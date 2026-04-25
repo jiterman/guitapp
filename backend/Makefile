@@ -4,7 +4,10 @@ DB_PASSWORD=password
 DB_USER=postgres
 DB_PORT=5432
 
-.PHONY: db-up db-down db-status
+APP_IMAGE_NAME=guitapp-backend
+APP_CONTAINER_NAME=guitapp-app
+
+.PHONY: db-up db-down db-status app-build app-up app-down
 
 db-up:
 	@if [ $$(docker ps -aq -f name=$(DB_CONTAINER_NAME)) ]; then \
@@ -30,3 +33,19 @@ db-down:
 
 db-status:
 	@docker ps -f name=$(DB_CONTAINER_NAME)
+
+app-build:
+	@echo "Building application image..."
+	docker build -t $(APP_IMAGE_NAME) .
+
+app-up:
+	@echo "Starting application container..."
+	@if [ $$(docker ps -aq -f name=$(APP_CONTAINER_NAME)) ]; then \
+		docker rm -f $(APP_CONTAINER_NAME); \
+	fi
+	docker run --name $(APP_CONTAINER_NAME) --network="host" -d $(APP_IMAGE_NAME)
+
+app-down:
+	@echo "Stopping and removing application container..."
+	@docker stop $(APP_CONTAINER_NAME) || true
+	@docker rm $(APP_CONTAINER_NAME) || true
