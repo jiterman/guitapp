@@ -43,7 +43,7 @@ app-up:
 	@if [ $$(docker ps -aq -f name=$(APP_CONTAINER_NAME)) ]; then \
 		docker rm -f $(APP_CONTAINER_NAME); \
 	fi
-	docker run --name $(APP_CONTAINER_NAME) --network="host" -d $(APP_IMAGE_NAME)
+	docker run --name $(APP_CONTAINER_NAME) --network="host" $(APP_IMAGE_NAME)
 
 app-down:
 	@echo "Stopping and removing application container..."

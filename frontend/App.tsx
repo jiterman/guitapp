@@ -1,8 +1,26 @@
 import React, { useEffect, useState } from 'react';
 import { StatusBar } from 'expo-status-bar';
 import { StyleSheet, Text, View, ActivityIndicator } from 'react-native';
+import Constants from 'expo-constants';
 
-const BACKEND_URL = 'http://10.0.2.2:8080/api/health'; // 10.0.2.2 is the host machine from Android Emulator
+const getBackendUrl = () => {
+  if (__DEV__) {
+    // En desarrollo, intentamos obtener la IP de la máquina que corre el bundler (Expo)
+    const hostUri = Constants.expoConfig?.hostUri;
+    if (hostUri) {
+      const ip = hostUri.split(':').shift();
+      const url = `http://${ip}:8080/api/health`;
+      console.log('Development Backend URL:', url);
+      return url;
+    }
+    // Fallback para web o si no se detecta hostUri
+    return 'http://localhost:8080/api/health';
+  }
+  // En producción, usa la variable de entorno configurada
+  return process.env.EXPO_PUBLIC_API_URL || 'https://tu-produccion.onrender.com/api/health';
+};
+
+const BACKEND_URL = getBackendUrl();
 
 export default function App() {
   const [status, setStatus] = useState<string>('Connecting...');
@@ -11,6 +29,7 @@ export default function App() {
   useEffect(() => {
     const checkHealth = async () => {
       try {
+        console.log('Fetching from:', BACKEND_URL);
         const response = await fetch(BACKEND_URL);
         const data = await response.json();
         if (data.status === 'UP') {
@@ -20,7 +39,7 @@ export default function App() {
         }
       } catch (error) {
         setStatus('Error connecting to backend');
-        console.error(error);
+        console.error('Connection error:', error);
       } finally {
         setLoading(false);
       }
