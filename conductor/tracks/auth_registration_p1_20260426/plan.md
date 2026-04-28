@@ -28,7 +28,7 @@
     - [x] Implement `EmailService` using `JavaMailSender` and Gmail SMTP configuration (Green).
 - [x] Task: Conductor - User Manual Verification 'Phase 3: OTP & Email' (Protocol in workflow.md) (fcccbb2)
 
-## Phase 4: Registration API Endpoints
+## Phase 4: Registration API Endpoints [checkpoint: 13b65b8]
 - [x] Task: Implement Registration Logic
     - [x] Write failing tests for `AuthService.register` (Red).
     - [x] Implement `AuthService.register`: create user, hash password, generate/save OTP, send email (Green).
@@ -38,7 +38,7 @@
 - [x] Task: Expose Authentication Controller (6de3795)
     - [x] Write failing integration tests for `/register` and `/verify-registration` (Red).
     - [x] Implement `AuthController` to handle requests and return standardized responses (Green).
-- [ ] Task: Conductor - User Manual Verification 'Phase 4: Registration API' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'Phase 4: Registration API' (Protocol in workflow.md) (13b65b8)
 
 ## Phase 5: Frontend Registration UI
 - [ ] Task: Implement Registration Screen
