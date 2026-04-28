@@ -5,6 +5,13 @@ import { EvaIconsPack } from '@ui-kitten/eva-icons';
 import * as eva from '@eva-design/eva';
 import OtpVerificationScreen from '../src/screens/OtpVerificationScreen';
 
+jest.mock('expo-router', () => ({
+  router: {
+    push: jest.fn(),
+  },
+  useLocalSearchParams: jest.fn(() => ({ email: 'test@example.com' })),
+}));
+
 const renderWithKitten = (component) => {
   return render(
     <>

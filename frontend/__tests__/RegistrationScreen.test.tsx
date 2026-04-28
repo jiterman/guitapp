@@ -5,6 +5,12 @@ import { EvaIconsPack } from '@ui-kitten/eva-icons';
 import * as eva from '@eva-design/eva';
 import RegistrationScreen from '../src/screens/RegistrationScreen';
 
+jest.mock('expo-router', () => ({
+  router: {
+    push: jest.fn(),
+  },
+}));
+
 const renderWithKitten = (component) => {
   return render(
     <>
