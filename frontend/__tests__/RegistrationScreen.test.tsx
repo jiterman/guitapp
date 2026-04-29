@@ -11,7 +11,7 @@ jest.mock('expo-router', () => ({
   },
 }));
 
-const renderWithKitten = (component) => {
+const renderWithKitten = (component: React.ReactElement) => {
   return render(
     <>
       <IconRegistry icons={EvaIconsPack}/>

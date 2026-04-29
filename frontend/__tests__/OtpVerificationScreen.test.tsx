@@ -12,7 +12,7 @@ jest.mock('expo-router', () => ({
   useLocalSearchParams: jest.fn(() => ({ email: 'test@example.com' })),
 }));
 
-const renderWithKitten = (component) => {
+const renderWithKitten = (component: React.ReactElement) => {
   return render(
     <>
       <IconRegistry icons={EvaIconsPack}/>
@@ -25,7 +25,7 @@ const renderWithKitten = (component) => {
 
 describe('OtpVerificationScreen', () => {
   it('should render correctly', async () => {
-    const { getByTestId, getByRole } = renderWithKitten(<OtpVerificationScreen />);
+    const { getByTestId } = renderWithKitten(<OtpVerificationScreen />);
     expect(getByTestId('otp-verification-title')).toBeDefined();
     expect(getByTestId('@otp-input/input')).toBeDefined();
     expect(getByTestId('verify-otp-button')).toBeDefined();
