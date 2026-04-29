@@ -56,7 +56,7 @@ const OtpVerificationScreen = () => {
     }
   };
 
-  const LoadingIndicator = (props) => (
+  const LoadingIndicator = (props: any) => (
     <View style={[props.style, styles.indicator]}>
       <Spinner size='small'/>
     </View>

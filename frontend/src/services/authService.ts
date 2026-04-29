@@ -16,7 +16,7 @@ const getApiUrl = () => {
 export const API_URL = getApiUrl();
 
 export const authService = {
-  register: async (email, password) => {
+  register: async (email: string, password: string) => {
     console.log("1. URL a la que le pego:", API_URL);
 
     try {
@@ -50,7 +50,7 @@ export const authService = {
     }
   },
 
-  verifyOtp: async (email, otp) => {
+  verifyOtp: async (email: string, otp: string) => {
     const response = await fetch(`${API_URL}/api/auth/verify-registration`, {
       method: 'POST',
       headers: {

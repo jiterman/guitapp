@@ -12,7 +12,7 @@ jest.mock('expo-router', () => ({
   useLocalSearchParams: jest.fn(() => ({ email: 'test@example.com' })),
 }));
 
-const renderWithKitten = (component) => {
+const renderWithKitten = (component: React.ReactElement) => {
   return render(
     <>
       <IconRegistry icons={EvaIconsPack}/>
