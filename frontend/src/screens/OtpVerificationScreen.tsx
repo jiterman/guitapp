@@ -15,19 +15,46 @@ const OtpVerificationScreen = () => {
   const [loading, setLoading] = React.useState(false);
 
   const onVerifyPress = async () => {
-    if (otp.length !== 6) {
-      Alert.alert('Error', 'OTP must be 6 digits');
+    if (!otp || otp.length !== 6) {
+      Alert.alert('Error de verificación', 'Por favor, ingresa un código de 6 dígitos.');
       return;
     }
 
     setLoading(true);
     try {
       await authService.verifyOtp(email, otp);
-      Alert.alert('Success', 'Account verified successfully!', [
+      Alert.alert('Éxito', '¡Cuenta verificada exitosamente!', [
         { text: 'OK', onPress: () => router.push('/register') } // Redirect to register for now as login is out of scope
       ]);
-    } catch (error) {
-      Alert.alert('Verification Failed', error.message);
+    } catch (error: any) { // Cast to any to access error.code
+      let errorMessage = 'Ocurrió un error inesperado durante la verificación. Por favor, inténtalo de nuevo.';
+      let errorTitle = 'Verificación Fallida';
+
+      if (error.code) {
+        switch (error.code) {
+          case 'INVALID_OTP':
+            errorMessage = 'El código ingresado es inválido.';
+            break;
+          case 'OTP_EXPIRED':
+            errorMessage = 'El código ha expirado. Por favor, solicita uno nuevo.';
+            break;
+          case 'USER_NOT_FOUND':
+            errorMessage = 'Usuario no encontrado. Por favor, verifica el email.';
+            break;
+          case 'USER_ALREADY_VERIFIED':
+            errorMessage = 'Este usuario ya ha sido verificado.';
+            break;
+          default:
+            errorMessage = `Error: ${error.code}. Por favor, inténtalo de nuevo.`;
+            break;
+        }
+      } else if (error.message && (error.message.includes('Network request failed') || error.message.includes('Failed to fetch'))) {
+        errorMessage = 'Ocurrió un error de conexión. Por favor, verifica tu internet o intenta de nuevo más tarde.';
+      } else if (error.message) {
+        errorMessage = error.message; // Fallback to generic message if no code or network error
+      }
+
+      Alert.alert(errorTitle, errorMessage);
     } finally {
       setLoading(false);
     }
@@ -42,11 +69,12 @@ const OtpVerificationScreen = () => {
   return (
     <SafeAreaView style={{ flex: 1 }}>
       <Layout style={styles.container}>
-        <Text category='h1' style={styles.title} testID="otp-verification-title">Verify OTP</Text>
-        <Text style={styles.subtitle}>Sent to: {email}</Text>
+        <Text category='h1' style={styles.title} testID="otp-verification-title">Verificar Mail</Text>
+        <Text style={styles.subtitle}>Ingresa el código de 6 dígitos enviado a:</Text>
+        <Text style={styles.subtitle}>{email}</Text>
         <Input
           value={otp}
-          placeholder='Enter OTP'
+          placeholder='Ingresa el código'
           onChangeText={setOtp}
           style={styles.input}
           keyboardType="number-pad"
@@ -61,7 +89,7 @@ const OtpVerificationScreen = () => {
           disabled={loading}
           accessoryLeft={loading ? LoadingIndicator : undefined}
         >
-          {loading ? '' : 'Verify'}
+          {loading ? '' : 'Verificar'}
         </Button>
       </Layout>
     </SafeAreaView>

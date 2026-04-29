@@ -22,8 +22,8 @@ public class AuthController {
 
     @PostMapping("/register")
     public ResponseEntity<?> register(@Valid @RequestBody RegisterRequest request) {
-        authService.register(request.email(), request.password());
-        return ResponseEntity.ok(Map.of("message", "Registration successful. Please check your email for the OTP."));
+        Map<String, Object> response = authService.register(request.email(), request.password());
+        return ResponseEntity.ok(response);
     }
 
     @PostMapping("/verify-registration")

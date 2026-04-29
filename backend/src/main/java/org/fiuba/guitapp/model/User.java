@@ -29,7 +29,30 @@ public class User {
     @Column(nullable = false)
     private UserStatus status;
 
+    @Column
+    private String verificationOtp;
+
+    @Column
+    private java.time.LocalDateTime otpCreatedAt;
+
     public User() {
+    }
+
+    // ... (Getters and Setters)
+    public String getVerificationOtp() {
+        return verificationOtp;
+    }
+
+    public void setVerificationOtp(String verificationOtp) {
+        this.verificationOtp = verificationOtp;
+    }
+
+    public java.time.LocalDateTime getOtpCreatedAt() {
+        return otpCreatedAt;
+    }
+
+    public void setOtpCreatedAt(java.time.LocalDateTime otpCreatedAt) {
+        this.otpCreatedAt = otpCreatedAt;
     }
 
     public UUID getId() {

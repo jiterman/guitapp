@@ -19,9 +19,9 @@ class SecurityConfigTests {
 
     @Test
     void shouldAllowPublicAccessToRegisterEndpoint() throws Exception {
-        // We don't have the controller yet, so this should return 404 but NOT 403/401
+        // Now that the controller exists, it should return 400 (Bad Request) due to missing body, but NOT 403/401
         mockMvc.perform(post("/api/auth/register"))
-                .andExpect(status().isNotFound());
+                .andExpect(status().isBadRequest());
     }
 
     @Test
