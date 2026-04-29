@@ -1,0 +1,32 @@
+package org.fiuba.guitapp.service;
+
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.mail.SimpleMailMessage;
+import org.springframework.mail.javamail.JavaMailSender;
+
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.verify;
+
+@ExtendWith(MockitoExtension.class)
+class EmailServiceTests {
+
+    @Mock
+    private JavaMailSender mailSender;
+
+    @InjectMocks
+    private EmailService emailService;
+
+    @Test
+    void shouldSendRegistrationOtpEmail() {
+        String to = "user@example.com";
+        String otp = "123456";
+
+        emailService.sendRegistrationOtp(to, otp);
+
+        verify(mailSender).send(any(SimpleMailMessage.class));
+    }
+}
