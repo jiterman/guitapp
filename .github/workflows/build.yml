@@ -51,6 +51,6 @@ jobs:
         working-directory: ./frontend
         run: npm ci
 
-      - name: Build for web
+      - name: Build frontend
         working-directory: ./frontend
-        run: npx expo export --platform web
+        run: npx expo export --platform web --platform android

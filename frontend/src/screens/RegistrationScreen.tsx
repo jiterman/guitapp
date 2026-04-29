@@ -89,7 +89,7 @@ const RegistrationScreen = () => {
       }
     } catch (error: any) { // Using 'any' for now to easily access error.message and error.code
       let errorMessage = 'Ocurrió un error inesperado. Por favor, inténtalo de nuevo.'; // Default Spanish error message
-      let errorTitle = 'Error de Registro';
+      const errorTitle = 'Error de Registro';
 
       // Check for backend error codes
       if (error.code) {

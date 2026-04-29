@@ -25,7 +25,7 @@ const renderWithKitten = (component) => {
 
 describe('OtpVerificationScreen', () => {
   it('should render correctly', async () => {
-    const { getByTestId, getByRole } = renderWithKitten(<OtpVerificationScreen />);
+    const { getByTestId } = renderWithKitten(<OtpVerificationScreen />);
     expect(getByTestId('otp-verification-title')).toBeDefined();
     expect(getByTestId('@otp-input/input')).toBeDefined();
     expect(getByTestId('verify-otp-button')).toBeDefined();
