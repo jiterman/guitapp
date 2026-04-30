@@ -6,11 +6,14 @@ interface BackendError extends Error {
 }
 
 const getApiUrl = () => {
+  if (process.env.EXPO_PUBLIC_ENV === 'prod') {
+    return process.env.EXPO_PUBLIC_BACKEND_URL;
+  }
   if (__DEV__ && Constants.expoConfig?.hostUri) {
     const localIp = Constants.expoConfig.hostUri.split(':')[0];
     return `http://${localIp}:8080`;
   }
-  return process.env.EXPO_PUBLIC_API_URL;
+  return process.env.EXPO_PUBLIC_BACKEND_URL;
 };
 
 export const API_URL = getApiUrl();
