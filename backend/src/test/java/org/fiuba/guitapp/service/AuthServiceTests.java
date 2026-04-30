@@ -32,6 +32,12 @@ class AuthServiceTests {
     @Mock
     private EmailService emailService;
 
+    @Mock
+    private JwtService jwtService;
+
+    @Mock
+    private org.springframework.security.authentication.AuthenticationManager authenticationManager;
+
     @InjectMocks
     private AuthService authService;
 
