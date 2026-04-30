@@ -49,10 +49,10 @@ const LoginScreen = () => {
       // Pass email as param to home screen
       router.push({ pathname: '/home', params: { email } }); 
     } catch (error: any) {
-      let errorMessage = 'Email o contraseña incorrectos.';
+      let errorMessage = 'Alguno de los campos ingresados no es correcto. Verifica los datos ingresados.';
       if (error.message && (error.message.includes('Network request failed') || error.message.includes('Failed to fetch'))) {
         errorMessage = 'Error de conexión con el servidor.';
-      } else if (error.message) {
+      } else if (error.message && error.message !== 'Login failed') {
         errorMessage = error.message;
       }
       Alert.alert('Error de Inicio de Sesión', errorMessage);
