@@ -193,4 +193,14 @@ class RateLimitFilterTests {
         assert responseBody.contains("\"code\"");
         assert responseBody.contains("RATE_LIMIT_EXCEEDED");
     }
+
+    @Test
+    void testExactMatchPath() throws Exception {
+        when(request.getRequestURI()).thenReturn("/api/auth/register");
+        when(request.getRemoteAddr()).thenReturn("192.168.7.1");
+
+        rateLimitFilter.doFilter(request, response, filterChain);
+
+        verify(filterChain).doFilter(request, response);
+    }
 }
