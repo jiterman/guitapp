@@ -96,4 +96,12 @@ export const authService = {
     }
     return data;
   },
+
+  getToken: async () => {
+    return await SecureStore.getItemAsync('userToken');
+  },
+
+  removeToken: async () => {
+    await SecureStore.deleteItemAsync('userToken');
+  },
 };

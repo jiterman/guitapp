@@ -71,4 +71,20 @@ describe('authService', () => {
     );
     expect(SecureStore.setItemAsync).toHaveBeenCalledWith('userToken', token);
   });
+
+  it('should get token from SecureStore', async () => {
+    const token = 'stored-token';
+    (SecureStore.getItemAsync as jest.Mock).mockResolvedValueOnce(token);
+
+    const result = await authService.getToken();
+
+    expect(SecureStore.getItemAsync).toHaveBeenCalledWith('userToken');
+    expect(result).toBe(token);
+  });
+
+  it('should remove token from SecureStore', async () => {
+    await authService.removeToken();
+
+    expect(SecureStore.deleteItemAsync).toHaveBeenCalledWith('userToken');
+  });
 });
