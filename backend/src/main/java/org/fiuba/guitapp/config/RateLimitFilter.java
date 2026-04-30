@@ -6,10 +6,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.fiuba.guitapp.exception.RateLimitException;
+import org.fiuba.guitapp.exception.ErrorCode;
+import org.springframework.http.HttpStatus;
 import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import io.github.bucket4j.Bandwidth;
 import io.github.bucket4j.Bucket;
@@ -24,6 +27,7 @@ public class RateLimitFilter extends OncePerRequestFilter {
 
     private final Map<String, Bucket> cache = new ConcurrentHashMap<>();
     private final List<RateLimitRule> rules;
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     public RateLimitFilter() {
         this.rules = List.of(
@@ -47,7 +51,8 @@ public class RateLimitFilter extends OncePerRequestFilter {
         Bucket bucket = resolveBucket(bucketKey, rule);
 
         if (!bucket.tryConsume(1)) {
-            throw new RateLimitException();
+            sendRateLimitResponse(response);
+            return;
         }
 
         filterChain.doFilter(request, response);
@@ -70,6 +75,17 @@ public class RateLimitFilter extends OncePerRequestFilter {
                 .refillIntervally(requestsPerMinute, Duration.ofMinutes(1))
                 .build();
         return Bucket.builder().addLimit(limit).build();
+    }
+
+    private void sendRateLimitResponse(HttpServletResponse response) throws IOException {
+        response.setStatus(HttpStatus.TOO_MANY_REQUESTS.value());
+        response.setContentType("application/json");
+
+        Map<String, String> errorResponse = Map.of(
+                "message", "Too many requests. Please try again later.",
+                "code", ErrorCode.RATE_LIMIT_EXCEEDED.name());
+
+        response.getWriter().write(objectMapper.writeValueAsString(errorResponse));
     }
 
     private String getClientIP(HttpServletRequest request) {

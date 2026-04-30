@@ -5,8 +5,6 @@ import java.util.Map;
 
 import org.fiuba.guitapp.exception.AuthException;
 import org.fiuba.guitapp.exception.ErrorCode;
-import org.fiuba.guitapp.exception.RateLimitException;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -34,13 +32,5 @@ public class GlobalExceptionHandler {
         response.put("code", ErrorCode.VALIDATION_FAILED.name());
         response.put("errors", fieldErrors);
         return ResponseEntity.badRequest().body(response);
-    }
-
-    @ExceptionHandler(RateLimitException.class)
-    public ResponseEntity<Map<String, String>> handleRateLimitException(RateLimitException ex) {
-        Map<String, String> errors = new HashMap<>();
-        errors.put("message", ex.getMessage());
-        errors.put("code", ex.getErrorCode().name());
-        return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS).body(errors);
     }
 }
