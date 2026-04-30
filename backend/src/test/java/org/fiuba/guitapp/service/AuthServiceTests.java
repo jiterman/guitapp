@@ -58,9 +58,35 @@ class AuthServiceTests {
     }
 
     @Test
-    void shouldThrowExceptionWhenEmailAlreadyExists() {
+    void shouldResendOtpWhenUserIsPendingVerification() {
         String email = "existing@example.com";
-        when(userRepository.findByEmail(email)).thenReturn(Optional.of(new User()));
+        String password = "Password123";
+        String newOtp = "654321";
+
+        User existingUser = new User();
+        existingUser.setEmail(email);
+        existingUser.setStatus(UserStatus.PENDING_VERIFICATION);
+        existingUser.setVerificationOtp("123456");
+
+        when(userRepository.findByEmail(email)).thenReturn(Optional.of(existingUser));
+        when(otpService.generateOtp()).thenReturn(newOtp);
+        when(userRepository.save(any(User.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        var result = authService.register(email, password);
+
+        assertThat(result.get("code")).isEqualTo("OTP_RESENT");
+        verify(emailService).sendRegistrationOtp(email, newOtp);
+        verify(userRepository).save(argThat(user -> user.getVerificationOtp().equals(newOtp)));
+    }
+
+    @Test
+    void shouldThrowExceptionWhenEmailAlreadyExistsAndActive() {
+        String email = "existing@example.com";
+        User activeUser = new User();
+        activeUser.setEmail(email);
+        activeUser.setStatus(UserStatus.ACTIVE);
+
+        when(userRepository.findByEmail(email)).thenReturn(Optional.of(activeUser));
 
         assertThatThrownBy(() -> authService.register(email, "password")).isInstanceOf(RuntimeException.class)
                 .hasMessageContaining("Email already exists");
