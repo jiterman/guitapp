@@ -60,7 +60,6 @@ describe('authService', () => {
 
     const email = 'test@example.com';
     const password = 'password123';
-    // @ts-ignore - login doesn't exist yet
     await authService.login(email, password);
 
     expect(global.fetch).toHaveBeenCalledWith(
