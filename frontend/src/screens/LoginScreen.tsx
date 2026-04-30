@@ -46,9 +46,8 @@ const LoginScreen = () => {
     setLoading(true);
     try {
       await authService.login(email, password);
-      // Home screen to be created in a later task.
-      // We'll push to /home, and if it doesn't exist yet, it's fine for this task.
-      router.push('/home'); 
+      // Pass email as param to home screen
+      router.push({ pathname: '/home', params: { email } }); 
     } catch (error: any) {
       let errorMessage = 'Email o contraseña incorrectos.';
       if (error.message && (error.message.includes('Network request failed') || error.message.includes('Failed to fetch'))) {
