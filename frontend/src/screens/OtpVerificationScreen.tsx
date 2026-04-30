@@ -1,13 +1,9 @@
 import React from 'react';
 import { SafeAreaView, Alert, View } from 'react-native';
-import { Button, Layout, Text, Input, Icon, Spinner } from '@ui-kitten/components';
+import { Button, Layout, Text, Input, Spinner } from '@ui-kitten/components';
 import { StyleSheet } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import { authService } from '../services/authService';
-
-const BackIcon = (props) => (
-  <Icon {...props} name='arrow-back'/>
-);
 
 const OtpVerificationScreen = () => {
   const { email } = useLocalSearchParams<{ email: string }>();
@@ -28,7 +24,7 @@ const OtpVerificationScreen = () => {
       ]);
     } catch (error: any) { // Cast to any to access error.code
       let errorMessage = 'Ocurrió un error inesperado durante la verificación. Por favor, inténtalo de nuevo.';
-      let errorTitle = 'Verificación Fallida';
+      const errorTitle = 'Verificación Fallida';
 
       if (error.code) {
         switch (error.code) {
@@ -60,7 +56,7 @@ const OtpVerificationScreen = () => {
     }
   };
 
-  const LoadingIndicator = (props) => (
+  const LoadingIndicator = (props: any) => (
     <View style={[props.style, styles.indicator]}>
       <Spinner size='small'/>
     </View>

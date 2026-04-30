@@ -5,11 +5,11 @@ import { StyleSheet } from 'react-native';
 import { router } from 'expo-router';
 import { authService } from '../services/authService';
 
-const EmailIcon = (props) => (
+const EmailIcon = (props: any) => (
   <Icon {...props} name='email'/>
 );
 
-const LockIcon = (props) => (
+const LockIcon = (props: any) => (
   <Icon {...props} name='lock'/>
 );
 
@@ -30,7 +30,7 @@ const RegistrationScreen = () => {
     }
   };
 
-  const renderPasswordIcon = (props, field: 'password' | 'confirmPassword') => (
+  const renderPasswordIcon = (props: any, field: 'password' | 'confirmPassword') => (
     <Icon
       {...props}
       name={ (field === 'password' ? passwordVisible : confirmPasswordVisible) ? 'eye-off' : 'eye'}
@@ -89,7 +89,7 @@ const RegistrationScreen = () => {
       }
     } catch (error: any) { // Using 'any' for now to easily access error.message and error.code
       let errorMessage = 'Ocurrió un error inesperado. Por favor, inténtalo de nuevo.'; // Default Spanish error message
-      let errorTitle = 'Error de Registro';
+      const errorTitle = 'Error de Registro';
 
       // Check for backend error codes
       if (error.code) {
