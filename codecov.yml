@@ -1,0 +1,21 @@
+coverage:
+  status:
+    project:
+      default:
+        target: 80%         # El proyecto debe tener mínimo 80% de coverage
+        threshold: 0%       # Sin margen de error
+    patch:
+      default:
+        target: 90%        # Código nuevo debe tener mínimo 90% de coverage
+        threshold: 5%      # Puede ser hasta 85%
+
+ignore:
+  - "**/GuitappApplication.java"
+  - "**/*Application.java"
+  - "**/config/WebConfig.java"
+  - "**/config/SecurityConfig.java"
+
+comment:
+  layout: "reach, diff, flags, files"
+  behavior: default
+  require_changes: false

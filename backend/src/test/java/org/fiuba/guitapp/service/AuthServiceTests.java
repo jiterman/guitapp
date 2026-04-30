@@ -1,5 +1,14 @@
 package org.fiuba.guitapp.service;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.argThat;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
+import java.util.Optional;
+
 import org.fiuba.guitapp.model.User;
 import org.fiuba.guitapp.model.UserStatus;
 import org.fiuba.guitapp.repository.UserRepository;
@@ -9,13 +18,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.password.PasswordEncoder;
-
-import java.util.Optional;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class AuthServiceTests {
@@ -49,22 +51,44 @@ class AuthServiceTests {
 
         authService.register(email, password);
 
-        verify(userRepository).save(argThat(user -> 
-            user.getEmail().equals(email) &&
-            user.getPassword().equals(encodedPassword) &&
-            user.getStatus() == UserStatus.PENDING_VERIFICATION &&
-            user.getVerificationOtp().equals(otp)
-        ));
+        verify(userRepository).save(argThat(user -> user.getEmail().equals(email)
+                && user.getPassword().equals(encodedPassword) && user.getStatus() == UserStatus.PENDING_VERIFICATION
+                && user.getVerificationOtp().equals(otp)));
         verify(emailService).sendRegistrationOtp(email, otp);
     }
 
     @Test
-    void shouldThrowExceptionWhenEmailAlreadyExists() {
+    void shouldResendOtpWhenUserIsPendingVerification() {
         String email = "existing@example.com";
-        when(userRepository.findByEmail(email)).thenReturn(Optional.of(new User()));
+        String password = "Password123";
+        String newOtp = "654321";
 
-        assertThatThrownBy(() -> authService.register(email, "password"))
-                .isInstanceOf(RuntimeException.class)
+        User existingUser = new User();
+        existingUser.setEmail(email);
+        existingUser.setStatus(UserStatus.PENDING_VERIFICATION);
+        existingUser.setVerificationOtp("123456");
+
+        when(userRepository.findByEmail(email)).thenReturn(Optional.of(existingUser));
+        when(otpService.generateOtp()).thenReturn(newOtp);
+        when(userRepository.save(any(User.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        var result = authService.register(email, password);
+
+        assertThat(result.get("code")).isEqualTo("OTP_RESENT");
+        verify(emailService).sendRegistrationOtp(email, newOtp);
+        verify(userRepository).save(argThat(user -> user.getVerificationOtp().equals(newOtp)));
+    }
+
+    @Test
+    void shouldThrowExceptionWhenEmailAlreadyExistsAndActive() {
+        String email = "existing@example.com";
+        User activeUser = new User();
+        activeUser.setEmail(email);
+        activeUser.setStatus(UserStatus.ACTIVE);
+
+        when(userRepository.findByEmail(email)).thenReturn(Optional.of(activeUser));
+
+        assertThatThrownBy(() -> authService.register(email, "password")).isInstanceOf(RuntimeException.class)
                 .hasMessageContaining("Email already exists");
     }
 
@@ -112,8 +136,7 @@ class AuthServiceTests {
         when(userRepository.findByEmail(email)).thenReturn(Optional.of(user));
         when(otpService.isOtpExpired(any())).thenReturn(true);
 
-        assertThatThrownBy(() -> authService.verifyRegistration(email, otp))
-                .isInstanceOf(RuntimeException.class)
+        assertThatThrownBy(() -> authService.verifyRegistration(email, otp)).isInstanceOf(RuntimeException.class)
                 .hasMessageContaining("OTP expired");
     }
 }

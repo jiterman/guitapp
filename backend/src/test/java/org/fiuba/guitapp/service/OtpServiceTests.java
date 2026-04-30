@@ -1,11 +1,11 @@
 package org.fiuba.guitapp.service;
 
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import java.time.LocalDateTime;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 class OtpServiceTests {
 
@@ -27,9 +27,9 @@ class OtpServiceTests {
     void shouldValidateNonExpiredOtp() {
         LocalDateTime now = LocalDateTime.now();
         LocalDateTime createdAt = now.minusMinutes(5); // 5 minutes ago
-        
+
         boolean isValid = otpService.isOtpExpired(createdAt);
-        
+
         assertThat(isValid).isFalse();
     }
 
@@ -37,9 +37,9 @@ class OtpServiceTests {
     void shouldInvalidateExpiredOtp() {
         LocalDateTime now = LocalDateTime.now();
         LocalDateTime createdAt = now.minusMinutes(11); // 11 minutes ago
-        
+
         boolean isValid = otpService.isOtpExpired(createdAt);
-        
+
         assertThat(isValid).isTrue();
     }
 }

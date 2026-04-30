@@ -3,7 +3,7 @@ plugins {
         id 'org.springframework.boot' version '3.2.5'
         id 'io.spring.dependency-management' version '1.1.4'
         id 'jacoco'
-        id 'checkstyle'
+        id 'com.diffplug.spotless' version '6.25.0'
 }
 
 group = 'org.fiuba'
@@ -23,6 +23,7 @@ dependencies {
         implementation 'org.springframework.boot:spring-boot-starter-security'
         implementation 'org.springframework.boot:spring-boot-starter-mail'
         implementation 'org.springframework.boot:spring-boot-starter-validation'
+        implementation 'com.bucket4j:bucket4j-core:8.10.1'
         compileOnly 'org.projectlombok:lombok'
         annotationProcessor 'org.projectlombok:lombok'
         runtimeOnly 'org.postgresql:postgresql'
@@ -44,15 +45,14 @@ jacocoTestReport {
     }
 }
 
-checkstyle {
-    toolVersion = '10.12.0'
-    configFile = file("${rootDir}/config/checkstyle/checkstyle.xml")
-}
-
-tasks.withType(Checkstyle) {
-    reports {
-        xml.required = true
-        html.required = true
+spotless {
+    java {
+        target 'src/**/*.java'
+        eclipse().configFile(project.file('code_style.xml'))
+        importOrder('java', 'javax', 'org', 'com', '')
+        removeUnusedImports()
+        trimTrailingWhitespace()
+        endWithNewline()
     }
 }
 

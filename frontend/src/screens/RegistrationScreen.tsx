@@ -5,13 +5,9 @@ import { StyleSheet } from 'react-native';
 import { router } from 'expo-router';
 import { authService } from '../services/authService';
 
-const EmailIcon = (props: any) => (
-  <Icon {...props} name='email'/>
-);
+const EmailIcon = (props: any) => <Icon {...props} name="email" />;
 
-const LockIcon = (props: any) => (
-  <Icon {...props} name='lock'/>
-);
+const LockIcon = (props: any) => <Icon {...props} name="lock" />;
 
 const RegistrationScreen = () => {
   const [email, setEmail] = React.useState('');
@@ -33,7 +29,7 @@ const RegistrationScreen = () => {
   const renderPasswordIcon = (props: any, field: 'password' | 'confirmPassword') => (
     <Icon
       {...props}
-      name={ (field === 'password' ? passwordVisible : confirmPasswordVisible) ? 'eye-off' : 'eye'}
+      name={(field === 'password' ? passwordVisible : confirmPasswordVisible) ? 'eye-off' : 'eye'}
       onPress={() => onPasswordIconPress(field)}
     />
   );
@@ -67,15 +63,19 @@ const RegistrationScreen = () => {
     setShowLoadingPopup(true); // Show loading popup
     try {
       const response = await authService.register(email, password);
-      if (response && response.code === "OTP_RESENT") { // Check for code instead of message string
+      if (response && response.code === 'OTP_RESENT') {
+        // Check for code instead of message string
         Alert.alert(
           'OTP Reenviado',
           'El usuario ya existe y estaba pendiente de verificación. Se ha enviado un nuevo código OTP a tu email.',
           [
-            { text: 'OK', onPress: () => router.push({ pathname: '/verify-otp', params: { email } }) }
+            {
+              text: 'OK',
+              onPress: () => router.push({ pathname: '/verify-otp', params: { email } }),
+            },
           ]
         );
-      } else if (response && response.code === "REGISTRATION_SUCCESS") {
+      } else if (response && response.code === 'REGISTRATION_SUCCESS') {
         router.push({ pathname: '/verify-otp', params: { email } });
       } else {
         // Fallback for unexpected successful response structures
@@ -83,11 +83,15 @@ const RegistrationScreen = () => {
           'Registro Exitoso',
           'Tu cuenta ha sido registrada. Por favor, verifica tu email para el código OTP.',
           [
-            { text: 'OK', onPress: () => router.push({ pathname: '/verify-otp', params: { email } }) }
+            {
+              text: 'OK',
+              onPress: () => router.push({ pathname: '/verify-otp', params: { email } }),
+            },
           ]
         );
       }
-    } catch (error: any) { // Using 'any' for now to easily access error.message and error.code
+    } catch (error: any) {
+      // Using 'any' for now to easily access error.message and error.code
       let errorMessage = 'Ocurrió un error inesperado. Por favor, inténtalo de nuevo.'; // Default Spanish error message
       const errorTitle = 'Error de Registro';
 
@@ -99,17 +103,26 @@ const RegistrationScreen = () => {
             break;
           case 'VALIDATION_FAILED':
             // For validation failures, the backend message might contain specific field errors
-            errorMessage = error.message; 
+            errorMessage = error.message;
+            break;
+          case 'RATE_LIMIT_EXCEEDED':
+            errorMessage =
+              'Has excedido el límite de intentos. Por favor, espera un momento antes de volver a intentar.';
             break;
           // Add other specific error codes as needed
           default:
             errorMessage = `Error: ${error.code}. Por favor, inténtalo de nuevo.`;
             break;
         }
-      // Check for common network-related error messages from the fetch API
-      // This is a heuristic approach and might need refinement based on actual error objects from React Native's fetch implementation.
-      } else if (error.message && (error.message.includes('Network request failed') || error.message.includes('Failed to fetch'))) {
-        errorMessage = 'Ocurrió un error al intentar conectarse con el servicio. Puede que el servicio esté temporalmente fuera de servicio o haya un problema con tu conexión a internet.';
+        // Check for common network-related error messages from the fetch API
+        // This is a heuristic approach and might need refinement based on actual error objects from React Native's fetch implementation.
+      } else if (
+        error.message &&
+        (error.message.includes('Network request failed') ||
+          error.message.includes('Failed to fetch'))
+      ) {
+        errorMessage =
+          'Ocurrió un error al intentar conectarse con el servicio. Puede que el servicio esté temporalmente fuera de servicio o haya un problema con tu conexión a internet.';
       } else if (error.message) {
         // For other errors coming from authService (e.g., server-side validation messages without a specific code)
         errorMessage = error.message;
@@ -125,10 +138,12 @@ const RegistrationScreen = () => {
   return (
     <SafeAreaView style={{ flex: 1 }}>
       <Layout style={styles.container}>
-        <Text category='h1' style={styles.title} testID="registration-title">Registro</Text>
+        <Text category="h1" style={styles.title} testID="registration-title">
+          Registro
+        </Text>
         <Input
           value={email}
-          placeholder='Email'
+          placeholder="Email"
           onChangeText={setEmail}
           style={styles.input}
           accessoryLeft={EmailIcon}
@@ -138,7 +153,7 @@ const RegistrationScreen = () => {
         />
         <Input
           value={password}
-          placeholder='Password'
+          placeholder="Password"
           onChangeText={setPassword}
           style={styles.input}
           accessoryLeft={LockIcon}
@@ -148,7 +163,7 @@ const RegistrationScreen = () => {
         />
         <Input
           value={confirmPassword}
-          placeholder='Confirm Password'
+          placeholder="Confirm Password"
           onChangeText={setConfirmPassword}
           style={styles.input}
           accessoryLeft={LockIcon}
@@ -156,9 +171,9 @@ const RegistrationScreen = () => {
           disabled={loading}
           accessoryRight={props => renderPasswordIcon(props, 'confirmPassword')}
         />
-        <Button 
-          style={styles.button} 
-          onPress={onRegisterPress} 
+        <Button
+          style={styles.button}
+          onPress={onRegisterPress}
           testID="register-button"
           disabled={loading}
         >
@@ -168,8 +183,10 @@ const RegistrationScreen = () => {
 
       {showLoadingPopup && (
         <View style={styles.loadingOverlay}>
-          <Spinner size='giant'/>
-          <Text category='h6' style={styles.loadingText}>Generando usuario...</Text>
+          <Spinner size="giant" />
+          <Text category="h6" style={styles.loadingText}>
+            Generando usuario...
+          </Text>
         </View>
       )}
     </SafeAreaView>

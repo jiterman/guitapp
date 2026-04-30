@@ -23,10 +23,17 @@ Aplicación de gestión de gastos para el Trabajo Práctico de la facultad.
 
 ## Configuración Local
 
+### Configuración Inicial
+1. Configurar Git hooks (formatea código automáticamente antes de commits):
+   ```bash
+   git config core.hooksPath .githooks
+   ```
+
 ### Backend
 1. Ir a la carpeta `backend`.
 2. Levantar la base de datos local: `make db-up`.
-3. Ejecutar `./gradlew bootRun`.
+3. Compilar: `./gradlew clean build -x test`.
+4. Ejecutar: `./gradlew bootRun`.
 
 ### Frontend
 1. Ir a la carpeta `frontend`.

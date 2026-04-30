@@ -1,13 +1,13 @@
 package org.fiuba.guitapp.config;
 
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.web.servlet.MockMvc;
-
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -19,9 +19,7 @@ class SecurityConfigTests {
 
     @Test
     void shouldAllowPublicAccessToRegisterEndpoint() throws Exception {
-        // Now that the controller exists, it should return 400 (Bad Request) due to missing body, but NOT 403/401
-        mockMvc.perform(post("/api/auth/register"))
-                .andExpect(status().isBadRequest());
+        mockMvc.perform(post("/api/auth/register")).andExpect(status().isBadRequest());
     }
 
     @Test

@@ -28,9 +28,9 @@ jobs:
         working-directory: ./backend
         run: chmod +x gradlew
 
-      - name: Run Checkstyle
+      - name: Run Spotless check
         working-directory: ./backend
-        run: ./gradlew checkstyleMain checkstyleTest --no-daemon
+        run: ./gradlew spotlessCheck --no-daemon
 
   frontend-lint:
     name: Frontend Lint
