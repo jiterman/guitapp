@@ -66,4 +66,16 @@ class AuthControllerTests {
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk());
     }
+
+    @Test
+    void shouldReturnOkWithTokenWhenLoginIsSuccessful() throws Exception {
+        Map<String, String> loginRequest = Map.of("email", "test@example.com", "password", "Password123");
+        when(authService.login("test@example.com", "Password123"))
+                .thenReturn(Map.of("token", "dummy-jwt-token"));
+
+        mockMvc.perform(post("/api/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(loginRequest)))
+                .andExpect(status().isOk());
+    }
 }
