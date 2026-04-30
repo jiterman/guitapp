@@ -1,6 +1,8 @@
 package org.fiuba.guitapp.service;
 
-import lombok.RequiredArgsConstructor;
+import java.time.LocalDateTime;
+import java.util.Map;
+
 import org.fiuba.guitapp.exception.AuthException;
 import org.fiuba.guitapp.exception.ErrorCode;
 import org.fiuba.guitapp.model.User;
@@ -10,8 +12,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
-import java.util.Map;
+import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
@@ -22,7 +23,7 @@ public class AuthService {
     private final OtpService otpService;
     private final EmailService emailService;
 
-        @Transactional
+    @Transactional
     public Map<String, Object> register(String email, String password) {
         return userRepository.findByEmail(email).map(existingUser -> {
             if (existingUser.getStatus() == UserStatus.PENDING_VERIFICATION) {
@@ -31,7 +32,8 @@ public class AuthService {
                 existingUser.setOtpCreatedAt(LocalDateTime.now());
                 userRepository.save(existingUser);
                 emailService.sendRegistrationOtp(email, newOtp);
-                return Map.<String, Object>of("message", "User already exists but pending verification. New OTP sent.", "code", "OTP_RESENT");
+                return Map.<String, Object> of("message", "User already exists but pending verification. New OTP sent.",
+                        "code", "OTP_RESENT");
             } else {
                 throw new AuthException(ErrorCode.MAIL_ALREADY_USED, "Email already exists");
             }
@@ -40,14 +42,15 @@ public class AuthService {
             user.setEmail(email);
             user.setPassword(passwordEncoder.encode(password));
             user.setStatus(UserStatus.PENDING_VERIFICATION);
-            
+
             String otp = otpService.generateOtp();
             user.setVerificationOtp(otp);
             user.setOtpCreatedAt(LocalDateTime.now());
 
             userRepository.save(user);
             emailService.sendRegistrationOtp(email, otp);
-            return Map.<String, Object>of("message", "Registration successful. Please check your email for the OTP.", "code", "REGISTRATION_SUCCESS");
+            return Map.<String, Object> of("message", "Registration successful. Please check your email for the OTP.",
+                    "code", "REGISTRATION_SUCCESS");
         });
     }
 
