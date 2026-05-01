@@ -1,6 +1,12 @@
 package org.fiuba.guitapp.controller;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+import java.util.Map;
+
 import org.fiuba.guitapp.dto.RegisterRequest;
 import org.fiuba.guitapp.dto.VerifyRegistrationRequest;
 import org.fiuba.guitapp.service.AuthService;
@@ -13,12 +19,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
-import static org.mockito.Mockito.doNothing;
-import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-
-import java.util.Map;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -37,23 +38,19 @@ class AuthControllerTests {
     @Test
     void shouldReturnOkWhenRegistrationIsSuccessful() throws Exception {
         RegisterRequest request = new RegisterRequest("test@example.com", "Password123");
-        when(authService.register(request.email(), request.password()))
-                .thenReturn(Map.of("message", "Registration successful. Please check your email for the OTP.", "code", "REGISTRATION_SUCCESS"));
+        when(authService.register(request.email(), request.password())).thenReturn(Map.of("message",
+                "Registration successful. Please check your email for the OTP.", "code", "REGISTRATION_SUCCESS"));
 
-        mockMvc.perform(post("/api/auth/register")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isOk());
+        mockMvc.perform(post("/api/auth/register").contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request))).andExpect(status().isOk());
     }
 
     @Test
     void shouldReturnBadRequestWhenRegistrationDataIsInvalid() throws Exception {
         RegisterRequest request = new RegisterRequest("invalid-email", "short");
 
-        mockMvc.perform(post("/api/auth/register")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isBadRequest());
+        mockMvc.perform(post("/api/auth/register").contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request))).andExpect(status().isBadRequest());
     }
 
     @Test
@@ -61,10 +58,8 @@ class AuthControllerTests {
         VerifyRegistrationRequest request = new VerifyRegistrationRequest("test@example.com", "123456");
         doNothing().when(authService).verifyRegistration(request.email(), request.otp());
 
-        mockMvc.perform(post("/api/auth/verify-registration")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isOk());
+        mockMvc.perform(post("/api/auth/verify-registration").contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request))).andExpect(status().isOk());
     }
 
     @Test
@@ -74,8 +69,8 @@ class AuthControllerTests {
                 .thenReturn(Map.of("token", "dummy-jwt-token"));
 
         mockMvc.perform(post("/api/auth/login")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(loginRequest)))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(loginRequest)))
                 .andExpect(status().isOk());
     }
 }

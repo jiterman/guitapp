@@ -20,10 +20,12 @@ const OtpVerificationScreen = () => {
     try {
       await authService.verifyOtp(email, otp);
       Alert.alert('Éxito', '¡Cuenta verificada exitosamente!', [
-        { text: 'OK', onPress: () => router.push('/login') }
+        { text: 'OK', onPress: () => router.push('/login') },
       ]);
-    } catch (error: any) { // Cast to any to access error.code
-      let errorMessage = 'Ocurrió un error inesperado durante la verificación. Por favor, inténtalo de nuevo.';
+    } catch (error: any) {
+      // Cast to any to access error.code
+      let errorMessage =
+        'Ocurrió un error inesperado durante la verificación. Por favor, inténtalo de nuevo.';
       const errorTitle = 'Verificación Fallida';
 
       if (error.code) {
@@ -40,12 +42,21 @@ const OtpVerificationScreen = () => {
           case 'USER_ALREADY_VERIFIED':
             errorMessage = 'Este usuario ya ha sido verificado.';
             break;
+          case 'RATE_LIMIT_EXCEEDED':
+            errorMessage =
+              'Has excedido el límite de intentos. Por favor, espera un momento antes de volver a intentar.';
+            break;
           default:
             errorMessage = `Error: ${error.code}. Por favor, inténtalo de nuevo.`;
             break;
         }
-      } else if (error.message && (error.message.includes('Network request failed') || error.message.includes('Failed to fetch'))) {
-        errorMessage = 'Ocurrió un error de conexión. Por favor, verifica tu internet o intenta de nuevo más tarde.';
+      } else if (
+        error.message &&
+        (error.message.includes('Network request failed') ||
+          error.message.includes('Failed to fetch'))
+      ) {
+        errorMessage =
+          'Ocurrió un error de conexión. Por favor, verifica tu internet o intenta de nuevo más tarde.';
       } else if (error.message) {
         errorMessage = error.message; // Fallback to generic message if no code or network error
       }
@@ -58,19 +69,21 @@ const OtpVerificationScreen = () => {
 
   const LoadingIndicator = (props: any) => (
     <View style={[props.style, styles.indicator]}>
-      <Spinner size='small'/>
+      <Spinner size="small" />
     </View>
   );
 
   return (
     <SafeAreaView style={{ flex: 1 }}>
       <Layout style={styles.container}>
-        <Text category='h1' style={styles.title} testID="otp-verification-title">Verificar Mail</Text>
+        <Text category="h1" style={styles.title} testID="otp-verification-title">
+          Verificar Mail
+        </Text>
         <Text style={styles.subtitle}>Ingresa el código de 6 dígitos enviado a:</Text>
         <Text style={styles.subtitle}>{email}</Text>
         <Input
           value={otp}
-          placeholder='Ingresa el código'
+          placeholder="Ingresa el código"
           onChangeText={setOtp}
           style={styles.input}
           keyboardType="number-pad"
@@ -78,9 +91,9 @@ const OtpVerificationScreen = () => {
           testID="otp-input"
           disabled={loading}
         />
-        <Button 
-          style={styles.button} 
-          onPress={onVerifyPress} 
+        <Button
+          style={styles.button}
+          onPress={onVerifyPress}
           testID="verify-otp-button"
           disabled={loading}
           accessoryLeft={loading ? LoadingIndicator : undefined}

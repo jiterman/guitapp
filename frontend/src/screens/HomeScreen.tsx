@@ -16,13 +16,13 @@ const HomeScreen = () => {
   return (
     <SafeAreaView style={{ flex: 1 }}>
       <Layout style={styles.container}>
-        <Text category='h1' style={styles.title}>Bienvenido</Text>
-        <Text category='h6' style={styles.email}>{email}</Text>
-        <Button 
-          style={styles.button} 
-          status='danger' 
-          onPress={onLogoutPress}
-        >
+        <Text category="h1" style={styles.title}>
+          Bienvenido
+        </Text>
+        <Text category="h6" style={styles.email}>
+          {email}
+        </Text>
+        <Button style={styles.button} status="danger" onPress={onLogoutPress}>
           Cerrar Sesión
         </Button>
       </Layout>

@@ -1,0 +1,26 @@
+#!/bin/sh
+
+# Pre-commit hook to auto-format code
+
+echo "Running code formatters..."
+
+# Format Backend (Java with Spotless)
+echo "→ Formatting backend (Spotless)..."
+cd backend || exit 1
+./gradlew spotlessApply --quiet
+cd ..
+
+# Format Frontend (TypeScript/React with Prettier)
+echo "→ Formatting frontend (Prettier)..."
+cd frontend || exit 1
+npm run format --silent
+cd ..
+
+# Check if there were any formatting changes
+if [ -n "$(git diff --name-only)" ]; then
+    echo "Code was formatted. Adding changes..."
+    git add -u
+fi
+
+echo "✓ Code formatting complete"
+exit 0
