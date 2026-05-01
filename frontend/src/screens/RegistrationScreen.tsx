@@ -1,13 +1,9 @@
 import React from 'react';
-import { SafeAreaView, Alert, View } from 'react-native';
+import { SafeAreaView, Alert, View, Image, TouchableOpacity } from 'react-native';
 import { Button, Layout, Text, Input, Icon, Spinner } from '@ui-kitten/components';
-import { StyleSheet } from 'react-native';
 import { router } from 'expo-router';
 import { authService } from '../services/authService';
-
-const EmailIcon = (props: any) => <Icon {...props} name="email" />;
-
-const LockIcon = (props: any) => <Icon {...props} name="lock" />;
+import { loginStyles as styles } from '../styles/loginStyles';
 
 const RegistrationScreen = () => {
   const [email, setEmail] = React.useState('');
@@ -29,7 +25,11 @@ const RegistrationScreen = () => {
   const renderPasswordIcon = (props: any, field: 'password' | 'confirmPassword') => (
     <Icon
       {...props}
-      name={(field === 'password' ? passwordVisible : confirmPasswordVisible) ? 'eye-off' : 'eye'}
+      name={
+        (field === 'password' ? passwordVisible : confirmPasswordVisible)
+          ? 'eye-off-outline'
+          : 'eye-outline'
+      }
       onPress={() => onPasswordIconPress(field)}
     />
   );
@@ -136,55 +136,97 @@ const RegistrationScreen = () => {
   };
 
   return (
-    <SafeAreaView style={{ flex: 1 }}>
+    <SafeAreaView style={styles.safeArea}>
       <Layout style={styles.container}>
+        <View style={styles.iconContainer}>
+          <Image
+            // eslint-disable-next-line @typescript-eslint/no-require-imports
+            source={require('../../assets/images/logotipo_transparent.png')}
+            style={styles.logoImage}
+            resizeMode="contain"
+          />
+        </View>
+
         <Text category="h1" style={styles.title} testID="registration-title">
-          Registro
+          Unite a Guitapp
         </Text>
-        <Input
-          value={email}
-          placeholder="Email"
-          onChangeText={setEmail}
-          style={styles.input}
-          accessoryLeft={EmailIcon}
-          keyboardType="email-address"
-          autoCapitalize="none"
-          disabled={loading}
-        />
-        <Input
-          value={password}
-          placeholder="Password"
-          onChangeText={setPassword}
-          style={styles.input}
-          accessoryLeft={LockIcon}
-          secureTextEntry={!passwordVisible}
-          disabled={loading}
-          accessoryRight={props => renderPasswordIcon(props, 'password')}
-        />
-        <Input
-          value={confirmPassword}
-          placeholder="Confirm Password"
-          onChangeText={setConfirmPassword}
-          style={styles.input}
-          accessoryLeft={LockIcon}
-          secureTextEntry={!confirmPasswordVisible}
-          disabled={loading}
-          accessoryRight={props => renderPasswordIcon(props, 'confirmPassword')}
-        />
-        <Button
-          style={styles.button}
-          onPress={onRegisterPress}
-          testID="register-button"
-          disabled={loading}
+        <Text category="s1" style={styles.subtitle}>
+          ¡Crea tu cuenta hoy!
+        </Text>
+
+        <View style={styles.card}>
+          <Text style={styles.label}>Email</Text>
+          <Input
+            value={email}
+            placeholder="tu@email.com"
+            onChangeText={setEmail}
+            style={styles.input}
+            textStyle={styles.inputText}
+            keyboardType="email-address"
+            autoCapitalize="none"
+            disabled={loading}
+          />
+
+          <Text style={styles.label}>Contraseña</Text>
+          <Input
+            value={password}
+            placeholder="********"
+            onChangeText={setPassword}
+            style={styles.input}
+            textStyle={styles.inputText}
+            secureTextEntry={!passwordVisible}
+            disabled={loading}
+            accessoryRight={props => renderPasswordIcon(props, 'password')}
+          />
+
+          <Text style={styles.label}>Confirmar Contraseña</Text>
+          <Input
+            value={confirmPassword}
+            placeholder="********"
+            onChangeText={setConfirmPassword}
+            style={styles.input}
+            textStyle={styles.inputText}
+            secureTextEntry={!confirmPasswordVisible}
+            disabled={loading}
+            accessoryRight={props => renderPasswordIcon(props, 'confirmPassword')}
+          />
+
+          <Button
+            style={styles.button}
+            onPress={onRegisterPress}
+            testID="register-button"
+            disabled={loading}
+          >
+            {() => (
+              <Text style={styles.buttonText}>{loading ? 'Registrando...' : 'Registrarse'}</Text>
+            )}
+          </Button>
+        </View>
+
+        <TouchableOpacity
+          onPress={() => router.push('/login')}
+          style={styles.registerLinkContainer}
         >
-          Registrarse
-        </Button>
+          <Text style={styles.registerLinkText}>¿Ya tenés cuenta? Ingresá</Text>
+        </TouchableOpacity>
       </Layout>
 
       {showLoadingPopup && (
-        <View style={styles.loadingOverlay}>
+        <View
+          style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.5)',
+            justifyContent: 'center',
+            alignItems: 'center',
+            zIndex: 999,
+          }}
+        >
           <Spinner size="giant" />
-          <Text category="h6" style={styles.loadingText}>
+          <Text category="h6" style={{ marginTop: 15, color: '#ffffff' }}>
             Generando usuario...
           </Text>
         </View>
@@ -192,47 +234,5 @@ const RegistrationScreen = () => {
     </SafeAreaView>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 20,
-    backgroundColor: '#f4f7f6', // Background color from guidelines
-  },
-  title: {
-    marginBottom: 30,
-    color: '#2c3e50', // Text Primary color
-  },
-  input: {
-    width: '100%',
-    marginBottom: 15,
-    borderRadius: 8,
-    borderColor: '#bdc3c7', // Input border color
-    backgroundColor: '#ffffff', // Surface color
-  },
-  button: {
-    width: '100%',
-    borderRadius: 8,
-    backgroundColor: '#3498db', // Primary color
-    borderColor: '#3498db', // Primary color
-  },
-  loadingOverlay: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    zIndex: 999,
-  },
-  loadingText: {
-    marginTop: 15,
-    color: '#ffffff',
-  },
-});
 
 export default RegistrationScreen;

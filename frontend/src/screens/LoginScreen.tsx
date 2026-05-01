@@ -1,13 +1,10 @@
 import React, { useState } from 'react';
-import { SafeAreaView, Alert, View, TouchableOpacity } from 'react-native';
+import { SafeAreaView, Alert, View, TouchableOpacity, Image } from 'react-native';
 import { Button, Layout, Text, Input, Icon } from '@ui-kitten/components';
 import { router } from 'expo-router';
 import { authService } from '../services/authService';
 import { validateEmail, validatePassword } from '../utils/validation';
 import { loginStyles as styles } from '../styles/loginStyles';
-
-const EmailIcon = (props: any) => <Icon {...props} name="email-outline" />;
-const LockIcon = (props: any) => <Icon {...props} name="lock-outline" />;
 
 const LoginScreen = () => {
   const [email, setEmail] = useState('');
@@ -78,18 +75,23 @@ const LoginScreen = () => {
     <SafeAreaView style={styles.safeArea}>
       <Layout style={styles.container}>
         <View style={styles.iconContainer}>
-          <Text style={styles.iconText}>💰</Text>
+          <Image
+            // eslint-disable-next-line @typescript-eslint/no-require-imports
+            source={require('../../assets/images/logotipo_transparent.png')}
+            style={styles.logoImage}
+            resizeMode="contain"
+          />
         </View>
 
         <Text category="h1" style={styles.title}>
-          Hey, ¡bienvenido de nuevo! 👋
+          ¡Hola, Bienvenido!
         </Text>
         <Text category="s1" style={styles.subtitle}>
           ¿Listo para ver tus finanzas?
         </Text>
 
         <View style={styles.card}>
-          <Text style={styles.label}>Tu email</Text>
+          <Text style={styles.label}>Ingresá tu email</Text>
           <Input
             value={email}
             placeholder="tu@email.com"
@@ -98,6 +100,7 @@ const LoginScreen = () => {
               if (emailError) setEmailError(null);
             }}
             style={styles.input}
+            textStyle={styles.inputText}
             status={emailError ? 'danger' : 'basic'}
             keyboardType="email-address"
             autoCapitalize="none"
@@ -105,10 +108,10 @@ const LoginScreen = () => {
           />
           {emailError && <Text style={styles.errorText}>{emailError}</Text>}
 
-          <Text style={styles.label}>Tu contraseña (mantenla en secreto 😉)</Text>
+          <Text style={styles.label}>Ingresá tu contraseña</Text>
           <Input
             value={password}
-            placeholder="........"
+            placeholder="********"
             onChangeText={text => {
               setPassword(text);
               if (passwordError) setPasswordError(null);
@@ -126,19 +129,15 @@ const LoginScreen = () => {
           </TouchableOpacity>
 
           <Button style={styles.button} onPress={onLoginPress} disabled={loading}>
-            {() => <Text style={styles.buttonText}>{loading ? 'Iniciando...' : '¡Vamos! 🚀'}</Text>}
+            {() => <Text style={styles.buttonText}>{loading ? 'Iniciando...' : 'Ingresar'}</Text>}
           </Button>
-
-          <View style={styles.infoBox}>
-            <Text style={styles.infoText}>Tus datos están seguros 🔒</Text>
-          </View>
         </View>
 
         <TouchableOpacity
           onPress={() => router.push('/register')}
           style={styles.registerLinkContainer}
         >
-          <Text style={styles.registerLinkText}>¿No tienes cuenta? Únete a nosotros ✨</Text>
+          <Text style={styles.registerLinkText}>¿No tenés cuenta? Unite!</Text>
         </TouchableOpacity>
       </Layout>
     </SafeAreaView>

@@ -13,16 +13,13 @@ export const loginStyles = StyleSheet.create({
     backgroundColor: '#E6F2FC', // Matches safe area
   },
   iconContainer: {
-    width: 80,
-    height: 80,
-    backgroundColor: '#FFCC00', // Yellow
-    borderRadius: 20,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 20,
   },
-  iconText: {
-    fontSize: 40,
+  logoImage: {
+    width: 250,
+    height: 250,
   },
   title: {
     color: '#003366', // Dark blue
@@ -34,6 +31,7 @@ export const loginStyles = StyleSheet.create({
     color: '#006699', // Lighter blue
     marginBottom: 30,
     textAlign: 'center',
+    fontSize: 20,
   },
   card: {
     backgroundColor: '#FFFFFF',
@@ -51,26 +49,30 @@ export const loginStyles = StyleSheet.create({
     fontWeight: '600',
     marginBottom: 5,
     marginTop: 10,
+    fontSize: 16,
   },
   input: {
     width: '100%',
     marginBottom: 5, // Less margin since we have inline errors
     borderRadius: 10,
     backgroundColor: '#FFFFFF',
-    borderColor: '#99CCFF', // Light blue border
+    //borderColor: '#99CCFF', // Light blue borders
+  },
+  inputText: {
+    fontSize: 16,
   },
   errorText: {
     color: '#FF3333',
-    fontSize: 12,
+    fontSize: 16,
     marginBottom: 10,
     marginLeft: 5,
   },
   forgotPasswordText: {
     color: '#0088CC',
-    textAlign: 'right',
+    textAlign: 'center',
     marginTop: 5,
     marginBottom: 20,
-    fontSize: 14,
+    fontSize: 16,
   },
   button: {
     width: '100%',
@@ -78,10 +80,12 @@ export const loginStyles = StyleSheet.create({
     backgroundColor: '#FFBB00',
     borderColor: '#FFBB00',
     paddingVertical: 12,
+    marginTop: 20,
   },
   buttonText: {
     color: '#000000',
     fontWeight: 'bold',
+    fontSize: 16,
   },
   infoBox: {
     backgroundColor: '#F0F8FF',
@@ -99,6 +103,6 @@ export const loginStyles = StyleSheet.create({
   },
   registerLinkText: {
     color: '#006699',
-    fontSize: 14,
+    fontSize: 16,
   },
 });

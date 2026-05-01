@@ -1,9 +1,9 @@
 import React from 'react';
-import { SafeAreaView, Alert, View } from 'react-native';
-import { Button, Layout, Text, Input, Spinner } from '@ui-kitten/components';
-import { StyleSheet } from 'react-native';
+import { SafeAreaView, Alert, View, Image, TouchableOpacity } from 'react-native';
+import { Button, Layout, Text, Input } from '@ui-kitten/components';
 import { router, useLocalSearchParams } from 'expo-router';
 import { authService } from '../services/authService';
+import { loginStyles as styles } from '../styles/loginStyles';
 
 const OtpVerificationScreen = () => {
   const { email } = useLocalSearchParams<{ email: string }>();
@@ -67,77 +67,64 @@ const OtpVerificationScreen = () => {
     }
   };
 
-  const LoadingIndicator = (props: any) => (
-    <View style={[props.style, styles.indicator]}>
-      <Spinner size="small" />
-    </View>
-  );
-
   return (
-    <SafeAreaView style={{ flex: 1 }}>
+    <SafeAreaView style={styles.safeArea}>
       <Layout style={styles.container}>
+        <View style={styles.iconContainer}>
+          <Image
+            // eslint-disable-next-line @typescript-eslint/no-require-imports
+            source={require('../../assets/images/logotipo_transparent.png')}
+            style={styles.logoImage}
+            resizeMode="contain"
+          />
+        </View>
+
         <Text category="h1" style={styles.title} testID="otp-verification-title">
           Verificar Mail
         </Text>
-        <Text style={styles.subtitle}>Ingresa el código de 6 dígitos enviado a:</Text>
-        <Text style={styles.subtitle}>{email}</Text>
-        <Input
-          value={otp}
-          placeholder="Ingresa el código"
-          onChangeText={setOtp}
-          style={styles.input}
-          keyboardType="number-pad"
-          maxLength={6}
-          testID="otp-input"
-          disabled={loading}
-        />
-        <Button
-          style={styles.button}
-          onPress={onVerifyPress}
-          testID="verify-otp-button"
-          disabled={loading}
-          accessoryLeft={loading ? LoadingIndicator : undefined}
+        <Text category="s1" style={styles.subtitle}>
+          Ingresá el código de 6 dígitos
+        </Text>
+
+        <View style={styles.card}>
+          <View style={styles.infoBox}>
+            <Text style={styles.infoText}>Enviamos un código a:</Text>
+            <Text style={[styles.infoText, { fontWeight: 'bold' }]}>{email}</Text>
+          </View>
+
+          <Text style={styles.label}>Código OTP</Text>
+          <Input
+            value={otp}
+            placeholder="123456"
+            onChangeText={setOtp}
+            style={styles.input}
+            textStyle={styles.inputText}
+            keyboardType="number-pad"
+            maxLength={6}
+            testID="otp-input"
+            disabled={loading}
+          />
+          <Button
+            style={styles.button}
+            onPress={onVerifyPress}
+            testID="verify-otp-button"
+            disabled={loading}
+          >
+            {() => (
+              <Text style={styles.buttonText}>{loading ? 'Verificando...' : 'Verificar'}</Text>
+            )}
+          </Button>
+        </View>
+
+        <TouchableOpacity
+          onPress={() => router.push('/login')}
+          style={styles.registerLinkContainer}
         >
-          {loading ? '' : 'Verificar'}
-        </Button>
+          <Text style={styles.registerLinkText}>Volver al inicio</Text>
+        </TouchableOpacity>
       </Layout>
     </SafeAreaView>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 20,
-    backgroundColor: '#f4f7f6', // Background color from guidelines
-  },
-  title: {
-    marginBottom: 10,
-    color: '#2c3e50', // Text Primary color
-  },
-  subtitle: {
-    marginBottom: 30,
-    color: '#7f8c8d', // Text Secondary color
-  },
-  input: {
-    width: '100%',
-    marginBottom: 15,
-    borderRadius: 8,
-    borderColor: '#bdc3c7', // Input border color
-    backgroundColor: '#ffffff', // Surface color
-  },
-  button: {
-    width: '100%',
-    borderRadius: 8,
-    backgroundColor: '#3498db', // Primary color
-    borderColor: '#3498db', // Primary color
-  },
-  indicator: {
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-});
 
 export default OtpVerificationScreen;
