@@ -1,0 +1,104 @@
+import { StyleSheet } from 'react-native';
+
+export const loginStyles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: '#E6F2FC', // Light blue background matching mockup
+  },
+  container: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+    backgroundColor: '#E6F2FC', // Matches safe area
+  },
+  iconContainer: {
+    width: 80,
+    height: 80,
+    backgroundColor: '#FFCC00', // Yellow
+    borderRadius: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  iconText: {
+    fontSize: 40,
+  },
+  title: {
+    color: '#003366', // Dark blue
+    fontWeight: 'bold',
+    marginBottom: 5,
+    textAlign: 'center',
+  },
+  subtitle: {
+    color: '#006699', // Lighter blue
+    marginBottom: 30,
+    textAlign: 'center',
+  },
+  card: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 20,
+    padding: 25,
+    width: '100%',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 10,
+    elevation: 5,
+  },
+  label: {
+    color: '#003366',
+    fontWeight: '600',
+    marginBottom: 5,
+    marginTop: 10,
+  },
+  input: {
+    width: '100%',
+    marginBottom: 5, // Less margin since we have inline errors
+    borderRadius: 10,
+    backgroundColor: '#FFFFFF',
+    borderColor: '#99CCFF', // Light blue border
+  },
+  errorText: {
+    color: '#FF3333',
+    fontSize: 12,
+    marginBottom: 10,
+    marginLeft: 5,
+  },
+  forgotPasswordText: {
+    color: '#0088CC',
+    textAlign: 'right',
+    marginTop: 5,
+    marginBottom: 20,
+    fontSize: 14,
+  },
+  button: {
+    width: '100%',
+    borderRadius: 12,
+    backgroundColor: '#FFBB00',
+    borderColor: '#FFBB00',
+    paddingVertical: 12,
+  },
+  buttonText: {
+    color: '#000000',
+    fontWeight: 'bold',
+  },
+  infoBox: {
+    backgroundColor: '#F0F8FF',
+    borderRadius: 10,
+    padding: 10,
+    marginTop: 20,
+    alignItems: 'center',
+  },
+  infoText: {
+    color: '#006699',
+    fontSize: 12,
+  },
+  registerLinkContainer: {
+    marginTop: 30,
+  },
+  registerLinkText: {
+    color: '#006699',
+    fontSize: 14,
+  },
+});

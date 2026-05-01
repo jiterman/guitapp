@@ -1,12 +1,12 @@
 # Implementation Plan: Redesign Login Screen
 
-## Phase 1: Validation Utilities
+## Phase 1: Validation Utilities [checkpoint: c83f91a]
 - [x] Task: Create test file `frontend/__tests__/validation.test.ts` for email and password validation rules (Red Phase). [c545d02]
 - [x] Task: Implement `frontend/src/utils/validation.ts` to make tests pass (Green Phase). [5281b1a]
-- [~] Task: Conductor - User Manual Verification 'Validation Utilities' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'Validation Utilities' (Protocol in workflow.md)
 
 ## Phase 2: UI Implementation and Styling
-- [ ] Task: Create `frontend/src/styles/loginStyles.ts` to centralize all styles for the login screen.
+- [~] Task: Create `frontend/src/styles/loginStyles.ts` to centralize all styles for the login screen.
 - [ ] Task: Refactor `frontend/src/screens/LoginScreen.tsx`:
     - [ ] Import and apply styles from `loginStyles.ts`.
     - [ ] Update UI components (header, icon, inputs, buttons) to match the mockup.
