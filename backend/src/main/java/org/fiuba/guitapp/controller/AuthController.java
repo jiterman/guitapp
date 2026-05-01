@@ -2,6 +2,7 @@ package org.fiuba.guitapp.controller;
 
 import java.util.Map;
 
+import org.fiuba.guitapp.dto.LoginRequest;
 import org.fiuba.guitapp.dto.RegisterRequest;
 import org.fiuba.guitapp.dto.VerifyRegistrationRequest;
 import org.fiuba.guitapp.service.AuthService;
@@ -31,5 +32,11 @@ public class AuthController {
     public ResponseEntity<?> verifyRegistration(@Valid @RequestBody VerifyRegistrationRequest request) {
         authService.verifyRegistration(request.email(), request.otp());
         return ResponseEntity.ok(Map.of("message", "Account activated successfully. You can now log in."));
+    }
+
+    @PostMapping("/login")
+    public ResponseEntity<?> login(@Valid @RequestBody LoginRequest request) {
+        Map<String, Object> response = authService.login(request.email(), request.password());
+        return ResponseEntity.ok(response);
     }
 }

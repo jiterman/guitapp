@@ -1,4 +1,5 @@
 import Constants from 'expo-constants';
+import * as SecureStore from 'expo-secure-store';
 
 // Define a custom error type to include the code
 interface BackendError extends Error {
@@ -71,5 +72,38 @@ export const authService = {
     }
 
     return response.json();
+  },
+
+  login: async (email: string, password: string) => {
+    const response = await fetch(`${API_URL}/api/auth/login`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ email, password }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      const errorToThrow: BackendError = new Error(errorData.message || 'Login failed');
+      if (errorData.code) {
+        errorToThrow.code = errorData.code;
+      }
+      throw errorToThrow;
+    }
+
+    const data = await response.json();
+    if (data.token) {
+      await SecureStore.setItemAsync('userToken', data.token);
+    }
+    return data;
+  },
+
+  getToken: async () => {
+    return await SecureStore.getItemAsync('userToken');
+  },
+
+  removeToken: async () => {
+    await SecureStore.deleteItemAsync('userToken');
   },
 };

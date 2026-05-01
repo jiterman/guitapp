@@ -8,6 +8,8 @@ import org.fiuba.guitapp.exception.ErrorCode;
 import org.fiuba.guitapp.model.User;
 import org.fiuba.guitapp.model.UserStatus;
 import org.fiuba.guitapp.repository.UserRepository;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,6 +24,8 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final OtpService otpService;
     private final EmailService emailService;
+    private final JwtService jwtService;
+    private final AuthenticationManager authenticationManager;
 
     @Transactional
     public Map<String, Object> register(String email, String password) {
@@ -75,5 +79,12 @@ public class AuthService {
         user.setVerificationOtp(null);
         user.setOtpCreatedAt(null);
         userRepository.save(user);
+    }
+
+    public Map<String, Object> login(String email, String password) {
+        authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(email, password));
+        String token = jwtService.generateToken(email);
+        return Map.of("token", token);
     }
 }

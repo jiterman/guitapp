@@ -20,7 +20,7 @@ const OtpVerificationScreen = () => {
     try {
       await authService.verifyOtp(email, otp);
       Alert.alert('Éxito', '¡Cuenta verificada exitosamente!', [
-        { text: 'OK', onPress: () => router.push('/register') }, // Redirect to register for now as login is out of scope
+        { text: 'OK', onPress: () => router.push('/login') },
       ]);
     } catch (error: any) {
       // Cast to any to access error.code
