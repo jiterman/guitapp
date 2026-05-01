@@ -2,8 +2,8 @@
 
 ## Phase 1: Validation Utilities
 - [x] Task: Create test file `frontend/__tests__/validation.test.ts` for email and password validation rules (Red Phase). [c545d02]
-- [~] Task: Implement `frontend/src/utils/validation.ts` to make tests pass (Green Phase).
-- [ ] Task: Conductor - User Manual Verification 'Validation Utilities' (Protocol in workflow.md)
+- [x] Task: Implement `frontend/src/utils/validation.ts` to make tests pass (Green Phase). [5281b1a]
+- [~] Task: Conductor - User Manual Verification 'Validation Utilities' (Protocol in workflow.md)
 
 ## Phase 2: UI Implementation and Styling
 - [ ] Task: Create `frontend/src/styles/loginStyles.ts` to centralize all styles for the login screen.
