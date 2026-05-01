@@ -1,7 +1,7 @@
 # Implementation Plan: Redesign Login Screen
 
 ## Phase 1: Validation Utilities
-- [ ] Task: Create test file `frontend/__tests__/validation.test.ts` for email and password validation rules (Red Phase).
+- [~] Task: Create test file `frontend/__tests__/validation.test.ts` for email and password validation rules (Red Phase).
 - [ ] Task: Implement `frontend/src/utils/validation.ts` to make tests pass (Green Phase).
 - [ ] Task: Conductor - User Manual Verification 'Validation Utilities' (Protocol in workflow.md)
 

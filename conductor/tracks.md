@@ -9,5 +9,5 @@ This file tracks all major tracks for the project. Each track has its own detail
 
 ---
 
-- [ ] **Track: Redesign the login screen UI to match the new mockup.**
+- [~] **Track: Redesign the login screen UI to match the new mockup.**
 *Link: [./tracks/login_redesign_20260430/](./tracks/login_redesign_20260430/)*
