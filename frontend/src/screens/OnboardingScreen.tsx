@@ -5,6 +5,7 @@ import { router } from 'expo-router';
 import { userService } from '../services/userService';
 import { validateFirstName } from '../utils/validation';
 import { loginStyles as styles } from '../styles/loginStyles';
+import { OnboardingError } from '../types/errors';
 
 const OnboardingScreen = () => {
   const [step, setStep] = useState(1);
@@ -57,7 +58,8 @@ const OnboardingScreen = () => {
     try {
       await userService.completeOnboarding(firstName, fixed, variable);
       router.replace('/home');
-    } catch (error: any) {
+    } catch (err) {
+      const error = err as OnboardingError;
       Alert.alert('Error', error.message || 'Ocurrió un error al guardar los datos.');
     } finally {
       setLoading(false);

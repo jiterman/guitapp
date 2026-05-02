@@ -32,14 +32,7 @@ describe('VerificationSuccessScreen', () => {
 
     expect(getByTestId('success-subtitle')).toBeDefined();
     expect(
-      getByText('Ya podés ingresar a la aplicación para gestionar tus gastos de forma inteligente')
-    ).toBeDefined();
-
-    expect(getByTestId('success-text')).toBeDefined();
-    expect(
-      getByText(
-        'Hacé click en el botón Ingresar. Te llevará a la pantalla de Login para que puedas ingresar'
-      )
+      getByText('Tocá el botón Ingresar para ir a la pantalla de Inicio de Sesión.')
     ).toBeDefined();
 
     expect(getByTestId('login-button')).toBeDefined();

@@ -31,3 +31,49 @@ To ensure consistency and quality across the codebase, specialized skill files h
 3. **Implement:** Follow the patterns, naming conventions, and architectural standards described in the skill files.
 4. **Test:** Add unit and integration tests to verify your changes, as mandated by the guidelines.
 5. **Lint & Format:** Ensure all code passes formatting and linting checks (Spotless for backend, ESLint/Prettier for frontend).
+6. **Pre-Commit Verification:** Before creating any commit, ALWAYS verify:
+   - ✅ All backend tests pass: `cd backend && ./gradlew test`
+   - ✅ All frontend tests pass: `cd frontend && npm test -- --watchAll=false`
+   - ✅ Backend coverage meets requirements: 
+     - Overall project coverage: **≥80%**
+     - New/modified code (patch): **≥90%** (minimum 85% with threshold)
+     - Check Jacoco report at `backend/build/reports/jacoco/test/html/index.html`
+   - ✅ Lint passes for both backend and frontend
+   - ❌ NEVER commit without running these checks first
+
+## Pre-Commit Checklist
+
+Before running `git commit`, ensure:
+
+```bash
+# Backend checks
+cd backend
+./gradlew clean test jacocoTestReport
+./gradlew spotlessApply
+
+# Frontend checks  
+cd ../frontend
+npm test -- --watchAll=false
+npm run lint
+
+# Verify coverage reports
+# Backend: open backend/build/reports/jacoco/test/html/index.html
+# Review that your changes have adequate test coverage
+```
+
+If any of these steps fail, DO NOT commit. Fix the issues first.
+
+## Test Coverage Requirements
+
+Based on `codecov.yml` configuration:
+
+- **Project Coverage:** Minimum **80%** overall coverage (no threshold)
+- **Patch Coverage (New/Modified Code):** Minimum **90%** coverage (with 5% threshold = 85% minimum)
+- **Backend:** Tests are run with Jacoco coverage reporting enabled
+- **Codecov:** All PRs will be checked by Codecov bot - PRs failing these requirements will not be merged
+
+### Ignored Files (No coverage required):
+- `**/GuitappApplication.java`
+- `**/*Application.java`
+- `**/config/WebConfig.java`
+- `**/config/SecurityConfig.java`

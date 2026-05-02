@@ -1,9 +1,10 @@
 import React from 'react';
-import { SafeAreaView, Alert, View, Image, TouchableOpacity } from 'react-native';
+import { SafeAreaView, Alert, View, Image } from 'react-native';
 import { Button, Layout, Text, Input, Spinner } from '@ui-kitten/components';
 import { router, useLocalSearchParams } from 'expo-router';
 import { authService } from '../services/authService';
 import { loginStyles as styles } from '../styles/loginStyles';
+import { AuthError } from '../types/errors';
 
 const OtpVerificationScreen = () => {
   const { email } = useLocalSearchParams<{ email: string }>();
@@ -22,8 +23,8 @@ const OtpVerificationScreen = () => {
     try {
       await authService.verifyOtp(email, otp);
       router.push('/verification-success');
-    } catch (error: any) {
-      // Cast to any to access error.code
+    } catch (err) {
+      const error = err as AuthError;
       let errorMessage =
         'Ocurrió un error inesperado durante la verificación. Por favor, inténtalo de nuevo.';
       const errorTitle = 'Verificación Fallida';

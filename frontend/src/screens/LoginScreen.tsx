@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
 import { SafeAreaView, Alert, View, TouchableOpacity, Image } from 'react-native';
-import { Button, Layout, Text, Input, Icon } from '@ui-kitten/components';
+import { Button, Layout, Text, Input, Icon, IconProps } from '@ui-kitten/components';
 import { router } from 'expo-router';
 import { authService } from '../services/authService';
 import { userService } from '../services/userService';
 import { validateEmail, validatePassword } from '../utils/validation';
 import { loginStyles as styles } from '../styles/loginStyles';
+import { AuthError } from '../types/errors';
 
 const LoginScreen = () => {
   const [email, setEmail] = useState('');
@@ -20,7 +21,7 @@ const LoginScreen = () => {
     setPasswordVisible(!passwordVisible);
   };
 
-  const renderPasswordIcon = (props: any) => (
+  const renderPasswordIcon = (props: IconProps) => (
     <Icon
       {...props}
       name={passwordVisible ? 'eye-off-outline' : 'eye-outline'}
@@ -62,7 +63,8 @@ const LoginScreen = () => {
       } else {
         router.replace('/onboarding');
       }
-    } catch (error: any) {
+    } catch (err) {
+      const error = err as AuthError;
       let errorMessage =
         'Alguno de los campos ingresados no es correcto. Verificá los datos ingresados.';
       if (
