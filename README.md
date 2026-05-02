@@ -4,7 +4,7 @@ Aplicación de gestión de gastos para el Trabajo Práctico de la facultad.
 
 ## Tecnologías
 
-- **Frontend**: React Native con [Expo](https://expo.dev/) (TypeScript).
+- **Frontend**: React Native con [Expo](https://expo.dev/) SDK 54, React 19 (TypeScript).
 - **Backend**: Java 21 con Spring Boot 3, Gradle y JPA.
 - **Base de Datos**: PostgreSQL.
 - **Despliegue**: Render.

@@ -14,7 +14,7 @@ To ensure consistency and quality across the codebase, specialized skill files h
 - **Language:** All code (variable names, classes, methods, documentation, and commits) must be in **English**.
 - **Architecture:** 
   - **Backend:** Follow a standard layered architecture (Controller, Service, Repository, Entity/Model).
-  - **Frontend:** Use functional components, React Hooks, and maintain strong typing with TypeScript.
+  - **Frontend:** Use functional components, React Hooks, and maintain strong typing with TypeScript. The project uses **React 19** and **Expo SDK 54**.
 - **Lombok Usage (Backend):**
   - **Entities/Models with fields:** Use `@Getter` and `@Setter` annotations instead of manual getter/setter methods
   - **Classes with dependency injection:** Use `@RequiredArgsConstructor` for constructor injection of `final` fields
