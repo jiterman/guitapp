@@ -15,6 +15,12 @@ To ensure consistency and quality across the codebase, specialized skill files h
 - **Architecture:** 
   - **Backend:** Follow a standard layered architecture (Controller, Service, Repository, Entity/Model).
   - **Frontend:** Use functional components, React Hooks, and maintain strong typing with TypeScript.
+- **Lombok Usage (Backend):**
+  - **Entities/Models with fields:** Use `@Getter` and `@Setter` annotations instead of manual getter/setter methods
+  - **Classes with dependency injection:** Use `@RequiredArgsConstructor` for constructor injection of `final` fields
+  - **DTOs:** Prefer Java Records over classes with Lombok annotations
+  - **Utility classes:** Do not use Lombok if the class has no injected dependencies or mutable fields
+  - **Exception:** Only write manual getters/setters when implementing interfaces that require them (e.g., `UserDetails`)
 - **Verification:** Always run the project's build and linting tools before considering a task complete.
   - Backend: `./gradlew build` and `./gradlew spotlessApply`.
   - Frontend: `npm run lint` and `npm run format`.
@@ -75,5 +81,3 @@ Based on `codecov.yml` configuration:
 ### Ignored Files (No coverage required):
 - `**/GuitappApplication.java`
 - `**/*Application.java`
-- `**/config/WebConfig.java`
-- `**/config/SecurityConfig.java`

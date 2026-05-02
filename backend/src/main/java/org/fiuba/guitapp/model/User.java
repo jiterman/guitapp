@@ -19,7 +19,11 @@ import jakarta.persistence.Table;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import lombok.Getter;
+import lombok.Setter;
 
+@Setter
+@Getter
 @Entity
 @Table(name = "users")
 public class User implements UserDetails {
@@ -64,94 +68,6 @@ public class User implements UserDetails {
     private java.time.LocalDateTime otpCreatedAt;
 
     public User() {
-    }
-
-    public UUID getId() {
-        return id;
-    }
-
-    public void setId(UUID id) {
-        this.id = id;
-    }
-
-    public String getEmail() {
-        return email;
-    }
-
-    public void setEmail(String email) {
-        this.email = email;
-    }
-
-    public String getPassword() {
-        return password;
-    }
-
-    public void setPassword(String password) {
-        this.password = password;
-    }
-
-    public UserStatus getStatus() {
-        return status;
-    }
-
-    public void setStatus(UserStatus status) {
-        this.status = status;
-    }
-
-    public String getFirstName() {
-        return firstName;
-    }
-
-    public void setFirstName(String firstName) {
-        this.firstName = firstName;
-    }
-
-    public boolean isOnboardingCompleted() {
-        return onboardingCompleted;
-    }
-
-    public void setOnboardingCompleted(boolean onboardingCompleted) {
-        this.onboardingCompleted = onboardingCompleted;
-    }
-
-    public Integer getTargetFixedExpenses() {
-        return targetFixedExpenses;
-    }
-
-    public void setTargetFixedExpenses(Integer targetFixedExpenses) {
-        this.targetFixedExpenses = targetFixedExpenses;
-    }
-
-    public Integer getTargetVariableExpenses() {
-        return targetVariableExpenses;
-    }
-
-    public void setTargetVariableExpenses(Integer targetVariableExpenses) {
-        this.targetVariableExpenses = targetVariableExpenses;
-    }
-
-    public Integer getTargetSavings() {
-        return targetSavings;
-    }
-
-    public void setTargetSavings(Integer targetSavings) {
-        this.targetSavings = targetSavings;
-    }
-
-    public String getVerificationOtp() {
-        return verificationOtp;
-    }
-
-    public void setVerificationOtp(String verificationOtp) {
-        this.verificationOtp = verificationOtp;
-    }
-
-    public java.time.LocalDateTime getOtpCreatedAt() {
-        return otpCreatedAt;
-    }
-
-    public void setOtpCreatedAt(java.time.LocalDateTime otpCreatedAt) {
-        this.otpCreatedAt = otpCreatedAt;
     }
 
     @Override
