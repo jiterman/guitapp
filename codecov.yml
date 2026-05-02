@@ -12,8 +12,6 @@ coverage:
 ignore:
   - "**/GuitappApplication.java"
   - "**/*Application.java"
-  - "**/config/WebConfig.java"
-  - "**/config/SecurityConfig.java"
 
 comment:
   layout: "reach, diff, flags, files"

@@ -1,14 +1,16 @@
 import React from 'react';
-import { SafeAreaView, Alert, View, Image, TouchableOpacity } from 'react-native';
-import { Button, Layout, Text, Input } from '@ui-kitten/components';
+import { SafeAreaView, Alert, View, Image } from 'react-native';
+import { Button, Layout, Text, Input, Spinner } from '@ui-kitten/components';
 import { router, useLocalSearchParams } from 'expo-router';
 import { authService } from '../services/authService';
 import { loginStyles as styles } from '../styles/loginStyles';
+import { AuthError } from '../types/errors';
 
 const OtpVerificationScreen = () => {
   const { email } = useLocalSearchParams<{ email: string }>();
   const [otp, setOtp] = React.useState('');
   const [loading, setLoading] = React.useState(false);
+  const [showLoadingPopup, setShowLoadingPopup] = React.useState(false);
 
   const onVerifyPress = async () => {
     if (!otp || otp.length !== 6) {
@@ -17,13 +19,12 @@ const OtpVerificationScreen = () => {
     }
 
     setLoading(true);
+    setShowLoadingPopup(true);
     try {
       await authService.verifyOtp(email, otp);
-      Alert.alert('Éxito', '¡Cuenta verificada exitosamente!', [
-        { text: 'OK', onPress: () => router.push('/login') },
-      ]);
-    } catch (error: any) {
-      // Cast to any to access error.code
+      router.push('/verification-success');
+    } catch (err) {
+      const error = err as AuthError;
       let errorMessage =
         'Ocurrió un error inesperado durante la verificación. Por favor, inténtalo de nuevo.';
       const errorTitle = 'Verificación Fallida';
@@ -64,6 +65,7 @@ const OtpVerificationScreen = () => {
       Alert.alert(errorTitle, errorMessage);
     } finally {
       setLoading(false);
+      setShowLoadingPopup(false);
     }
   };
 
@@ -80,19 +82,17 @@ const OtpVerificationScreen = () => {
         </View>
 
         <Text category="h1" style={styles.title} testID="otp-verification-title">
-          Verificar Mail
+          Verificación de mail
         </Text>
-        <Text category="s1" style={styles.subtitle}>
-          Ingresá el código de 6 dígitos
+        <Text category="s1" style={styles.otpVerificationSubtitle}>
+          Enviamos un código de 6 dígitos a:
+        </Text>
+        <Text category="s1" style={styles.emailSubtitle}>
+          {email}
         </Text>
 
         <View style={styles.card}>
-          <View style={styles.infoBox}>
-            <Text style={styles.infoText}>Enviamos un código a:</Text>
-            <Text style={[styles.infoText, { fontWeight: 'bold' }]}>{email}</Text>
-          </View>
-
-          <Text style={styles.label}>Código OTP</Text>
+          <Text style={styles.label}>Ingresá el código</Text>
           <Input
             value={otp}
             placeholder="123456"
@@ -115,14 +115,28 @@ const OtpVerificationScreen = () => {
             )}
           </Button>
         </View>
-
-        <TouchableOpacity
-          onPress={() => router.push('/login')}
-          style={styles.registerLinkContainer}
-        >
-          <Text style={styles.registerLinkText}>Volver al inicio</Text>
-        </TouchableOpacity>
       </Layout>
+
+      {showLoadingPopup && (
+        <View
+          style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.5)',
+            justifyContent: 'center',
+            alignItems: 'center',
+            zIndex: 999,
+          }}
+        >
+          <Spinner size="giant" />
+          <Text category="h6" style={{ marginTop: 15, color: '#ffffff' }}>
+            Verificando cuenta...
+          </Text>
+        </View>
+      )}
     </SafeAreaView>
   );
 };

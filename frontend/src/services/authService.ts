@@ -21,10 +21,7 @@ export const API_URL = getApiUrl();
 
 export const authService = {
   register: async (email: string, password: string) => {
-    console.log('1. URL a la que le pego:', API_URL);
-
     try {
-      console.log('2. Iniciando fetch...');
       const response = await fetch(`${API_URL}/api/auth/register`, {
         method: 'POST',
         headers: {
@@ -32,8 +29,6 @@ export const authService = {
         },
         body: JSON.stringify({ email, password }),
       });
-
-      console.log('3. ¡El fetch terminó! La respuesta es:', response.status);
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
@@ -46,10 +41,7 @@ export const authService = {
 
       return response.json();
     } catch (error) {
-      // Si el fetch explota por red, va a caer directo acá
-      console.log('🚨 ERROR FATAL DE RED:', (error as Error).message);
-      console.log('Detalle completo:', error);
-      throw error; // Volvemos a lanzar el error por si la UI lo necesita
+      throw error;
     }
   },
 

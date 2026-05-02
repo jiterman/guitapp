@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
 import { SafeAreaView, Alert, View, TouchableOpacity, Image } from 'react-native';
-import { Button, Layout, Text, Input, Icon } from '@ui-kitten/components';
+import { Button, Layout, Text, Input, Icon, IconProps } from '@ui-kitten/components';
 import { router } from 'expo-router';
 import { authService } from '../services/authService';
+import { userService } from '../services/userService';
 import { validateEmail, validatePassword } from '../utils/validation';
 import { loginStyles as styles } from '../styles/loginStyles';
+import { AuthError } from '../types/errors';
 
 const LoginScreen = () => {
   const [email, setEmail] = useState('');
@@ -19,7 +21,7 @@ const LoginScreen = () => {
     setPasswordVisible(!passwordVisible);
   };
 
-  const renderPasswordIcon = (props: any) => (
+  const renderPasswordIcon = (props: IconProps) => (
     <Icon
       {...props}
       name={passwordVisible ? 'eye-off-outline' : 'eye-outline'}
@@ -52,10 +54,19 @@ const LoginScreen = () => {
     setLoading(true);
     try {
       await authService.login(email, password);
-      router.push({ pathname: '/home', params: { email } });
-    } catch (error: any) {
+
+      // Fetch user profile to check onboarding status
+      const profile = await userService.getProfile();
+
+      if (profile.onboardingCompleted) {
+        router.replace({ pathname: '/home', params: { email } });
+      } else {
+        router.replace('/onboarding');
+      }
+    } catch (err) {
+      const error = err as AuthError;
       let errorMessage =
-        'Alguno de los campos ingresados no es correcto. Verifica los datos ingresados.';
+        'Alguno de los campos ingresados no es correcto. Verificá los datos ingresados.';
       if (
         error.message &&
         (error.message.includes('Network request failed') ||
@@ -84,7 +95,7 @@ const LoginScreen = () => {
         </View>
 
         <Text category="h1" style={styles.title}>
-          ¡Hola, Bienvenido!
+          ¡Hola, bienvenido!
         </Text>
         <Text category="s1" style={styles.subtitle}>
           ¿Listo para ver tus finanzas?
@@ -126,6 +137,7 @@ const LoginScreen = () => {
 
           <TouchableOpacity onPress={handleForgotPassword}>
             <Text style={styles.forgotPasswordText}>¿Olvidaste tu contraseña?</Text>
+            <Text style={styles.forgotPasswordLink}>Recuperala tocando acá</Text>
           </TouchableOpacity>
 
           <Button style={styles.button} onPress={onLoginPress} disabled={loading}>
@@ -135,9 +147,11 @@ const LoginScreen = () => {
 
         <TouchableOpacity
           onPress={() => router.push('/register')}
-          style={styles.registerLinkContainer}
+          style={styles.footerLinkContainer}
         >
-          <Text style={styles.registerLinkText}>¿No tenés cuenta? Unite!</Text>
+          <Text style={styles.footerText}>
+            ¿No tenés cuenta? <Text style={styles.footerLink}>Unite tocando acá</Text>
+          </Text>
         </TouchableOpacity>
       </Layout>
     </SafeAreaView>

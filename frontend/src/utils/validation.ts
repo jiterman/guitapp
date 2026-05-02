@@ -15,3 +15,14 @@ export const validatePassword = (password: string): string | null => {
   }
   return null;
 };
+
+export const validateFirstName = (name: string): string | null => {
+  if (!name || name.trim() === '') {
+    return 'El nombre es obligatorio.';
+  }
+  const nameRegex = /^[a-zA-ZáéíóúÁÉÍÓÚñÑ]+$/;
+  if (!nameRegex.test(name)) {
+    return 'El nombre no debe contener espacios ni números.';
+  }
+  return null;
+};

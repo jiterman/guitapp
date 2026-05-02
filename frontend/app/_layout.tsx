@@ -24,6 +24,7 @@ export default function RootLayout() {
         <Stack screenOptions={{ headerShown: false }}>
           <Stack.Screen name="register" />
           <Stack.Screen name="verify-otp" />
+          <Stack.Screen name="onboarding" />
         </Stack>
         <StatusBar style="auto" />
       </ApplicationProvider>

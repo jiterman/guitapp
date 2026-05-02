@@ -1,9 +1,10 @@
 import React from 'react';
 import { SafeAreaView, Alert, View, Image, TouchableOpacity } from 'react-native';
-import { Button, Layout, Text, Input, Icon, Spinner } from '@ui-kitten/components';
+import { Button, Layout, Text, Input, Icon, Spinner, IconProps } from '@ui-kitten/components';
 import { router } from 'expo-router';
 import { authService } from '../services/authService';
 import { loginStyles as styles } from '../styles/loginStyles';
+import { AuthError } from '../types/errors';
 
 const RegistrationScreen = () => {
   const [email, setEmail] = React.useState('');
@@ -22,7 +23,7 @@ const RegistrationScreen = () => {
     }
   };
 
-  const renderPasswordIcon = (props: any, field: 'password' | 'confirmPassword') => (
+  const renderPasswordIcon = (props: IconProps, field: 'password' | 'confirmPassword') => (
     <Icon
       {...props}
       name={
@@ -90,9 +91,9 @@ const RegistrationScreen = () => {
           ]
         );
       }
-    } catch (error: any) {
-      // Using 'any' for now to easily access error.message and error.code
-      let errorMessage = 'Ocurrió un error inesperado. Por favor, inténtalo de nuevo.'; // Default Spanish error message
+    } catch (err) {
+      const error = err as AuthError;
+      let errorMessage = 'Ocurrió un error inesperado. Por favor, inténtalo de nuevo.';
       const errorTitle = 'Error de Registro';
 
       // Check for backend error codes
@@ -103,7 +104,7 @@ const RegistrationScreen = () => {
             break;
           case 'VALIDATION_FAILED':
             // For validation failures, the backend message might contain specific field errors
-            errorMessage = error.message;
+            errorMessage = error.message || errorMessage;
             break;
           case 'RATE_LIMIT_EXCEEDED':
             errorMessage =
@@ -203,11 +204,10 @@ const RegistrationScreen = () => {
           </Button>
         </View>
 
-        <TouchableOpacity
-          onPress={() => router.push('/login')}
-          style={styles.registerLinkContainer}
-        >
-          <Text style={styles.registerLinkText}>¿Ya tenés cuenta? Ingresá</Text>
+        <TouchableOpacity onPress={() => router.push('/login')} style={styles.footerLinkContainer}>
+          <Text style={styles.footerText}>
+            ¿Ya tenés cuenta? <Text style={styles.footerLink}>Ingresá tocando acá</Text>
+          </Text>
         </TouchableOpacity>
       </Layout>
 
