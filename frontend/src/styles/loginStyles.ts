@@ -33,6 +33,19 @@ export const loginStyles = StyleSheet.create({
     textAlign: 'center',
     fontSize: 20,
   },
+  otpVerificationSubtitle: {
+    color: '#006699', // Lighter blue
+    marginBottom: 10,
+    textAlign: 'center',
+    fontSize: 20,
+  },
+  emailSubtitle: {
+    color: '#006699', // Lighter blue
+    marginBottom: 30,
+    textAlign: 'center',
+    fontWeight: 'bold',
+    fontSize: 20,
+  },
   card: {
     backgroundColor: '#FFFFFF',
     borderRadius: 20,
@@ -71,8 +84,14 @@ export const loginStyles = StyleSheet.create({
     color: '#0088CC',
     textAlign: 'center',
     marginTop: 5,
-    marginBottom: 20,
     fontSize: 16,
+  },
+  forgotPasswordLink: {
+    color: '#0088CC',
+    fontSize: 16,
+    fontWeight: 'bold',
+    textAlign: 'center',
+    marginBottom: 20,
   },
   button: {
     width: '100%',
@@ -94,15 +113,16 @@ export const loginStyles = StyleSheet.create({
     marginTop: 20,
     alignItems: 'center',
   },
-  infoText: {
-    color: '#006699',
-    fontSize: 12,
-  },
-  registerLinkContainer: {
-    marginTop: 30,
-  },
-  registerLinkText: {
-    color: '#006699',
+  footerText: {
+    color: '#0088CC',
     fontSize: 16,
+  },
+  footerLink: {
+    color: '#0088CC',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  footerLinkContainer: {
+    marginTop: 30,
   },
 });

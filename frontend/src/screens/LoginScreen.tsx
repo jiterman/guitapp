@@ -64,7 +64,7 @@ const LoginScreen = () => {
       }
     } catch (error: any) {
       let errorMessage =
-        'Alguno de los campos ingresados no es correcto. Verifica los datos ingresados.';
+        'Alguno de los campos ingresados no es correcto. Verificá los datos ingresados.';
       if (
         error.message &&
         (error.message.includes('Network request failed') ||
@@ -93,7 +93,7 @@ const LoginScreen = () => {
         </View>
 
         <Text category="h1" style={styles.title}>
-          ¡Hola, Bienvenido!
+          ¡Hola, bienvenido!
         </Text>
         <Text category="s1" style={styles.subtitle}>
           ¿Listo para ver tus finanzas?
@@ -135,6 +135,7 @@ const LoginScreen = () => {
 
           <TouchableOpacity onPress={handleForgotPassword}>
             <Text style={styles.forgotPasswordText}>¿Olvidaste tu contraseña?</Text>
+            <Text style={styles.forgotPasswordLink}>Recuperala tocando acá</Text>
           </TouchableOpacity>
 
           <Button style={styles.button} onPress={onLoginPress} disabled={loading}>
@@ -144,9 +145,11 @@ const LoginScreen = () => {
 
         <TouchableOpacity
           onPress={() => router.push('/register')}
-          style={styles.registerLinkContainer}
+          style={styles.footerLinkContainer}
         >
-          <Text style={styles.registerLinkText}>¿No tenés cuenta? Unite!</Text>
+          <Text style={styles.footerText}>
+            ¿No tenés cuenta? <Text style={styles.footerLink}>Unite tocando acá</Text>
+          </Text>
         </TouchableOpacity>
       </Layout>
     </SafeAreaView>

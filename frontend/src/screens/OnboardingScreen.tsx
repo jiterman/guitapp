@@ -94,7 +94,7 @@ const OnboardingScreen = () => {
               {firstNameError && <Text style={styles.errorText}>{firstNameError}</Text>}
 
               <Button style={styles.button} onPress={handleNextStep}>
-                Continuar
+                <Text style={styles.buttonText}>Continuar</Text>
               </Button>
             </>
           )}
@@ -132,7 +132,9 @@ const OnboardingScreen = () => {
               {expensesError && <Text style={styles.errorText}>{expensesError}</Text>}
 
               <Button style={styles.button} onPress={handleFinish} disabled={loading}>
-                {loading ? 'Guardando...' : 'Finalizar Onboarding'}
+                <Text style={styles.buttonText}>
+                  {loading ? 'Guardando...' : 'Finalizar Onboarding'}
+                </Text>
               </Button>
               <Button appearance="ghost" onPress={() => setStep(1)} disabled={loading}>
                 Atrás
