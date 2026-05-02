@@ -26,6 +26,6 @@ class SecurityConfigTests {
     void shouldDenyAccessToProtectedEndpoints() throws Exception {
         mockMvc.perform(post("/api/protected-resource"))
                 .andDo(org.springframework.test.web.servlet.result.MockMvcResultHandlers.print())
-                .andExpect(status().isUnauthorized());
+                .andExpect(status().isForbidden());
     }
 }

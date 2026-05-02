@@ -12,7 +12,7 @@ export const userService = {
     });
 
     if (!response.ok) {
-      throw new Error('Failed to fetch user profile');
+      throw new Error(`Error al obtener perfil del usuario: ${response.status}`);
     }
 
     return response.json();
