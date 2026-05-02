@@ -207,7 +207,7 @@ const RegistrationScreen = () => {
 
         <TouchableOpacity onPress={() => router.push('/login')} style={styles.footerLinkContainer}>
           <Text style={styles.footerText}>
-            ¿Ya tenés cuenta? <Text style={styles.footerLink}>Ingresá tocando acá</Text>
+            ¿Ya tenés cuenta? <Text style={styles.footerLink}>Ingresá</Text>
           </Text>
         </TouchableOpacity>
       </Layout>

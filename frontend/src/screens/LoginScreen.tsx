@@ -137,8 +137,7 @@ const LoginScreen = () => {
           {passwordError && <Text style={styles.errorText}>{passwordError}</Text>}
 
           <TouchableOpacity onPress={handleForgotPassword}>
-            <Text style={styles.forgotPasswordText}>¿Olvidaste tu contraseña?</Text>
-            <Text style={styles.forgotPasswordLink}>Recuperala tocando acá</Text>
+            <Text style={styles.forgotPasswordLink}>¿Olvidaste tu contraseña?</Text>
           </TouchableOpacity>
 
           <Button style={styles.button} onPress={onLoginPress} disabled={loading}>
@@ -151,7 +150,7 @@ const LoginScreen = () => {
           style={styles.footerLinkContainer}
         >
           <Text style={styles.footerText}>
-            ¿No tenés cuenta? <Text style={styles.footerLink}>Unite tocando acá</Text>
+            ¿No tenés cuenta? <Text style={styles.footerLink}>Unite</Text>
           </Text>
         </TouchableOpacity>
       </Layout>
