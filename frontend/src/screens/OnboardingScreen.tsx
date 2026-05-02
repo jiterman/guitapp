@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { SafeAreaView, View, Alert } from 'react-native';
+import { View, Alert } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Layout, Text, Input, Button } from '@ui-kitten/components';
 import { router } from 'expo-router';
 import { userService } from '../services/userService';

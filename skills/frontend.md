@@ -2,6 +2,12 @@
 
 This document outlines the best practices and standards for frontend development in Guitapp.
 
+## Stack Versions
+- **React 19** (not 18 — do not downgrade or use React 18 APIs that were changed in 19)
+- **Expo SDK 54**
+- **React Native 0.81.5**
+- **expo-router 6**
+
 ## 1. Component Architecture
 - **Functional Components:** Use functional components with Hooks (`useState`, `useEffect`, `useMemo`, `useCallback`).
 - **Custom Hooks:** Extract complex logic into custom hooks to keep components focused on rendering.

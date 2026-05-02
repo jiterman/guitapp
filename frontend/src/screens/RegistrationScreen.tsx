@@ -1,5 +1,6 @@
 import React from 'react';
-import { SafeAreaView, Alert, View, Image, TouchableOpacity } from 'react-native';
+import { Alert, View, Image, TouchableOpacity } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button, Layout, Text, Input, Icon, Spinner, IconProps } from '@ui-kitten/components';
 import { router } from 'expo-router';
 import { authService } from '../services/authService';
