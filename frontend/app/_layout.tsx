@@ -22,6 +22,8 @@ export default function RootLayout() {
       <IconRegistry icons={EvaIconsPack} />
       <ApplicationProvider {...eva} theme={customTheme}>
         <Stack screenOptions={{ headerShown: false }}>
+          <Stack.Screen name="index" />
+          <Stack.Screen name="login" />
           <Stack.Screen name="register" />
           <Stack.Screen name="verify-otp" />
           <Stack.Screen name="onboarding" />
