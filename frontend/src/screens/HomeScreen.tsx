@@ -1,12 +1,29 @@
-import React from 'react';
-import { SafeAreaView } from 'react-native';
-import { Layout, Text, Button } from '@ui-kitten/components';
+import React, { useEffect, useState } from 'react';
+import { SafeAreaView, View } from 'react-native';
+import { Layout, Text, Button, Spinner } from '@ui-kitten/components';
 import { StyleSheet } from 'react-native';
-import { router, useLocalSearchParams } from 'expo-router';
+import { router } from 'expo-router';
 import { authService } from '../services/authService';
+import { userService } from '../services/userService';
 
 const HomeScreen = () => {
-  const { email } = useLocalSearchParams<{ email: string }>();
+  const [firstName, setFirstName] = useState<string>('');
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const profile = await userService.getProfile();
+        setFirstName(profile.firstName || 'Usuario');
+      } catch (error) {
+        console.error('Error fetching profile:', error);
+        setFirstName('Usuario');
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchProfile();
+  }, []);
 
   const onLogoutPress = async () => {
     await authService.removeToken();
@@ -16,15 +33,23 @@ const HomeScreen = () => {
   return (
     <SafeAreaView style={{ flex: 1 }}>
       <Layout style={styles.container}>
-        <Text category="h1" style={styles.title}>
-          Bienvenido
-        </Text>
-        <Text category="h6" style={styles.email}>
-          {email}
-        </Text>
-        <Button style={styles.button} status="danger" onPress={onLogoutPress}>
-          Cerrar Sesión
-        </Button>
+        {loading ? (
+          <View style={styles.loadingContainer}>
+            <Spinner size="giant" />
+          </View>
+        ) : (
+          <>
+            <Text category="h1" style={styles.title}>
+              Bienvenido,
+            </Text>
+            <Text category="h2" style={styles.name}>
+              {firstName}
+            </Text>
+            <Button style={styles.button} status="danger" onPress={onLogoutPress}>
+              Cerrar Sesión
+            </Button>
+          </>
+        )}
       </Layout>
     </SafeAreaView>
   );
@@ -38,13 +63,18 @@ const styles = StyleSheet.create({
     padding: 20,
     backgroundColor: '#f4f7f6',
   },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
   title: {
-    marginBottom: 10,
+    marginBottom: 5,
     color: '#2c3e50',
   },
-  email: {
+  name: {
     marginBottom: 40,
-    color: '#34495e',
+    color: '#3498db',
   },
   button: {
     width: '100%',
