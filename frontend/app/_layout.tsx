@@ -1,9 +1,12 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Stack } from 'expo-router';
 import * as eva from '@eva-design/eva';
 import { ApplicationProvider, IconRegistry } from '@ui-kitten/components';
 import { EvaIconsPack } from '@ui-kitten/eva-icons';
 import { StatusBar } from 'expo-status-bar';
+import * as SplashScreen from 'expo-splash-screen';
+
+SplashScreen.preventAutoHideAsync();
 
 const customTheme = {
   ...eva.light,
@@ -17,15 +20,15 @@ const customTheme = {
 };
 
 export default function RootLayout() {
+  useEffect(() => {
+    SplashScreen.hideAsync();
+  }, []);
+
   return (
     <>
       <IconRegistry icons={EvaIconsPack} />
       <ApplicationProvider {...eva} theme={customTheme}>
-        <Stack screenOptions={{ headerShown: false }}>
-          <Stack.Screen name="register" />
-          <Stack.Screen name="verify-otp" />
-          <Stack.Screen name="onboarding" />
-        </Stack>
+        <Stack screenOptions={{ headerShown: false }} />
         <StatusBar style="auto" />
       </ApplicationProvider>
     </>
