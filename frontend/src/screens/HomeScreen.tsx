@@ -6,6 +6,7 @@ import { StyleSheet } from 'react-native';
 import { router } from 'expo-router';
 import { authService } from '../services/authService';
 import { userService } from '../services/userService';
+import BottomNavBar from '../components/BottomNavBar';
 
 const HomeScreen = () => {
   const [firstName, setFirstName] = useState<string>('');
@@ -39,7 +40,7 @@ const HomeScreen = () => {
             <Spinner size="giant" />
           </View>
         ) : (
-          <>
+          <View style={styles.content}>
             <Text category="h1" style={styles.title}>
               Bienvenido,
             </Text>
@@ -49,9 +50,10 @@ const HomeScreen = () => {
             <Button style={styles.button} status="danger" onPress={onLogoutPress}>
               Cerrar Sesión
             </Button>
-          </>
+          </View>
         )}
       </Layout>
+      <BottomNavBar />
     </SafeAreaView>
   );
 };
@@ -63,6 +65,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 20,
     backgroundColor: '#f4f7f6',
+  },
+  content: {
+    flex: 1,
+    width: '100%',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   loadingContainer: {
     flex: 1,
