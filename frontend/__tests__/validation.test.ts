@@ -1,37 +1,49 @@
-import { validateEmail, validatePassword } from '../src/utils/validation';
+import { validateEmail, validatePassword, validateFirstName } from '../src/utils/validation';
 
-describe('validation utilities', () => {
+describe('Validation Utils', () => {
   describe('validateEmail', () => {
-    it('returns an error message if email is empty', () => {
-      expect(validateEmail('')).toBe('El email es requerido.');
-    });
-
-    it('returns an error message if email format is invalid', () => {
-      expect(validateEmail('invalid-email')).toBe(
-        'Por favor, introduce un correo electrónico válido.'
-      );
-      expect(validateEmail('test@')).toBe('Por favor, introduce un correo electrónico válido.');
-      expect(validateEmail('@domain.com')).toBe(
-        'Por favor, introduce un correo electrónico válido.'
-      );
-    });
-
-    it('returns null if email format is valid', () => {
+    it('should return null for a valid email', () => {
       expect(validateEmail('test@example.com')).toBeNull();
-      expect(validateEmail('user.name+tag@domain.co.uk')).toBeNull();
+    });
+
+    it('should return error for empty email', () => {
+      expect(validateEmail('')).toBe('El email es requerido.');
+      expect(validateEmail('   ')).toBe('El email es requerido.');
+    });
+
+    it('should return error for invalid email', () => {
+      expect(validateEmail('test@.com')).toBe('Por favor, introduce un correo electrónico válido.');
+      expect(validateEmail('test@example')).toBe(
+        'Por favor, introduce un correo electrónico válido.'
+      );
     });
   });
 
   describe('validatePassword', () => {
-    it('returns an error message if password is empty', () => {
-      expect(validatePassword('')).toBe('La contraseña es requerida.');
+    it('should return null for a valid password', () => {
+      expect(validatePassword('123456')).toBeNull();
     });
 
-    it('returns null if password is provided', () => {
-      // The current LoginScreen only checks if it's not empty.
-      // We can add length checks if desired, but for now we'll match existing behavior.
-      expect(validatePassword('123')).toBeNull();
-      expect(validatePassword('secretpassword')).toBeNull();
+    it('should return error for empty password', () => {
+      expect(validatePassword('')).toBe('La contraseña es requerida.');
+      expect(validatePassword('   ')).toBe('La contraseña es requerida.');
+    });
+  });
+
+  describe('validateFirstName', () => {
+    it('should return null for a valid first name', () => {
+      expect(validateFirstName('Chris')).toBeNull();
+      expect(validateFirstName('María')).toBeNull();
+    });
+
+    it('should return error for empty first name', () => {
+      expect(validateFirstName('')).toBe('El nombre es obligatorio.');
+      expect(validateFirstName('   ')).toBe('El nombre es obligatorio.');
+    });
+
+    it('should return error for names with numbers or spaces', () => {
+      expect(validateFirstName('Chris 2')).toBe('El nombre no debe contener espacios ni números.');
+      expect(validateFirstName('John Doe')).toBe('El nombre no debe contener espacios ni números.');
     });
   });
 });

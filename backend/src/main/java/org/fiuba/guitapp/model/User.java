@@ -43,29 +43,27 @@ public class User implements UserDetails {
     private UserStatus status;
 
     @Column
+    private String firstName;
+
+    @Column(nullable = false)
+    private boolean onboardingCompleted = false;
+
+    @Column
+    private Integer targetFixedExpenses;
+
+    @Column
+    private Integer targetVariableExpenses;
+
+    @Column
+    private Integer targetSavings;
+
+    @Column
     private String verificationOtp;
 
     @Column
     private java.time.LocalDateTime otpCreatedAt;
 
     public User() {
-    }
-
-    // ... (Getters and Setters)
-    public String getVerificationOtp() {
-        return verificationOtp;
-    }
-
-    public void setVerificationOtp(String verificationOtp) {
-        this.verificationOtp = verificationOtp;
-    }
-
-    public java.time.LocalDateTime getOtpCreatedAt() {
-        return otpCreatedAt;
-    }
-
-    public void setOtpCreatedAt(java.time.LocalDateTime otpCreatedAt) {
-        this.otpCreatedAt = otpCreatedAt;
     }
 
     public UUID getId() {
@@ -98,6 +96,62 @@ public class User implements UserDetails {
 
     public void setStatus(UserStatus status) {
         this.status = status;
+    }
+
+    public String getFirstName() {
+        return firstName;
+    }
+
+    public void setFirstName(String firstName) {
+        this.firstName = firstName;
+    }
+
+    public boolean isOnboardingCompleted() {
+        return onboardingCompleted;
+    }
+
+    public void setOnboardingCompleted(boolean onboardingCompleted) {
+        this.onboardingCompleted = onboardingCompleted;
+    }
+
+    public Integer getTargetFixedExpenses() {
+        return targetFixedExpenses;
+    }
+
+    public void setTargetFixedExpenses(Integer targetFixedExpenses) {
+        this.targetFixedExpenses = targetFixedExpenses;
+    }
+
+    public Integer getTargetVariableExpenses() {
+        return targetVariableExpenses;
+    }
+
+    public void setTargetVariableExpenses(Integer targetVariableExpenses) {
+        this.targetVariableExpenses = targetVariableExpenses;
+    }
+
+    public Integer getTargetSavings() {
+        return targetSavings;
+    }
+
+    public void setTargetSavings(Integer targetSavings) {
+        this.targetSavings = targetSavings;
+    }
+
+    public String getVerificationOtp() {
+        return verificationOtp;
+    }
+
+    public void setVerificationOtp(String verificationOtp) {
+        this.verificationOtp = verificationOtp;
+    }
+
+    public java.time.LocalDateTime getOtpCreatedAt() {
+        return otpCreatedAt;
+    }
+
+    public void setOtpCreatedAt(java.time.LocalDateTime otpCreatedAt) {
+        this.otpCreatedAt = otpCreatedAt;
     }
 
     @Override

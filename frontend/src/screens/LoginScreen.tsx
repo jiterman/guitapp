@@ -3,6 +3,7 @@ import { SafeAreaView, Alert, View, TouchableOpacity, Image } from 'react-native
 import { Button, Layout, Text, Input, Icon } from '@ui-kitten/components';
 import { router } from 'expo-router';
 import { authService } from '../services/authService';
+import { userService } from '../services/userService';
 import { validateEmail, validatePassword } from '../utils/validation';
 import { loginStyles as styles } from '../styles/loginStyles';
 
@@ -52,7 +53,15 @@ const LoginScreen = () => {
     setLoading(true);
     try {
       await authService.login(email, password);
-      router.push({ pathname: '/home', params: { email } });
+
+      // Fetch user profile to check onboarding status
+      const profile = await userService.getProfile();
+
+      if (profile.onboardingCompleted) {
+        router.replace({ pathname: '/home', params: { email } });
+      } else {
+        router.replace('/onboarding');
+      }
     } catch (error: any) {
       let errorMessage =
         'Alguno de los campos ingresados no es correcto. Verifica los datos ingresados.';
