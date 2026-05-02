@@ -12,6 +12,16 @@
       "resizeMode": "contain",
       "backgroundColor": "#dff3ff"
     },
+    "plugins": [
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/splash-icon.png",
+          "resizeMode": "contain",
+          "backgroundColor": "#dff3ff"
+        }
+      ]
+    ],
     "ios": {
       "supportsTablet": true
     },
