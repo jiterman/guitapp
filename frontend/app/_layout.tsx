@@ -1,9 +1,11 @@
 import React from 'react';
-import { Stack } from 'expo-router';
+import { Slot } from 'expo-router';
 import * as eva from '@eva-design/eva';
 import { ApplicationProvider, IconRegistry } from '@ui-kitten/components';
 import { EvaIconsPack } from '@ui-kitten/eva-icons';
 import { StatusBar } from 'expo-status-bar';
+import Header from '../src/components/Header';
+import BottomNavBar from '../src/components/BottomNavBar';
 
 const customTheme = {
   ...eva.light,
@@ -21,11 +23,9 @@ export default function RootLayout() {
     <>
       <IconRegistry icons={EvaIconsPack} />
       <ApplicationProvider {...eva} theme={customTheme}>
-        <Stack screenOptions={{ headerShown: false }}>
-          <Stack.Screen name="register" />
-          <Stack.Screen name="verify-otp" />
-          <Stack.Screen name="onboarding" />
-        </Stack>
+        <Header />
+        <Slot />
+        <BottomNavBar />
         <StatusBar style="auto" />
       </ApplicationProvider>
     </>
