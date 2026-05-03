@@ -1,6 +1,31 @@
 import { authService, API_URL } from './authService';
 
-export type ExpenseCategory = 'FOOD' | 'TRANSPORT' | 'ENTERTAINMENT' | 'HOME';
+export type ExpenseCategory =
+  | 'SUPERMARKET'
+  | 'RESTAURANT'
+  | 'CAFE'
+  | 'DELIVERY'
+  | 'PUBLIC_TRANSPORT'
+  | 'FUEL'
+  | 'TAXI'
+  | 'UTILITIES'
+  | 'RENT'
+  | 'HOME'
+  | 'DOCTOR'
+  | 'PHARMACY'
+  | 'SUBSCRIPTIONS'
+  | 'OUTINGS'
+  | 'BAR'
+  | 'GYM'
+  | 'TRAVEL'
+  | 'CLOTHING'
+  | 'EDUCATION'
+  | 'TECHNOLOGY'
+  | 'BEAUTY'
+  | 'HOA_FEES'
+  | 'VEHICLE'
+  | 'PETS'
+  | 'OTHER';
 
 export interface AddExpenseRequest {
   amount: number;

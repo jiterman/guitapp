@@ -1,5 +1,5 @@
 import React from 'react';
-import { Alert, View, Image, TouchableOpacity } from 'react-native';
+import { Alert, View, Image, TouchableOpacity, KeyboardAvoidingView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button, Layout, Text, Input, Icon, Spinner, IconProps } from '@ui-kitten/components';
 import { router } from 'expo-router';
@@ -139,78 +139,83 @@ const RegistrationScreen = () => {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <Layout style={styles.container}>
-        <View style={styles.iconContainer}>
-          <Image
-            // eslint-disable-next-line @typescript-eslint/no-require-imports
-            source={require('../../assets/images/logotipo_transparent.png')}
-            style={styles.logoImage}
-            resizeMode="contain"
-          />
-        </View>
+      <KeyboardAvoidingView style={{ flex: 1 }} behavior="height">
+        <Layout style={styles.container}>
+          <View style={styles.iconContainer}>
+            <Image
+              // eslint-disable-next-line @typescript-eslint/no-require-imports
+              source={require('../../assets/images/logotipo_transparent.png')}
+              style={styles.logoImage}
+              resizeMode="contain"
+            />
+          </View>
 
-        <Text category="h1" style={styles.title} testID="registration-title">
-          Unite a Guitapp
-        </Text>
-        <Text category="s1" style={styles.subtitle}>
-          ¡Crea tu cuenta hoy!
-        </Text>
-
-        <View style={styles.card}>
-          <Text style={styles.label}>Email</Text>
-          <Input
-            value={email}
-            placeholder="tu@email.com"
-            onChangeText={setEmail}
-            style={styles.input}
-            textStyle={styles.inputText}
-            keyboardType="email-address"
-            autoCapitalize="none"
-            disabled={loading}
-          />
-
-          <Text style={styles.label}>Contraseña</Text>
-          <Input
-            value={password}
-            placeholder="********"
-            onChangeText={setPassword}
-            style={styles.input}
-            textStyle={styles.inputText}
-            secureTextEntry={!passwordVisible}
-            disabled={loading}
-            accessoryRight={props => renderPasswordIcon(props, 'password')}
-          />
-
-          <Text style={styles.label}>Confirmar Contraseña</Text>
-          <Input
-            value={confirmPassword}
-            placeholder="********"
-            onChangeText={setConfirmPassword}
-            style={styles.input}
-            textStyle={styles.inputText}
-            secureTextEntry={!confirmPasswordVisible}
-            disabled={loading}
-            accessoryRight={props => renderPasswordIcon(props, 'confirmPassword')}
-          />
-
-          <Button
-            style={styles.button}
-            onPress={onRegisterPress}
-            testID="register-button"
-            disabled={loading}
-          >
-            {() => (
-              <Text style={styles.buttonText}>{loading ? 'Registrando...' : 'Registrarse'}</Text>
-            )}
-          </Button>
-        </View>
-
-        <TouchableOpacity onPress={() => router.push('/login')} style={styles.footerLinkContainer}>
-          <Text style={styles.footerText}>
-            ¿Ya tenés cuenta? <Text style={styles.footerLink}>Ingresá</Text>
+          <Text category="h1" style={styles.title} testID="registration-title">
+            Unite a Guitapp
           </Text>
-        </TouchableOpacity>
-      </Layout>
+          <Text category="s1" style={styles.subtitle}>
+            ¡Crea tu cuenta hoy!
+          </Text>
+
+          <View style={styles.card}>
+            <Text style={styles.label}>Email</Text>
+            <Input
+              value={email}
+              placeholder="tu@email.com"
+              onChangeText={setEmail}
+              style={styles.input}
+              textStyle={styles.inputText}
+              keyboardType="email-address"
+              autoCapitalize="none"
+              disabled={loading}
+            />
+
+            <Text style={styles.label}>Contraseña</Text>
+            <Input
+              value={password}
+              placeholder="********"
+              onChangeText={setPassword}
+              style={styles.input}
+              textStyle={styles.inputText}
+              secureTextEntry={!passwordVisible}
+              disabled={loading}
+              accessoryRight={props => renderPasswordIcon(props, 'password')}
+            />
+
+            <Text style={styles.label}>Confirmar Contraseña</Text>
+            <Input
+              value={confirmPassword}
+              placeholder="********"
+              onChangeText={setConfirmPassword}
+              style={styles.input}
+              textStyle={styles.inputText}
+              secureTextEntry={!confirmPasswordVisible}
+              disabled={loading}
+              accessoryRight={props => renderPasswordIcon(props, 'confirmPassword')}
+            />
+
+            <Button
+              style={styles.button}
+              onPress={onRegisterPress}
+              testID="register-button"
+              disabled={loading}
+            >
+              {() => (
+                <Text style={styles.buttonText}>{loading ? 'Registrando...' : 'Registrarse'}</Text>
+              )}
+            </Button>
+          </View>
+
+          <TouchableOpacity
+            onPress={() => router.push('/login')}
+            style={styles.footerLinkContainer}
+          >
+            <Text style={styles.footerText}>
+              ¿Ya tenés cuenta? <Text style={styles.footerLink}>Ingresá</Text>
+            </Text>
+          </TouchableOpacity>
+        </Layout>
+      </KeyboardAvoidingView>
 
       {showLoadingPopup && (
         <View

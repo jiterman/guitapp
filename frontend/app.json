@@ -30,7 +30,7 @@
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#dff3ff"
       },
-      "package": "com.jiterman.guitapp"
+      "package": "com.guitapp"
     },
     "web": {
       "favicon": "./assets/favicon.png"
