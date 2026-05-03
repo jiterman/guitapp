@@ -38,12 +38,7 @@ Aplicación de gestión de gastos para el Trabajo Práctico de la facultad.
 ### Frontend
 1. Ir a la carpeta `frontend`.
 2. Instalar dependencias: `npm install`.
-3. Crear el archivo `frontend/.env.local` con la IP de tu máquina (donde corre el backend):
-   ```
-   EXPO_PUBLIC_LOCAL_BACKEND_URL=http://<tu-ip-local>:8080
-   ```
-   La IP aparece en el QR al correr `npx expo start` (ej. `192.168.0.116`). Este archivo no se commitea.
-4. Iniciar Expo: `npx expo start --clear` (el `--clear` es necesario al crear o modificar `.env.local`).
+3. Iniciar Expo: `npx expo start`.
 
 ### Builds (EAS)
 
