@@ -1,4 +1,8 @@
-import { StyleSheet } from 'react-native';
+import { StyleSheet, Dimensions } from 'react-native';
+
+const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
+const logoSize = Math.min(screenWidth * 0.6, screenHeight * 0.35);
+const vh = screenHeight / 100;
 
 export const loginStyles = StyleSheet.create({
   safeArea: {
@@ -9,47 +13,47 @@ export const loginStyles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 20,
-    backgroundColor: '#E6F2FC', // Matches safe area
+    paddingHorizontal: 20,
+    paddingVertical: vh * 2,
+    backgroundColor: '#E6F2FC',
   },
   iconContainer: {
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 20,
   },
   logoImage: {
-    width: 250,
-    height: 250,
+    width: logoSize,
+    height: logoSize,
   },
   title: {
-    color: '#003366', // Dark blue
+    color: '#003366',
     fontWeight: 'bold',
-    marginBottom: 5,
+    marginBottom: vh * 0.5,
     textAlign: 'center',
   },
   subtitle: {
-    color: '#006699', // Lighter blue
-    marginBottom: 30,
+    color: '#006699',
+    marginBottom: vh * 2,
     textAlign: 'center',
-    fontSize: 20,
+    fontSize: 18,
   },
   otpVerificationSubtitle: {
-    color: '#006699', // Lighter blue
-    marginBottom: 10,
+    color: '#006699',
+    marginBottom: vh * 1,
     textAlign: 'center',
-    fontSize: 20,
+    fontSize: 18,
   },
   emailSubtitle: {
-    color: '#006699', // Lighter blue
-    marginBottom: 30,
+    color: '#006699',
+    marginBottom: vh * 2,
     textAlign: 'center',
     fontWeight: 'bold',
-    fontSize: 20,
+    fontSize: 18,
   },
   card: {
     backgroundColor: '#FFFFFF',
     borderRadius: 20,
-    padding: 25,
+    padding: vh * 2.5,
     width: '100%',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
@@ -60,16 +64,15 @@ export const loginStyles = StyleSheet.create({
   label: {
     color: '#003366',
     fontWeight: '600',
-    marginBottom: 5,
-    marginTop: 10,
+    marginBottom: vh * 0.5,
+    marginTop: vh * 1,
     fontSize: 16,
   },
   input: {
     width: '100%',
-    marginBottom: 5, // Less margin since we have inline errors
+    marginBottom: vh * 0.5,
     borderRadius: 10,
     backgroundColor: '#FFFFFF',
-    //borderColor: '#99CCFF', // Light blue borders
   },
   inputText: {
     fontSize: 16,
@@ -80,26 +83,19 @@ export const loginStyles = StyleSheet.create({
     marginBottom: 10,
     marginLeft: 5,
   },
-  forgotPasswordText: {
-    color: '#0088CC',
-    textAlign: 'center',
-    marginTop: 5,
-    fontSize: 16,
-  },
   forgotPasswordLink: {
     color: '#0088CC',
     fontSize: 16,
-    fontWeight: 'bold',
     textAlign: 'center',
-    marginBottom: 20,
+    marginTop: 5,
   },
   button: {
     width: '100%',
     borderRadius: 12,
     backgroundColor: '#FFBB00',
     borderColor: '#FFBB00',
-    paddingVertical: 12,
-    marginTop: 20,
+    paddingVertical: vh * 1.2,
+    marginTop: vh * 2,
   },
   buttonText: {
     color: '#000000',
@@ -123,6 +119,6 @@ export const loginStyles = StyleSheet.create({
     fontWeight: 'bold',
   },
   footerLinkContainer: {
-    marginTop: 30,
+    marginTop: vh * 2.5,
   },
 });
