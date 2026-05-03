@@ -1,4 +1,3 @@
-import Constants from 'expo-constants';
 import * as SecureStore from 'expo-secure-store';
 
 // Define a custom error type to include the code
@@ -10,12 +9,8 @@ const getApiUrl = () => {
   if (process.env.EXPO_PUBLIC_ENV === 'prod') {
     return process.env.EXPO_PUBLIC_BACKEND_URL;
   }
-  if (__DEV__) {
-    const debuggerHost = Constants.expoGoConfig?.debuggerHost ?? Constants.expoConfig?.hostUri;
-    if (debuggerHost) {
-      const localIp = debuggerHost.split(':')[0];
-      return `http://${localIp}:8080`;
-    }
+  if (__DEV__ && process.env.EXPO_PUBLIC_LOCAL_BACKEND_URL) {
+    return process.env.EXPO_PUBLIC_LOCAL_BACKEND_URL;
   }
   return process.env.EXPO_PUBLIC_BACKEND_URL;
 };
