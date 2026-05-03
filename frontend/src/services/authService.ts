@@ -10,9 +10,12 @@ const getApiUrl = () => {
   if (process.env.EXPO_PUBLIC_ENV === 'prod') {
     return process.env.EXPO_PUBLIC_BACKEND_URL;
   }
-  if (__DEV__ && Constants.expoConfig?.hostUri) {
-    const localIp = Constants.expoConfig.hostUri.split(':')[0];
-    return `http://${localIp}:8080`;
+  if (__DEV__) {
+    const debuggerHost = Constants.expoGoConfig?.debuggerHost ?? Constants.expoConfig?.hostUri;
+    if (debuggerHost) {
+      const localIp = debuggerHost.split(':')[0];
+      return `http://${localIp}:8080`;
+    }
   }
   return process.env.EXPO_PUBLIC_BACKEND_URL;
 };
