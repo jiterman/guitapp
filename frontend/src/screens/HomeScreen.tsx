@@ -14,13 +14,15 @@ const HomeScreen = () => {
         <Text style={styles.balanceLabel}>Balance</Text>
         <Text style={styles.balanceAmount}>$150.000</Text>
         <View style={styles.balanceRow}>
-          <View style={styles.balanceItem}>
-            <Text style={styles.balanceItemLabel}>↑ Ingresos</Text>
+          <View style={styles.balanceSubCard}>
+            <Ionicons name="trending-up" size={20} color="#1a9e5c" />
+            <Text style={styles.balanceItemLabel}>Ingresos</Text>
             <Text style={styles.incomeText}>$200.000</Text>
           </View>
           <View style={styles.balanceDivider} />
-          <View style={styles.balanceItem}>
-            <Text style={styles.balanceItemLabel}>↓ Gastos</Text>
+          <View style={styles.balanceSubCard}>
+            <Ionicons name="trending-down" size={20} color="#c0392b" />
+            <Text style={styles.balanceItemLabel}>Gastos</Text>
             <Text style={styles.expenseText}>$50.000</Text>
           </View>
         </View>
@@ -63,7 +65,9 @@ const styles = StyleSheet.create({
   balanceCard: {
     backgroundColor: '#5bbfdd',
     borderRadius: 24,
-    padding: vh * 2.5,
+    paddingTop: vh * 2.3,
+    paddingHorizontal: 0,
+    paddingBottom: 0,
     marginBottom: vh * 2.5,
     borderTopWidth: 4,
     borderTopColor: '#FFBB00',
@@ -75,6 +79,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.4,
     shadowRadius: 12,
     elevation: 6,
+    overflow: 'hidden',
   },
   balanceLabel: {
     color: '#fff',
@@ -82,38 +87,52 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     letterSpacing: 0.5,
     marginBottom: vh * 0.5,
+    paddingHorizontal: vh * 2.5,
   },
   balanceAmount: {
-    color: '#006699',
+    color: '#005f8d',
     fontSize: 38,
     fontWeight: 'bold',
     marginBottom: vh * 1.5,
+    paddingHorizontal: vh * 2.5,
   },
   balanceRow: {
     flexDirection: 'row',
     alignItems: 'center',
+    backgroundColor: '#f0f8ff',
+    paddingVertical: vh * 1.5,
+    borderTopWidth: 1,
+    borderTopColor: '#006699',
   },
-  balanceItem: {
+  balanceSubCard: {
     flex: 1,
     alignItems: 'center',
   },
+  balanceItemRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 4,
+    marginBottom: 4,
+  },
   balanceDivider: {
-    width: 1,
-    height: 30,
-    backgroundColor: '#4ac5ff',
+    width: 2,
+    height: 40,
+    backgroundColor: '#FFBB00',
+    borderRadius: 1,
   },
   balanceItemLabel: {
-    color: 'rgba(255,255,255,0.8)',
-    fontSize: 18,
-    marginBottom: 2,
+    color: '#0084c5',
+    fontSize: 17,
+    fontWeight: '600',
   },
   incomeText: {
-    color: '#fff',
+    color: '#1a9e5c',
     fontWeight: 'bold',
     fontSize: 22,
   },
   expenseText: {
-    color: '#fff',
+    color: '#c0392b',
     fontWeight: 'bold',
     fontSize: 22,
   },

@@ -73,7 +73,7 @@ const AddExpenseScreen = () => {
       <Layout style={styles.container}>
         <View style={styles.subHeader}>
           <Text category="h4" style={styles.title}>
-            Agregar Gasto
+            Agregar gasto
           </Text>
           <TouchableOpacity onPress={() => router.back()}>
             <Text style={styles.closeButton}>✕</Text>
