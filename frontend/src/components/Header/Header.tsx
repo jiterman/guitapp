@@ -6,6 +6,7 @@ import styles from '../../styles/headerStyles';
 
 const Header: React.FC = () => {
   const [firstName, setFirstName] = useState<string>('Usuario');
+  
 
   useEffect(() => {
     let mounted = true;
