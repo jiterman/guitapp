@@ -1,18 +1,25 @@
 import Constants from 'expo-constants';
 import * as SecureStore from 'expo-secure-store';
+import * as LocalAuthentication from 'expo-local-authentication';
 
-// Define a custom error type to include the code
 interface BackendError extends Error {
   code?: string;
+}
+
+export interface BiometricUser {
+  email: string;
+  firstName?: string;
 }
 
 const getApiUrl = () => {
   if (process.env.EXPO_PUBLIC_ENV === 'prod') {
     return process.env.EXPO_PUBLIC_BACKEND_URL;
   }
-  if (__DEV__ && Constants.expoConfig?.hostUri) {
-    const localIp = Constants.expoConfig.hostUri.split(':')[0];
-    return `http://${localIp}:8080`;
+  if (__DEV__) {
+    const hostUri = Constants.expoGoConfig?.debuggerHost ?? Constants.expoConfig?.hostUri;
+    if (hostUri) {
+      return `http://${hostUri.split(':')[0]}:8080`;
+    }
   }
   return process.env.EXPO_PUBLIC_BACKEND_URL;
 };
@@ -97,5 +104,53 @@ export const authService = {
 
   removeToken: async () => {
     await SecureStore.deleteItemAsync('userToken');
+  },
+
+  isBiometricAvailable: async (): Promise<boolean> => {
+    const compatible = await LocalAuthentication.hasHardwareAsync();
+    if (!compatible) return false;
+    return LocalAuthentication.isEnrolledAsync();
+  },
+
+  authenticateWithBiometrics: async (): Promise<boolean> => {
+    const result = await LocalAuthentication.authenticateAsync({
+      promptMessage: 'Ingresá a Guitapp',
+      fallbackLabel: 'Usar contraseña',
+      cancelLabel: 'Cancelar',
+    });
+    return result.success;
+  },
+
+  getBiometricUsers: async (): Promise<BiometricUser[]> => {
+    const raw = await SecureStore.getItemAsync('biometricUsers');
+    if (!raw) return [];
+    const users: BiometricUser[] = JSON.parse(raw);
+    const valid: BiometricUser[] = [];
+    for (const user of users) {
+      const key = `biometric_creds_${user.email.replace(/[^a-zA-Z0-9._-]/g, '_')}`;
+      const creds = await SecureStore.getItemAsync(key);
+      if (creds) valid.push(user);
+    }
+    if (valid.length !== users.length) {
+      await SecureStore.setItemAsync('biometricUsers', JSON.stringify(valid));
+    }
+    return valid;
+  },
+
+  addBiometricUser: async (email: string, password: string, firstName?: string) => {
+    const users = await authService.getBiometricUsers();
+    const filtered = users.filter(u => u.email !== email);
+    const updated: BiometricUser[] = [...filtered, { email, firstName }];
+    await SecureStore.setItemAsync('biometricUsers', JSON.stringify(updated));
+    const key = `biometric_creds_${email.replace(/[^a-zA-Z0-9._-]/g, '_')}`;
+    await SecureStore.setItemAsync(key, JSON.stringify({ email, password }));
+  },
+
+  getBiometricCredentials: async (
+    email: string
+  ): Promise<{ email: string; password: string } | null> => {
+    const key = `biometric_creds_${email.replace(/[^a-zA-Z0-9._-]/g, '_')}`;
+    const raw = await SecureStore.getItemAsync(key);
+    return raw ? JSON.parse(raw) : null;
   },
 };

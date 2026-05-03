@@ -2,3 +2,4 @@
 .claude/
 backend/.sdkmanrc
 CLAUDE.md
+frontend/.env.local

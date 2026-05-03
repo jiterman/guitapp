@@ -18,7 +18,7 @@ export const validatePassword = (password: string): string | null => {
 
 export const validateFirstName = (name: string): string | null => {
   if (!name || name.trim() === '') {
-    return 'El nombre es obligatorio.';
+    return 'Este campo es obligatorio.';
   }
   const nameRegex = /^[a-zA-ZáéíóúÁÉÍÓÚñÑ]+$/;
   if (!nameRegex.test(name)) {
