@@ -6,7 +6,6 @@ import styles from '../../styles/headerStyles';
 
 const Header: React.FC = () => {
   const [firstName, setFirstName] = useState<string>('Usuario');
-  
 
   useEffect(() => {
     let mounted = true;
@@ -15,7 +14,7 @@ const Header: React.FC = () => {
         const profile = await userService.getProfile();
         if (mounted) setFirstName(profile.firstName || 'Usuario');
       } catch (e) {
-        // ignore
+        console.log(e);
       }
     })();
     return () => {
