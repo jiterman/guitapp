@@ -1,7 +1,7 @@
 import { StyleSheet, Dimensions } from 'react-native';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
-const logoSize = Math.min(screenWidth * 0.45, screenHeight * 0.25);
+const logoSize = Math.min(screenWidth * 0.6, screenHeight * 0.35);
 const vh = screenHeight / 100;
 
 export const loginStyles = StyleSheet.create({
@@ -20,7 +20,6 @@ export const loginStyles = StyleSheet.create({
   iconContainer: {
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: vh * 1.5,
   },
   logoImage: {
     width: logoSize,
