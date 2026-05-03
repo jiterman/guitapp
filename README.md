@@ -39,3 +39,21 @@ Aplicación de gestión de gastos para el Trabajo Práctico de la facultad.
 1. Ir a la carpeta `frontend`.
 2. Instalar dependencias: `npm install`.
 3. Iniciar Expo: `npx expo start`.
+
+### Builds (EAS)
+
+Requiere cuenta en [expo.dev](https://expo.dev) y EAS CLI:
+
+```bash
+npm install -g eas-cli
+eas login
+eas init  # solo la primera vez, vincula el proyecto a tu cuenta
+```
+
+| Perfil | Comando | Para qué sirve |
+|--------|---------|---------------|
+| `development` | `eas build --profile development --platform android` | Reemplaza Expo Go, con splash e íconos propios |
+| `preview` | `eas build --profile preview --platform android` | APK para testear sin Play Store |
+| `production` | `eas build --profile production --platform android` | Build final (AAB) para publicar |
+
+> **Nota:** En Expo Go el splash screen y los íconos no se ven como en la build final. Usar `preview` o `development` build para verlos correctamente.

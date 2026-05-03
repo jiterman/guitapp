@@ -12,6 +12,16 @@
       "resizeMode": "contain",
       "backgroundColor": "#dff3ff"
     },
+    "plugins": [
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/splash-icon.png",
+          "resizeMode": "contain",
+          "backgroundColor": "#dff3ff"
+        }
+      ]
+    ],
     "ios": {
       "supportsTablet": true
     },
@@ -19,10 +29,17 @@
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#dff3ff"
-      }
+      },
+      "package": "com.jiterman.guitapp"
     },
     "web": {
       "favicon": "./assets/favicon.png"
-    }
+    },
+    "extra": {
+      "eas": {
+        "projectId": "393fae22-3b84-4104-83d8-aae5420604f6"
+      }
+    },
+    "owner": "jiterman"
   }
 }

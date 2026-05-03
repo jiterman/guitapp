@@ -23,6 +23,14 @@ This document outlines the best practices and standards for frontend development
 - **StyleSheet:** Use `StyleSheet.create` for performance and organization.
 - **Flexbox:** Leverage Flexbox for responsive layouts. Avoid hardcoded dimensions.
 - **Themes:** Use UI Kitten's theming system to manage colors and typography consistently.
+- **Responsive sizing:** Always size components relative to screen dimensions, never use hardcoded pixel values for spacing, margins, or image sizes. Use this pattern:
+  ```ts
+  import { Dimensions } from 'react-native';
+  const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
+  const vh = screenHeight / 100; // 1% of screen height, like CSS vh units
+  const logoSize = Math.min(screenWidth * 0.45, screenHeight * 0.25);
+  ```
+  Then use `vh * 2` for margins/paddings, `logoSize` for images, etc. This ensures the layout fits all screen sizes without scrolling on screens that have enough space.
 
 ## 4. State Management & Data Fetching
 - **Hooks:** Use local state (`useState`) for component-specific state.
