@@ -41,8 +41,8 @@ public class UserService {
         }
 
         int total = request.targetFixedExpenses() + request.targetVariableExpenses();
-        if (total >= 100) {
-            throw new IllegalArgumentException("Sum of expenses must be strictly less than 100 to allow savings");
+        if (total > 100) {
+            throw new IllegalArgumentException("Sum of expenses cannot exceed 100");
         }
         int savings = 100 - total;
 

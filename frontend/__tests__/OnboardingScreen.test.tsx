@@ -50,7 +50,7 @@ describe('OnboardingScreen', () => {
     );
 
     fireEvent.press(getByText('Continuar'));
-    expect(getByText('El nombre es obligatorio.')).toBeTruthy();
+    expect(getByText('Este campo es obligatorio.')).toBeTruthy();
   });
 
   it('should transition to step 2 if name is valid', () => {
@@ -79,11 +79,11 @@ describe('OnboardingScreen', () => {
 
     // We are in step 2
     fireEvent.changeText(getByPlaceholderText('Ej. 50'), '60');
-    fireEvent.changeText(getByPlaceholderText('Ej. 30'), '40'); // 100 total
+    fireEvent.changeText(getByPlaceholderText('Ej. 30'), '50'); // 110 total
     fireEvent.press(getByText('Finalizar Onboarding'));
 
     await waitFor(() => {
-      expect(getByText('La suma de gastos fijos y variables debe ser menor a 100.')).toBeTruthy();
+      expect(getByText('La suma de gastos fijos y variables no puede superar 100.')).toBeTruthy();
     });
   });
 

@@ -24,6 +24,8 @@ const AddExpenseScreen = () => {
   const [submitting, setSubmitting] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
   const [search, setSearch] = useState('');
+  const [amountError, setAmountError] = useState<string | null>(null);
+  const [categoryError, setCategoryError] = useState<string | null>(null);
 
   const filteredCategories = CATEGORIES.filter(cat =>
     cat.label.toLowerCase().includes(search.toLowerCase())
@@ -31,30 +33,34 @@ const AddExpenseScreen = () => {
 
   const onSelectCategory = (cat: CategoryOption) => {
     setSelectedCategory(cat);
+    setCategoryError(null);
     setModalVisible(false);
     setSearch('');
   };
 
   const onSubmit = async () => {
+    setAmountError(null);
+    setCategoryError(null);
+    let hasError = false;
+
     if (!amount || isNaN(parseFloat(amount)) || parseFloat(amount) <= 0) {
-      Alert.alert('Error', 'Ingresá un monto válido mayor a 0.');
-      return;
+      setAmountError('Ingresá un monto válido mayor a 0.');
+      hasError = true;
     }
     if (!selectedCategory) {
-      Alert.alert('Error', 'Seleccioná una categoría.');
-      return;
+      setCategoryError('Seleccioná una categoría.');
+      hasError = true;
     }
+    if (hasError) return;
 
     setSubmitting(true);
     try {
       await expenseService.addExpense({
         amount: parseFloat(amount),
         description: description.trim() || undefined,
-        category: selectedCategory.value,
+        category: selectedCategory!.value,
       });
-      Alert.alert('¡Listo!', 'Gasto registrado correctamente.', [
-        { text: 'OK', onPress: () => router.back() },
-      ]);
+      router.back();
     } catch {
       Alert.alert('Error', 'No se pudo registrar el gasto. Intentá de nuevo.');
     } finally {
@@ -77,11 +83,16 @@ const AddExpenseScreen = () => {
         <Text style={styles.label}>Monto *</Text>
         <Input
           value={amount}
-          onChangeText={setAmount}
+          onChangeText={text => {
+            setAmount(text);
+            if (amountError) setAmountError(null);
+          }}
           placeholder="Ej. 1500"
           keyboardType="decimal-pad"
           style={styles.input}
+          status={amountError ? 'danger' : 'basic'}
         />
+        {amountError && <Text style={styles.errorText}>{amountError}</Text>}
 
         <Text style={styles.label}>Descripción</Text>
         <Input
@@ -92,7 +103,10 @@ const AddExpenseScreen = () => {
         />
 
         <Text style={styles.label}>Categoría *</Text>
-        <TouchableOpacity style={styles.dropdownButton} onPress={() => setModalVisible(true)}>
+        <TouchableOpacity
+          style={[styles.dropdownButton, categoryError ? styles.dropdownButtonError : null]}
+          onPress={() => setModalVisible(true)}
+        >
           <Text style={selectedCategory ? styles.dropdownButtonText : styles.dropdownPlaceholder}>
             {selectedCategory
               ? `${selectedCategory.icon}  ${selectedCategory.label}`
@@ -100,6 +114,7 @@ const AddExpenseScreen = () => {
           </Text>
           <Text style={styles.dropdownArrow}>▼</Text>
         </TouchableOpacity>
+        {categoryError && <Text style={styles.categoryErrorText}>{categoryError}</Text>}
 
         <Button style={styles.button} onPress={onSubmit} disabled={submitting}>
           {() => (
@@ -205,6 +220,18 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     backgroundColor: '#fff',
   },
+  errorText: {
+    color: '#FF3333',
+    fontSize: 13,
+    marginTop: -vh * 1.5,
+    marginBottom: vh * 1.5,
+  },
+  categoryErrorText: {
+    color: '#FF3333',
+    fontSize: 13,
+    marginTop: vh * 0.6,
+    marginBottom: vh * 1,
+  },
   dropdownButton: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -215,7 +242,10 @@ const styles = StyleSheet.create({
     borderColor: '#ddd',
     paddingHorizontal: 14,
     paddingVertical: vh * 1.5,
-    marginBottom: vh * 3,
+    marginBottom: 0,
+  },
+  dropdownButtonError: {
+    borderColor: '#FF3333',
   },
   dropdownButtonText: {
     fontSize: 15,
@@ -234,7 +264,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFBB00',
     borderColor: '#FFBB00',
     paddingVertical: vh * 1.2,
-    marginTop: vh,
+    marginTop: vh * 3,
   },
   buttonText: {
     color: '#000000',

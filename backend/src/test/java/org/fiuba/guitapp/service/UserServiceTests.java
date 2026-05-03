@@ -138,17 +138,16 @@ class UserServiceTests {
     }
 
     @Test
-    void completeOnboarding_ShouldThrowException_WhenExpensesEqualTo100() {
+    void completeOnboarding_ShouldAllowZeroSavings_WhenExpensesEqualTo100() {
         OnboardingRequest request = new OnboardingRequest("John", 50, 50);
         when(userRepository.findByEmail(testEmail)).thenReturn(Optional.of(testUser));
+        when(userRepository.save(any(User.class))).thenReturn(testUser);
 
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
-            userService.completeOnboarding(testEmail, request);
-        });
+        userService.completeOnboarding(testEmail, request);
 
-        assertEquals("Sum of expenses must be strictly less than 100 to allow savings", exception.getMessage());
-        verify(userRepository, times(1)).findByEmail(testEmail);
-        verify(userRepository, never()).save(any(User.class));
+        assertEquals(0, testUser.getTargetSavings());
+        assertTrue(testUser.isOnboardingCompleted());
+        verify(userRepository, times(1)).save(testUser);
     }
 
     @Test
@@ -160,7 +159,7 @@ class UserServiceTests {
             userService.completeOnboarding(testEmail, request);
         });
 
-        assertEquals("Sum of expenses must be strictly less than 100 to allow savings", exception.getMessage());
+        assertEquals("Sum of expenses cannot exceed 100", exception.getMessage());
         verify(userRepository, never()).save(any(User.class));
     }
 

@@ -12,10 +12,12 @@ const OtpVerificationScreen = () => {
   const [otp, setOtp] = React.useState('');
   const [loading, setLoading] = React.useState(false);
   const [showLoadingPopup, setShowLoadingPopup] = React.useState(false);
+  const [otpError, setOtpError] = React.useState<string | null>(null);
 
   const onVerifyPress = async () => {
+    setOtpError(null);
     if (!otp || otp.length !== 6) {
-      Alert.alert('Error de verificación', 'Por favor, ingresa un código de 6 dígitos.');
+      setOtpError('Ingresá un código de 6 dígitos.');
       return;
     }
 
@@ -98,14 +100,19 @@ const OtpVerificationScreen = () => {
             <Input
               value={otp}
               placeholder="123456"
-              onChangeText={setOtp}
+              onChangeText={text => {
+                setOtp(text);
+                if (otpError) setOtpError(null);
+              }}
               style={styles.input}
               textStyle={styles.inputText}
               keyboardType="number-pad"
               maxLength={6}
               testID="otp-input"
               disabled={loading}
+              status={otpError ? 'danger' : 'basic'}
             />
+            {otpError && <Text style={styles.errorText}>{otpError}</Text>}
             <Button
               style={styles.button}
               onPress={onVerifyPress}

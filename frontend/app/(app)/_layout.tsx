@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { View, StyleSheet, TouchableOpacity, Dimensions } from 'react-native';
+import { View, StyleSheet, TouchableOpacity, Dimensions, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Text } from '@ui-kitten/components';
+import { Text, Icon } from '@ui-kitten/components';
 import { Stack, router } from 'expo-router';
 import { authService } from '../../src/services/authService';
 import { userService } from '../../src/services/userService';
@@ -32,11 +32,19 @@ export default function AppLayout() {
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.header}>
-        <View>
-          <Text style={styles.greeting}>Hola,</Text>
-          <Text style={styles.name}>{firstName} 👋</Text>
+        <View style={styles.greetingRow}>
+          <Image
+            // eslint-disable-next-line @typescript-eslint/no-require-imports
+            source={require('../../assets/images/logo.png')}
+            style={styles.logo}
+            resizeMode="contain"
+          />
+          <Text style={styles.name}>
+            Hola, <Text style={styles.nameBold}>{firstName}</Text>
+          </Text>
         </View>
-        <TouchableOpacity onPress={onLogoutPress}>
+        <TouchableOpacity onPress={onLogoutPress} style={styles.logoutButton}>
+          <Icon name="log-out-outline" style={styles.logoutIcon} fill="#003366" />
           <Text style={styles.logoutText}>Salir</Text>
         </TouchableOpacity>
       </View>
@@ -48,7 +56,7 @@ export default function AppLayout() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#E6F2FC',
+    backgroundColor: '#c8dff0',
   },
   header: {
     flexDirection: 'row',
@@ -56,19 +64,47 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: screenWidth * 0.05,
     paddingVertical: vh * 1.5,
-    backgroundColor: '#E6F2FC',
+    paddingTop: vh * 2,
+    backgroundColor: '#c8dff0',
+    borderBottomWidth: 1,
+    borderBottomColor: '#a8c8e0',
   },
-  greeting: {
-    fontSize: 16,
-    color: '#006699',
+  greetingRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  logo: {
+    width: 32,
+    height: 32,
   },
   name: {
-    fontSize: 22,
+    fontSize: 18,
+    fontWeight: '400',
+    color: '#003366',
+  },
+  nameBold: {
+    fontSize: 18,
     fontWeight: 'bold',
     color: '#003366',
   },
+  logoutButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    borderWidth: 1.5,
+    borderColor: '#003366',
+    borderRadius: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+  },
+  logoutIcon: {
+    width: 20,
+    height: 20,
+  },
   logoutText: {
-    color: '#e74c3c',
-    fontSize: 14,
+    color: '#003366',
+    fontSize: 16,
+    fontWeight: 'bold',
   },
 });

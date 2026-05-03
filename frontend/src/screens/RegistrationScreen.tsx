@@ -15,6 +15,9 @@ const RegistrationScreen = () => {
   const [passwordVisible, setPasswordVisible] = React.useState(false);
   const [confirmPasswordVisible, setConfirmPasswordVisible] = React.useState(false);
   const [showLoadingPopup, setShowLoadingPopup] = React.useState(false);
+  const [emailError, setEmailError] = React.useState<string | null>(null);
+  const [passwordError, setPasswordError] = React.useState<string | null>(null);
+  const [confirmPasswordError, setConfirmPasswordError] = React.useState<string | null>(null);
 
   const onPasswordIconPress = (field: 'password' | 'confirmPassword') => {
     if (field === 'password') {
@@ -37,29 +40,38 @@ const RegistrationScreen = () => {
   );
 
   const onRegisterPress = async () => {
-    // New: Client-side validation for empty fields
-    if (!email || !password || !confirmPassword) {
-      Alert.alert('Error de Registro', 'Por favor, completa todos los campos.');
-      return;
-    }
+    setEmailError(null);
+    setPasswordError(null);
+    setConfirmPasswordError(null);
 
-    // New: Email format validation
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      Alert.alert('Error de Registro', 'Por favor, introduce un correo electrónico válido.');
-      return;
+    let hasError = false;
+
+    if (!email) {
+      setEmailError('El email es requerido.');
+      hasError = true;
+    } else if (!emailRegex.test(email)) {
+      setEmailError('Ingresá un email válido.');
+      hasError = true;
     }
 
-    // New: Password length validation
-    if (password.length < 8) {
-      Alert.alert('Error de Registro', 'La contraseña debe tener al menos 8 caracteres.');
-      return;
+    if (!password) {
+      setPasswordError('La contraseña es requerida.');
+      hasError = true;
+    } else if (password.length < 8) {
+      setPasswordError('La contraseña debe tener al menos 8 caracteres.');
+      hasError = true;
     }
 
-    if (password !== confirmPassword) {
-      Alert.alert('Error de Contraseña', 'Las contraseñas no coinciden');
-      return;
+    if (!confirmPassword) {
+      setConfirmPasswordError('Confirmá tu contraseña.');
+      hasError = true;
+    } else if (password !== confirmPassword) {
+      setConfirmPasswordError('Las contraseñas no coinciden.');
+      hasError = true;
     }
+
+    if (hasError) return;
 
     setLoading(true);
     setShowLoadingPopup(true); // Show loading popup
@@ -162,37 +174,52 @@ const RegistrationScreen = () => {
             <Input
               value={email}
               placeholder="tu@email.com"
-              onChangeText={setEmail}
+              onChangeText={text => {
+                setEmail(text);
+                if (emailError) setEmailError(null);
+              }}
               style={styles.input}
               textStyle={styles.inputText}
               keyboardType="email-address"
               autoCapitalize="none"
               disabled={loading}
+              status={emailError ? 'danger' : 'basic'}
             />
+            {emailError && <Text style={styles.errorText}>{emailError}</Text>}
 
             <Text style={styles.label}>Contraseña</Text>
             <Input
               value={password}
               placeholder="********"
-              onChangeText={setPassword}
+              onChangeText={text => {
+                setPassword(text);
+                if (passwordError) setPasswordError(null);
+              }}
               style={styles.input}
               textStyle={styles.inputText}
               secureTextEntry={!passwordVisible}
               disabled={loading}
+              status={passwordError ? 'danger' : 'basic'}
               accessoryRight={props => renderPasswordIcon(props, 'password')}
             />
+            {passwordError && <Text style={styles.errorText}>{passwordError}</Text>}
 
             <Text style={styles.label}>Confirmar Contraseña</Text>
             <Input
               value={confirmPassword}
               placeholder="********"
-              onChangeText={setConfirmPassword}
+              onChangeText={text => {
+                setConfirmPassword(text);
+                if (confirmPasswordError) setConfirmPasswordError(null);
+              }}
               style={styles.input}
               textStyle={styles.inputText}
               secureTextEntry={!confirmPasswordVisible}
               disabled={loading}
+              status={confirmPasswordError ? 'danger' : 'basic'}
               accessoryRight={props => renderPasswordIcon(props, 'confirmPassword')}
             />
+            {confirmPasswordError && <Text style={styles.errorText}>{confirmPasswordError}</Text>}
 
             <Button
               style={styles.button}

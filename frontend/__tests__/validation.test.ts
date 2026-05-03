@@ -37,8 +37,8 @@ describe('Validation Utils', () => {
     });
 
     it('should return error for empty first name', () => {
-      expect(validateFirstName('')).toBe('El nombre es obligatorio.');
-      expect(validateFirstName('   ')).toBe('El nombre es obligatorio.');
+      expect(validateFirstName('')).toBe('Este campo es obligatorio.');
+      expect(validateFirstName('   ')).toBe('Este campo es obligatorio.');
     });
 
     it('should return error for names with numbers or spaces', () => {

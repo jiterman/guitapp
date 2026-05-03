@@ -191,4 +191,11 @@ export const loginStyles = StyleSheet.create({
     fontSize: 13,
     color: '#006699',
   },
+  hint: {
+    color: '#5588aa',
+    fontSize: 13,
+    textAlign: 'center',
+    marginBottom: vh * 2,
+    lineHeight: 18,
+  },
 });
