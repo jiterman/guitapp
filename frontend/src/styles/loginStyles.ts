@@ -121,4 +121,81 @@ export const loginStyles = StyleSheet.create({
   footerLinkContainer: {
     marginTop: vh * 2.5,
   },
+  biometricButton: {
+    marginTop: vh * 2,
+    alignItems: 'center',
+    paddingVertical: vh * 1.2,
+  },
+  biometricText: {
+    color: '#006699',
+    fontSize: 15,
+    fontWeight: '600',
+  },
+  modalOverlay: {
+    flex: 1,
+    justifyContent: 'flex-end',
+    backgroundColor: 'rgba(0,0,0,0.4)',
+  },
+  modalContainer: {
+    backgroundColor: '#fff',
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    paddingBottom: vh * 3,
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingVertical: vh * 2,
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee',
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#003366',
+  },
+  modalClose: {
+    fontSize: 18,
+    color: '#006699',
+  },
+  userItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingVertical: vh * 2,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f0f0f0',
+  },
+  userAvatar: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: '#003366',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 14,
+  },
+  userAvatarText: {
+    color: '#fff',
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
+  userName: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#003366',
+  },
+  userEmail: {
+    fontSize: 13,
+    color: '#006699',
+  },
+  hint: {
+    color: '#5588aa',
+    fontSize: 13,
+    textAlign: 'center',
+    marginBottom: vh * 2,
+    lineHeight: 18,
+  },
 });

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Alert, View, Image, TouchableOpacity } from 'react-native';
+import { Alert, View, Image, TouchableOpacity, KeyboardAvoidingView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button, Layout, Text, Input, Icon, Spinner, IconProps } from '@ui-kitten/components';
 import { router } from 'expo-router';
@@ -15,6 +15,9 @@ const RegistrationScreen = () => {
   const [passwordVisible, setPasswordVisible] = React.useState(false);
   const [confirmPasswordVisible, setConfirmPasswordVisible] = React.useState(false);
   const [showLoadingPopup, setShowLoadingPopup] = React.useState(false);
+  const [emailError, setEmailError] = React.useState<string | null>(null);
+  const [passwordError, setPasswordError] = React.useState<string | null>(null);
+  const [confirmPasswordError, setConfirmPasswordError] = React.useState<string | null>(null);
 
   const onPasswordIconPress = (field: 'password' | 'confirmPassword') => {
     if (field === 'password') {
@@ -37,29 +40,38 @@ const RegistrationScreen = () => {
   );
 
   const onRegisterPress = async () => {
-    // New: Client-side validation for empty fields
-    if (!email || !password || !confirmPassword) {
-      Alert.alert('Error de Registro', 'Por favor, completa todos los campos.');
-      return;
-    }
+    setEmailError(null);
+    setPasswordError(null);
+    setConfirmPasswordError(null);
 
-    // New: Email format validation
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      Alert.alert('Error de Registro', 'Por favor, introduce un correo electrónico válido.');
-      return;
+    let hasError = false;
+
+    if (!email) {
+      setEmailError('El email es requerido.');
+      hasError = true;
+    } else if (!emailRegex.test(email)) {
+      setEmailError('Ingresá un email válido.');
+      hasError = true;
     }
 
-    // New: Password length validation
-    if (password.length < 8) {
-      Alert.alert('Error de Registro', 'La contraseña debe tener al menos 8 caracteres.');
-      return;
+    if (!password) {
+      setPasswordError('La contraseña es requerida.');
+      hasError = true;
+    } else if (password.length < 8) {
+      setPasswordError('La contraseña debe tener al menos 8 caracteres.');
+      hasError = true;
     }
 
-    if (password !== confirmPassword) {
-      Alert.alert('Error de Contraseña', 'Las contraseñas no coinciden');
-      return;
+    if (!confirmPassword) {
+      setConfirmPasswordError('Confirmá tu contraseña.');
+      hasError = true;
+    } else if (password !== confirmPassword) {
+      setConfirmPasswordError('Las contraseñas no coinciden.');
+      hasError = true;
     }
+
+    if (hasError) return;
 
     setLoading(true);
     setShowLoadingPopup(true); // Show loading popup
@@ -139,78 +151,98 @@ const RegistrationScreen = () => {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <Layout style={styles.container}>
-        <View style={styles.iconContainer}>
-          <Image
-            // eslint-disable-next-line @typescript-eslint/no-require-imports
-            source={require('../../assets/images/logotipo_transparent.png')}
-            style={styles.logoImage}
-            resizeMode="contain"
-          />
-        </View>
+      <KeyboardAvoidingView style={{ flex: 1 }} behavior="height">
+        <Layout style={styles.container}>
+          <View style={styles.iconContainer}>
+            <Image
+              // eslint-disable-next-line @typescript-eslint/no-require-imports
+              source={require('../../assets/images/logotipo_transparent.png')}
+              style={styles.logoImage}
+              resizeMode="contain"
+            />
+          </View>
 
-        <Text category="h1" style={styles.title} testID="registration-title">
-          Unite a Guitapp
-        </Text>
-        <Text category="s1" style={styles.subtitle}>
-          ¡Crea tu cuenta hoy!
-        </Text>
-
-        <View style={styles.card}>
-          <Text style={styles.label}>Email</Text>
-          <Input
-            value={email}
-            placeholder="tu@email.com"
-            onChangeText={setEmail}
-            style={styles.input}
-            textStyle={styles.inputText}
-            keyboardType="email-address"
-            autoCapitalize="none"
-            disabled={loading}
-          />
-
-          <Text style={styles.label}>Contraseña</Text>
-          <Input
-            value={password}
-            placeholder="********"
-            onChangeText={setPassword}
-            style={styles.input}
-            textStyle={styles.inputText}
-            secureTextEntry={!passwordVisible}
-            disabled={loading}
-            accessoryRight={props => renderPasswordIcon(props, 'password')}
-          />
-
-          <Text style={styles.label}>Confirmar Contraseña</Text>
-          <Input
-            value={confirmPassword}
-            placeholder="********"
-            onChangeText={setConfirmPassword}
-            style={styles.input}
-            textStyle={styles.inputText}
-            secureTextEntry={!confirmPasswordVisible}
-            disabled={loading}
-            accessoryRight={props => renderPasswordIcon(props, 'confirmPassword')}
-          />
-
-          <Button
-            style={styles.button}
-            onPress={onRegisterPress}
-            testID="register-button"
-            disabled={loading}
-          >
-            {() => (
-              <Text style={styles.buttonText}>{loading ? 'Registrando...' : 'Registrarse'}</Text>
-            )}
-          </Button>
-        </View>
-
-        <TouchableOpacity onPress={() => router.push('/login')} style={styles.footerLinkContainer}>
-          <Text style={styles.footerText}>
-            ¿Ya tenés cuenta? <Text style={styles.footerLink}>Ingresá</Text>
+          <Text category="h1" style={styles.title} testID="registration-title">
+            Unite a Guitapp
           </Text>
-        </TouchableOpacity>
-      </Layout>
+          <Text category="s1" style={styles.subtitle}>
+            ¡Crea tu cuenta hoy!
+          </Text>
+
+          <View style={styles.card}>
+            <Text style={styles.label}>Email</Text>
+            <Input
+              value={email}
+              placeholder="tu@email.com"
+              onChangeText={text => {
+                setEmail(text);
+                if (emailError) setEmailError(null);
+              }}
+              style={styles.input}
+              textStyle={styles.inputText}
+              keyboardType="email-address"
+              autoCapitalize="none"
+              disabled={loading}
+              status={emailError ? 'danger' : 'basic'}
+            />
+            {emailError && <Text style={styles.errorText}>{emailError}</Text>}
+
+            <Text style={styles.label}>Contraseña</Text>
+            <Input
+              value={password}
+              placeholder="********"
+              onChangeText={text => {
+                setPassword(text);
+                if (passwordError) setPasswordError(null);
+              }}
+              style={styles.input}
+              textStyle={styles.inputText}
+              secureTextEntry={!passwordVisible}
+              disabled={loading}
+              status={passwordError ? 'danger' : 'basic'}
+              accessoryRight={props => renderPasswordIcon(props, 'password')}
+            />
+            {passwordError && <Text style={styles.errorText}>{passwordError}</Text>}
+
+            <Text style={styles.label}>Confirmar Contraseña</Text>
+            <Input
+              value={confirmPassword}
+              placeholder="********"
+              onChangeText={text => {
+                setConfirmPassword(text);
+                if (confirmPasswordError) setConfirmPasswordError(null);
+              }}
+              style={styles.input}
+              textStyle={styles.inputText}
+              secureTextEntry={!confirmPasswordVisible}
+              disabled={loading}
+              status={confirmPasswordError ? 'danger' : 'basic'}
+              accessoryRight={props => renderPasswordIcon(props, 'confirmPassword')}
+            />
+            {confirmPasswordError && <Text style={styles.errorText}>{confirmPasswordError}</Text>}
+
+            <Button
+              style={styles.button}
+              onPress={onRegisterPress}
+              testID="register-button"
+              disabled={loading}
+            >
+              {() => (
+                <Text style={styles.buttonText}>{loading ? 'Registrando...' : 'Registrarse'}</Text>
+              )}
+            </Button>
+          </View>
+
+          <TouchableOpacity
+            onPress={() => router.push('/login')}
+            style={styles.footerLinkContainer}
+          >
+            <Text style={styles.footerText}>
+              ¿Ya tenés cuenta? <Text style={styles.footerLink}>Ingresá</Text>
+            </Text>
+          </TouchableOpacity>
+        </Layout>
+      </KeyboardAvoidingView>
 
       {showLoadingPopup && (
         <View

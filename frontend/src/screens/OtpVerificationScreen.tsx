@@ -1,5 +1,5 @@
 import React from 'react';
-import { Alert, View, Image } from 'react-native';
+import { Alert, View, Image, KeyboardAvoidingView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button, Layout, Text, Input, Spinner } from '@ui-kitten/components';
 import { router, useLocalSearchParams } from 'expo-router';
@@ -12,10 +12,12 @@ const OtpVerificationScreen = () => {
   const [otp, setOtp] = React.useState('');
   const [loading, setLoading] = React.useState(false);
   const [showLoadingPopup, setShowLoadingPopup] = React.useState(false);
+  const [otpError, setOtpError] = React.useState<string | null>(null);
 
   const onVerifyPress = async () => {
+    setOtpError(null);
     if (!otp || otp.length !== 6) {
-      Alert.alert('Error de verificación', 'Por favor, ingresa un código de 6 dígitos.');
+      setOtpError('Ingresá un código de 6 dígitos.');
       return;
     }
 
@@ -72,51 +74,58 @@ const OtpVerificationScreen = () => {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <Layout style={styles.container}>
-        <View style={styles.iconContainer}>
-          <Image
-            // eslint-disable-next-line @typescript-eslint/no-require-imports
-            source={require('../../assets/images/logotipo_transparent.png')}
-            style={styles.logoImage}
-            resizeMode="contain"
-          />
-        </View>
+      <KeyboardAvoidingView style={{ flex: 1 }} behavior="height">
+        <Layout style={styles.container}>
+          <View style={styles.iconContainer}>
+            <Image
+              // eslint-disable-next-line @typescript-eslint/no-require-imports
+              source={require('../../assets/images/logotipo_transparent.png')}
+              style={styles.logoImage}
+              resizeMode="contain"
+            />
+          </View>
 
-        <Text category="h1" style={styles.title} testID="otp-verification-title">
-          Verificación de mail
-        </Text>
-        <Text category="s1" style={styles.otpVerificationSubtitle}>
-          Enviamos un código de 6 dígitos a:
-        </Text>
-        <Text category="s1" style={styles.emailSubtitle}>
-          {email}
-        </Text>
+          <Text category="h1" style={styles.title} testID="otp-verification-title">
+            Verificación de mail
+          </Text>
+          <Text category="s1" style={styles.otpVerificationSubtitle}>
+            Enviamos un código de 6 dígitos a:
+          </Text>
+          <Text category="s1" style={styles.emailSubtitle}>
+            {email}
+          </Text>
 
-        <View style={styles.card}>
-          <Text style={styles.label}>Ingresá el código</Text>
-          <Input
-            value={otp}
-            placeholder="123456"
-            onChangeText={setOtp}
-            style={styles.input}
-            textStyle={styles.inputText}
-            keyboardType="number-pad"
-            maxLength={6}
-            testID="otp-input"
-            disabled={loading}
-          />
-          <Button
-            style={styles.button}
-            onPress={onVerifyPress}
-            testID="verify-otp-button"
-            disabled={loading}
-          >
-            {() => (
-              <Text style={styles.buttonText}>{loading ? 'Verificando...' : 'Verificar'}</Text>
-            )}
-          </Button>
-        </View>
-      </Layout>
+          <View style={styles.card}>
+            <Text style={styles.label}>Ingresá el código</Text>
+            <Input
+              value={otp}
+              placeholder="123456"
+              onChangeText={text => {
+                setOtp(text);
+                if (otpError) setOtpError(null);
+              }}
+              style={styles.input}
+              textStyle={styles.inputText}
+              keyboardType="number-pad"
+              maxLength={6}
+              testID="otp-input"
+              disabled={loading}
+              status={otpError ? 'danger' : 'basic'}
+            />
+            {otpError && <Text style={styles.errorText}>{otpError}</Text>}
+            <Button
+              style={styles.button}
+              onPress={onVerifyPress}
+              testID="verify-otp-button"
+              disabled={loading}
+            >
+              {() => (
+                <Text style={styles.buttonText}>{loading ? 'Verificando...' : 'Verificar'}</Text>
+              )}
+            </Button>
+          </View>
+        </Layout>
+      </KeyboardAvoidingView>
 
       {showLoadingPopup && (
         <View

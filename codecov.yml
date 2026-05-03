@@ -12,6 +12,7 @@ coverage:
 ignore:
   - "**/GuitappApplication.java"
   - "**/*Application.java"
+  - "**/dto/**"
 
 comment:
   layout: "reach, diff, flags, files"

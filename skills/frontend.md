@@ -41,6 +41,9 @@ This document outlines the best practices and standards for frontend development
 - **Expo Router:** Use file-based routing provided by `expo-router`. Follow the directory structure in the `app/` folder.
 - **Deep Linking:** Ensure routes are compatible with deep linking requirements.
 
+## 9. Screen-specific conventions
+- **App header:** The greeting header ("Hola, {firstName}" + "Salir" logout button) is defined in `app/(app)/_layout.tsx` and must always be visible across all post-login screens. Never remove or hide it.
+
 ## 6. Security
 - **SecureStore:** Use `expo-secure-store` for sensitive data like JWT tokens or user credentials.
 - **Validation:** Use utility functions (e.g., `src/utils/validation.ts`) for client-side form validation.

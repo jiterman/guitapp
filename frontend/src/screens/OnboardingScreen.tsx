@@ -17,14 +17,14 @@ const OnboardingScreen = () => {
   const [firstNameError, setFirstNameError] = useState<string | null>(null);
 
   // Step 2
-  const [fixedExpenses, setFixedExpenses] = useState('');
-  const [variableExpenses, setVariableExpenses] = useState('');
+  const [fixedExpenses, setFixedExpenses] = useState('50');
+  const [variableExpenses, setVariableExpenses] = useState('30');
   const [expensesError, setExpensesError] = useState<string | null>(null);
 
   const calculateSavings = () => {
     const fixed = parseInt(fixedExpenses || '0', 10);
     const variable = parseInt(variableExpenses || '0', 10);
-    return 100 - (fixed + variable);
+    return Math.max(0, 100 - (fixed + variable));
   };
 
   const handleNextStep = () => {
@@ -49,11 +49,6 @@ const OnboardingScreen = () => {
       setExpensesError('Los porcentajes deben ser mayores a 0.');
       return;
     }
-    const savings = 100 - (fixed + variable);
-    if (savings <= 0) {
-      setExpensesError('La suma de gastos fijos y variables debe ser menor a 100.');
-      return;
-    }
 
     setLoading(true);
     try {
@@ -74,15 +69,20 @@ const OnboardingScreen = () => {
           {step === 1 ? '¡Bienvenido!' : 'Tus Objetivos'}
         </Text>
         <Text category="s1" style={styles.subtitle}>
-          {step === 1
-            ? 'Queremos conocerte un poco más.'
-            : 'Configurá tus metas de gastos (opcional).'}
+          {step === 1 ? 'Queremos conocerte un poco más.' : 'Configurá tus metas de gastos.'}
         </Text>
+        {step === 2 && (
+          <Text style={styles.hint}>
+            {
+              'Con estos datos calculamos tu porcentaje de ahorro y te avisamos cuando tu meta esté en riesgo o cuando tus gastos se disparen.'
+            }
+          </Text>
+        )}
 
         <View style={styles.card}>
           {step === 1 && (
             <>
-              <Text style={styles.label}>¿Cómo te llamas?</Text>
+              <Text style={styles.label}>¿Cómo querés que te llamemos?</Text>
               <Input
                 value={firstName}
                 placeholder="Ej. Chris"
@@ -111,9 +111,16 @@ const OnboardingScreen = () => {
                 keyboardType="numeric"
                 onChangeText={text => {
                   setFixedExpenses(text);
-                  setExpensesError(null);
+                  const fixed = parseInt(text, 10);
+                  const variable = parseInt(variableExpenses, 10);
+                  if (!isNaN(fixed) && !isNaN(variable) && fixed + variable > 100) {
+                    setExpensesError('La suma de gastos fijos y variables no puede superar 100.');
+                  } else {
+                    setExpensesError(null);
+                  }
                 }}
                 style={styles.input}
+                status={expensesError ? 'danger' : 'basic'}
                 disabled={loading}
               />
 
@@ -124,9 +131,16 @@ const OnboardingScreen = () => {
                 keyboardType="numeric"
                 onChangeText={text => {
                   setVariableExpenses(text);
-                  setExpensesError(null);
+                  const fixed = parseInt(fixedExpenses, 10);
+                  const variable = parseInt(text, 10);
+                  if (!isNaN(fixed) && !isNaN(variable) && fixed + variable > 100) {
+                    setExpensesError('La suma de gastos fijos y variables no puede superar 100.');
+                  } else {
+                    setExpensesError(null);
+                  }
                 }}
                 style={styles.input}
+                status={expensesError ? 'danger' : 'basic'}
                 disabled={loading}
               />
 
@@ -134,7 +148,11 @@ const OnboardingScreen = () => {
               <Input value={String(calculateSavings())} style={styles.input} disabled={true} />
               {expensesError && <Text style={styles.errorText}>{expensesError}</Text>}
 
-              <Button style={styles.button} onPress={handleFinish} disabled={loading}>
+              <Button
+                style={styles.button}
+                onPress={handleFinish}
+                disabled={loading || !!expensesError}
+              >
                 <Text style={styles.buttonText}>
                   {loading ? 'Guardando...' : 'Finalizar Onboarding'}
                 </Text>
