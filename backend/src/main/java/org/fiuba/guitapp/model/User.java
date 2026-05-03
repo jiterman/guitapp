@@ -49,7 +49,7 @@ public class User implements UserDetails {
     @Column
     private String firstName;
 
-    @Column(nullable = false)
+    @Column(nullable = false, columnDefinition = "boolean default false")
     private boolean onboardingCompleted = false;
 
     @Column
