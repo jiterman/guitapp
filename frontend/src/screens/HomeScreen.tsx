@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, StyleSheet, TouchableOpacity, Dimensions } from 'react-native';
+import { View, StyleSheet, TouchableOpacity, Dimensions, Alert } from 'react-native';
 import { Layout, Text } from '@ui-kitten/components';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
@@ -11,24 +11,41 @@ const HomeScreen = () => {
   return (
     <Layout style={styles.container}>
       <View style={styles.balanceCard}>
-        <Text style={styles.balanceLabel}>Balance</Text>
-        <Text style={styles.balanceAmount}>$150.000</Text>
+        <View style={styles.balanceTop}>
+          <View>
+            <Text style={styles.balanceLabel}>Balance</Text>
+            <Text style={styles.balanceAmount}>$150.000</Text>
+          </View>
+          <Ionicons name="sunny" size={56} color="#FFBB00" style={styles.sunIcon} />
+        </View>
         <View style={styles.balanceRow}>
           <View style={styles.balanceSubCard}>
-            <Ionicons name="trending-up" size={20} color="#1a9e5c" />
-            <Text style={styles.balanceItemLabel}>Ingresos</Text>
-            <Text style={styles.incomeText}>$200.000</Text>
+            <View style={styles.balanceSubCardInner}>
+              <View style={styles.iconCircleGreen}>
+                <Ionicons name="trending-up" size={16} color="#1a9e5c" />
+              </View>
+              <View>
+                <Text style={styles.balanceItemLabel}>Ingresos</Text>
+                <Text style={styles.incomeText}>$200.000</Text>
+              </View>
+            </View>
           </View>
           <View style={styles.balanceDivider} />
           <View style={styles.balanceSubCard}>
-            <Ionicons name="trending-down" size={20} color="#c0392b" />
-            <Text style={styles.balanceItemLabel}>Gastos</Text>
-            <Text style={styles.expenseText}>$50.000</Text>
+            <View style={styles.balanceSubCardInner}>
+              <View style={styles.iconCircleRed}>
+                <Ionicons name="trending-down" size={16} color="#c0392b" />
+              </View>
+              <View>
+                <Text style={styles.balanceItemLabel}>Gastos</Text>
+                <Text style={styles.expenseText}>$50.000</Text>
+              </View>
+            </View>
           </View>
         </View>
       </View>
 
-      <Text style={styles.sectionTitle}>Acciones rápidas</Text>
+      <Text style={styles.sectionTitle}>Acciones</Text>
       <View style={styles.actionsRow}>
         <TouchableOpacity
           style={[styles.actionButton, styles.actionButtonPrimary]}
@@ -47,9 +64,28 @@ const HomeScreen = () => {
         </TouchableOpacity>
       </View>
 
-      <Text style={styles.sectionTitle}>Últimos movimientos</Text>
+      <View style={styles.sectionHeader}>
+        <Text style={styles.sectionTitle}>Últimos movimientos</Text>
+        <TouchableOpacity
+          style={styles.seeAllButton}
+          onPress={() =>
+            Alert.alert('Próximamente', 'Esta función estará disponible muy pronto. 🚀')
+          }
+        >
+          <Text style={styles.seeAllText}>Ver todos</Text>
+          <Ionicons name="chevron-forward" size={14} color="#07a3e4" />
+        </TouchableOpacity>
+      </View>
       <View style={styles.emptyMovements}>
-        <Text style={styles.emptyText}>Todavía no hay movimientos este mes.</Text>
+        <View style={styles.emptyIconContainer}>
+          <Ionicons name="wallet" size={36} color="#07a3e4" />
+        </View>
+        <View style={styles.emptyTextContainer}>
+          <Text style={styles.emptyText}>Todavía no hay movimientos este mes.</Text>
+          <Text style={styles.emptySubText}>
+            {'¡Agregá tu primer ingreso o gasto para verlo reflejado acá!'}
+          </Text>
+        </View>
       </View>
     </Layout>
   );
@@ -65,65 +101,84 @@ const styles = StyleSheet.create({
   balanceCard: {
     backgroundColor: '#5bbfdd',
     borderRadius: 24,
-    paddingTop: vh * 2.3,
-    paddingHorizontal: 0,
-    paddingBottom: 0,
     marginBottom: vh * 2.5,
     borderTopWidth: 4,
     borderTopColor: '#FFBB00',
-    borderLeftWidth: 0,
-    borderRightWidth: 0,
-    borderBottomWidth: 0,
-    shadowColor: '#5bbfdd',
+    shadowColor: '#3a9fc0',
     shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.4,
     shadowRadius: 12,
     elevation: 6,
     overflow: 'hidden',
   },
+  balanceTop: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: screenWidth * 0.05,
+    paddingTop: vh * 2,
+    paddingBottom: vh * 2,
+  },
+  sunIcon: {
+    opacity: 0.95,
+  },
   balanceLabel: {
-    color: '#fff',
-    fontSize: 18,
+    color: 'rgba(255,255,255,0.85)',
+    fontSize: 17,
     fontWeight: '600',
-    letterSpacing: 0.5,
     marginBottom: vh * 0.5,
-    paddingHorizontal: vh * 2.5,
   },
   balanceAmount: {
-    color: '#005f8d',
+    color: '#fff',
     fontSize: 38,
     fontWeight: 'bold',
-    marginBottom: vh * 1.5,
-    paddingHorizontal: vh * 2.5,
+    textShadowColor: 'rgba(0,0,0,0.2)',
+    textShadowOffset: { width: 1, height: 2 },
+    textShadowRadius: 4,
   },
   balanceRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#f0f8ff',
-    paddingVertical: vh * 1.5,
-    borderTopWidth: 1,
-    borderTopColor: '#006699',
+    backgroundColor: '#fff',
+    paddingVertical: vh * 1.75,
+    borderTopWidth: 3,
+    borderTopColor: '#FFBB00',
   },
   balanceSubCard: {
     flex: 1,
     alignItems: 'center',
+    gap: 4,
   },
-  balanceItemRow: {
+  balanceSubCardInner: {
     flexDirection: 'row',
     alignItems: 'center',
+    gap: 10,
+  },
+  iconCircleGreen: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: 'rgba(26,158,92,0.12)',
     justifyContent: 'center',
-    gap: 4,
-    marginBottom: 4,
+    alignItems: 'center',
+  },
+  iconCircleRed: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: 'rgba(192,57,43,0.12)',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   balanceDivider: {
-    width: 2,
-    height: 40,
+    width: 1.5,
+    height: 50,
     backgroundColor: '#FFBB00',
     borderRadius: 1,
   },
   balanceItemLabel: {
-    color: '#0084c5',
-    fontSize: 17,
+    color: '#006699',
+    fontSize: 16.5,
     fontWeight: '600',
   },
   incomeText: {
@@ -136,15 +191,31 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     fontSize: 22,
   },
+  sectionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: vh * 1.5,
+  },
   sectionTitle: {
     fontSize: 16,
     fontWeight: '700',
     color: '#003366',
-    marginBottom: vh * 1.5,
+  },
+  seeAllButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 2,
+  },
+  seeAllText: {
+    fontSize: 14,
+    color: '#07a3e4',
+    fontWeight: '600',
   },
   actionsRow: {
     flexDirection: 'row',
     gap: screenWidth * 0.03,
+    marginTop: vh * 1.5,
     marginBottom: vh * 3,
   },
   actionButton: {
@@ -176,17 +247,36 @@ const styles = StyleSheet.create({
   emptyMovements: {
     backgroundColor: '#fff',
     borderRadius: 14,
-    padding: vh * 2.5,
+    padding: vh * 2,
+    flexDirection: 'row',
     alignItems: 'center',
+    gap: 14,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.08,
     shadowRadius: 6,
     elevation: 3,
   },
+  emptyIconContainer: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: '#E6F2FC',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  emptyTextContainer: {
+    flex: 1,
+  },
   emptyText: {
-    color: '#006699',
+    color: '#003366',
     fontSize: 14,
+    fontWeight: '600',
+    marginBottom: 4,
+  },
+  emptySubText: {
+    color: '#006699',
+    fontSize: 13,
   },
 });
 

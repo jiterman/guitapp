@@ -89,6 +89,7 @@ const styles = StyleSheet.create({
     color: '#003366',
   },
   logoutButton: {
+    backgroundColor: '#fff',
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
