@@ -4,6 +4,8 @@ import * as eva from '@eva-design/eva';
 import { ApplicationProvider, IconRegistry } from '@ui-kitten/components';
 import { EvaIconsPack } from '@ui-kitten/eva-icons';
 import { StatusBar } from 'expo-status-bar';
+import Header from '../src/components/Header';
+import BottomNavBar from '../src/components/BottomNavBar';
 import * as SplashScreen from 'expo-splash-screen';
 
 SplashScreen.preventAutoHideAsync();
@@ -28,7 +30,9 @@ export default function RootLayout() {
     <>
       <IconRegistry icons={EvaIconsPack} />
       <ApplicationProvider {...eva} theme={customTheme}>
+        <Header />
         <Stack screenOptions={{ headerShown: false }} />
+        <BottomNavBar />
         <StatusBar style="auto" />
       </ApplicationProvider>
     </>

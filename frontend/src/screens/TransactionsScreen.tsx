@@ -1,12 +1,13 @@
 import React from 'react';
+import { View, Text } from 'react-native';
 import { Layout } from '@ui-kitten/components';
 
-const HomeScreen = () => {
+const TransactionsScreen: React.FC = () => {
   return (
     <Layout style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-      {/* Home (vacío) - reserved for future features */}
+      <Text>Transacciones (vacío)</Text>
     </Layout>
   );
 };
 
-export default HomeScreen;
+export default TransactionsScreen;
