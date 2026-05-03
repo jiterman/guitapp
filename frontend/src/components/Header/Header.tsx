@@ -14,7 +14,7 @@ const Header: React.FC = () => {
         const profile = await userService.getProfile();
         if (mounted) setFirstName(profile.firstName || 'Usuario');
       } catch (e) {
-        // ignore
+        console.log(e);
       }
     })();
     return () => {
