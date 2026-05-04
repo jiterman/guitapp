@@ -1,10 +1,10 @@
 import React, { useEffect } from 'react';
 import { Stack } from 'expo-router';
+import { useSegments } from 'expo-router';
 import * as eva from '@eva-design/eva';
 import { ApplicationProvider, IconRegistry } from '@ui-kitten/components';
 import { EvaIconsPack } from '@ui-kitten/eva-icons';
 import { StatusBar } from 'expo-status-bar';
-import Header from '../src/components/Header';
 import BottomNavBar from '../src/components/BottomNavBar';
 import * as SplashScreen from 'expo-splash-screen';
 
@@ -26,13 +26,14 @@ export default function RootLayout() {
     SplashScreen.hideAsync();
   }, []);
 
+  const segments = useSegments();
+
   return (
     <>
       <IconRegistry icons={EvaIconsPack} />
       <ApplicationProvider {...eva} theme={customTheme}>
-        <Header />
         <Stack screenOptions={{ headerShown: false }} />
-        <BottomNavBar />
+        {segments[0] !== '(auth)' && <BottomNavBar />}
         <StatusBar style="auto" />
       </ApplicationProvider>
     </>

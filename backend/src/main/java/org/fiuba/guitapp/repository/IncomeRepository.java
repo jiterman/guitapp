@@ -3,12 +3,12 @@ package org.fiuba.guitapp.repository;
 import java.util.List;
 import java.util.UUID;
 
-import org.fiuba.guitapp.model.Expense;
+import org.fiuba.guitapp.model.Income;
 import org.fiuba.guitapp.model.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 
-public interface ExpenseRepository extends JpaRepository<Expense, UUID> {
+public interface IncomeRepository extends JpaRepository<Income, UUID> {
 
-    List<Expense> findAllByUserOrderByDateDesc(User user);
+    List<Income> findAllByUserOrderByDateDesc(User user);
 
 }

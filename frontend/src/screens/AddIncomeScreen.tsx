@@ -11,27 +11,28 @@ import {
 } from 'react-native';
 import { Layout, Text, Button, Input } from '@ui-kitten/components';
 import { router } from 'expo-router';
-import { expenseService } from '../services/expenseService';
-import { CATEGORIES, ExpenseCategoryOption } from '../constants/categories';
+import { incomeService } from '../services/incomeService';
+import type { IncomeCategory } from '../services/incomeService';
+import { INCOME_CATEGORIES, IncomeCategoryOption } from '../constants/categories';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 const vh = screenHeight / 100;
 
-const AddExpenseScreen = () => {
+const AddIncomeScreen = () => {
   const [amount, setAmount] = useState('');
   const [description, setDescription] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState<ExpenseCategoryOption | null>(null);
+  const [selectedCategory, setSelectedCategory] = useState<IncomeCategoryOption | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
   const [search, setSearch] = useState('');
   const [amountError, setAmountError] = useState<string | null>(null);
   const [categoryError, setCategoryError] = useState<string | null>(null);
 
-  const filteredCategories = CATEGORIES.filter(cat =>
+  const filteredCategories = INCOME_CATEGORIES.filter(cat =>
     cat.label.toLowerCase().includes(search.toLowerCase())
   );
 
-  const onSelectCategory = (cat: ExpenseCategoryOption) => {
+  const onSelectCategory = (cat: IncomeCategoryOption) => {
     setSelectedCategory(cat);
     setCategoryError(null);
     setModalVisible(false);
@@ -55,14 +56,14 @@ const AddExpenseScreen = () => {
 
     setSubmitting(true);
     try {
-      await expenseService.addExpense({
+      await incomeService.addIncome({
         amount: parseFloat(amount),
         description: description.trim() || undefined,
-        category: selectedCategory!.value,
+        category: selectedCategory!.value as unknown as IncomeCategory,
       });
       router.back();
     } catch {
-      Alert.alert('Error', 'No se pudo registrar el gasto. Intentá de nuevo.');
+      Alert.alert('Error', 'No se pudo registrar el ingreso. Intentá de nuevo.');
     } finally {
       setSubmitting(false);
     }
@@ -73,7 +74,7 @@ const AddExpenseScreen = () => {
       <Layout style={styles.container}>
         <View style={styles.subHeader}>
           <Text category="h4" style={styles.title}>
-            Agregar gasto
+            Agregar ingreso
           </Text>
           <TouchableOpacity onPress={() => router.back()}>
             <Text style={styles.closeButton}>✕</Text>
@@ -98,7 +99,7 @@ const AddExpenseScreen = () => {
         <Input
           value={description}
           onChangeText={setDescription}
-          placeholder="Ej. Almuerzo"
+          placeholder="Ej. Pago por proyecto"
           style={styles.input}
         />
 
@@ -118,7 +119,7 @@ const AddExpenseScreen = () => {
 
         <Button style={styles.button} onPress={onSubmit} disabled={submitting}>
           {() => (
-            <Text style={styles.buttonText}>{submitting ? 'Guardando...' : 'Guardar gasto'}</Text>
+            <Text style={styles.buttonText}>{submitting ? 'Guardando...' : 'Guardar ingreso'}</Text>
           )}
         </Button>
       </Layout>
@@ -329,4 +330,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default AddExpenseScreen;
+export default AddIncomeScreen;

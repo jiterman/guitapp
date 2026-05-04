@@ -1,12 +1,19 @@
 import { ExpenseCategory } from '../services/expenseService';
+import { IncomeCategory } from '../services/incomeService';
 
-export interface CategoryOption {
+export interface ExpenseCategoryOption {
   label: string;
   value: ExpenseCategory;
   icon: string;
 }
 
-export const CATEGORIES: CategoryOption[] = [
+export interface IncomeCategoryOption {
+  label: string;
+  value: IncomeCategory;
+  icon: string;
+}
+
+export const CATEGORIES: ExpenseCategoryOption[] = [
   { label: 'Supermercado', value: 'SUPERMARKET', icon: '🛒' },
   { label: 'Restaurante', value: 'RESTAURANT', icon: '🍽️' },
   { label: 'Café', value: 'CAFE', icon: '☕' },
@@ -31,5 +38,13 @@ export const CATEGORIES: CategoryOption[] = [
   { label: 'Tecnología', value: 'TECHNOLOGY', icon: '💻' },
   { label: 'Belleza', value: 'BEAUTY', icon: '💅' },
   { label: 'Mascotas', value: 'PETS', icon: '🐾' },
+  { label: 'Otros', value: 'OTHER', icon: '📦' },
+];
+
+export const INCOME_CATEGORIES: IncomeCategoryOption[] = [
+  { label: 'Sueldo', value: 'SALARY', icon: '💼' },
+  { label: 'Freelance', value: 'FREELANCE', icon: '🧑‍💻' },
+  { label: 'Regalo', value: 'GIFT', icon: '🎁' },
+  { label: 'Inversión', value: 'INVESTMENT', icon: '📈' },
   { label: 'Otros', value: 'OTHER', icon: '📦' },
 ];
