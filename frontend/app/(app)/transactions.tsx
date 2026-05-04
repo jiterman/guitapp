@@ -1,4 +1,4 @@
-import TransactionsScreen from '../src/screens/TransactionsScreen';
+import TransactionsScreen from '../../src/screens/TransactionsScreen';
 
 export default function Transactions() {
   return <TransactionsScreen />;
