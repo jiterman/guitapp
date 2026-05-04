@@ -54,9 +54,12 @@ const HomeScreen = () => {
           <Ionicons name="remove-circle-outline" size={40} color="#FFBB00" />
           <Text style={[styles.actionLabel, { color: '#07a3e4' }]}>Gasto</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={[styles.actionButton, styles.actionDisabled]}>
+        <TouchableOpacity
+          style={[styles.actionButton, styles.actionButtonPrimary]}
+          onPress={() => router.push('/add-income')}
+        >
           <Ionicons name="add-circle-outline" size={40} color="#FFBB00" />
-          <Text style={styles.actionLabel}>Ingreso</Text>
+          <Text style={[styles.actionLabel, { color: '#07a3e4' }]}>Ingreso</Text>
         </TouchableOpacity>
         <TouchableOpacity style={[styles.actionButton, styles.actionDisabled]}>
           <Ionicons name="bar-chart-outline" size={40} color="#FFBB00" />

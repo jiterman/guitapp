@@ -13,8 +13,8 @@ const Header: React.FC = () => {
       try {
         const profile = await userService.getProfile();
         if (mounted) setFirstName(profile.firstName || 'Usuario');
-      } catch (e) {
-        console.log(e);
+      } catch {
+        // ignore profile load errors
       }
     })();
     return () => {
