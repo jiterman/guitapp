@@ -12,7 +12,7 @@ import {
 import { Layout, Text, Button, Input } from '@ui-kitten/components';
 import { router } from 'expo-router';
 import { expenseService } from '../services/expenseService';
-import { CATEGORIES, CategoryOption } from '../constants/categories';
+import { CATEGORIES, ExpenseCategoryOption } from '../constants/categories';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 const vh = screenHeight / 100;
@@ -20,7 +20,7 @@ const vh = screenHeight / 100;
 const AddExpenseScreen = () => {
   const [amount, setAmount] = useState('');
   const [description, setDescription] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState<CategoryOption | null>(null);
+  const [selectedCategory, setSelectedCategory] = useState<ExpenseCategoryOption | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
   const [search, setSearch] = useState('');
@@ -31,7 +31,7 @@ const AddExpenseScreen = () => {
     cat.label.toLowerCase().includes(search.toLowerCase())
   );
 
-  const onSelectCategory = (cat: CategoryOption) => {
+  const onSelectCategory = (cat: ExpenseCategoryOption) => {
     setSelectedCategory(cat);
     setCategoryError(null);
     setModalVisible(false);
