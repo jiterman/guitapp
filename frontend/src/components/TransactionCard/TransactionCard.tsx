@@ -26,7 +26,7 @@ const TransactionCard: React.FC<Props> = ({ movement }) => {
       </View>
       <View>
         <Text style={movement.type === 'INCOME' ? styles.incomeAmount : styles.expenseAmount}>
-          {movement.type === 'INCOME' ? '+' : '-'}${movement.amount}
+          {movement.type === 'INCOME' ? '+' : '-'}${new Intl.NumberFormat('es-AR').format(Number(movement.amount))}
         </Text>
       </View>
     </View>

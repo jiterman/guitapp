@@ -53,12 +53,16 @@ const HomeScreen = () => {
     setIncomeSum(incomesThisMonth);
     setExpenseSum(expensesThisMonth);
   }, [movements]);
+  const now = new Date();
+  const monthName = now.toLocaleString('es-ES', { month: 'long' });
+  const monthLabel = `${monthName.charAt(0).toUpperCase()}${monthName.slice(1)} ${now.getFullYear()}`;
+
   return (
     <Layout style={styles.container}>
       <View style={styles.balanceCard}>
         <View style={styles.balanceTop}>
           <View>
-            <Text style={styles.balanceLabel}>{`Balance de ${new Date().toLocaleString('es-ES', { month: 'long' })}`}</Text>
+            <Text style={styles.balanceLabel}>{`Balance de ${monthLabel}`}</Text>
             <Text style={styles.balanceAmount}>${new Intl.NumberFormat('es-AR').format(incomeSum - expenseSum)}</Text>
           </View>
           <Ionicons name="sunny" size={56} color="#FFBB00" style={styles.sunIcon} />
@@ -347,10 +351,10 @@ const styles = StyleSheet.create({
     elevation: 3,
     maxHeight: vh * 28,
     paddingRight: 8,
-    marginBottom: vh * 2,
   },
   movementsContainer: {
     marginBottom: vh * 2,
+    paddingBottom: vh * 2,
   },
   movementRow: {
     flexDirection: 'row',
