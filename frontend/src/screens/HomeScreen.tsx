@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, StyleSheet, TouchableOpacity, Dimensions, Alert, ScrollView } from 'react-native';
+import { View, StyleSheet, TouchableOpacity, Dimensions, ScrollView } from 'react-native';
 import { Layout, Text } from '@ui-kitten/components';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
@@ -20,7 +20,7 @@ const HomeScreen = () => {
       try {
         const data = await movementService.getMovements();
         if (mounted) setMovements(data);
-      } catch (err) {
+      } catch {
         // ignore
       }
     })();
@@ -35,16 +35,16 @@ const HomeScreen = () => {
     const currentYear = now.getFullYear();
 
     const incomesThisMonth = movements
-      .filter((m) => m.type === 'INCOME')
-      .filter((m) => {
+      .filter(m => m.type === 'INCOME')
+      .filter(m => {
         const d = new Date(m.date);
         return d.getMonth() === currentMonth && d.getFullYear() === currentYear;
       })
       .reduce((acc, m) => acc + Number(m.amount), 0);
 
     const expensesThisMonth = movements
-      .filter((m) => m.type === 'EXPENSE')
-      .filter((m) => {
+      .filter(m => m.type === 'EXPENSE')
+      .filter(m => {
         const d = new Date(m.date);
         return d.getMonth() === currentMonth && d.getFullYear() === currentYear;
       })
@@ -63,7 +63,9 @@ const HomeScreen = () => {
         <View style={styles.balanceTop}>
           <View>
             <Text style={styles.balanceLabel}>{`Balance de ${monthLabel}`}</Text>
-            <Text style={styles.balanceAmount}>${new Intl.NumberFormat('es-AR').format(incomeSum - expenseSum)}</Text>
+            <Text style={styles.balanceAmount}>
+              ${new Intl.NumberFormat('es-AR').format(incomeSum - expenseSum)}
+            </Text>
           </View>
           <Ionicons name="sunny" size={56} color="#FFBB00" style={styles.sunIcon} />
         </View>
@@ -75,7 +77,9 @@ const HomeScreen = () => {
               </View>
               <View>
                 <Text style={styles.balanceItemLabel}>Ingresos</Text>
-                <Text style={styles.incomeText}>${new Intl.NumberFormat('es-AR').format(incomeSum)}</Text>
+                <Text style={styles.incomeText}>
+                  ${new Intl.NumberFormat('es-AR').format(incomeSum)}
+                </Text>
               </View>
             </View>
           </View>
@@ -87,7 +91,9 @@ const HomeScreen = () => {
               </View>
               <View>
                 <Text style={styles.balanceItemLabel}>Gastos</Text>
-                <Text style={styles.expenseText}>${new Intl.NumberFormat('es-AR').format(expenseSum)}</Text>
+                <Text style={styles.expenseText}>
+                  ${new Intl.NumberFormat('es-AR').format(expenseSum)}
+                </Text>
               </View>
             </View>
           </View>
@@ -138,7 +144,7 @@ const HomeScreen = () => {
           </View>
         ) : (
           <ScrollView style={styles.movementsList} nestedScrollEnabled>
-            {movements.map((m) => (
+            {movements.map(m => (
               <View key={m.id}>
                 <TransactionCard movement={m} />
                 <View style={{ height: 1, backgroundColor: '#EEF6FB' }} />
@@ -377,10 +383,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   incomeIconBg: {
-    backgroundColor: 'rgba(26,158,92,0.08)'
+    backgroundColor: 'rgba(26,158,92,0.08)',
   },
   expenseIconBg: {
-    backgroundColor: 'rgba(192,57,43,0.08)'
+    backgroundColor: 'rgba(192,57,43,0.08)',
   },
   movementDesc: {
     fontSize: 14,

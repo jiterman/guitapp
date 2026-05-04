@@ -16,10 +16,12 @@ const BottomNavBar: React.FC = () => {
   const currentIndex = useRef<number>(0);
   // try to initialize from router.pathname if available
   try {
-    const pathname = (router as any).pathname;
-    const idx = order.indexOf(pathname);
+    const pathname = (router as unknown as { pathname?: string }).pathname;
+    const idx = order.indexOf(pathname || '');
     if (idx !== -1) currentIndex.current = idx;
-  } catch (_) {}
+  } catch {
+    // ignore
+  }
 
   const panRef = useRef(
     PanResponder.create({
