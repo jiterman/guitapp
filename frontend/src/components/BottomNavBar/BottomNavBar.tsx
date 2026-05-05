@@ -1,6 +1,7 @@
 import React, { useRef } from 'react';
 import { View, Pressable, PanResponder } from 'react-native';
 import { useRouter } from 'expo-router';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { SvgXml } from 'react-native-svg';
 
 import HOME_ICON from '../../../assets/icons/homeIcon';
@@ -11,6 +12,7 @@ import styles from '../../styles/bottomNavStyles';
 
 const BottomNavBar: React.FC = () => {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
 
   const order = ['/home', '/transactions', '/more', '/profile'];
   const currentIndex = useRef<number>(0);
@@ -25,8 +27,8 @@ const BottomNavBar: React.FC = () => {
 
   const panRef = useRef(
     PanResponder.create({
-      onStartShouldSetPanResponder: () => true,
-      onMoveShouldSetPanResponder: () => true,
+      onStartShouldSetPanResponder: () => false,
+      onMoveShouldSetPanResponder: (_, gestureState) => Math.abs(gestureState.dx) > 10,
       onPanResponderRelease: (_, gestureState) => {
         const { dx } = gestureState;
         if (Math.abs(dx) < 50) return;
@@ -45,7 +47,11 @@ const BottomNavBar: React.FC = () => {
   );
 
   return (
-    <View style={styles.container} accessibilityRole="tablist" {...panRef.current.panHandlers}>
+    <View
+      style={[styles.container, { paddingBottom: insets.bottom }]}
+      accessibilityRole="tablist"
+      {...panRef.current.panHandlers}
+    >
       <Pressable
         style={styles.button}
         onPress={() => {
