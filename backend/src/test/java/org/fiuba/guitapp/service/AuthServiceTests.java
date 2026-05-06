@@ -200,4 +200,146 @@ class AuthServiceTests {
         assertThat(user.getVerificationOtp()).isNull();
         verify(userRepository).save(user);
     }
+
+    @Test
+    void shouldThrowExceptionWhenVerifyRegistrationUserNotFound() {
+        String email = "nonexistent@example.com";
+        when(userRepository.findByEmail(email)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> authService.verifyRegistration(email, "123456"))
+                .isInstanceOf(org.fiuba.guitapp.exception.AuthException.class)
+                .hasMessageContaining("User not found");
+    }
+
+    @Test
+    void shouldThrowExceptionWhenVerifyRegistrationUserAlreadyVerified() {
+        String email = "already@verified.com";
+        User user = new User();
+        user.setEmail(email);
+        user.setStatus(UserStatus.ACTIVE);
+
+        when(userRepository.findByEmail(email)).thenReturn(Optional.of(user));
+
+        assertThatThrownBy(() -> authService.verifyRegistration(email, "123456"))
+                .isInstanceOf(org.fiuba.guitapp.exception.AuthException.class)
+                .hasMessageContaining("User already verified");
+    }
+
+    @Test
+    void shouldLoginSuccessfully() {
+        String email = "user@example.com";
+        String password = "Password123";
+        String token = "jwt_token";
+
+        when(jwtService.generateToken(email)).thenReturn(token);
+
+        var result = authService.login(email, password);
+
+        assertThat(result.get("token")).isEqualTo(token);
+        verify(authenticationManager).authenticate(any(org.springframework.security.authentication.UsernamePasswordAuthenticationToken.class));
+    }
+
+    @Test
+    void shouldDoNothingWhenForgotPasswordUserNotFound() {
+        String email = "nonexistent@example.com";
+        when(userRepository.findByEmail(email)).thenReturn(Optional.empty());
+
+        authService.forgotPassword(email);
+
+        verify(userRepository, org.mockito.Mockito.never()).save(any());
+    }
+
+    @Test
+    void shouldDoNothingWhenForgotPasswordUserNotActive() {
+        String email = "pending@example.com";
+        User user = new User();
+        user.setEmail(email);
+        user.setStatus(UserStatus.PENDING_VERIFICATION);
+
+        when(userRepository.findByEmail(email)).thenReturn(Optional.of(user));
+
+        authService.forgotPassword(email);
+
+        verify(userRepository, org.mockito.Mockito.never()).save(any());
+    }
+
+    @Test
+    void shouldThrowExceptionWhenVerifyResetOtpUserNotFound() {
+        String email = "nonexistent@example.com";
+        when(userRepository.findByEmail(email)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> authService.verifyResetOtp(email, "123456"))
+                .isInstanceOf(org.fiuba.guitapp.exception.AuthException.class)
+                .hasMessageContaining("User not found");
+    }
+
+    @Test
+    void shouldThrowExceptionWhenVerifyResetOtpInvalid() {
+        String email = "user@example.com";
+        User user = new User();
+        user.setEmail(email);
+        user.setVerificationOtp("123456");
+
+        when(userRepository.findByEmail(email)).thenReturn(Optional.of(user));
+
+        assertThatThrownBy(() -> authService.verifyResetOtp(email, "654321"))
+                .isInstanceOf(org.fiuba.guitapp.exception.AuthException.class)
+                .hasMessageContaining("Invalid OTP");
+    }
+
+    @Test
+    void shouldThrowExceptionWhenVerifyResetOtpExpired() {
+        String email = "user@example.com";
+        String otp = "123456";
+        User user = new User();
+        user.setEmail(email);
+        user.setVerificationOtp(otp);
+
+        when(userRepository.findByEmail(email)).thenReturn(Optional.of(user));
+        when(otpService.isOtpExpired(any())).thenReturn(true);
+
+        assertThatThrownBy(() -> authService.verifyResetOtp(email, otp))
+                .isInstanceOf(org.fiuba.guitapp.exception.AuthException.class)
+                .hasMessageContaining("OTP expired");
+    }
+
+    @Test
+    void shouldThrowExceptionWhenResetPasswordUserNotFound() {
+        String email = "nonexistent@example.com";
+        when(userRepository.findByEmail(email)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> authService.resetPassword(email, "123456", "newPass"))
+                .isInstanceOf(org.fiuba.guitapp.exception.AuthException.class)
+                .hasMessageContaining("User not found");
+    }
+
+    @Test
+    void shouldThrowExceptionWhenResetPasswordInvalidOtp() {
+        String email = "user@example.com";
+        User user = new User();
+        user.setEmail(email);
+        user.setVerificationOtp("123456");
+
+        when(userRepository.findByEmail(email)).thenReturn(Optional.of(user));
+
+        assertThatThrownBy(() -> authService.resetPassword(email, "wrong", "newPass"))
+                .isInstanceOf(org.fiuba.guitapp.exception.AuthException.class)
+                .hasMessageContaining("Invalid OTP");
+    }
+
+    @Test
+    void shouldThrowExceptionWhenResetPasswordOtpExpired() {
+        String email = "user@example.com";
+        String otp = "123456";
+        User user = new User();
+        user.setEmail(email);
+        user.setVerificationOtp(otp);
+
+        when(userRepository.findByEmail(email)).thenReturn(Optional.of(user));
+        when(otpService.isOtpExpired(any())).thenReturn(true);
+
+        assertThatThrownBy(() -> authService.resetPassword(email, otp, "newPass"))
+                .isInstanceOf(org.fiuba.guitapp.exception.AuthException.class)
+                .hasMessageContaining("OTP expired");
+    }
 }

@@ -73,4 +73,55 @@ class AuthControllerTests {
                 .content(objectMapper.writeValueAsString(loginRequest)))
                 .andExpect(status().isOk());
     }
+
+    @Test
+    void shouldReturnOkWhenForgotPasswordIsSuccessful() throws Exception {
+        org.fiuba.guitapp.dto.ForgotPasswordRequest request = new org.fiuba.guitapp.dto.ForgotPasswordRequest("test@example.com");
+        doNothing().when(authService).forgotPassword(request.email());
+
+        mockMvc.perform(post("/api/auth/forgot-password").contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request))).andExpect(status().isOk());
+    }
+
+    @Test
+    void shouldReturnOkWhenVerifyResetOtpIsSuccessful() throws Exception {
+        org.fiuba.guitapp.dto.VerifyResetOtpRequest request = new org.fiuba.guitapp.dto.VerifyResetOtpRequest("test@example.com", "123456");
+        doNothing().when(authService).verifyResetOtp(request.email(), request.otp());
+
+        mockMvc.perform(post("/api/auth/verify-reset-otp").contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request))).andExpect(status().isOk());
+    }
+
+    @Test
+    void shouldReturnOkWhenResetPasswordIsSuccessful() throws Exception {
+        org.fiuba.guitapp.dto.ResetPasswordRequest request = new org.fiuba.guitapp.dto.ResetPasswordRequest("test@example.com", "123456", "newPassword123");
+        doNothing().when(authService).resetPassword(request.email(), request.otp(), request.newPassword());
+
+        mockMvc.perform(post("/api/auth/reset-password").contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request))).andExpect(status().isOk());
+    }
+
+    @Test
+    void shouldReturnBadRequestWhenForgotPasswordDataIsInvalid() throws Exception {
+        org.fiuba.guitapp.dto.ForgotPasswordRequest request = new org.fiuba.guitapp.dto.ForgotPasswordRequest("invalid-email");
+
+        mockMvc.perform(post("/api/auth/forgot-password").contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request))).andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void shouldReturnBadRequestWhenVerifyResetOtpDataIsInvalid() throws Exception {
+        org.fiuba.guitapp.dto.VerifyResetOtpRequest request = new org.fiuba.guitapp.dto.VerifyResetOtpRequest("test@example.com", "123");
+
+        mockMvc.perform(post("/api/auth/verify-reset-otp").contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request))).andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void shouldReturnBadRequestWhenResetPasswordDataIsInvalid() throws Exception {
+        org.fiuba.guitapp.dto.ResetPasswordRequest request = new org.fiuba.guitapp.dto.ResetPasswordRequest("test@example.com", "123456", "short");
+
+        mockMvc.perform(post("/api/auth/reset-password").contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request))).andExpect(status().isBadRequest());
+    }
 }

@@ -29,4 +29,40 @@ class EmailServiceTests {
 
         verify(mailSender).send(any(SimpleMailMessage.class));
     }
+
+    @Test
+    void shouldSendResetPasswordOtpEmail() {
+        String to = "user@example.com";
+        String otp = "123456";
+
+        emailService.sendResetPasswordOtp(to, otp);
+
+        verify(mailSender).send(any(SimpleMailMessage.class));
+    }
+
+    @Test
+    void shouldHandleMailExceptionInSendRegistrationOtp() {
+        String to = "user@example.com";
+        String otp = "123456";
+        org.mockito.Mockito.doThrow(new org.springframework.mail.MailSendException("error"))
+                .when(mailSender)
+                .send(any(SimpleMailMessage.class));
+
+        emailService.sendRegistrationOtp(to, otp);
+
+        verify(mailSender).send(any(SimpleMailMessage.class));
+    }
+
+    @Test
+    void shouldHandleMailExceptionInSendResetPasswordOtp() {
+        String to = "user@example.com";
+        String otp = "123456";
+        org.mockito.Mockito.doThrow(new org.springframework.mail.MailSendException("error"))
+                .when(mailSender)
+                .send(any(SimpleMailMessage.class));
+
+        emailService.sendResetPasswordOtp(to, otp);
+
+        verify(mailSender).send(any(SimpleMailMessage.class));
+    }
 }
