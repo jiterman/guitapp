@@ -145,4 +145,59 @@ class AuthServiceTests {
         assertThatThrownBy(() -> authService.verifyRegistration(email, otp)).isInstanceOf(RuntimeException.class)
                 .hasMessageContaining("OTP expired");
     }
+
+    @Test
+    void shouldForgotPasswordSuccessfully() {
+        String email = "user@example.com";
+        String otp = "123456";
+        User user = new User();
+        user.setEmail(email);
+        user.setStatus(UserStatus.ACTIVE);
+
+        when(userRepository.findByEmail(email)).thenReturn(Optional.of(user));
+        when(otpService.generateOtp()).thenReturn(otp);
+
+        authService.forgotPassword(email);
+
+        verify(emailService).sendResetPasswordOtp(email, otp);
+        verify(userRepository).save(user);
+        assertThat(user.getVerificationOtp()).isEqualTo(otp);
+    }
+
+    @Test
+    void shouldVerifyResetOtpSuccessfully() {
+        String email = "user@example.com";
+        String otp = "123456";
+        User user = new User();
+        user.setEmail(email);
+        user.setVerificationOtp(otp);
+        user.setOtpCreatedAt(java.time.LocalDateTime.now());
+
+        when(userRepository.findByEmail(email)).thenReturn(Optional.of(user));
+        when(otpService.isOtpExpired(any())).thenReturn(false);
+
+        authService.verifyResetOtp(email, otp);
+    }
+
+    @Test
+    void shouldResetPasswordSuccessfully() {
+        String email = "user@example.com";
+        String otp = "123456";
+        String newPassword = "newPassword123";
+        String encodedPassword = "encoded_new_password";
+        User user = new User();
+        user.setEmail(email);
+        user.setVerificationOtp(otp);
+        user.setOtpCreatedAt(java.time.LocalDateTime.now());
+
+        when(userRepository.findByEmail(email)).thenReturn(Optional.of(user));
+        when(otpService.isOtpExpired(any())).thenReturn(false);
+        when(passwordEncoder.encode(newPassword)).thenReturn(encodedPassword);
+
+        authService.resetPassword(email, otp, newPassword);
+
+        assertThat(user.getPassword()).isEqualTo(encodedPassword);
+        assertThat(user.getVerificationOtp()).isNull();
+        verify(userRepository).save(user);
+    }
 }

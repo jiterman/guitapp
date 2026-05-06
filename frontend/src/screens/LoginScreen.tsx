@@ -81,10 +81,7 @@ const LoginScreen = () => {
   );
 
   const handleForgotPassword = () => {
-    Alert.alert(
-      'Recuperar contraseña',
-      'La funcionalidad de recuperación de contraseña estará disponible pronto.'
-    );
+    router.push('/forgot-password');
   };
 
   const onLoginPress = async () => {

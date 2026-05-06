@@ -4,12 +4,13 @@ import { ApplicationProvider, IconRegistry } from '@ui-kitten/components';
 import { EvaIconsPack } from '@ui-kitten/eva-icons';
 import * as eva from '@eva-design/eva';
 import VerificationSuccessScreen from '../src/screens/VerificationSuccessScreen';
-import { router } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 
 jest.mock('expo-router', () => ({
   router: {
     push: jest.fn(),
   },
+  useLocalSearchParams: jest.fn(),
 }));
 
 const renderWithKitten = (component: React.ReactElement) => {
@@ -24,11 +25,15 @@ const renderWithKitten = (component: React.ReactElement) => {
 };
 
 describe('VerificationSuccessScreen', () => {
+  beforeEach(() => {
+    (useLocalSearchParams as jest.Mock).mockReturnValue({});
+  });
+
   it('should render correctly with expected content', () => {
     const { getByTestId, getByText } = renderWithKitten(<VerificationSuccessScreen />);
 
     expect(getByTestId('success-title')).toBeDefined();
-    expect(getByText('¡Cuenta verificada existosamente!')).toBeDefined();
+    expect(getByText('¡Cuenta verificada exitosamente!')).toBeDefined();
 
     expect(getByTestId('success-subtitle')).toBeDefined();
     expect(
@@ -36,6 +41,18 @@ describe('VerificationSuccessScreen', () => {
     ).toBeDefined();
 
     expect(getByTestId('login-button')).toBeDefined();
+  });
+
+  it('should render with custom content when params are provided', () => {
+    (useLocalSearchParams as jest.Mock).mockReturnValue({
+      title: 'Custom Title',
+      subtitle: 'Custom Subtitle',
+    });
+
+    const { getByText } = renderWithKitten(<VerificationSuccessScreen />);
+
+    expect(getByText('Custom Title')).toBeDefined();
+    expect(getByText('Custom Subtitle')).toBeDefined();
   });
 
   it('should navigate to login when pressing the Ingresar button', () => {

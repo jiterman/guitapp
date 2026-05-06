@@ -87,4 +87,49 @@ public class AuthService {
         String token = jwtService.generateToken(email);
         return Map.of("token", token);
     }
+
+    @Transactional
+    public void forgotPassword(String email) {
+        userRepository.findByEmail(email).ifPresent(user -> {
+            if (user.getStatus() == UserStatus.ACTIVE) {
+                String otp = otpService.generateOtp();
+                user.setVerificationOtp(otp);
+                user.setOtpCreatedAt(LocalDateTime.now());
+                userRepository.save(user);
+                emailService.sendResetPasswordOtp(email, otp);
+            }
+        });
+    }
+
+    public void verifyResetOtp(String email, String otp) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new AuthException(ErrorCode.USER_NOT_FOUND, "User not found"));
+
+        if (!otp.equals(user.getVerificationOtp())) {
+            throw new AuthException(ErrorCode.INVALID_OTP, "Invalid OTP");
+        }
+
+        if (otpService.isOtpExpired(user.getOtpCreatedAt())) {
+            throw new AuthException(ErrorCode.OTP_EXPIRED, "OTP expired");
+        }
+    }
+
+    @Transactional
+    public void resetPassword(String email, String otp, String newPassword) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new AuthException(ErrorCode.USER_NOT_FOUND, "User not found"));
+
+        if (!otp.equals(user.getVerificationOtp())) {
+            throw new AuthException(ErrorCode.INVALID_OTP, "Invalid OTP");
+        }
+
+        if (otpService.isOtpExpired(user.getOtpCreatedAt())) {
+            throw new AuthException(ErrorCode.OTP_EXPIRED, "OTP expired");
+        }
+
+        user.setPassword(passwordEncoder.encode(newPassword));
+        user.setVerificationOtp(null);
+        user.setOtpCreatedAt(null);
+        userRepository.save(user);
+    }
 }

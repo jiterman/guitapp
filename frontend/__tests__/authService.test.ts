@@ -87,4 +87,61 @@ describe('authService', () => {
 
     expect(SecureStore.deleteItemAsync).toHaveBeenCalledWith('userToken');
   });
+
+  it('should call forgotPassword endpoint correctly', async () => {
+    (global.fetch as jest.Mock).mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({ message: 'Success' }),
+    });
+
+    const email = 'test@example.com';
+    await authService.forgotPassword(email);
+
+    expect(global.fetch).toHaveBeenCalledWith(
+      expect.stringContaining('/auth/forgot-password'),
+      expect.objectContaining({
+        method: 'POST',
+        body: JSON.stringify({ email }),
+      })
+    );
+  });
+
+  it('should call verifyResetOtp endpoint correctly', async () => {
+    (global.fetch as jest.Mock).mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({ message: 'Success' }),
+    });
+
+    const email = 'test@example.com';
+    const otp = '123456';
+    await authService.verifyResetOtp(email, otp);
+
+    expect(global.fetch).toHaveBeenCalledWith(
+      expect.stringContaining('/auth/verify-reset-otp'),
+      expect.objectContaining({
+        method: 'POST',
+        body: JSON.stringify({ email, otp }),
+      })
+    );
+  });
+
+  it('should call resetPassword endpoint correctly', async () => {
+    (global.fetch as jest.Mock).mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({ message: 'Success' }),
+    });
+
+    const email = 'test@example.com';
+    const otp = '123456';
+    const newPassword = 'newPassword123';
+    await authService.resetPassword(email, otp, newPassword);
+
+    expect(global.fetch).toHaveBeenCalledWith(
+      expect.stringContaining('/auth/reset-password'),
+      expect.objectContaining({
+        method: 'POST',
+        body: JSON.stringify({ email, otp, newPassword }),
+      })
+    );
+  });
 });
