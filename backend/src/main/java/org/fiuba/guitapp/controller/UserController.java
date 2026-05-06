@@ -4,10 +4,12 @@ import java.security.Principal;
 import java.util.Map;
 
 import org.fiuba.guitapp.dto.OnboardingRequest;
+import org.fiuba.guitapp.dto.UpdateUserProfileRequest;
 import org.fiuba.guitapp.dto.UserProfileResponse;
 import org.fiuba.guitapp.service.UserService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -33,5 +35,15 @@ public class UserController {
     public ResponseEntity<?> completeOnboarding(Principal principal, @Valid @RequestBody OnboardingRequest request) {
         userService.completeOnboarding(principal.getName(), request);
         return ResponseEntity.ok(Map.of("message", "Onboarding completed successfully"));
+    }
+
+    @PatchMapping("/me/profile")
+    public ResponseEntity<UserProfileResponse> updateProfile(
+            Principal principal,
+            @Valid @RequestBody UpdateUserProfileRequest request) {
+
+        UserProfileResponse response = userService.updateUserProfile(principal.getName(), request);
+
+        return ResponseEntity.ok(response);
     }
 }

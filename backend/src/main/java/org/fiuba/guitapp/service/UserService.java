@@ -1,6 +1,7 @@
 package org.fiuba.guitapp.service;
 
 import org.fiuba.guitapp.dto.OnboardingRequest;
+import org.fiuba.guitapp.dto.UpdateUserProfileRequest;
 import org.fiuba.guitapp.dto.UserProfileResponse;
 import org.fiuba.guitapp.exception.AuthException;
 import org.fiuba.guitapp.exception.ErrorCode;
@@ -25,6 +26,7 @@ public class UserService {
                 user.getId(),
                 user.getEmail(),
                 user.getFirstName(),
+                user.getLastName(),
                 user.isOnboardingCompleted(),
                 user.getTargetFixedExpenses(),
                 user.getTargetVariableExpenses(),
@@ -53,5 +55,30 @@ public class UserService {
         user.setOnboardingCompleted(true);
 
         userRepository.save(user);
+    }
+
+    @Transactional
+    public UserProfileResponse updateUserProfile(String email, UpdateUserProfileRequest request) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new AuthException(ErrorCode.USER_NOT_FOUND, "User not found"));
+
+        user.setFirstName(request.firstName());
+
+        if (request.lastName() == null || request.lastName().isBlank()) {
+            user.setLastName(null);
+        } else {
+            user.setLastName(request.lastName());
+        }
+        userRepository.save(user);
+
+        return new UserProfileResponse(
+                user.getId(),
+                user.getEmail(),
+                user.getFirstName(),
+                user.getLastName(),
+                user.isOnboardingCompleted(),
+                user.getTargetFixedExpenses(),
+                user.getTargetVariableExpenses(),
+                user.getTargetSavings());
     }
 }

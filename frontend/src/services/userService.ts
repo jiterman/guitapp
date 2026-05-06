@@ -44,4 +44,27 @@ export const userService = {
 
     return response.json();
   },
+
+  updateProfile: async (firstName: string, lastName?: string) => {
+    const token = await authService.getToken();
+
+    const response = await fetch(`${API_URL}/api/users/me/profile`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        firstName,
+        lastName,
+      }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || 'Error updating profile');
+    }
+
+    return response.json();
+  },
 };
