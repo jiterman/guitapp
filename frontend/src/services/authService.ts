@@ -160,6 +160,8 @@ export const authService = {
       throw errorToThrow;
     }
 
+    await authService.removeBiometricUser(email);
+
     return response.json();
   },
 
@@ -217,5 +219,13 @@ export const authService = {
     const key = `biometric_creds_${email.replace(/[^a-zA-Z0-9._-]/g, '_')}`;
     const raw = await SecureStore.getItemAsync(key);
     return raw ? JSON.parse(raw) : null;
+  },
+
+  removeBiometricUser: async (email: string) => {
+    const users = await authService.getBiometricUsers();
+    const filtered = users.filter(u => u.email !== email);
+    await SecureStore.setItemAsync('biometricUsers', JSON.stringify(filtered));
+    const key = `biometric_creds_${email.replace(/[^a-zA-Z0-9._-]/g, '_')}`;
+    await SecureStore.deleteItemAsync(key);
   },
 };

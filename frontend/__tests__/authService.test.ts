@@ -125,11 +125,16 @@ describe('authService', () => {
     );
   });
 
-  it('should call resetPassword endpoint correctly', async () => {
+  it('should call resetPassword endpoint correctly and remove biometric user', async () => {
     (global.fetch as jest.Mock).mockResolvedValueOnce({
       ok: true,
       json: async () => ({ message: 'Success' }),
     });
+
+    // Mock getBiometricUsers behavior
+    (SecureStore.getItemAsync as jest.Mock).mockResolvedValueOnce(
+      JSON.stringify([{ email: 'test@example.com' }])
+    );
 
     const email = 'test@example.com';
     const otp = '123456';
@@ -143,5 +148,20 @@ describe('authService', () => {
         body: JSON.stringify({ email, otp, newPassword }),
       })
     );
+    expect(SecureStore.setItemAsync).toHaveBeenCalledWith('biometricUsers', '[]');
+    expect(SecureStore.deleteItemAsync).toHaveBeenCalledWith('biometric_creds_test_example.com');
+  });
+
+  it('should remove biometric user correctly', async () => {
+    const email = 'test@example.com';
+    // Mock that we have a user in SecureStore
+    (SecureStore.getItemAsync as jest.Mock).mockResolvedValueOnce(
+      JSON.stringify([{ email, firstName: 'Test' }])
+    );
+
+    await authService.removeBiometricUser(email);
+
+    expect(SecureStore.setItemAsync).toHaveBeenCalledWith('biometricUsers', '[]');
+    expect(SecureStore.deleteItemAsync).toHaveBeenCalledWith(`biometric_creds_test_example.com`);
   });
 });
