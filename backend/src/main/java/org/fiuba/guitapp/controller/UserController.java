@@ -10,10 +10,13 @@ import org.fiuba.guitapp.service.UserService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -43,6 +46,16 @@ public class UserController {
             @Valid @RequestBody UpdateUserProfileRequest request) {
 
         UserProfileResponse response = userService.updateUserProfile(principal.getName(), request);
+
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/me/avatar")
+    public ResponseEntity<UserProfileResponse> uploadAvatar(
+            Principal principal,
+            @RequestParam("file") MultipartFile file) {
+
+        UserProfileResponse response = userService.updateAvatar(principal.getName(), file);
 
         return ResponseEntity.ok(response);
     }

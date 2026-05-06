@@ -7,6 +7,7 @@ public record UserProfileResponse(
         String email,
         String firstName,
         String lastName,
+        String avatarUrl,
         boolean onboardingCompleted,
         Integer targetFixedExpenses,
         Integer targetVariableExpenses,

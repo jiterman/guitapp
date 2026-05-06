@@ -15,6 +15,7 @@ import { Ionicons } from '@expo/vector-icons';
 import PersonalInfoEditor from './PersonalInfoEditor';
 import PasswordEditor from './PasswordEditor';
 import { userService } from '../services/userService';
+import AvatarPicker from './AvatarPicker';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 const vh = screenHeight / 100;
@@ -22,10 +23,11 @@ const SHEET_HEIGHT = vh * 55;
 
 const ProfileScreen: React.FC = () => {
   const [sheetVisible, setSheetVisible] = useState(false);
+  const [saving, setSaving] = useState(false);
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
-  const [saving, setSaving] = useState(false);
+  const [avatarUrl, setAvatarUrl] = useState<string | undefined>(undefined);
   const translateY = useRef(new Animated.Value(SHEET_HEIGHT)).current;
 
   useEffect(() => {
@@ -35,11 +37,14 @@ const ProfileScreen: React.FC = () => {
         setFirstName(profile.firstName || 'Usuario');
         setLastName(profile.lastName || '');
         setEmail(profile.email || '');
+        setAvatarUrl(profile.avatarUrl || undefined);
       } catch (e) {
         setFirstName('Usuario');
         setEmail('usuario@example.com');
+        setAvatarUrl(undefined);
       }
     };
+
     fetchProfile();
   }, []);
 
@@ -90,12 +95,12 @@ const ProfileScreen: React.FC = () => {
           {/* Profile Card */}
           <View style={styles.profileCard}>
             <View style={styles.avatarContainer}>
-              <View style={styles.avatarCircle}>
-                <Ionicons name="person" size={64} color="#5bbfdd" />
-              </View>
-              <TouchableOpacity style={styles.cameraButton}>
-                <Ionicons name="camera" size={18} color="#fff" />
-              </TouchableOpacity>
+              <AvatarPicker
+                avatarUrl={avatarUrl}
+                onUploaded={url => {
+                  setAvatarUrl(url);
+                }}
+              />
             </View>
             <View style={styles.profileInfo}>
               <Text style={styles.profileName}>
@@ -230,27 +235,6 @@ const styles = StyleSheet.create({
   },
   avatarContainer: {
     position: 'relative',
-  },
-  avatarCircle: {
-    width: 90,
-    height: 90,
-    borderRadius: 45,
-    backgroundColor: '#E6F2FC',
-    borderWidth: 3,
-    borderColor: '#07a3e4',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  cameraButton: {
-    position: 'absolute',
-    bottom: 0,
-    right: -4,
-    width: 30,
-    height: 30,
-    borderRadius: 15,
-    backgroundColor: '#FFBB00',
-    justifyContent: 'center',
-    alignItems: 'center',
   },
   profileInfo: {
     flex: 1,

@@ -67,4 +67,23 @@ export const userService = {
 
     return response.json();
   },
+
+  uploadAvatar: async (formData: FormData) => {
+    const token = await authService.getToken();
+
+    const response = await fetch(`${API_URL}/api/users/me/avatar`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      body: formData,
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || 'Error uploading avatar');
+    }
+
+    return response.json();
+  },
 };

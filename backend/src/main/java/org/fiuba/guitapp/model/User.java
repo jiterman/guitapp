@@ -56,6 +56,9 @@ public class User implements UserDetails {
     private boolean onboardingCompleted = false;
 
     @Column
+    private String avatarUrl;
+
+    @Column
     private Integer targetFixedExpenses;
 
     @Column
