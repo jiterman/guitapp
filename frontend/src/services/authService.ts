@@ -98,6 +98,73 @@ export const authService = {
     return data;
   },
 
+  forgotPassword: async (email: string) => {
+    const response = await fetch(`${API_URL}/api/auth/forgot-password`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ email }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      const errorToThrow: BackendError = new Error(
+        errorData.message || 'Forgot password request failed'
+      );
+      if (errorData.code) {
+        errorToThrow.code = errorData.code;
+      }
+      throw errorToThrow;
+    }
+
+    return response.json();
+  },
+
+  verifyResetOtp: async (email: string, otp: string) => {
+    const response = await fetch(`${API_URL}/api/auth/verify-reset-otp`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ email, otp }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      const errorToThrow: BackendError = new Error(errorData.message || 'OTP verification failed');
+      if (errorData.code) {
+        errorToThrow.code = errorData.code;
+      }
+      throw errorToThrow;
+    }
+
+    return response.json();
+  },
+
+  resetPassword: async (email: string, otp: string, newPassword: string) => {
+    const response = await fetch(`${API_URL}/api/auth/reset-password`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ email, otp, newPassword }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      const errorToThrow: BackendError = new Error(errorData.message || 'Password reset failed');
+      if (errorData.code) {
+        errorToThrow.code = errorData.code;
+      }
+      throw errorToThrow;
+    }
+
+    await authService.removeBiometricUser(email);
+
+    return response.json();
+  },
+
   getToken: async () => {
     return await SecureStore.getItemAsync('userToken');
   },
@@ -152,5 +219,13 @@ export const authService = {
     const key = `biometric_creds_${email.replace(/[^a-zA-Z0-9._-]/g, '_')}`;
     const raw = await SecureStore.getItemAsync(key);
     return raw ? JSON.parse(raw) : null;
+  },
+
+  removeBiometricUser: async (email: string) => {
+    const users = await authService.getBiometricUsers();
+    const filtered = users.filter(u => u.email !== email);
+    await SecureStore.setItemAsync('biometricUsers', JSON.stringify(filtered));
+    const key = `biometric_creds_${email.replace(/[^a-zA-Z0-9._-]/g, '_')}`;
+    await SecureStore.deleteItemAsync(key);
   },
 };
