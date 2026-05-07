@@ -1,10 +1,8 @@
-import React, { useEffect, useState } from 'react';
 import { View, StyleSheet, TouchableOpacity, Dimensions, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Text, Icon } from '@ui-kitten/components';
 import { Stack, router } from 'expo-router';
 import { authService } from '../../src/services/authService';
-import { userService } from '../../src/services/userService';
 import { useUser } from '../../src/context/UserContext';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');

@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef } from 'react';
 import {
   View,
   StyleSheet,
@@ -8,12 +8,10 @@ import {
   Animated,
   Modal,
   TouchableWithoutFeedback,
-  TextInput,
 } from 'react-native';
 import { Layout, Text } from '@ui-kitten/components';
 import { Ionicons } from '@expo/vector-icons';
 import PersonalInfoEditor from './PersonalInfoEditor';
-import PasswordEditor from './PasswordEditor';
 import { userService } from '../services/userService';
 import AvatarPicker from './AvatarPicker';
 import { useUser } from '../context/UserContext';

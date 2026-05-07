@@ -2,7 +2,6 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import { userService } from '../services/userService';
 
 export interface UserProfile {
-  [key: string]: any;
   firstName: string;
   lastName?: string;
   email: string;

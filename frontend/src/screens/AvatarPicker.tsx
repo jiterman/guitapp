@@ -3,7 +3,6 @@ import { View, Image, TouchableOpacity, StyleSheet, ActivityIndicator } from 're
 import * as ImagePicker from 'expo-image-picker';
 import { userService } from '../services/userService';
 import { Ionicons } from '@expo/vector-icons';
-import { authService } from '../services/authService';
 
 interface Props {
   avatarUrl?: string;

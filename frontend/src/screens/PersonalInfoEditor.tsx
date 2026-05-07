@@ -47,7 +47,7 @@ const PersonalInfoEditor: React.FC<PersonalInfoEditorProps> = ({
 
     try {
       await onSaveName(draftFirstName, draftLastName);
-    } catch (e) {
+    } catch {
       setError('Error al guardar. Intentá nuevamente');
     }
   };
