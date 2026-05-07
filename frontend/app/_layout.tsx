@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react';
 import { View } from 'react-native';
-import { Stack, useSegments } from 'expo-router';
+import { Stack } from 'expo-router';
+import { useSegments } from 'expo-router';
 import * as eva from '@eva-design/eva';
 import { ApplicationProvider, IconRegistry } from '@ui-kitten/components';
 import { EvaIconsPack } from '@ui-kitten/eva-icons';
@@ -8,7 +9,6 @@ import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import BottomNavBar from '../src/components/BottomNavBar';
 import * as SplashScreen from 'expo-splash-screen';
-import { UserProvider } from '../src/context/UserContext';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -34,13 +34,10 @@ export default function RootLayout() {
     <SafeAreaProvider>
       <IconRegistry icons={EvaIconsPack} />
       <ApplicationProvider {...eva} theme={customTheme}>
-        <UserProvider>
-          <View style={{ flex: 1 }}>
-            <Stack screenOptions={{ headerShown: false }} />
-            {segments[0] !== '(auth)' && <BottomNavBar />}
-          </View>
-        </UserProvider>
-
+        <View style={{ flex: 1 }}>
+          <Stack screenOptions={{ headerShown: false }} />
+          {segments[0] !== '(auth)' && <BottomNavBar />}
+        </View>
         <StatusBar style="auto" />
       </ApplicationProvider>
     </SafeAreaProvider>
