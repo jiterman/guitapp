@@ -1,15 +1,28 @@
+import React, { useEffect, useState } from 'react';
 import { View, StyleSheet, TouchableOpacity, Dimensions, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Text, Icon } from '@ui-kitten/components';
 import { Stack, router } from 'expo-router';
 import { authService } from '../../src/services/authService';
-import { useUser } from '../../src/context/UserContext';
+import { userService } from '../../src/services/userService';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 const vh = screenHeight / 100;
 
 export default function AppLayout() {
-  const { user } = useUser();
+  const [firstName, setFirstName] = useState<string>('');
+
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const profile = await userService.getProfile();
+        setFirstName(profile.firstName || 'Usuario');
+      } catch {
+        setFirstName('Usuario');
+      }
+    };
+    fetchProfile();
+  }, []);
 
   const onLogoutPress = async () => {
     await authService.removeToken();
@@ -21,22 +34,20 @@ export default function AppLayout() {
       <View style={styles.header}>
         <View style={styles.greetingRow}>
           <Image
+            // eslint-disable-next-line @typescript-eslint/no-require-imports
             source={require('../../assets/images/logo.png')}
             style={styles.logo}
             resizeMode="contain"
           />
-
           <Text style={styles.name}>
-            Hola, <Text style={styles.nameBold}>{user?.firstName ?? 'Usuario'}</Text>
+            Hola, <Text style={styles.nameBold}>{firstName}</Text>
           </Text>
         </View>
-
         <TouchableOpacity onPress={onLogoutPress} style={styles.logoutButton}>
           <Icon name="log-out-outline" style={styles.logoutIcon} fill="#003366" />
           <Text style={styles.logoutText}>Salir</Text>
         </TouchableOpacity>
       </View>
-
       <Stack screenOptions={{ headerShown: false }} />
     </SafeAreaView>
   );
