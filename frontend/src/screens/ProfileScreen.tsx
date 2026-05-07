@@ -116,26 +116,9 @@ const ProfileScreen: React.FC = () => {
             </TouchableOpacity>
           </View>
 
-          {/* Seguridad */}
-          <Text style={styles.sectionTitle}>Seguridad</Text>
+          {/* Finanzas */}
+          <Text style={styles.sectionTitle}>Finanzas</Text>
           <View style={styles.menuCard}>
-            <PasswordEditor />
-          </View>
-
-          {/* Información de la cuenta */}
-          <Text style={styles.sectionTitle}>Información de la cuenta</Text>
-          <View style={styles.menuCard}>
-            <TouchableOpacity style={styles.menuItem}>
-              <View style={[styles.menuIconCircle, { backgroundColor: 'rgba(26,158,92,0.1)' }]}>
-                <Ionicons name="cash-outline" size={22} color="#1a9e5c" />
-              </View>
-              <View style={styles.menuText}>
-                <Text style={styles.menuLabel}>Moneda utilizada</Text>
-                <Text style={styles.menuSub}>Peso argentino (ARS)</Text>
-              </View>
-              <Ionicons name="chevron-forward" size={20} color="#1a9e5c" />
-            </TouchableOpacity>
-
             <View style={styles.divider} />
 
             <TouchableOpacity style={styles.menuItem}>
@@ -143,23 +126,28 @@ const ProfileScreen: React.FC = () => {
                 <Ionicons name="pie-chart-outline" size={22} color="#FFBB00" />
               </View>
               <View style={styles.menuText}>
-                <Text style={styles.menuLabel}>Gastos recurrentes</Text>
-                <Text style={styles.menuSub}>Administrá tus gastos fijos y variables.</Text>
+                <Text style={styles.menuLabel}>Estructura de gastos</Text>
+                <Text style={styles.menuSub}>Editá tus gastos fijos y variables</Text>
               </View>
               <Ionicons name="chevron-forward" size={20} color="#FFBB00" />
             </TouchableOpacity>
+          </View>
 
-            <View style={styles.divider} />
+          {/* Seguridad */}
+          <Text style={styles.sectionTitle}>Seguridad</Text>
 
+          <View style={styles.menuCard}>
             <TouchableOpacity style={styles.menuItem}>
-              <View style={[styles.menuIconCircle, { backgroundColor: '#E6F2FC' }]}>
-                <Ionicons name="wallet-outline" size={22} color="#07a3e4" />
+              <View style={[styles.menuIconCircle, { backgroundColor: 'rgba(255, 59, 48, 0.12)' }]}>
+                <Ionicons name="lock-closed-outline" size={22} color="#FF3B30" />
               </View>
+
               <View style={styles.menuText}>
-                <Text style={styles.menuLabel}>Transacciones realizadas</Text>
-                <Text style={styles.menuSub}>0 movimientos</Text>
+                <Text style={styles.menuLabel}>Contraseña</Text>
+                <Text style={styles.menuSub}>Cambiá tu contraseña para proteger tu cuenta</Text>
               </View>
-              <Ionicons name="chevron-forward" size={20} color="#07a3e4" />
+
+              <Ionicons name="chevron-forward" size={20} color="#FF3B30" />
             </TouchableOpacity>
           </View>
 
