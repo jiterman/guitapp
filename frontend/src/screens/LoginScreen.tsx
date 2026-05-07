@@ -16,8 +16,10 @@ import { userService } from '../services/userService';
 import { validateEmail, validatePassword } from '../utils/validation';
 import { loginStyles as styles } from '../styles/loginStyles';
 import { AuthError } from '../types/errors';
+import { useUser } from '../context/UserContext';
 
 const LoginScreen = () => {
+  const { setUser } = useUser();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -101,6 +103,7 @@ const LoginScreen = () => {
       await authService.login(email, password);
 
       const profile = await userService.getProfile();
+      setUser(profile);
 
       const biometricHardwareAvailable = await authService.isBiometricAvailable();
       const existingUsers = await authService.getBiometricUsers();

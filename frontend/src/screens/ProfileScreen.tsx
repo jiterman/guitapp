@@ -16,48 +16,27 @@ import PersonalInfoEditor from './PersonalInfoEditor';
 import PasswordEditor from './PasswordEditor';
 import { userService } from '../services/userService';
 import AvatarPicker from './AvatarPicker';
+import { useUser } from '../context/UserContext';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 const vh = screenHeight / 100;
 const SHEET_HEIGHT = vh * 55;
 
 const ProfileScreen: React.FC = () => {
+  const { user, setUser } = useUser();
   const [sheetVisible, setSheetVisible] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [firstName, setFirstName] = useState('');
-  const [lastName, setLastName] = useState('');
-  const [email, setEmail] = useState('');
-  const [avatarUrl, setAvatarUrl] = useState<string | undefined>(undefined);
   const translateY = useRef(new Animated.Value(SHEET_HEIGHT)).current;
 
-  useEffect(() => {
-    const fetchProfile = async () => {
-      try {
-        const profile = await userService.getProfile();
-        setFirstName(profile.firstName || 'Usuario');
-        setLastName(profile.lastName || '');
-        setEmail(profile.email || '');
-        setAvatarUrl(profile.avatarUrl || undefined);
-      } catch (e) {
-        setFirstName('Usuario');
-        setEmail('usuario@example.com');
-        setAvatarUrl(undefined);
-      }
-    };
-
-    fetchProfile();
-  }, []);
-
   const handleSaveName = async (newFirst: string, newLast: string) => {
-    if (saving) return;
+    if (saving || !user) return;
 
     setSaving(true);
 
     try {
       const updatedProfile = await userService.updateProfile(newFirst, newLast);
 
-      setFirstName(updatedProfile.firstName || '');
-      setLastName(updatedProfile.lastName || '');
+      setUser({ ...user, ...updatedProfile });
 
       closeSheet();
 
@@ -96,15 +75,24 @@ const ProfileScreen: React.FC = () => {
           <View style={styles.profileCard}>
             <View style={styles.avatarContainer}>
               <AvatarPicker
-                avatarUrl={avatarUrl}
-                onUploaded={url => {
-                  setAvatarUrl(url);
-                }}
+                avatarUrl={user?.avatarUrl}
+                onUploaded={(url: string) =>
+                  setUser({
+                    ...user,
+                    avatarUrl: url,
+                    firstName: user?.firstName || '',
+                    lastName: user?.lastName || '',
+                    email: user?.email || '',
+                    targetFixedExpenses: user?.targetFixedExpenses || 0,
+                    targetVariableExpenses: user?.targetVariableExpenses || 0,
+                    targetSavings: user?.targetSavings || 0,
+                  })
+                }
               />
             </View>
             <View style={styles.profileInfo}>
               <Text style={styles.profileName}>
-                {firstName} {lastName}
+                {user?.firstName} {user?.lastName}
               </Text>
               <View style={styles.memberRow}>
                 <Ionicons name="calendar-outline" size={16} color="#6b8aa1" />
@@ -196,12 +184,45 @@ const ProfileScreen: React.FC = () => {
           </View>
           <ScrollView showsVerticalScrollIndicator={false}>
             <PersonalInfoEditor
-              firstName={firstName}
-              setFirstName={setFirstName}
-              lastName={lastName}
-              setLastName={setLastName}
-              email={email}
-              setEmail={setEmail}
+              firstName={user?.firstName || ''}
+              setFirstName={(first: string) =>
+                setUser({
+                  ...user,
+                  firstName: first,
+                  lastName: user?.lastName || '',
+                  email: user?.email || '',
+                  avatarUrl: user?.avatarUrl || '',
+                  targetFixedExpenses: user?.targetFixedExpenses || 0,
+                  targetVariableExpenses: user?.targetVariableExpenses || 0,
+                  targetSavings: user?.targetSavings || 0,
+                })
+              }
+              lastName={user?.lastName || ''}
+              setLastName={(last: string) =>
+                setUser({
+                  ...user,
+                  lastName: last,
+                  firstName: user?.firstName || '',
+                  email: user?.email || '',
+                  avatarUrl: user?.avatarUrl || '',
+                  targetFixedExpenses: user?.targetFixedExpenses || 0,
+                  targetVariableExpenses: user?.targetVariableExpenses || 0,
+                  targetSavings: user?.targetSavings || 0,
+                })
+              }
+              email={user?.email || ''}
+              setEmail={(email: string) =>
+                setUser({
+                  ...user,
+                  email,
+                  firstName: user?.firstName || '',
+                  lastName: user?.lastName || '',
+                  avatarUrl: user?.avatarUrl || '',
+                  targetFixedExpenses: user?.targetFixedExpenses || 0,
+                  targetVariableExpenses: user?.targetVariableExpenses || 0,
+                  targetSavings: user?.targetSavings || 0,
+                })
+              }
               onSaveName={handleSaveName}
             />
             <View style={{ height: vh * 3 }} />
