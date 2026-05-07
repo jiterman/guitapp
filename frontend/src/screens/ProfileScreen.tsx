@@ -28,20 +28,13 @@ const ProfileScreen: React.FC = () => {
 
   const handleSaveName = async (newFirst: string, newLast: string) => {
     if (saving || !user) return;
-
     setSaving(true);
-
     try {
       const updatedProfile = await userService.updateProfile(newFirst, newLast);
-
       setUser({ ...user, ...updatedProfile });
-
       closeSheet();
-
-      return true;
     } catch (e) {
       console.error('Error actualizando perfil', e);
-
       throw e;
     } finally {
       setSaving(false);

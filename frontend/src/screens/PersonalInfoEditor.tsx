@@ -11,7 +11,7 @@ interface PersonalInfoEditorProps {
   email: string;
   setEmail: (email: string) => void;
   onSaveName: (firstName: string, lastName: string) => Promise<void>;
-  saving: boolean;
+  saving?: boolean;
 }
 
 const PersonalInfoEditor: React.FC<PersonalInfoEditorProps> = ({
