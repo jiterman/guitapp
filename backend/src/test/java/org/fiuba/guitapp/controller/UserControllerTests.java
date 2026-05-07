@@ -8,6 +8,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import java.util.UUID;
 
 import org.fiuba.guitapp.dto.OnboardingRequest;
+import org.fiuba.guitapp.dto.UpdateUserProfileRequest;
 import org.fiuba.guitapp.dto.UserProfileResponse;
 import org.fiuba.guitapp.service.UserService;
 import org.junit.jupiter.api.Test;
@@ -16,6 +17,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
+import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
@@ -44,6 +46,8 @@ class UserControllerTests {
                 userId,
                 "test@example.com",
                 "John",
+                "Doe",
+                "https://avatar.png",
                 true,
                 30,
                 50,
@@ -57,6 +61,8 @@ class UserControllerTests {
                 .andExpect(jsonPath("$.id").value(userId.toString()))
                 .andExpect(jsonPath("$.email").value("test@example.com"))
                 .andExpect(jsonPath("$.firstName").value("John"))
+                .andExpect(jsonPath("$.lastName").value("Doe"))
+                .andExpect(jsonPath("$.avatarUrl").value("https://avatar.png"))
                 .andExpect(jsonPath("$.onboardingCompleted").value(true))
                 .andExpect(jsonPath("$.targetFixedExpenses").value(30))
                 .andExpect(jsonPath("$.targetVariableExpenses").value(50))
@@ -105,5 +111,79 @@ class UserControllerTests {
                 .andExpect(status().isBadRequest());
 
         verify(userService, never()).completeOnboarding(anyString(), any(OnboardingRequest.class));
+    }
+
+    @Test
+    @WithMockUser(username = "test@example.com")
+    void updateProfile_ShouldReturnUpdatedProfile() throws Exception {
+        UpdateUserProfileRequest request = new UpdateUserProfileRequest(
+                "John",
+                "Doe");
+
+        UUID userId = UUID.randomUUID();
+
+        UserProfileResponse response = new UserProfileResponse(
+                userId,
+                "test@example.com",
+                "John",
+                "Doe",
+                "https://avatar.png",
+                true,
+                30,
+                50,
+                20);
+
+        when(userService.updateUserProfile(
+                eq("test@example.com"),
+                any(UpdateUserProfileRequest.class)))
+                .thenReturn(response);
+
+        mockMvc.perform(patch("/api/users/me/profile")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(userId.toString()))
+                .andExpect(jsonPath("$.email").value("test@example.com"))
+                .andExpect(jsonPath("$.firstName").value("John"))
+                .andExpect(jsonPath("$.onboardingCompleted").value(true));
+
+        verify(userService, times(1))
+                .updateUserProfile(eq("test@example.com"), any(UpdateUserProfileRequest.class));
+    }
+
+    @Test
+    @WithMockUser(username = "test@example.com")
+    void uploadAvatar_ShouldReturnUpdatedProfile() throws Exception {
+        UUID userId = UUID.randomUUID();
+
+        UserProfileResponse response = new UserProfileResponse(
+                userId,
+                "test@example.com",
+                "John",
+                "Doe",
+                "https://avatar.png",
+                true,
+                30,
+                50,
+                20);
+
+        MockMultipartFile file = new MockMultipartFile(
+                "file",
+                "avatar.png",
+                MediaType.IMAGE_PNG_VALUE,
+                "fake-image-content".getBytes());
+
+        when(userService.updateAvatar(eq("test@example.com"), any()))
+                .thenReturn(response);
+
+        mockMvc.perform(multipart("/api/users/me/avatar")
+                .file(file))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(userId.toString()))
+                .andExpect(jsonPath("$.email").value("test@example.com"))
+                .andExpect(jsonPath("$.firstName").value("John"));
+
+        verify(userService, times(1))
+                .updateAvatar(eq("test@example.com"), any());
     }
 }
