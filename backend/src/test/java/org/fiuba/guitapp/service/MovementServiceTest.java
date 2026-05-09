@@ -106,4 +106,42 @@ class MovementServiceTest {
         List<MovementResponse> movements = movementService.getAllMovements(user.getEmail());
         assertEquals(0, movements.size());
     }
+
+    @Test
+    void getMovementsByDayMonthYear() {
+        when(userRepository.findByEmail(anyString())).thenReturn(Optional.of(user));
+
+        LocalDateTime now = LocalDateTime.now();
+
+        Income income = new Income();
+        income.setId(UUID.randomUUID());
+        income.setAmount(BigDecimal.valueOf(200));
+        income.setDescription("Freelance");
+        income.setCategory(IncomeCategory.FREELANCE);
+        income.setDate(now);
+        income.setUser(user);
+
+        Expense expense = new Expense();
+        expense.setId(UUID.randomUUID());
+        expense.setAmount(BigDecimal.valueOf(10));
+        expense.setDescription("Snack");
+        expense.setCategory(org.fiuba.guitapp.model.ExpenseCategory.CAFE);
+        expense.setDate(now.minusMonths(1));
+        expense.setUser(user);
+
+        when(incomeRepository.findAllByUserOrderByDateDesc(user)).thenReturn(List.of(income));
+        when(expenseRepository.findAllByUserOrderByDateDesc(user)).thenReturn(List.of(expense));
+
+        // by day -> should include income only
+        List<MovementResponse> day = movementService.getMovementsByDay(user.getEmail(), now.toLocalDate());
+        assertEquals(1, day.size());
+
+        // by month -> income in current month (month of 'now'), expense in previous month
+        List<MovementResponse> month = movementService.getMovementsByMonth(user.getEmail(), now.getYear(), now.getMonthValue());
+        assertEquals(1, month.size());
+
+        // by year -> both (same year)
+        List<MovementResponse> year = movementService.getMovementsByYear(user.getEmail(), now.getYear());
+        assertEquals(2, year.size());
+    }
 }

@@ -58,4 +58,115 @@ public class MovementService {
 
         return movements;
     }
+
+    public List<MovementResponse> getMovementsByDay(String email, java.time.LocalDate day) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new AuthException(ErrorCode.USER_NOT_FOUND, "User not found"));
+
+        List<Income> incomes = incomeRepository.findAllByUserOrderByDateDesc(user);
+        List<Expense> expenses = expenseRepository.findAllByUserOrderByDateDesc(user);
+
+        List<MovementResponse> movements = new ArrayList<>();
+
+        for (Income i : incomes) {
+            if (i.getDate().toLocalDate().equals(day)) {
+                movements.add(new MovementResponse(
+                        i.getId(),
+                        "INCOME",
+                        i.getAmount(),
+                        i.getDescription(),
+                        i.getCategory().name(),
+                        i.getDate()));
+            }
+        }
+
+        for (Expense e : expenses) {
+            if (e.getDate().toLocalDate().equals(day)) {
+                movements.add(new MovementResponse(
+                        e.getId(),
+                        "EXPENSE",
+                        e.getAmount(),
+                        e.getDescription(),
+                        e.getCategory().name(),
+                        e.getDate()));
+            }
+        }
+
+        movements.sort(Comparator.comparing(MovementResponse::date).reversed());
+        return movements;
+    }
+
+    public List<MovementResponse> getMovementsByMonth(String email, int year, int month) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new AuthException(ErrorCode.USER_NOT_FOUND, "User not found"));
+
+        List<Income> incomes = incomeRepository.findAllByUserOrderByDateDesc(user);
+        List<Expense> expenses = expenseRepository.findAllByUserOrderByDateDesc(user);
+
+        List<MovementResponse> movements = new ArrayList<>();
+
+        for (Income i : incomes) {
+            if (i.getDate().getYear() == year && i.getDate().getMonthValue() == month) {
+                movements.add(new MovementResponse(
+                        i.getId(),
+                        "INCOME",
+                        i.getAmount(),
+                        i.getDescription(),
+                        i.getCategory().name(),
+                        i.getDate()));
+            }
+        }
+
+        for (Expense e : expenses) {
+            if (e.getDate().getYear() == year && e.getDate().getMonthValue() == month) {
+                movements.add(new MovementResponse(
+                        e.getId(),
+                        "EXPENSE",
+                        e.getAmount(),
+                        e.getDescription(),
+                        e.getCategory().name(),
+                        e.getDate()));
+            }
+        }
+
+        movements.sort(Comparator.comparing(MovementResponse::date).reversed());
+        return movements;
+    }
+
+    public List<MovementResponse> getMovementsByYear(String email, int year) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new AuthException(ErrorCode.USER_NOT_FOUND, "User not found"));
+
+        List<Income> incomes = incomeRepository.findAllByUserOrderByDateDesc(user);
+        List<Expense> expenses = expenseRepository.findAllByUserOrderByDateDesc(user);
+
+        List<MovementResponse> movements = new ArrayList<>();
+
+        for (Income i : incomes) {
+            if (i.getDate().getYear() == year) {
+                movements.add(new MovementResponse(
+                        i.getId(),
+                        "INCOME",
+                        i.getAmount(),
+                        i.getDescription(),
+                        i.getCategory().name(),
+                        i.getDate()));
+            }
+        }
+
+        for (Expense e : expenses) {
+            if (e.getDate().getYear() == year) {
+                movements.add(new MovementResponse(
+                        e.getId(),
+                        "EXPENSE",
+                        e.getAmount(),
+                        e.getDescription(),
+                        e.getCategory().name(),
+                        e.getDate()));
+            }
+        }
+
+        movements.sort(Comparator.comparing(MovementResponse::date).reversed());
+        return movements;
+    }
 }
