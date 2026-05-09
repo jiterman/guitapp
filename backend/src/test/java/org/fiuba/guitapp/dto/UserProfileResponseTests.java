@@ -13,6 +13,8 @@ class UserProfileResponseTests {
         UUID id = UUID.randomUUID();
         String email = "test@example.com";
         String firstName = "John";
+        String lastName = "Doe";
+        String avatarUrl = "https://avatar.png";
         boolean onboardingCompleted = true;
         Integer targetFixed = 30;
         Integer targetVariable = 50;
@@ -22,6 +24,8 @@ class UserProfileResponseTests {
                 id,
                 email,
                 firstName,
+                lastName,
+                avatarUrl,
                 onboardingCompleted,
                 targetFixed,
                 targetVariable,
@@ -45,6 +49,8 @@ class UserProfileResponseTests {
                 id,
                 email,
                 null,
+                null,
+                null,
                 false,
                 null,
                 null,
@@ -53,6 +59,8 @@ class UserProfileResponseTests {
         assertEquals(id, response.id());
         assertEquals(email, response.email());
         assertNull(response.firstName());
+        assertNull(response.lastName());
+        assertNull(response.avatarUrl());
         assertFalse(response.onboardingCompleted());
         assertNull(response.targetFixedExpenses());
         assertNull(response.targetVariableExpenses());
@@ -66,6 +74,8 @@ class UserProfileResponseTests {
                 id,
                 "test@example.com",
                 "John",
+                "Doe",
+                "https://avatar.png",
                 true,
                 30,
                 50,
@@ -75,6 +85,8 @@ class UserProfileResponseTests {
                 id,
                 "test@example.com",
                 "John",
+                "Doe",
+                "https://avatar.png",
                 true,
                 30,
                 50,
@@ -91,6 +103,8 @@ class UserProfileResponseTests {
                 id,
                 "test@example.com",
                 "John",
+                "Doe",
+                "https://avatar.png",
                 true,
                 30,
                 50,
