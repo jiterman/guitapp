@@ -1,10 +1,17 @@
-import { Stack } from 'expo-router';
-import { UserProvider } from '../../src/context/UserContext';
+import { Stack, Redirect, useSegments } from 'expo-router';
+import { useUser } from '../../src/context/UserContext';
 
 export default function AuthLayout() {
-  return (
-    <UserProvider>
-      <Stack screenOptions={{ headerShown: false }} />
-    </UserProvider>
-  );
+  const { user, isLoading } = useUser();
+  const segments = useSegments();
+
+  if (!isLoading && user) {
+    if (user.onboardingCompleted) {
+      return <Redirect href="/home" />;
+    } else if (!segments.includes('onboarding')) {
+      return <Redirect href="/onboarding" />;
+    }
+  }
+
+  return <Stack screenOptions={{ headerShown: false }} />;
 }

@@ -5,6 +5,7 @@ import * as eva from '@eva-design/eva';
 import OnboardingScreen from '../src/screens/OnboardingScreen';
 import { userService } from '../src/services/userService';
 import { router } from 'expo-router';
+import { UserProvider } from '../src/context/UserContext';
 
 // Mock router
 jest.mock('expo-router', () => ({
@@ -17,18 +18,24 @@ jest.mock('expo-router', () => ({
 jest.mock('../src/services/userService', () => ({
   userService: {
     completeOnboarding: jest.fn(),
+    getProfile: jest.fn(),
   },
 }));
 
 const Wrapper = ({ children }: { children: React.ReactNode }) => (
   <ApplicationProvider {...eva} theme={eva.light}>
-    {children}
+    <UserProvider>{children}</UserProvider>
   </ApplicationProvider>
 );
 
 describe('OnboardingScreen', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    (userService.getProfile as jest.Mock).mockResolvedValue({
+      firstName: '',
+      email: 'test@test.com',
+      onboardingCompleted: false,
+    });
   });
 
   it('should render step 1 initially', () => {

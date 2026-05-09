@@ -1,7 +1,7 @@
 import { View, StyleSheet, TouchableOpacity, Dimensions, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Text, Icon } from '@ui-kitten/components';
-import { Stack, router } from 'expo-router';
+import { Stack, router, Redirect, useSegments } from 'expo-router';
 import { authService } from '../../src/services/authService';
 import { useUser } from '../../src/context/UserContext';
 
@@ -9,12 +9,22 @@ const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 const vh = screenHeight / 100;
 
 export default function AppLayout() {
-  const { user } = useUser();
+  const { user, isLoading, setUser } = useUser();
+  const segments = useSegments();
 
   const onLogoutPress = async () => {
     await authService.removeToken();
+    setUser(null);
     router.replace('/login');
   };
+
+  if (!isLoading && !user) {
+    return <Redirect href="/login" />;
+  }
+
+  if (user && !user.onboardingCompleted && !segments.includes('onboarding')) {
+    return <Redirect href="/onboarding" />;
+  }
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>

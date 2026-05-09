@@ -31,7 +31,12 @@ const ProfileScreen: React.FC = () => {
     setSaving(true);
     try {
       const updatedProfile = await userService.updateProfile(newFirst, newLast);
-      setUser({ ...user, ...updatedProfile });
+      setUser({
+        ...user,
+        firstName: updatedProfile.firstName,
+        lastName: updatedProfile.lastName,
+        onboardingCompleted: true, // If they are here, it's completed
+      });
       closeSheet();
     } catch (e) {
       console.error('Error actualizando perfil', e);
@@ -67,18 +72,14 @@ const ProfileScreen: React.FC = () => {
             <View style={styles.avatarContainer}>
               <AvatarPicker
                 avatarUrl={user?.avatarUrl}
-                onUploaded={(url: string) =>
-                  setUser({
-                    ...user,
-                    avatarUrl: url,
-                    firstName: user?.firstName || '',
-                    lastName: user?.lastName || '',
-                    email: user?.email || '',
-                    targetFixedExpenses: user?.targetFixedExpenses || 0,
-                    targetVariableExpenses: user?.targetVariableExpenses || 0,
-                    targetSavings: user?.targetSavings || 0,
-                  })
-                }
+                onUploaded={(url: string) => {
+                  if (user) {
+                    setUser({
+                      ...user,
+                      avatarUrl: url,
+                    });
+                  }
+                }}
               />
             </View>
             <View style={styles.profileInfo}>
@@ -164,44 +165,32 @@ const ProfileScreen: React.FC = () => {
           <ScrollView showsVerticalScrollIndicator={false}>
             <PersonalInfoEditor
               firstName={user?.firstName || ''}
-              setFirstName={(first: string) =>
-                setUser({
-                  ...user,
-                  firstName: first,
-                  lastName: user?.lastName || '',
-                  email: user?.email || '',
-                  avatarUrl: user?.avatarUrl || '',
-                  targetFixedExpenses: user?.targetFixedExpenses || 0,
-                  targetVariableExpenses: user?.targetVariableExpenses || 0,
-                  targetSavings: user?.targetSavings || 0,
-                })
-              }
+              setFirstName={(first: string) => {
+                if (user) {
+                  setUser({
+                    ...user,
+                    firstName: first,
+                  });
+                }
+              }}
               lastName={user?.lastName || ''}
-              setLastName={(last: string) =>
-                setUser({
-                  ...user,
-                  lastName: last,
-                  firstName: user?.firstName || '',
-                  email: user?.email || '',
-                  avatarUrl: user?.avatarUrl || '',
-                  targetFixedExpenses: user?.targetFixedExpenses || 0,
-                  targetVariableExpenses: user?.targetVariableExpenses || 0,
-                  targetSavings: user?.targetSavings || 0,
-                })
-              }
+              setLastName={(last: string) => {
+                if (user) {
+                  setUser({
+                    ...user,
+                    lastName: last,
+                  });
+                }
+              }}
               email={user?.email || ''}
-              setEmail={(email: string) =>
-                setUser({
-                  ...user,
-                  email,
-                  firstName: user?.firstName || '',
-                  lastName: user?.lastName || '',
-                  avatarUrl: user?.avatarUrl || '',
-                  targetFixedExpenses: user?.targetFixedExpenses || 0,
-                  targetVariableExpenses: user?.targetVariableExpenses || 0,
-                  targetSavings: user?.targetSavings || 0,
-                })
-              }
+              setEmail={(email: string) => {
+                if (user) {
+                  setUser({
+                    ...user,
+                    email,
+                  });
+                }
+              }}
               onSaveName={handleSaveName}
             />
             <View style={{ height: vh * 3 }} />

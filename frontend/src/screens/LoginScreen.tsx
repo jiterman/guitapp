@@ -50,6 +50,7 @@ const LoginScreen = () => {
     try {
       await authService.login(credentials.email, credentials.password);
       const profile = await userService.getProfile();
+      setUser(profile);
       if (profile.onboardingCompleted) {
         router.replace({ pathname: '/home', params: { email: credentials.email } });
       } else {
