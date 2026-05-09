@@ -4,11 +4,13 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Layout, Text, Input, Button } from '@ui-kitten/components';
 import { router } from 'expo-router';
 import { userService } from '../services/userService';
+import { useUser } from '../context/UserContext';
 import { validateFirstName } from '../utils/validation';
 import { loginStyles as styles } from '../styles/loginStyles';
 import { OnboardingError } from '../types/errors';
 
 const OnboardingScreen = () => {
+  const { setUser } = useUser();
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
 
@@ -53,6 +55,8 @@ const OnboardingScreen = () => {
     setLoading(true);
     try {
       await userService.completeOnboarding(firstName, fixed, variable);
+      const profile = await userService.getProfile();
+      setUser(profile);
       router.replace('/home');
     } catch (err) {
       const error = err as OnboardingError;

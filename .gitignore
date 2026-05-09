@@ -3,3 +3,5 @@
 backend/.sdkmanrc
 CLAUDE.md
 frontend/.env.local
+frontend/android
+config_local

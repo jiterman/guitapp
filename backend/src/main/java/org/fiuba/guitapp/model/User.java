@@ -49,8 +49,14 @@ public class User implements UserDetails {
     @Column
     private String firstName;
 
+    @Column(nullable = true)
+    private String lastName;
+
     @Column(nullable = false, columnDefinition = "boolean default false")
     private boolean onboardingCompleted = false;
+
+    @Column
+    private String avatarUrl;
 
     @Column
     private Integer targetFixedExpenses;

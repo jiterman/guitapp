@@ -4,10 +4,12 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
 import org.fiuba.guitapp.dto.OnboardingRequest;
+import org.fiuba.guitapp.dto.UpdateUserProfileRequest;
 import org.fiuba.guitapp.dto.UserProfileResponse;
 import org.fiuba.guitapp.exception.AuthException;
 import org.fiuba.guitapp.exception.ErrorCode;
@@ -20,12 +22,22 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.mock.web.MockMultipartFile;
+
+import com.cloudinary.Cloudinary;
+import com.cloudinary.Uploader;
 
 @ExtendWith(MockitoExtension.class)
 class UserServiceTests {
 
     @Mock
     private UserRepository userRepository;
+
+    @Mock
+    private Cloudinary cloudinary;
+
+    @Mock
+    private Uploader uploader;
 
     @InjectMocks
     private UserService userService;
@@ -174,5 +186,153 @@ class UserServiceTests {
         assertEquals(1, testUser.getTargetSavings());
         assertTrue(testUser.isOnboardingCompleted());
         verify(userRepository, times(1)).save(testUser);
+    }
+
+    @Test
+    void updateUserProfile_ShouldUpdateProfile_WhenUserExistsAndValidData() {
+        UpdateUserProfileRequest request = new UpdateUserProfileRequest("Jane", "Doe");
+        when(userRepository.findByEmail(testEmail)).thenReturn(Optional.of(testUser));
+        when(userRepository.save(any(User.class))).thenReturn(testUser);
+
+        UserProfileResponse response = userService.updateUserProfile(testEmail, request);
+
+        assertEquals("Jane", testUser.getFirstName());
+        assertEquals("Doe", testUser.getLastName());
+        assertEquals("Jane", response.firstName());
+        assertEquals("Doe", response.lastName());
+        verify(userRepository, times(1)).save(testUser);
+    }
+
+    @Test
+    void updateUserProfile_ShouldSetLastNameToNull_WhenLastNameIsBlank() {
+        UpdateUserProfileRequest request = new UpdateUserProfileRequest("Jane", "   ");
+        when(userRepository.findByEmail(testEmail)).thenReturn(Optional.of(testUser));
+        when(userRepository.save(any(User.class))).thenReturn(testUser);
+
+        UserProfileResponse response = userService.updateUserProfile(testEmail, request);
+
+        assertEquals("Jane", testUser.getFirstName());
+        assertNull(testUser.getLastName());
+        assertNull(response.lastName());
+        verify(userRepository, times(1)).save(testUser);
+    }
+
+    @Test
+    void updateUserProfile_ShouldSetLastNameToNull_WhenLastNameIsNull() {
+        UpdateUserProfileRequest request = new UpdateUserProfileRequest("Jane", null);
+        when(userRepository.findByEmail(testEmail)).thenReturn(Optional.of(testUser));
+        when(userRepository.save(any(User.class))).thenReturn(testUser);
+
+        UserProfileResponse response = userService.updateUserProfile(testEmail, request);
+
+        assertEquals("Jane", testUser.getFirstName());
+        assertNull(testUser.getLastName());
+        assertNull(response.lastName());
+        verify(userRepository, times(1)).save(testUser);
+    }
+
+    @Test
+    void updateUserProfile_ShouldThrowAuthException_WhenUserNotFound() {
+        UpdateUserProfileRequest request = new UpdateUserProfileRequest("Jane", "Doe");
+        when(userRepository.findByEmail(testEmail)).thenReturn(Optional.empty());
+
+        AuthException exception = assertThrows(AuthException.class, () -> {
+            userService.updateUserProfile(testEmail, request);
+        });
+
+        assertEquals(ErrorCode.USER_NOT_FOUND, exception.getErrorCode());
+        verify(userRepository, never()).save(any(User.class));
+    }
+
+    @Test
+    void updateAvatar_ShouldUpdateAvatar_WhenFileIsValid() throws Exception {
+        MockMultipartFile file = new MockMultipartFile("file", "test.jpg", "image/jpeg", "test image content".getBytes());
+        when(userRepository.findByEmail(testEmail)).thenReturn(Optional.of(testUser));
+        when(userRepository.save(any(User.class))).thenReturn(testUser);
+        when(cloudinary.uploader()).thenReturn(uploader);
+        when(uploader.upload(any(byte[].class), anyMap())).thenReturn(Map.of("secure_url", "http://example.com/avatar.jpg"));
+
+        UserProfileResponse response = userService.updateAvatar(testEmail, file);
+
+        assertEquals("http://example.com/avatar.jpg", testUser.getAvatarUrl());
+        assertEquals("http://example.com/avatar.jpg", response.avatarUrl());
+        verify(userRepository, times(1)).save(testUser);
+    }
+
+    @Test
+    void updateAvatar_ShouldThrowIllegalArgumentException_WhenFileIsEmpty() {
+        MockMultipartFile file = new MockMultipartFile("file", "test.jpg", "image/jpeg", new byte[0]);
+
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
+            userService.updateAvatar(testEmail, file);
+        });
+
+        assertEquals("File is empty", exception.getMessage());
+        verify(userRepository, never()).findByEmail(anyString());
+    }
+
+    @Test
+    void updateAvatar_ShouldThrowIllegalArgumentException_WhenFileIsTooLarge() {
+        byte[] largeContent = new byte[(5 * 1024 * 1024) + 1]; // 5MB + 1 byte
+        MockMultipartFile file = new MockMultipartFile("file", "test.jpg", "image/jpeg", largeContent);
+
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
+            userService.updateAvatar(testEmail, file);
+        });
+
+        assertEquals("Max file size is 5MB", exception.getMessage());
+        verify(userRepository, never()).findByEmail(anyString());
+    }
+
+    @Test
+    void updateAvatar_ShouldThrowIllegalArgumentException_WhenContentTypeIsInvalid() {
+        MockMultipartFile file = new MockMultipartFile("file", "test.txt", "text/plain", "test".getBytes());
+
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
+            userService.updateAvatar(testEmail, file);
+        });
+
+        assertEquals("Only PNG, JPG or WEBP images are allowed", exception.getMessage());
+        verify(userRepository, never()).findByEmail(anyString());
+    }
+
+    @Test
+    void updateAvatar_ShouldThrowIllegalArgumentException_WhenContentTypeIsNull() {
+        MockMultipartFile file = new MockMultipartFile("file", "test.jpg", null, "test".getBytes());
+
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
+            userService.updateAvatar(testEmail, file);
+        });
+
+        assertEquals("Only PNG, JPG or WEBP images are allowed", exception.getMessage());
+        verify(userRepository, never()).findByEmail(anyString());
+    }
+
+    @Test
+    void updateAvatar_ShouldThrowAuthException_WhenUserNotFound() {
+        MockMultipartFile file = new MockMultipartFile("file", "test.jpg", "image/jpeg", "test".getBytes());
+        when(userRepository.findByEmail(testEmail)).thenReturn(Optional.empty());
+
+        AuthException exception = assertThrows(AuthException.class, () -> {
+            userService.updateAvatar(testEmail, file);
+        });
+
+        assertEquals(ErrorCode.USER_NOT_FOUND, exception.getErrorCode());
+        verify(userRepository, never()).save(any(User.class));
+    }
+
+    @Test
+    void updateAvatar_ShouldThrowRuntimeException_WhenCloudinaryFails() throws Exception {
+        MockMultipartFile file = new MockMultipartFile("file", "test.jpg", "image/jpeg", "test".getBytes());
+        when(userRepository.findByEmail(testEmail)).thenReturn(Optional.of(testUser));
+        when(cloudinary.uploader()).thenReturn(uploader);
+        when(uploader.upload(any(byte[].class), anyMap())).thenThrow(new RuntimeException("Cloudinary error"));
+
+        RuntimeException exception = assertThrows(RuntimeException.class, () -> {
+            userService.updateAvatar(testEmail, file);
+        });
+
+        assertEquals("Error uploading avatar", exception.getMessage());
+        verify(userRepository, never()).save(any(User.class));
     }
 }

@@ -1,53 +1,52 @@
-import React, { useEffect, useState } from 'react';
 import { View, StyleSheet, TouchableOpacity, Dimensions, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Text, Icon } from '@ui-kitten/components';
-import { Stack, router } from 'expo-router';
+import { Stack, router, Redirect, useSegments } from 'expo-router';
 import { authService } from '../../src/services/authService';
-import { userService } from '../../src/services/userService';
+import { useUser } from '../../src/context/UserContext';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 const vh = screenHeight / 100;
 
 export default function AppLayout() {
-  const [firstName, setFirstName] = useState<string>('');
-
-  useEffect(() => {
-    const fetchProfile = async () => {
-      try {
-        const profile = await userService.getProfile();
-        setFirstName(profile.firstName || 'Usuario');
-      } catch {
-        setFirstName('Usuario');
-      }
-    };
-    fetchProfile();
-  }, []);
+  const { user, isLoading, setUser } = useUser();
+  const segments = useSegments();
 
   const onLogoutPress = async () => {
     await authService.removeToken();
+    setUser(null);
     router.replace('/login');
   };
+
+  if (!isLoading && !user) {
+    return <Redirect href="/login" />;
+  }
+
+  if (user && !user.onboardingCompleted && !segments.includes('onboarding')) {
+    return <Redirect href="/onboarding" />;
+  }
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
       <View style={styles.header}>
         <View style={styles.greetingRow}>
           <Image
-            // eslint-disable-next-line @typescript-eslint/no-require-imports
             source={require('../../assets/images/logo.png')}
             style={styles.logo}
             resizeMode="contain"
           />
+
           <Text style={styles.name}>
-            Hola, <Text style={styles.nameBold}>{firstName}</Text>
+            Hola, <Text style={styles.nameBold}>{user?.firstName ?? 'Usuario'}</Text>
           </Text>
         </View>
+
         <TouchableOpacity onPress={onLogoutPress} style={styles.logoutButton}>
           <Icon name="log-out-outline" style={styles.logoutIcon} fill="#003366" />
           <Text style={styles.logoutText}>Salir</Text>
         </TouchableOpacity>
       </View>
+
       <Stack screenOptions={{ headerShown: false }} />
     </SafeAreaView>
   );

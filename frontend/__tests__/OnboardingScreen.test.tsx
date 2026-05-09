@@ -1,10 +1,11 @@
 import React from 'react';
-import { render, fireEvent, waitFor } from '@testing-library/react-native';
+import { render, fireEvent, waitFor, act } from '@testing-library/react-native';
 import { ApplicationProvider } from '@ui-kitten/components';
 import * as eva from '@eva-design/eva';
 import OnboardingScreen from '../src/screens/OnboardingScreen';
 import { userService } from '../src/services/userService';
 import { router } from 'expo-router';
+import { UserProvider } from '../src/context/UserContext';
 
 // Mock router
 jest.mock('expo-router', () => ({
@@ -17,48 +18,55 @@ jest.mock('expo-router', () => ({
 jest.mock('../src/services/userService', () => ({
   userService: {
     completeOnboarding: jest.fn(),
+    getProfile: jest.fn(),
   },
 }));
 
 const Wrapper = ({ children }: { children: React.ReactNode }) => (
   <ApplicationProvider {...eva} theme={eva.light}>
-    {children}
+    <UserProvider>{children}</UserProvider>
   </ApplicationProvider>
 );
+
+const renderScreen = async () => {
+  const utils = render(
+    <Wrapper>
+      <OnboardingScreen />
+    </Wrapper>
+  );
+  // Flush promises to allow UserProvider's useEffect to complete and update state
+  await act(async () => {
+    await Promise.resolve();
+  });
+  return utils;
+};
 
 describe('OnboardingScreen', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    (userService.getProfile as jest.Mock).mockResolvedValue({
+      firstName: '',
+      email: 'test@test.com',
+      onboardingCompleted: false,
+    });
   });
 
-  it('should render step 1 initially', () => {
-    const { getByText, getByPlaceholderText } = render(
-      <Wrapper>
-        <OnboardingScreen />
-      </Wrapper>
-    );
+  it('should render step 1 initially', async () => {
+    const { getByText, getByPlaceholderText } = await renderScreen();
 
     expect(getByText('¡Bienvenido!')).toBeTruthy();
     expect(getByPlaceholderText('Ej. Chris')).toBeTruthy();
   });
 
-  it('should show error if name is empty and next is pressed', () => {
-    const { getByText } = render(
-      <Wrapper>
-        <OnboardingScreen />
-      </Wrapper>
-    );
+  it('should show error if name is empty and next is pressed', async () => {
+    const { getByText } = await renderScreen();
 
     fireEvent.press(getByText('Continuar'));
     expect(getByText('Este campo es obligatorio.')).toBeTruthy();
   });
 
-  it('should transition to step 2 if name is valid', () => {
-    const { getByText, getByPlaceholderText } = render(
-      <Wrapper>
-        <OnboardingScreen />
-      </Wrapper>
-    );
+  it('should transition to step 2 if name is valid', async () => {
+    const { getByText, getByPlaceholderText } = await renderScreen();
 
     fireEvent.changeText(getByPlaceholderText('Ej. Chris'), 'Chris');
     fireEvent.press(getByText('Continuar'));
@@ -68,11 +76,7 @@ describe('OnboardingScreen', () => {
   });
 
   it('should show error if expenses sum is 100 or more', async () => {
-    const { getByText, getByPlaceholderText } = render(
-      <Wrapper>
-        <OnboardingScreen />
-      </Wrapper>
-    );
+    const { getByText, getByPlaceholderText } = await renderScreen();
 
     fireEvent.changeText(getByPlaceholderText('Ej. Chris'), 'Chris');
     fireEvent.press(getByText('Continuar'));
@@ -88,11 +92,7 @@ describe('OnboardingScreen', () => {
   });
 
   it('should show error if expenses are 0', async () => {
-    const { getByText, getByPlaceholderText } = render(
-      <Wrapper>
-        <OnboardingScreen />
-      </Wrapper>
-    );
+    const { getByText, getByPlaceholderText } = await renderScreen();
 
     fireEvent.changeText(getByPlaceholderText('Ej. Chris'), 'Chris');
     fireEvent.press(getByText('Continuar'));
@@ -109,11 +109,7 @@ describe('OnboardingScreen', () => {
   it('should call userService and redirect on success', async () => {
     (userService.completeOnboarding as jest.Mock).mockResolvedValueOnce({});
 
-    const { getByText, getByPlaceholderText } = render(
-      <Wrapper>
-        <OnboardingScreen />
-      </Wrapper>
-    );
+    const { getByText, getByPlaceholderText } = await renderScreen();
 
     fireEvent.changeText(getByPlaceholderText('Ej. Chris'), 'Chris');
     fireEvent.press(getByText('Continuar'));
