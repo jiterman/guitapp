@@ -34,10 +34,7 @@ const getMovements = async (): Promise<MovementResponse[]> =>
 const getMovementsByDay = async (date: string): Promise<MovementResponse[]> =>
   fetchMovements(`${API_URL}/api/movements/day?date=${encodeURIComponent(date)}`);
 
-const getMovementsByMonth = async (
-  year: number,
-  month: number
-): Promise<MovementResponse[]> =>
+const getMovementsByMonth = async (year: number, month: number): Promise<MovementResponse[]> =>
   fetchMovements(`${API_URL}/api/movements/month?year=${year}&month=${month}`);
 
 const getMovementsByYear = async (year: number): Promise<MovementResponse[]> =>

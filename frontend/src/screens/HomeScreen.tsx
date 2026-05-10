@@ -60,11 +60,7 @@ const HomeScreen = () => {
 
   return (
     <Layout style={styles.container}>
-      <BalanceCard
-        title={`Balance de ${monthLabel}`}
-        income={incomeSum}
-        expense={expenseSum}
-      />
+      <BalanceCard title={`Balance de ${monthLabel}`} income={incomeSum} expense={expenseSum} />
 
       <Text style={styles.sectionTitle}>Acciones</Text>
       <View style={styles.actionsRow}>

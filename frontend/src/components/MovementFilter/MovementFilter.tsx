@@ -67,7 +67,7 @@ const MovementFilter: React.FC<MovementFilterProps> = ({
   initialYear,
   initialMovementType = 'all',
 }) => {
-  const now = new Date();
+  const now = useMemo(() => new Date(), []);
   const [filterIndex, setFilterIndex] = useState(() =>
     Math.max(
       FILTER_OPTIONS.findIndex(option => option.key === initialKind),
@@ -77,9 +77,7 @@ const MovementFilter: React.FC<MovementFilterProps> = ({
   const [movementType, setMovementType] = useState<MovementTypeFilter>(initialMovementType);
   const [selectedDay, setSelectedDay] = useState<Date>(initialDay);
   const [selectedYear, setSelectedYear] = useState<number>(initialYear ?? now.getFullYear());
-  const [selectedMonth, setSelectedMonth] = useState<number>(
-    initialMonth ?? now.getMonth() + 1
-  );
+  const [selectedMonth, setSelectedMonth] = useState<number>(initialMonth ?? now.getMonth() + 1);
   const [isDayPickerVisible, setIsDayPickerVisible] = useState(false);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [sheetAnim] = useState(() => new Animated.Value(0));
@@ -93,10 +91,7 @@ const MovementFilter: React.FC<MovementFilterProps> = ({
     return Array.from({ length: 10 }, (_, i) => currentYear - i);
   }, [now]);
 
-  const draftFilterIndexPath = useMemo(
-    () => new IndexPath(draftFilterIndex),
-    [draftFilterIndex]
-  );
+  const draftFilterIndexPath = useMemo(() => new IndexPath(draftFilterIndex), [draftFilterIndex]);
   const draftMonthIndex = useMemo(() => new IndexPath(draftMonth - 1), [draftMonth]);
   const draftYearIndex = useMemo(() => {
     const idx = Math.max(years.indexOf(draftYear), 0);
@@ -128,7 +123,6 @@ const MovementFilter: React.FC<MovementFilterProps> = ({
     setDraftYear(years[idx]);
   };
 
-  const activeKind = FILTER_OPTIONS[filterIndex].key;
   const draftKind = FILTER_OPTIONS[draftFilterIndex].key;
 
   const openModal = () => {
@@ -194,19 +188,13 @@ const MovementFilter: React.FC<MovementFilterProps> = ({
       <View style={styles.actionsRow}>
         <TouchableOpacity
           onPress={() => toggleMovementType('income')}
-          style={[
-            styles.typeButton,
-            movementType === 'income' && styles.typeButtonIncomeActive,
-          ]}
+          style={[styles.typeButton, movementType === 'income' && styles.typeButtonIncomeActive]}
         >
           <Text style={[styles.typeLabel, styles.incomeText]}>Ingresos</Text>
         </TouchableOpacity>
         <TouchableOpacity
           onPress={() => toggleMovementType('expense')}
-          style={[
-            styles.typeButton,
-            movementType === 'expense' && styles.typeButtonExpenseActive,
-          ]}
+          style={[styles.typeButton, movementType === 'expense' && styles.typeButtonExpenseActive]}
         >
           <Text style={[styles.typeLabel, styles.expenseText]}>Gastos</Text>
         </TouchableOpacity>
@@ -216,12 +204,7 @@ const MovementFilter: React.FC<MovementFilterProps> = ({
         </TouchableOpacity>
       </View>
 
-      <Modal
-        visible={isModalVisible}
-        transparent
-        animationType="none"
-        onRequestClose={closeModal}
-      >
+      <Modal visible={isModalVisible} transparent animationType="none" onRequestClose={closeModal}>
         <Pressable style={styles.modalOverlay} onPress={closeModal}>
           <Animated.View
             onStartShouldSetResponder={() => true}
