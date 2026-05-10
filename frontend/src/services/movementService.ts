@@ -11,9 +11,9 @@ export interface MovementResponse {
   date: string;
 }
 
-const getMovements = async (): Promise<MovementResponse[]> => {
+const fetchMovements = async (url: string): Promise<MovementResponse[]> => {
   const token = await authService.getToken();
-  const response = await fetch(`${API_URL}/api/movements`, {
+  const response = await fetch(url, {
     method: 'GET',
     headers: {
       Authorization: `Bearer ${token}`,
@@ -28,4 +28,21 @@ const getMovements = async (): Promise<MovementResponse[]> => {
   return response.json();
 };
 
-export const movementService = { getMovements };
+const getMovements = async (): Promise<MovementResponse[]> =>
+  fetchMovements(`${API_URL}/api/movements`);
+
+const getMovementsByDay = async (date: string): Promise<MovementResponse[]> =>
+  fetchMovements(`${API_URL}/api/movements/day?date=${encodeURIComponent(date)}`);
+
+const getMovementsByMonth = async (year: number, month: number): Promise<MovementResponse[]> =>
+  fetchMovements(`${API_URL}/api/movements/month?year=${year}&month=${month}`);
+
+const getMovementsByYear = async (year: number): Promise<MovementResponse[]> =>
+  fetchMovements(`${API_URL}/api/movements/year?year=${year}`);
+
+export const movementService = {
+  getMovements,
+  getMovementsByDay,
+  getMovementsByMonth,
+  getMovementsByYear,
+};
