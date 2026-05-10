@@ -164,4 +164,35 @@ describe('authService', () => {
     expect(SecureStore.setItemAsync).toHaveBeenCalledWith('biometricUsers', '[]');
     expect(SecureStore.deleteItemAsync).toHaveBeenCalledWith(`biometric_creds_test_example.com`);
   });
+
+  it('should store and clear temp password correctly', () => {
+    const pass = 'secret123';
+    authService.setTempPassword(pass);
+    expect(authService.getTempPassword()).toBe(pass);
+    authService.clearTempPassword();
+    expect(authService.getTempPassword()).toBe(null);
+  });
+
+  it('should update biometric user name correctly', async () => {
+    const email = 'test@example.com';
+    const originalUsers = [{ email, firstName: 'OldName' }, { email: 'other@example.com' }];
+
+    // getBiometricUsers checks 'biometricUsers' and then checks 'biometric_creds_...' for each user
+    (SecureStore.getItemAsync as jest.Mock).mockImplementation(key => {
+      if (key === 'biometricUsers') {
+        return Promise.resolve(JSON.stringify(originalUsers));
+      }
+      if (key.startsWith('biometric_creds_')) {
+        return Promise.resolve(JSON.stringify({ email: 'mock', password: 'mock' }));
+      }
+      return Promise.resolve(null);
+    });
+
+    await authService.updateBiometricUserName(email, 'NewName');
+
+    expect(SecureStore.setItemAsync).toHaveBeenCalledWith(
+      'biometricUsers',
+      JSON.stringify([{ email, firstName: 'NewName' }, { email: 'other@example.com' }])
+    );
+  });
 });

@@ -27,6 +27,16 @@ const getApiUrl = () => {
 export const API_URL = getApiUrl();
 
 export const authService = {
+  tempPassword: null as string | null,
+  setTempPassword: (password: string) => {
+    authService.tempPassword = password;
+  },
+  getTempPassword: () => {
+    return authService.tempPassword;
+  },
+  clearTempPassword: () => {
+    authService.tempPassword = null;
+  },
   register: async (email: string, password: string) => {
     try {
       const response = await fetch(`${API_URL}/api/auth/register`, {
@@ -191,7 +201,14 @@ export const authService = {
   getBiometricUsers: async (): Promise<BiometricUser[]> => {
     const raw = await SecureStore.getItemAsync('biometricUsers');
     if (!raw) return [];
-    const users: BiometricUser[] = JSON.parse(raw);
+
+    let users: BiometricUser[] = [];
+    try {
+      users = JSON.parse(raw);
+    } catch (e) {
+      return [];
+    }
+
     const valid: BiometricUser[] = [];
     for (const user of users) {
       const key = `biometric_creds_${user.email.replace(/[^a-zA-Z0-9._-]/g, '_')}`;
@@ -211,6 +228,12 @@ export const authService = {
     await SecureStore.setItemAsync('biometricUsers', JSON.stringify(updated));
     const key = `biometric_creds_${email.replace(/[^a-zA-Z0-9._-]/g, '_')}`;
     await SecureStore.setItemAsync(key, JSON.stringify({ email, password }));
+  },
+
+  updateBiometricUserName: async (email: string, firstName: string) => {
+    const users = await authService.getBiometricUsers();
+    const updated = users.map(u => (u.email === email ? { ...u, firstName } : u));
+    await SecureStore.setItemAsync('biometricUsers', JSON.stringify(updated));
   },
 
   getBiometricCredentials: async (
