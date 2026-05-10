@@ -16,7 +16,18 @@ const buildInitialFilter = (): FilterState => {
     day: now,
     month: now.getMonth() + 1,
     year: now.getFullYear(),
+    movementType: 'all',
   };
+};
+
+const applyTypeFilter = (data: MovementResponse[], movementType: FilterState['movementType']) => {
+  if (movementType === 'income') {
+    return data.filter(movement => movement.type === 'INCOME');
+  }
+  if (movementType === 'expense') {
+    return data.filter(movement => movement.type === 'EXPENSE');
+  }
+  return data;
 };
 
 const formatMonthLabel = (year: number, month: number) => {
@@ -24,10 +35,17 @@ const formatMonthLabel = (year: number, month: number) => {
   return `${label.charAt(0).toUpperCase()}${label.slice(1)} ${year}`;
 };
 
+const formatDayLabel = (date: Date) => {
+  const day = date.getDate();
+  const monthLabel = date.toLocaleString('es-ES', { month: 'long' });
+  const month = `${monthLabel.charAt(0).toUpperCase()}${monthLabel.slice(1)}`;
+  return `${day} de ${month} del ${date.getFullYear()}`;
+};
+
 const buildBalanceTitle = (filterState: FilterState) => {
   if (filterState.kind === 'all') return 'Balance total';
   if (filterState.kind === 'day') {
-    return `Balance del ${filterState.day.toLocaleDateString('es-AR')}`;
+    return `Balance del ${formatDayLabel(filterState.day)}`;
   }
   if (filterState.kind === 'month') {
     return `Balance de ${formatMonthLabel(filterState.year, filterState.month)}`;
@@ -37,13 +55,14 @@ const buildBalanceTitle = (filterState: FilterState) => {
 
 const SummaryScreen: React.FC = () => {
   const [movements, setMovements] = useState<MovementResponse[]>([]);
+  const [periodMovements, setPeriodMovements] = useState<MovementResponse[]>([]);
   const [filterState, setFilterState] = useState<FilterState>(() => buildInitialFilter());
 
   useEffect(() => {
     let mounted = true;
     (async () => {
       try {
-        const { kind, day, month, year } = filterState;
+        const { kind, day, month, year, movementType } = filterState;
         let data: MovementResponse[] = [];
 
         if (kind === 'all') {
@@ -57,9 +76,15 @@ const SummaryScreen: React.FC = () => {
           data = await movementService.getMovementsByYear(year);
         }
 
-        if (mounted) setMovements(data);
+        if (mounted) {
+          setPeriodMovements(data);
+          setMovements(applyTypeFilter(data, movementType));
+        }
       } catch {
-        if (mounted) setMovements([]);
+        if (mounted) {
+          setPeriodMovements([]);
+          setMovements([]);
+        }
       }
     })();
     return () => {
@@ -68,7 +93,7 @@ const SummaryScreen: React.FC = () => {
   }, [filterState]);
 
   const totals = useMemo(() => {
-    return movements.reduce(
+    return periodMovements.reduce(
       (acc, movement) => {
         if (movement.type === 'INCOME') acc.income += Number(movement.amount);
         else acc.expense += Number(movement.amount);
@@ -76,7 +101,7 @@ const SummaryScreen: React.FC = () => {
       },
       { income: 0, expense: 0 }
     );
-  }, [movements]);
+  }, [periodMovements]);
 
   const balanceTitle = useMemo(() => buildBalanceTitle(filterState), [filterState]);
 

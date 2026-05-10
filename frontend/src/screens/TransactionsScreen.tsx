@@ -11,11 +11,22 @@ const vh = screenHeight / 100;
 const buildInitialFilter = (): FilterState => {
   const now = new Date();
   return {
-    kind: 'day',
+    kind: 'month',
     day: now,
     month: now.getMonth() + 1,
     year: now.getFullYear(),
+    movementType: 'all',
   };
+};
+
+const applyTypeFilter = (data: MovementResponse[], movementType: FilterState['movementType']) => {
+  if (movementType === 'income') {
+    return data.filter(movement => movement.type === 'INCOME');
+  }
+  if (movementType === 'expense') {
+    return data.filter(movement => movement.type === 'EXPENSE');
+  }
+  return data;
 };
 
 const TransactionsScreen: React.FC = () => {
@@ -26,7 +37,7 @@ const TransactionsScreen: React.FC = () => {
     let mounted = true;
     (async () => {
       try {
-        const { kind, day, month, year } = filterState;
+        const { kind, day, month, year, movementType } = filterState;
         let data: MovementResponse[] = [];
 
         if (kind === 'all') {
@@ -40,7 +51,7 @@ const TransactionsScreen: React.FC = () => {
           data = await movementService.getMovementsByYear(year);
         }
 
-        if (mounted) setMovements(data);
+        if (mounted) setMovements(applyTypeFilter(data, movementType));
       } catch {
         if (mounted) setMovements([]);
       }
