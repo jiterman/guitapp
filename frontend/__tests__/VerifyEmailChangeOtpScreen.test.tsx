@@ -7,7 +7,7 @@ import VerifyEmailChangeOtpScreen from '../src/screens/VerifyEmailChangeOtpScree
 import { userService } from '../src/services/userService';
 import { authService } from '../src/services/authService';
 import { useUser } from '../src/context/UserContext';
-import { router, useLocalSearchParams } from 'expo-router';
+import { router } from 'expo-router';
 
 jest.mock('expo-router', () => ({
   router: {

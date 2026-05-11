@@ -4,13 +4,16 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
+import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
+import org.fiuba.guitapp.dto.InitiateEmailChangeRequest;
 import org.fiuba.guitapp.dto.OnboardingRequest;
 import org.fiuba.guitapp.dto.UpdateUserProfileRequest;
 import org.fiuba.guitapp.dto.UserProfileResponse;
+import org.fiuba.guitapp.dto.VerifyEmailChangeRequest;
 import org.fiuba.guitapp.exception.AuthException;
 import org.fiuba.guitapp.exception.ErrorCode;
 import org.fiuba.guitapp.model.User;
@@ -38,6 +41,12 @@ class UserServiceTests {
 
     @Mock
     private Uploader uploader;
+
+    @Mock
+    private OtpService otpService;
+
+    @Mock
+    private EmailService emailService;
 
     @InjectMocks
     private UserService userService;
@@ -333,6 +342,122 @@ class UserServiceTests {
         });
 
         assertEquals("Error uploading avatar", exception.getMessage());
+        verify(userRepository, never()).save(any(User.class));
+    }
+
+    @Test
+    void initiateEmailChange_ShouldInitiateChange_WhenValidData() {
+        String newEmail = "new@example.com";
+        InitiateEmailChangeRequest request = new InitiateEmailChangeRequest(newEmail);
+        String otp = "123456";
+
+        when(userRepository.findByEmail(testEmail)).thenReturn(Optional.of(testUser));
+        when(userRepository.findByEmail(newEmail)).thenReturn(Optional.empty());
+        when(otpService.generateOtp()).thenReturn(otp);
+
+        userService.initiateEmailChange(testEmail, request);
+
+        assertEquals(newEmail, testUser.getPendingEmail());
+        assertEquals(otp, testUser.getVerificationOtp());
+        assertNotNull(testUser.getOtpCreatedAt());
+        verify(userRepository, times(1)).save(testUser);
+        verify(emailService, times(1)).sendEmailChangeOtp(newEmail, otp);
+    }
+
+    @Test
+    void initiateEmailChange_ShouldThrowException_WhenNewEmailSameAsCurrent() {
+        InitiateEmailChangeRequest request = new InitiateEmailChangeRequest(testEmail);
+        when(userRepository.findByEmail(testEmail)).thenReturn(Optional.of(testUser));
+
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
+            userService.initiateEmailChange(testEmail, request);
+        });
+
+        assertEquals("El nuevo email debe ser diferente al actual", exception.getMessage());
+        verify(userRepository, never()).save(any(User.class));
+    }
+
+    @Test
+    void initiateEmailChange_ShouldThrowException_WhenNewEmailAlreadyUsed() {
+        String newEmail = "used@example.com";
+        InitiateEmailChangeRequest request = new InitiateEmailChangeRequest(newEmail);
+        when(userRepository.findByEmail(testEmail)).thenReturn(Optional.of(testUser));
+        when(userRepository.findByEmail(newEmail)).thenReturn(Optional.of(new User()));
+
+        AuthException exception = assertThrows(AuthException.class, () -> {
+            userService.initiateEmailChange(testEmail, request);
+        });
+
+        assertEquals(ErrorCode.MAIL_ALREADY_USED, exception.getErrorCode());
+        verify(userRepository, never()).save(any(User.class));
+    }
+
+    @Test
+    void verifyEmailChange_ShouldUpdateEmail_WhenValidOtp() {
+        String newEmail = "new@example.com";
+        String otp = "123456";
+        testUser.setPendingEmail(newEmail);
+        testUser.setVerificationOtp(otp);
+        testUser.setOtpCreatedAt(LocalDateTime.now());
+
+        VerifyEmailChangeRequest request = new VerifyEmailChangeRequest(otp);
+
+        when(userRepository.findByEmail(testEmail)).thenReturn(Optional.of(testUser));
+        when(otpService.isOtpExpired(any())).thenReturn(false);
+
+        userService.verifyEmailChange(testEmail, request);
+
+        assertEquals(newEmail, testUser.getEmail());
+        assertNull(testUser.getPendingEmail());
+        assertNull(testUser.getVerificationOtp());
+        assertNull(testUser.getOtpCreatedAt());
+        verify(userRepository, times(1)).save(testUser);
+    }
+
+    @Test
+    void verifyEmailChange_ShouldThrowException_WhenNoPendingEmail() {
+        VerifyEmailChangeRequest request = new VerifyEmailChangeRequest("123456");
+        when(userRepository.findByEmail(testEmail)).thenReturn(Optional.of(testUser));
+
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
+            userService.verifyEmailChange(testEmail, request);
+        });
+
+        assertEquals("No hay un cambio de email pendiente", exception.getMessage());
+        verify(userRepository, never()).save(any(User.class));
+    }
+
+    @Test
+    void verifyEmailChange_ShouldThrowException_WhenInvalidOtp() {
+        testUser.setPendingEmail("new@example.com");
+        testUser.setVerificationOtp("123456");
+        VerifyEmailChangeRequest request = new VerifyEmailChangeRequest("wrong");
+
+        when(userRepository.findByEmail(testEmail)).thenReturn(Optional.of(testUser));
+
+        AuthException exception = assertThrows(AuthException.class, () -> {
+            userService.verifyEmailChange(testEmail, request);
+        });
+
+        assertEquals(ErrorCode.INVALID_OTP, exception.getErrorCode());
+        verify(userRepository, never()).save(any(User.class));
+    }
+
+    @Test
+    void verifyEmailChange_ShouldThrowException_WhenOtpExpired() {
+        testUser.setPendingEmail("new@example.com");
+        testUser.setVerificationOtp("123456");
+        testUser.setOtpCreatedAt(LocalDateTime.now().minusMinutes(11));
+        VerifyEmailChangeRequest request = new VerifyEmailChangeRequest("123456");
+
+        when(userRepository.findByEmail(testEmail)).thenReturn(Optional.of(testUser));
+        when(otpService.isOtpExpired(any())).thenReturn(true);
+
+        AuthException exception = assertThrows(AuthException.class, () -> {
+            userService.verifyEmailChange(testEmail, request);
+        });
+
+        assertEquals(ErrorCode.OTP_EXPIRED, exception.getErrorCode());
         verify(userRepository, never()).save(any(User.class));
     }
 }

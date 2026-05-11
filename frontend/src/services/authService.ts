@@ -205,7 +205,7 @@ export const authService = {
     let users: BiometricUser[] = [];
     try {
       users = JSON.parse(raw);
-    } catch (e) {
+    } catch {
       return [];
     }
 
