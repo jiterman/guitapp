@@ -51,4 +51,23 @@ public class EmailService {
         }
         log.info("Reset password OTP for {}: {}", to, otp);
     }
+
+    public void sendEmailChangeOtp(String to, String otp) {
+        SimpleMailMessage message = new SimpleMailMessage();
+        message.setTo(to);
+        message.setSubject("GuitApp - Confirma tu nuevo correo electrónico");
+        message.setText("¡Hola!\n\n" + "Recibimos una solicitud para cambiar tu correo electrónico en GuitApp. "
+                + "Para completar este cambio, por favor utiliza el siguiente código de verificación:\n\n"
+                + otp + "\n\n" + "Este código expirará en 10 minutos.\n\n"
+                + "Si no solicitaste este cambio, por favor ignora este correo.\n\n" + "¡Saludos,\n"
+                + "El equipo de GuitApp");
+
+        try {
+            mailSender.send(message);
+        } catch (MailException ex) {
+            log.warn("Failed to send email change OTP to {}: {}. Continuing without failing.", to,
+                    ex.getMessage());
+        }
+        log.info("Email change OTP for {}: {}", to, otp);
+    }
 }

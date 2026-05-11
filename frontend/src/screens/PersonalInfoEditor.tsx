@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, TextInput, TouchableOpacity, StyleSheet, Alert } from 'react-native';
 import { Text } from '@ui-kitten/components';
 import { Ionicons } from '@expo/vector-icons';
 
@@ -9,35 +9,38 @@ interface PersonalInfoEditorProps {
   lastName: string;
   setLastName: (name: string) => void;
   email: string;
-  setEmail: (email: string) => void;
   onSaveName: (firstName: string, lastName: string) => Promise<void>;
+  onSaveEmail: (newEmail: string) => Promise<void>;
   saving?: boolean;
 }
 
 const PersonalInfoEditor: React.FC<PersonalInfoEditorProps> = ({
   firstName,
   lastName,
-  setEmail,
   email,
   onSaveName,
+  onSaveEmail,
   saving,
 }) => {
   const [draftFirstName, setDraftFirstName] = useState(firstName);
   const [draftLastName, setDraftLastName] = useState(lastName);
+  const [draftEmail, setDraftEmail] = useState(email);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     setDraftFirstName(firstName);
     setDraftLastName(lastName);
-  }, [firstName, lastName]);
+    setDraftEmail(email);
+  }, [firstName, lastName, email]);
 
   useEffect(() => {
     if (error) {
       setError(null);
     }
-  }, [draftFirstName, draftLastName]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [draftFirstName, draftLastName, draftEmail]);
 
-  const handleSave = async () => {
+  const handleSaveName = async () => {
     if (!draftFirstName.trim()) {
       setError('El nombre no puede estar vacío');
       return;
@@ -50,6 +53,37 @@ const PersonalInfoEditor: React.FC<PersonalInfoEditorProps> = ({
     } catch {
       setError('Error al guardar. Intentá nuevamente');
     }
+  };
+
+  const handleSaveEmail = async () => {
+    if (!draftEmail.trim() || !draftEmail.includes('@')) {
+      setError('Email inválido');
+      return;
+    }
+
+    if (draftEmail === email) {
+      setError('El email es el mismo que el actual');
+      return;
+    }
+
+    Alert.alert(
+      'Cambiar correo electrónico',
+      'Si cambias tu correo, deberás verificar el nuevo mail y volver a iniciar sesión. También se desactivará el acceso biométrico.',
+      [
+        { text: 'Cancelar', style: 'cancel' },
+        {
+          text: 'Continuar',
+          onPress: async () => {
+            try {
+              await onSaveEmail(draftEmail);
+            } catch (e: unknown) {
+              const errorMessage = e instanceof Error ? e.message : 'Error al cambiar email';
+              setError(errorMessage);
+            }
+          },
+        },
+      ]
+    );
   };
 
   return (
@@ -98,7 +132,7 @@ const PersonalInfoEditor: React.FC<PersonalInfoEditorProps> = ({
 
         <TouchableOpacity
           style={[styles.saveButton, saving && { opacity: 0.6 }]}
-          onPress={handleSave}
+          onPress={handleSaveName}
           disabled={saving}
         >
           <Text style={styles.saveButtonText}>{saving ? 'Guardando...' : 'Guardar nombre'}</Text>
@@ -119,8 +153,8 @@ const PersonalInfoEditor: React.FC<PersonalInfoEditorProps> = ({
           <View style={styles.inputWrapper}>
             <TextInput
               style={styles.input}
-              value={email}
-              onChangeText={setEmail}
+              value={draftEmail}
+              onChangeText={setDraftEmail}
               placeholder="correo@ejemplo.com"
               placeholderTextColor="#a0b8c8"
               keyboardType="email-address"
@@ -130,8 +164,12 @@ const PersonalInfoEditor: React.FC<PersonalInfoEditorProps> = ({
           </View>
         </View>
 
-        <TouchableOpacity style={styles.saveButton}>
-          <Text style={styles.saveButtonText}>Guardar email</Text>
+        <TouchableOpacity
+          style={[styles.saveButton, saving && { opacity: 0.6 }]}
+          onPress={handleSaveEmail}
+          disabled={saving}
+        >
+          <Text style={styles.saveButtonText}>{saving ? 'Guardando...' : 'Guardar email'}</Text>
         </TouchableOpacity>
       </View>
     </>

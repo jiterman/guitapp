@@ -7,9 +7,11 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import java.util.UUID;
 
+import org.fiuba.guitapp.dto.InitiateEmailChangeRequest;
 import org.fiuba.guitapp.dto.OnboardingRequest;
 import org.fiuba.guitapp.dto.UpdateUserProfileRequest;
 import org.fiuba.guitapp.dto.UserProfileResponse;
+import org.fiuba.guitapp.dto.VerifyEmailChangeRequest;
 import org.fiuba.guitapp.service.UserService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -185,5 +187,37 @@ class UserControllerTests {
 
         verify(userService, times(1))
                 .updateAvatar(eq("test@example.com"), any());
+    }
+
+    @Test
+    @WithMockUser(username = "test@example.com")
+    void initiateEmailChange_ShouldReturnSuccessMessage() throws Exception {
+        InitiateEmailChangeRequest request = new InitiateEmailChangeRequest("new@example.com");
+
+        doNothing().when(userService).initiateEmailChange(eq("test@example.com"), any(InitiateEmailChangeRequest.class));
+
+        mockMvc.perform(post("/api/users/me/email/initiate")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.message").value("OTP sent to new email"));
+
+        verify(userService, times(1)).initiateEmailChange(eq("test@example.com"), any(InitiateEmailChangeRequest.class));
+    }
+
+    @Test
+    @WithMockUser(username = "test@example.com")
+    void verifyEmailChange_ShouldReturnSuccessMessage() throws Exception {
+        VerifyEmailChangeRequest request = new VerifyEmailChangeRequest("123456");
+
+        doNothing().when(userService).verifyEmailChange(eq("test@example.com"), any(VerifyEmailChangeRequest.class));
+
+        mockMvc.perform(post("/api/users/me/email/verify")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.message").value("Email updated successfully"));
+
+        verify(userService, times(1)).verifyEmailChange(eq("test@example.com"), any(VerifyEmailChangeRequest.class));
     }
 }

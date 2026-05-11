@@ -6,7 +6,11 @@ import { router, useLocalSearchParams } from 'expo-router';
 import { loginStyles as styles } from '../styles/loginStyles';
 
 const VerificationSuccessScreen = () => {
-  const { title, subtitle } = useLocalSearchParams<{ title?: string; subtitle?: string }>();
+  const { title, subtitle, securityNote } = useLocalSearchParams<{
+    title?: string;
+    subtitle?: string;
+    securityNote?: string;
+  }>();
 
   const displayTitle = title || '¡Cuenta verificada exitosamente!';
   const displaySubtitle =
@@ -30,6 +34,13 @@ const VerificationSuccessScreen = () => {
         <Text category="s1" style={styles.subtitle} testID="success-subtitle">
           {displaySubtitle}
         </Text>
+        {securityNote && (
+          <View style={styles.infoBox}>
+            <Text style={styles.hint} testID="security-note">
+              {securityNote}
+            </Text>
+          </View>
+        )}
         <Button style={styles.button} onPress={() => router.push('/login')} testID="login-button">
           {() => <Text style={styles.buttonText}>Ingresar</Text>}
         </Button>

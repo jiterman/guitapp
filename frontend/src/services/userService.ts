@@ -86,4 +86,48 @@ export const userService = {
 
     return response.json();
   },
+
+  initiateEmailChange: async (newEmail: string) => {
+    const token = await authService.getToken();
+
+    const response = await fetch(`${API_URL}/api/users/me/email/initiate`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        newEmail,
+      }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || 'Error al iniciar cambio de email');
+    }
+
+    return response.json();
+  },
+
+  verifyEmailChange: async (otp: string) => {
+    const token = await authService.getToken();
+
+    const response = await fetch(`${API_URL}/api/users/me/email/verify`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        otp,
+      }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || 'Error al verificar OTP');
+    }
+
+    return response.json();
+  },
 };

@@ -43,16 +43,17 @@ describe('VerificationSuccessScreen', () => {
     expect(getByTestId('login-button')).toBeDefined();
   });
 
-  it('should render with custom content when params are provided', () => {
+  it('should render with securityNote when provided', () => {
     (useLocalSearchParams as jest.Mock).mockReturnValue({
-      title: 'Custom Title',
-      subtitle: 'Custom Subtitle',
+      title: 'Title',
+      subtitle: 'Subtitle',
+      securityNote: 'Security Note',
     });
 
-    const { getByText } = renderWithKitten(<VerificationSuccessScreen />);
+    const { getByText, getByTestId } = renderWithKitten(<VerificationSuccessScreen />);
 
-    expect(getByText('Custom Title')).toBeDefined();
-    expect(getByText('Custom Subtitle')).toBeDefined();
+    expect(getByText('Security Note')).toBeDefined();
+    expect(getByTestId('security-note')).toBeDefined();
   });
 
   it('should navigate to login when pressing the Ingresar button', () => {

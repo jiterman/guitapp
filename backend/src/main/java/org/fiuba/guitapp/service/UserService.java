@@ -1,10 +1,13 @@
 package org.fiuba.guitapp.service;
 
+import java.time.LocalDateTime;
 import java.util.Map;
 
+import org.fiuba.guitapp.dto.InitiateEmailChangeRequest;
 import org.fiuba.guitapp.dto.OnboardingRequest;
 import org.fiuba.guitapp.dto.UpdateUserProfileRequest;
 import org.fiuba.guitapp.dto.UserProfileResponse;
+import org.fiuba.guitapp.dto.VerifyEmailChangeRequest;
 import org.fiuba.guitapp.exception.AuthException;
 import org.fiuba.guitapp.exception.ErrorCode;
 import org.fiuba.guitapp.model.User;
@@ -23,6 +26,8 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final Cloudinary cloudinary;
+    private final OtpService otpService;
+    private final EmailService emailService;
     private static final long MAX_FILE_SIZE = 5 * 1024 * 1024;
 
     public UserProfileResponse getUserProfile(String email) {
@@ -137,5 +142,52 @@ public class UserService {
         } catch (Exception e) {
             throw new RuntimeException("Error uploading avatar", e);
         }
+    }
+
+    @Transactional
+    public void initiateEmailChange(String currentEmail, InitiateEmailChangeRequest request) {
+        User user = userRepository.findByEmail(currentEmail)
+                .orElseThrow(() -> new AuthException(ErrorCode.USER_NOT_FOUND, "User not found"));
+
+        if (user.getEmail().equals(request.newEmail())) {
+            throw new IllegalArgumentException("El nuevo email debe ser diferente al actual");
+        }
+
+        if (userRepository.findByEmail(request.newEmail()).isPresent()) {
+            throw new AuthException(ErrorCode.MAIL_ALREADY_USED, "El email ya está en uso");
+        }
+
+        String otp = otpService.generateOtp();
+        user.setPendingEmail(request.newEmail());
+        user.setVerificationOtp(otp);
+        user.setOtpCreatedAt(LocalDateTime.now());
+
+        userRepository.save(user);
+        emailService.sendEmailChangeOtp(request.newEmail(), otp);
+    }
+
+    @Transactional
+    public void verifyEmailChange(String currentEmail, VerifyEmailChangeRequest request) {
+        User user = userRepository.findByEmail(currentEmail)
+                .orElseThrow(() -> new AuthException(ErrorCode.USER_NOT_FOUND, "User not found"));
+
+        if (user.getPendingEmail() == null) {
+            throw new IllegalArgumentException("No hay un cambio de email pendiente");
+        }
+
+        if (!user.getVerificationOtp().equals(request.otp())) {
+            throw new AuthException(ErrorCode.INVALID_OTP, "Código OTP inválido");
+        }
+
+        if (otpService.isOtpExpired(user.getOtpCreatedAt())) {
+            throw new AuthException(ErrorCode.OTP_EXPIRED, "El código OTP ha expirado");
+        }
+
+        user.setEmail(user.getPendingEmail());
+        user.setPendingEmail(null);
+        user.setVerificationOtp(null);
+        user.setOtpCreatedAt(null);
+
+        userRepository.save(user);
     }
 }

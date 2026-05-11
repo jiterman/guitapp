@@ -3,9 +3,11 @@ package org.fiuba.guitapp.controller;
 import java.security.Principal;
 import java.util.Map;
 
+import org.fiuba.guitapp.dto.InitiateEmailChangeRequest;
 import org.fiuba.guitapp.dto.OnboardingRequest;
 import org.fiuba.guitapp.dto.UpdateUserProfileRequest;
 import org.fiuba.guitapp.dto.UserProfileResponse;
+import org.fiuba.guitapp.dto.VerifyEmailChangeRequest;
 import org.fiuba.guitapp.service.UserService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -58,5 +60,23 @@ public class UserController {
         UserProfileResponse response = userService.updateAvatar(principal.getName(), file);
 
         return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/me/email/initiate")
+    public ResponseEntity<?> initiateEmailChange(
+            Principal principal,
+            @Valid @RequestBody InitiateEmailChangeRequest request) {
+
+        userService.initiateEmailChange(principal.getName(), request);
+        return ResponseEntity.ok(Map.of("message", "OTP sent to new email"));
+    }
+
+    @PostMapping("/me/email/verify")
+    public ResponseEntity<?> verifyEmailChange(
+            Principal principal,
+            @Valid @RequestBody VerifyEmailChangeRequest request) {
+
+        userService.verifyEmailChange(principal.getName(), request);
+        return ResponseEntity.ok(Map.of("message", "Email updated successfully"));
     }
 }

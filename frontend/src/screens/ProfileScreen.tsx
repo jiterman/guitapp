@@ -13,8 +13,10 @@ import { Layout, Text } from '@ui-kitten/components';
 import { Ionicons } from '@expo/vector-icons';
 import PersonalInfoEditor from './PersonalInfoEditor';
 import { userService } from '../services/userService';
+import { authService } from '../services/authService';
 import AvatarPicker from './AvatarPicker';
 import { useUser } from '../context/UserContext';
+import { router } from 'expo-router';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 const vh = screenHeight / 100;
@@ -31,6 +33,9 @@ const ProfileScreen: React.FC = () => {
     setSaving(true);
     try {
       const updatedProfile = await userService.updateProfile(newFirst, newLast);
+      if (user.email) {
+        await authService.updateBiometricUserName(user.email, updatedProfile.firstName);
+      }
       setUser({
         ...user,
         firstName: updatedProfile.firstName,
@@ -40,6 +45,24 @@ const ProfileScreen: React.FC = () => {
       closeSheet();
     } catch (e) {
       console.error('Error actualizando perfil', e);
+      throw e;
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleSaveEmail = async (newEmail: string) => {
+    if (saving || !user) return;
+    setSaving(true);
+    try {
+      await userService.initiateEmailChange(newEmail);
+      closeSheet();
+      router.push({
+        pathname: '/verify-email-change',
+        params: { email: newEmail },
+      });
+    } catch (e) {
+      console.error('Error iniciando cambio de email', e);
       throw e;
     } finally {
       setSaving(false);
@@ -183,15 +206,9 @@ const ProfileScreen: React.FC = () => {
                 }
               }}
               email={user?.email || ''}
-              setEmail={(email: string) => {
-                if (user) {
-                  setUser({
-                    ...user,
-                    email,
-                  });
-                }
-              }}
               onSaveName={handleSaveName}
+              onSaveEmail={handleSaveEmail}
+              saving={saving}
             />
             <View style={{ height: vh * 3 }} />
           </ScrollView>

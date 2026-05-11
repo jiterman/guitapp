@@ -4,7 +4,7 @@
   "main": "expo-router/entry",
   "scripts": {
     "start": "expo start --go",
-    "start:prod": "cross-env EXPO_PUBLIC_ENV=prod expo start",
+    "start:prod": "cross-env EXPO_PUBLIC_ENV=prod expo start --go",
     "android": "expo start --android",
     "ios": "expo start --ios",
     "web": "expo start --web",

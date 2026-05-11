@@ -104,34 +104,23 @@ const LoginScreen = () => {
       await authService.login(email, password);
 
       const profile = await userService.getProfile();
-      setUser(profile);
 
       const biometricHardwareAvailable = await authService.isBiometricAvailable();
       const existingUsers = await authService.getBiometricUsers();
       const alreadyEnabled = existingUsers.some(u => u.email === email);
 
       if (biometricHardwareAvailable && !alreadyEnabled) {
-        Alert.alert(
-          'Acceso con biometría',
-          '¿Querés habilitar el acceso con huella o Face ID para la próxima vez?',
-          [
-            {
-              text: 'Ahora no',
-              style: 'cancel',
-              onPress: () => navigateAfterLogin(profile, email),
-            },
-            {
-              text: 'Habilitar',
-              onPress: async () => {
-                await authService.addBiometricUser(email, password, profile.firstName);
-                setBiometricUsers(await authService.getBiometricUsers());
-                setBiometricAvailable(true);
-                navigateAfterLogin(profile, email);
-              },
-            },
-          ]
-        );
+        authService.setTempPassword(password);
+        router.replace({
+          pathname: '/biometric-setup',
+          params: {
+            email,
+            firstName: profile.firstName,
+            onboardingCompleted: profile.onboardingCompleted.toString(),
+          },
+        });
       } else {
+        setUser(profile);
         navigateAfterLogin(profile, email);
       }
     } catch (err) {

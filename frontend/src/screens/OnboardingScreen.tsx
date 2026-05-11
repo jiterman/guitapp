@@ -9,8 +9,10 @@ import { validateFirstName } from '../utils/validation';
 import { loginStyles as styles } from '../styles/loginStyles';
 import { OnboardingError } from '../types/errors';
 
+import { authService } from '../services/authService';
+
 const OnboardingScreen = () => {
-  const { setUser } = useUser();
+  const { user, setUser } = useUser();
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
 
@@ -56,6 +58,9 @@ const OnboardingScreen = () => {
     try {
       await userService.completeOnboarding(firstName, fixed, variable);
       const profile = await userService.getProfile();
+      if (user?.email) {
+        await authService.updateBiometricUserName(user.email, firstName);
+      }
       setUser(profile);
       router.replace('/home');
     } catch (err) {

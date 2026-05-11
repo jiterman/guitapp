@@ -54,12 +54,15 @@ class UserTests {
     void testOtpGettersAndSetters() {
         String otp = "123456";
         LocalDateTime otpCreatedAt = LocalDateTime.now();
+        String pendingEmail = "new@example.com";
 
         user.setVerificationOtp(otp);
         user.setOtpCreatedAt(otpCreatedAt);
+        user.setPendingEmail(pendingEmail);
 
         assertEquals(otp, user.getVerificationOtp());
         assertEquals(otpCreatedAt, user.getOtpCreatedAt());
+        assertEquals(pendingEmail, user.getPendingEmail());
     }
 
     @Test

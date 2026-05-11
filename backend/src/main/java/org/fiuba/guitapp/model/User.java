@@ -71,6 +71,9 @@ public class User implements UserDetails {
     private String verificationOtp;
 
     @Column
+    private String pendingEmail;
+
+    @Column
     private java.time.LocalDateTime otpCreatedAt;
 
     public User() {

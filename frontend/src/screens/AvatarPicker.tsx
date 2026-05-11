@@ -41,7 +41,7 @@ const AvatarUploader: React.FC<Props> = ({ avatarUrl, onUploaded }) => {
         uri,
         name: 'avatar.jpg',
         type: 'image/jpeg',
-      } as any);
+      } as unknown as Blob);
 
       const data = await userService.uploadAvatar(formData);
       const url = data.avatarUrl;
