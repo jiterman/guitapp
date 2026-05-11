@@ -35,11 +35,15 @@ const VerifyEmailChangeOtpScreen = () => {
       await authService.removeToken();
       setUser(null);
 
-      Alert.alert(
-        'Email actualizado',
-        'Tu correo electrónico ha sido actualizado. Por favor, iniciá sesión nuevamente.',
-        [{ text: 'OK', onPress: () => router.replace('/login') }]
-      );
+      router.replace({
+        pathname: '/verification-success',
+        params: {
+          title: '¡Email verificado!',
+          subtitle:
+            'Tu correo electrónico ha sido actualizado correctamente. Por favor, iniciá sesión nuevamente con tu nuevo email.',
+          securityNote: 'Por razones de seguridad, se ha desactivado el ingreso biométrico.',
+        },
+      });
     } catch (err: unknown) {
       let errorMessage = 'Ocurrió un error al verificar el código. Por favor, intentá nuevamente.';
       if (err instanceof Error) {
@@ -78,6 +82,7 @@ const VerifyEmailChangeOtpScreen = () => {
           <View style={styles.card}>
             <Text style={styles.label}>Ingresá el código</Text>
             <Input
+              testID="otp-input"
               value={otp}
               placeholder="123456"
               onChangeText={text => {
@@ -92,7 +97,12 @@ const VerifyEmailChangeOtpScreen = () => {
               status={otpError ? 'danger' : 'basic'}
             />
             {otpError && <Text style={styles.errorText}>{otpError}</Text>}
-            <Button style={styles.button} onPress={onVerifyPress} disabled={loading}>
+            <Button
+              testID="verify-button"
+              style={styles.button}
+              onPress={onVerifyPress}
+              disabled={loading}
+            >
               {() => (
                 <Text style={styles.buttonText}>
                   {loading ? 'Verificando...' : 'Verificar y salir'}

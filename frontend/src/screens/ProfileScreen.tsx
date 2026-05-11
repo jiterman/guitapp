@@ -13,6 +13,7 @@ import { Layout, Text } from '@ui-kitten/components';
 import { Ionicons } from '@expo/vector-icons';
 import PersonalInfoEditor from './PersonalInfoEditor';
 import { userService } from '../services/userService';
+import { authService } from '../services/authService';
 import AvatarPicker from './AvatarPicker';
 import { useUser } from '../context/UserContext';
 import { router } from 'expo-router';
@@ -32,6 +33,9 @@ const ProfileScreen: React.FC = () => {
     setSaving(true);
     try {
       const updatedProfile = await userService.updateProfile(newFirst, newLast);
+      if (user.email) {
+        await authService.updateBiometricUserName(user.email, updatedProfile.firstName);
+      }
       setUser({
         ...user,
         firstName: updatedProfile.firstName,
