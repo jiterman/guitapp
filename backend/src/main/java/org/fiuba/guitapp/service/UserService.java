@@ -190,4 +190,13 @@ public class UserService {
 
         userRepository.save(user);
     }
+
+    @Transactional
+    public void updateFcmToken(String email, String fcmToken) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new AuthException(ErrorCode.USER_NOT_FOUND, "User not found"));
+
+        user.setFcmToken(fcmToken);
+        userRepository.save(user);
+    }
 }

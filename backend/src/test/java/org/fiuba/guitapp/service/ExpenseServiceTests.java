@@ -35,6 +35,9 @@ class ExpenseServiceTests {
     @Mock
     private UserRepository userRepository;
 
+    @Mock
+    private NotificationService notificationService;
+
     @InjectMocks
     private ExpenseService expenseService;
 
@@ -76,6 +79,7 @@ class ExpenseServiceTests {
         assertNotNull(response.date());
         verify(userRepository, times(1)).findByEmail(testEmail);
         verify(expenseRepository, times(1)).save(any(Expense.class));
+        verify(notificationService, times(1)).sendExpenseNotification(eq(testUser), any(Expense.class));
     }
 
     @Test
@@ -111,6 +115,7 @@ class ExpenseServiceTests {
 
         assertNull(response.description());
         verify(expenseRepository, times(1)).save(any(Expense.class));
+        verify(notificationService, times(1)).sendExpenseNotification(eq(testUser), any(Expense.class));
     }
 
     @Test
@@ -135,5 +140,6 @@ class ExpenseServiceTests {
         expenseService.addExpense(testEmail, request);
 
         verify(expenseRepository, times(1)).save(any(Expense.class));
+        verify(notificationService, times(1)).sendExpenseNotification(eq(testUser), any(Expense.class));
     }
 }

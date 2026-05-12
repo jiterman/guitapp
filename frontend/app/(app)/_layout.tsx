@@ -4,6 +4,7 @@ import { Text, Icon } from '@ui-kitten/components';
 import { Stack, router, Redirect, useSegments } from 'expo-router';
 import { authService } from '../../src/services/authService';
 import { useUser } from '../../src/context/UserContext';
+import { usePushNotifications } from '../../src/hooks/usePushNotifications';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 const vh = screenHeight / 100;
@@ -11,6 +12,7 @@ const vh = screenHeight / 100;
 export default function AppLayout() {
   const { user, isLoading, setUser } = useUser();
   const segments = useSegments();
+  usePushNotifications();
 
   const onLogoutPress = async () => {
     await authService.removeToken();

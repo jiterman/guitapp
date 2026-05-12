@@ -20,6 +20,13 @@
           "resizeMode": "contain",
           "backgroundColor": "#dff3ff"
         }
+      ],
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/icon.png",
+          "color": "#ffffff"
+        }
       ]
     ],
     "ios": {
@@ -30,7 +37,8 @@
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#dff3ff"
       },
-      "package": "com.guitapp"
+      "package": "org.fiuba.guitapp",
+      "googleServicesFile": "./google-services.json"
     },
     "web": {
       "favicon": "./assets/favicon.png"
@@ -40,6 +48,6 @@
         "projectId": "393fae22-3b84-4104-83d8-aae5420604f6"
       }
     },
-    "owner": "jiterman"
+    "owner": "guitapp"
   }
 }

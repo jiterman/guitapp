@@ -130,4 +130,26 @@ export const userService = {
 
     return response.json();
   },
+
+  updateFcmToken: async (fcmToken: string) => {
+    const token = await authService.getToken();
+
+    const response = await fetch(`${API_URL}/api/users/me/fcm-token`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        fcmToken,
+      }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || 'Error al actualizar FCM token');
+    }
+
+    return response.json();
+  },
 };

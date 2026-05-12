@@ -21,6 +21,7 @@ public class ExpenseService {
 
     private final ExpenseRepository expenseRepository;
     private final UserRepository userRepository;
+    private final NotificationService notificationService;
 
     @Transactional
     public ExpenseResponse addExpense(String email, AddExpenseRequest request) {
@@ -35,6 +36,8 @@ public class ExpenseService {
         expense.setUser(user);
 
         Expense saved = expenseRepository.save(expense);
+
+        notificationService.sendExpenseNotification(user, saved);
 
         return new ExpenseResponse(
                 saved.getId(),
