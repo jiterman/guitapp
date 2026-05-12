@@ -10,5 +10,6 @@ public record MovementResponse(
         BigDecimal amount,
         String description,
         String category,
+        String expenseType,
         LocalDateTime date) {
 }

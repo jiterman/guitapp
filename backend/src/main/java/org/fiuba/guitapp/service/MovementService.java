@@ -41,6 +41,7 @@ public class MovementService {
                     i.getAmount(),
                     i.getDescription(),
                     i.getCategory().name(),
+                    null,
                     i.getDate()));
         }
 
@@ -51,6 +52,7 @@ public class MovementService {
                     e.getAmount(),
                     e.getDescription(),
                     e.getCategory().name(),
+                    e.getType().name(),
                     e.getDate()));
         }
 
@@ -76,6 +78,7 @@ public class MovementService {
                         i.getAmount(),
                         i.getDescription(),
                         i.getCategory().name(),
+                        null,
                         i.getDate()));
             }
         }
@@ -88,6 +91,7 @@ public class MovementService {
                         e.getAmount(),
                         e.getDescription(),
                         e.getCategory().name(),
+                        e.getType().name(),
                         e.getDate()));
             }
         }
@@ -113,6 +117,7 @@ public class MovementService {
                         i.getAmount(),
                         i.getDescription(),
                         i.getCategory().name(),
+                        null,
                         i.getDate()));
             }
         }
@@ -125,6 +130,7 @@ public class MovementService {
                         e.getAmount(),
                         e.getDescription(),
                         e.getCategory().name(),
+                        e.getType().name(),
                         e.getDate()));
             }
         }
@@ -150,6 +156,7 @@ public class MovementService {
                         i.getAmount(),
                         i.getDescription(),
                         i.getCategory().name(),
+                        null,
                         i.getDate()));
             }
         }
@@ -162,6 +169,7 @@ public class MovementService {
                         e.getAmount(),
                         e.getDescription(),
                         e.getCategory().name(),
+                        e.getType().name(),
                         e.getDate()));
             }
         }

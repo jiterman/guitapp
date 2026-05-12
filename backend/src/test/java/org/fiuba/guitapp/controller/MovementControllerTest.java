@@ -36,7 +36,7 @@ class MovementControllerTest {
 
     @Test
     void getAllMovementsReturnsOk() throws Exception {
-        MovementResponse r = new MovementResponse(UUID.randomUUID(), "INCOME", BigDecimal.TEN, "desc", "CAT", LocalDateTime.now());
+        MovementResponse r = new MovementResponse(UUID.randomUUID(), "INCOME", BigDecimal.TEN, "desc", "CAT", null, LocalDateTime.now());
         when(movementService.getAllMovements("test@example.com")).thenReturn(List.of(r));
 
         Principal p = () -> "test@example.com";
@@ -48,7 +48,7 @@ class MovementControllerTest {
 
     @Test
     void dayMonthYearEndpoints() throws Exception {
-        MovementResponse r = new MovementResponse(UUID.randomUUID(), "INCOME", BigDecimal.TEN, "desc", "CAT", LocalDateTime.now());
+        MovementResponse r = new MovementResponse(UUID.randomUUID(), "INCOME", BigDecimal.TEN, "desc", "CAT", null, LocalDateTime.now());
         when(movementService.getMovementsByDay("test@example.com", java.time.LocalDate.now())).thenReturn(List.of(r));
         when(movementService.getMovementsByMonth("test@example.com", java.time.LocalDate.now().getYear(), java.time.LocalDate.now().getMonthValue())).thenReturn(List.of(r));
         when(movementService.getMovementsByYear("test@example.com", java.time.LocalDate.now().getYear())).thenReturn(List.of(r));

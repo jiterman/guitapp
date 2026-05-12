@@ -17,6 +17,7 @@ import org.fiuba.guitapp.dto.MovementResponse;
 import org.fiuba.guitapp.exception.AuthException;
 import org.fiuba.guitapp.model.Expense;
 import org.fiuba.guitapp.model.ExpenseCategory;
+import org.fiuba.guitapp.model.ExpenseType;
 import org.fiuba.guitapp.model.Income;
 import org.fiuba.guitapp.model.IncomeCategory;
 import org.fiuba.guitapp.model.User;
@@ -78,6 +79,7 @@ class MovementServiceTest {
         expense1.setAmount(BigDecimal.valueOf(25));
         expense1.setDescription("Coffee");
         expense1.setCategory(ExpenseCategory.CAFE);
+        expense1.setType(ExpenseType.FIXED);
         expense1.setDate(LocalDateTime.now());
         expense1.setUser(user);
 
@@ -92,6 +94,7 @@ class MovementServiceTest {
         // first should be the most recent (expense1)
         MovementResponse first = movements.get(0);
         assertEquals("EXPENSE", first.type());
+        assertEquals("FIXED", first.expenseType());
         assertEquals(expense1.getAmount(), first.amount());
 
         // check that incomes are present
@@ -141,6 +144,7 @@ class MovementServiceTest {
         expense.setAmount(BigDecimal.valueOf(10));
         expense.setDescription("Snack");
         expense.setCategory(org.fiuba.guitapp.model.ExpenseCategory.CAFE);
+        expense.setType(ExpenseType.VARIABLE);
         expense.setDate(now.minusMonths(1));
         expense.setUser(user);
 
@@ -187,6 +191,7 @@ class MovementServiceTest {
         expenseMatch.setAmount(BigDecimal.valueOf(20));
         expenseMatch.setDescription("Lunch");
         expenseMatch.setCategory(ExpenseCategory.CAFE);
+        expenseMatch.setType(ExpenseType.VARIABLE);
         expenseMatch.setDate(base.plusHours(2));
         expenseMatch.setUser(user);
 
@@ -195,6 +200,7 @@ class MovementServiceTest {
         expenseOther.setAmount(BigDecimal.valueOf(5));
         expenseOther.setDescription("Snack");
         expenseOther.setCategory(ExpenseCategory.CAFE);
+        expenseOther.setType(ExpenseType.FIXED);
         expenseOther.setDate(base.minusDays(2));
         expenseOther.setUser(user);
 
@@ -238,6 +244,7 @@ class MovementServiceTest {
         expenseMatch.setAmount(BigDecimal.valueOf(30));
         expenseMatch.setDescription("Transport");
         expenseMatch.setCategory(ExpenseCategory.PUBLIC_TRANSPORT);
+        expenseMatch.setType(ExpenseType.FIXED);
         expenseMatch.setDate(base);
         expenseMatch.setUser(user);
 
@@ -246,6 +253,7 @@ class MovementServiceTest {
         expenseOther.setAmount(BigDecimal.valueOf(12));
         expenseOther.setDescription("Old ride");
         expenseOther.setCategory(ExpenseCategory.PUBLIC_TRANSPORT);
+        expenseOther.setType(ExpenseType.VARIABLE);
         expenseOther.setDate(base.minusMonths(1));
         expenseOther.setUser(user);
 
@@ -289,6 +297,7 @@ class MovementServiceTest {
         expenseMatch.setAmount(BigDecimal.valueOf(22));
         expenseMatch.setDescription("Books");
         expenseMatch.setCategory(ExpenseCategory.EDUCATION);
+        expenseMatch.setType(ExpenseType.FIXED);
         expenseMatch.setDate(base.plusDays(2));
         expenseMatch.setUser(user);
 
@@ -297,6 +306,7 @@ class MovementServiceTest {
         expenseOther.setAmount(BigDecimal.valueOf(18));
         expenseOther.setDescription("Old books");
         expenseOther.setCategory(ExpenseCategory.EDUCATION);
+        expenseOther.setType(ExpenseType.VARIABLE);
         expenseOther.setDate(base.minusYears(2));
         expenseOther.setUser(user);
 

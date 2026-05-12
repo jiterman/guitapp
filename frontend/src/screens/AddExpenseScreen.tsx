@@ -11,7 +11,7 @@ import {
 } from 'react-native';
 import { Layout, Text, Button, Input } from '@ui-kitten/components';
 import { router } from 'expo-router';
-import { expenseService } from '../services/expenseService';
+import { expenseService, type ExpenseType } from '../services/expenseService';
 import { CATEGORIES, ExpenseCategoryOption } from '../constants/categories';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
@@ -21,11 +21,13 @@ const AddExpenseScreen = () => {
   const [amount, setAmount] = useState('');
   const [description, setDescription] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<ExpenseCategoryOption | null>(null);
+  const [selectedType, setSelectedType] = useState<ExpenseType | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
   const [search, setSearch] = useState('');
   const [amountError, setAmountError] = useState<string | null>(null);
   const [categoryError, setCategoryError] = useState<string | null>(null);
+  const [typeError, setTypeError] = useState<string | null>(null);
 
   const filteredCategories = CATEGORIES.filter(cat =>
     cat.label.toLowerCase().includes(search.toLowerCase())
@@ -38,9 +40,15 @@ const AddExpenseScreen = () => {
     setSearch('');
   };
 
+  const onSelectType = (type: ExpenseType) => {
+    setSelectedType(type);
+    setTypeError(null);
+  };
+
   const onSubmit = async () => {
     setAmountError(null);
     setCategoryError(null);
+    setTypeError(null);
     let hasError = false;
 
     if (!amount || isNaN(parseFloat(amount)) || parseFloat(amount) <= 0) {
@@ -51,6 +59,10 @@ const AddExpenseScreen = () => {
       setCategoryError('Seleccioná una categoría.');
       hasError = true;
     }
+    if (!selectedType) {
+      setTypeError('Seleccioná si es un gasto fijo o variable.');
+      hasError = true;
+    }
     if (hasError) return;
 
     setSubmitting(true);
@@ -59,6 +71,7 @@ const AddExpenseScreen = () => {
         amount: parseFloat(amount),
         description: description.trim() || undefined,
         category: selectedCategory!.value,
+        type: selectedType!,
       });
       router.back();
     } catch {
@@ -115,6 +128,47 @@ const AddExpenseScreen = () => {
           <Text style={styles.dropdownArrow}>▼</Text>
         </TouchableOpacity>
         {categoryError && <Text style={styles.categoryErrorText}>{categoryError}</Text>}
+
+        <Text style={styles.label}>Tipo de gasto *</Text>
+        <View style={styles.typeContainer}>
+          <TouchableOpacity
+            style={[
+              styles.typeButton,
+              selectedType === 'FIXED' ? styles.typeButtonActive : styles.typeButtonInactive,
+            ]}
+            onPress={() => onSelectType('FIXED')}
+          >
+            <Text
+              style={[
+                styles.typeButtonText,
+                selectedType === 'FIXED'
+                  ? styles.typeButtonTextActive
+                  : styles.typeButtonTextInactive,
+              ]}
+            >
+              Fijo
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[
+              styles.typeButton,
+              selectedType === 'VARIABLE' ? styles.typeButtonActive : styles.typeButtonInactive,
+            ]}
+            onPress={() => onSelectType('VARIABLE')}
+          >
+            <Text
+              style={[
+                styles.typeButtonText,
+                selectedType === 'VARIABLE'
+                  ? styles.typeButtonTextActive
+                  : styles.typeButtonTextInactive,
+              ]}
+            >
+              Variable
+            </Text>
+          </TouchableOpacity>
+        </View>
+        {typeError && <Text style={styles.typeErrorText}>{typeError}</Text>}
 
         <Button style={styles.button} onPress={onSubmit} disabled={submitting}>
           {() => (
@@ -232,6 +286,12 @@ const styles = StyleSheet.create({
     marginTop: vh * 0.6,
     marginBottom: vh * 1,
   },
+  typeErrorText: {
+    color: '#FF3333',
+    fontSize: 13,
+    marginTop: vh * 0.6,
+    marginBottom: vh * 1,
+  },
   dropdownButton: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -258,6 +318,37 @@ const styles = StyleSheet.create({
   dropdownArrow: {
     fontSize: 11,
     color: '#006699',
+  },
+  typeContainer: {
+    flexDirection: 'row',
+    gap: 10,
+    marginBottom: vh * 2,
+  },
+  typeButton: {
+    flex: 1,
+    paddingVertical: vh * 1.3,
+    borderRadius: 10,
+    borderWidth: 1.5,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  typeButtonActive: {
+    backgroundColor: '#FFBB00',
+    borderColor: '#FFBB00',
+  },
+  typeButtonInactive: {
+    backgroundColor: '#fff',
+    borderColor: '#ddd',
+  },
+  typeButtonText: {
+    fontSize: 15,
+    fontWeight: '600',
+  },
+  typeButtonTextActive: {
+    color: '#000000',
+  },
+  typeButtonTextInactive: {
+    color: '#003366',
   },
   button: {
     borderRadius: 12,
