@@ -333,8 +333,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   typeButtonActive: {
-    backgroundColor: '#FFBB00',
-    borderColor: '#FFBB00',
+    backgroundColor: '#3498db',
+    borderColor: '#3498db',
   },
   typeButtonInactive: {
     backgroundColor: '#fff',
@@ -345,7 +345,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   typeButtonTextActive: {
-    color: '#000000',
+    color: '#ffffff',
   },
   typeButtonTextInactive: {
     color: '#003366',
