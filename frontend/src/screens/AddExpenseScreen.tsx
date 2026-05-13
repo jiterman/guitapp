@@ -129,7 +129,7 @@ const AddExpenseScreen = () => {
         </TouchableOpacity>
         {categoryError && <Text style={styles.categoryErrorText}>{categoryError}</Text>}
 
-        <Text style={styles.label}>Tipo de gasto *</Text>
+        <Text style={styles.typeLabel}>Tipo de gasto *</Text>
         <View style={styles.typeContainer}>
           <TouchableOpacity
             style={[
@@ -267,7 +267,14 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     color: '#003366',
-    marginBottom: vh * 0.5,
+    marginBottom: vh * 0.6,
+  },
+  typeLabel: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#003366',
+    marginBottom: vh * 0.7,
+    marginTop: vh * 2.5,
   },
   input: {
     marginBottom: vh * 2,

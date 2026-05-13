@@ -37,6 +37,11 @@ const TransactionCard: React.FC<Props> = ({ movement }) => {
             <Text style={styles.badgeText}>FIJO</Text>
           </View>
         )}
+        {movement.type === 'EXPENSE' && movement.expenseType === 'VARIABLE' && (
+          <View style={styles.badgeVariable}>
+            <Text style={styles.badgeText}>VAR.</Text>
+          </View>
+        )}
         <Text style={movement.type === 'INCOME' ? styles.incomeAmount : styles.expenseAmount}>
           {movement.type === 'INCOME' ? '+' : '-'}$
           {new Intl.NumberFormat('es-AR').format(Number(movement.amount))}
@@ -67,6 +72,13 @@ const styles = StyleSheet.create({
     alignItems: 'flex-end',
   },
   badge: {
+    marginBottom: 4,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 12,
+    backgroundColor: '#c0392b',
+  },
+  badgeVariable: {
     marginBottom: 4,
     paddingHorizontal: 10,
     paddingVertical: 4,

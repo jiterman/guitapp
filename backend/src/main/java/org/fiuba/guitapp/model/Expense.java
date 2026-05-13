@@ -44,8 +44,8 @@ public class Expense {
 
     @NotNull
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    private ExpenseType type;
+    @Column(nullable = false, columnDefinition = "VARCHAR(20) DEFAULT 'VARIABLE'")
+    private ExpenseType type = ExpenseType.VARIABLE;
 
     @NotNull
     @Column(nullable = false)
