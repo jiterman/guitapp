@@ -15,6 +15,7 @@ import org.fiuba.guitapp.exception.AuthException;
 import org.fiuba.guitapp.exception.ErrorCode;
 import org.fiuba.guitapp.model.Expense;
 import org.fiuba.guitapp.model.ExpenseCategory;
+import org.fiuba.guitapp.model.ExpenseType;
 import org.fiuba.guitapp.model.User;
 import org.fiuba.guitapp.model.UserStatus;
 import org.fiuba.guitapp.repository.ExpenseRepository;
@@ -53,13 +54,14 @@ class ExpenseServiceTests {
     @Test
     void addExpense_ShouldReturnExpenseResponse_WhenUserExists() {
         AddExpenseRequest request = new AddExpenseRequest(
-                new BigDecimal("1500.00"), "Lunch", ExpenseCategory.RESTAURANT);
+                new BigDecimal("1500.00"), "Lunch", ExpenseCategory.RESTAURANT, ExpenseType.VARIABLE);
 
         Expense savedExpense = new Expense();
         savedExpense.setId(UUID.randomUUID());
         savedExpense.setAmount(request.amount());
         savedExpense.setDescription(request.description());
         savedExpense.setCategory(request.category());
+        savedExpense.setType(request.type());
         savedExpense.setDate(LocalDateTime.now());
         savedExpense.setUser(testUser);
 
@@ -73,6 +75,7 @@ class ExpenseServiceTests {
         assertEquals(new BigDecimal("1500.00"), response.amount());
         assertEquals("Lunch", response.description());
         assertEquals(ExpenseCategory.RESTAURANT, response.category());
+        assertEquals(ExpenseType.VARIABLE, response.type());
         assertNotNull(response.date());
         verify(userRepository, times(1)).findByEmail(testEmail);
         verify(expenseRepository, times(1)).save(any(Expense.class));
@@ -81,7 +84,7 @@ class ExpenseServiceTests {
     @Test
     void addExpense_ShouldThrowAuthException_WhenUserNotFound() {
         AddExpenseRequest request = new AddExpenseRequest(
-                new BigDecimal("100.00"), null, ExpenseCategory.OTHER);
+                new BigDecimal("100.00"), null, ExpenseCategory.OTHER, ExpenseType.FIXED);
 
         when(userRepository.findByEmail(testEmail)).thenReturn(Optional.empty());
 
@@ -94,7 +97,7 @@ class ExpenseServiceTests {
     @Test
     void addExpense_ShouldSaveExpenseWithNullDescription_WhenDescriptionIsNull() {
         AddExpenseRequest request = new AddExpenseRequest(
-                new BigDecimal("500.00"), null, ExpenseCategory.SUPERMARKET);
+                new BigDecimal("500.00"), null, ExpenseCategory.SUPERMARKET, ExpenseType.VARIABLE);
 
         Expense savedExpense = new Expense();
         savedExpense.setId(UUID.randomUUID());
@@ -116,12 +119,13 @@ class ExpenseServiceTests {
     @Test
     void addExpense_ShouldAssociateExpenseWithUser() {
         AddExpenseRequest request = new AddExpenseRequest(
-                new BigDecimal("200.00"), "Transport", ExpenseCategory.PUBLIC_TRANSPORT);
+                new BigDecimal("200.00"), "Transport", ExpenseCategory.PUBLIC_TRANSPORT, ExpenseType.FIXED);
 
         Expense savedExpense = new Expense();
         savedExpense.setId(UUID.randomUUID());
         savedExpense.setAmount(request.amount());
         savedExpense.setCategory(request.category());
+        savedExpense.setType(request.type());
         savedExpense.setDate(LocalDateTime.now());
         savedExpense.setUser(testUser);
 

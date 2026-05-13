@@ -8,6 +8,7 @@ export interface MovementResponse {
   amount: number;
   description?: string;
   category?: string;
+  expenseType?: 'FIXED' | 'VARIABLE';
   date: string;
 }
 

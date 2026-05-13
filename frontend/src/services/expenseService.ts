@@ -27,10 +27,13 @@ export type ExpenseCategory =
   | 'PETS'
   | 'OTHER';
 
+export type ExpenseType = 'FIXED' | 'VARIABLE';
+
 export interface AddExpenseRequest {
   amount: number;
   description?: string;
   category: ExpenseCategory;
+  type: ExpenseType;
 }
 
 export interface ExpenseResponse {
@@ -38,6 +41,7 @@ export interface ExpenseResponse {
   amount: number;
   description?: string;
   category: ExpenseCategory;
+  type: ExpenseType;
   date: string;
 }
 

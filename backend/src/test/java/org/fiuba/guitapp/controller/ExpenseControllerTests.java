@@ -12,6 +12,7 @@ import java.util.UUID;
 import org.fiuba.guitapp.dto.AddExpenseRequest;
 import org.fiuba.guitapp.dto.ExpenseResponse;
 import org.fiuba.guitapp.model.ExpenseCategory;
+import org.fiuba.guitapp.model.ExpenseType;
 import org.fiuba.guitapp.service.ExpenseService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -44,13 +45,14 @@ class ExpenseControllerTests {
     void addExpense_ShouldReturnExpenseResponse_WhenRequestIsValid() throws Exception {
         UUID expenseId = UUID.randomUUID();
         AddExpenseRequest request = new AddExpenseRequest(
-                new BigDecimal("1500.00"), "Lunch", ExpenseCategory.RESTAURANT);
+                new BigDecimal("1500.00"), "Lunch", ExpenseCategory.RESTAURANT, ExpenseType.VARIABLE);
 
         ExpenseResponse response = new ExpenseResponse(
                 expenseId,
                 new BigDecimal("1500.00"),
                 "Lunch",
                 ExpenseCategory.RESTAURANT,
+                ExpenseType.VARIABLE,
                 LocalDateTime.now());
 
         when(expenseService.addExpense(eq("test@example.com"), any(AddExpenseRequest.class)))
@@ -73,13 +75,14 @@ class ExpenseControllerTests {
     void addExpense_ShouldReturnOk_WhenDescriptionIsNull() throws Exception {
         UUID expenseId = UUID.randomUUID();
         AddExpenseRequest request = new AddExpenseRequest(
-                new BigDecimal("500.00"), null, ExpenseCategory.SUPERMARKET);
+                new BigDecimal("500.00"), null, ExpenseCategory.SUPERMARKET, ExpenseType.FIXED);
 
         ExpenseResponse response = new ExpenseResponse(
                 expenseId,
                 new BigDecimal("500.00"),
                 null,
                 ExpenseCategory.SUPERMARKET,
+                ExpenseType.FIXED,
                 LocalDateTime.now());
 
         when(expenseService.addExpense(eq("test@example.com"), any(AddExpenseRequest.class)))
@@ -97,7 +100,7 @@ class ExpenseControllerTests {
     @Test
     @WithMockUser(username = "test@example.com")
     void addExpense_ShouldReturnBadRequest_WhenAmountIsNull() throws Exception {
-        String body = "{\"amount\": null, \"category\": \"RESTAURANT\"}";
+        String body = "{\"amount\": null, \"category\": \"RESTAURANT\", \"type\": \"VARIABLE\"}";
 
         mockMvc.perform(post("/api/expenses")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -111,7 +114,7 @@ class ExpenseControllerTests {
     @WithMockUser(username = "test@example.com")
     void addExpense_ShouldReturnBadRequest_WhenAmountIsNegative() throws Exception {
         AddExpenseRequest request = new AddExpenseRequest(
-                new BigDecimal("-100.00"), null, ExpenseCategory.OTHER);
+                new BigDecimal("-100.00"), null, ExpenseCategory.OTHER, ExpenseType.VARIABLE);
 
         mockMvc.perform(post("/api/expenses")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -124,7 +127,7 @@ class ExpenseControllerTests {
     @Test
     @WithMockUser(username = "test@example.com")
     void addExpense_ShouldReturnBadRequest_WhenCategoryIsNull() throws Exception {
-        String body = "{\"amount\": 100.00, \"category\": null}";
+        String body = "{\"amount\": 100.00, \"category\": null, \"type\": \"FIXED\"}";
 
         mockMvc.perform(post("/api/expenses")
                 .contentType(MediaType.APPLICATION_JSON)

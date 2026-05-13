@@ -31,6 +31,7 @@ public class ExpenseService {
         expense.setAmount(request.amount());
         expense.setDescription(request.description());
         expense.setCategory(request.category());
+        expense.setType(request.type());
         expense.setDate(LocalDateTime.now());
         expense.setUser(user);
 
@@ -41,6 +42,7 @@ public class ExpenseService {
                 saved.getAmount(),
                 saved.getDescription(),
                 saved.getCategory(),
+                saved.getType(),
                 saved.getDate());
     }
 }

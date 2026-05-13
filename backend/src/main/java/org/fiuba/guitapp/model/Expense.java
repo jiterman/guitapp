@@ -43,6 +43,11 @@ public class Expense {
     private ExpenseCategory category;
 
     @NotNull
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, columnDefinition = "VARCHAR(20) DEFAULT 'VARIABLE'")
+    private ExpenseType type = ExpenseType.VARIABLE;
+
+    @NotNull
     @Column(nullable = false)
     private LocalDateTime date;
 
