@@ -27,6 +27,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
+@SuppressWarnings("null")
 class IncomeServiceTests {
 
     @Mock
@@ -135,5 +136,56 @@ class IncomeServiceTests {
         incomeService.addIncome(testEmail, request);
 
         verify(incomeRepository, times(1)).save(any(Income.class));
+    }
+
+    @Test
+    void deleteIncome_ShouldDeleteIncome_WhenIncomeBelongsToUser() {
+        UUID incomeId = UUID.randomUUID();
+
+        Income income = new Income();
+        income.setId(incomeId);
+        income.setUser(testUser);
+
+        when(userRepository.findByEmail(testEmail)).thenReturn(Optional.of(testUser));
+        when(incomeRepository.findById(incomeId)).thenReturn(Optional.of(income));
+
+        incomeService.deleteIncome(testEmail, incomeId);
+
+        verify(incomeRepository, times(1)).delete(income);
+    }
+
+    @Test
+    void deleteIncome_ShouldThrowAuthException_WhenIncomeNotFound() {
+        UUID incomeId = UUID.randomUUID();
+
+        when(userRepository.findByEmail(testEmail)).thenReturn(Optional.of(testUser));
+        when(incomeRepository.findById(incomeId)).thenReturn(Optional.empty());
+
+        AuthException exception = assertThrows(AuthException.class, () -> incomeService.deleteIncome(testEmail, incomeId));
+
+        assertEquals(ErrorCode.INCOME_NOT_FOUND, exception.getErrorCode());
+        verify(incomeRepository, never()).delete(any(Income.class));
+    }
+
+    @Test
+    void deleteIncome_ShouldThrowAuthException_WhenIncomeBelongsToAnotherUser() {
+        UUID incomeId = UUID.randomUUID();
+
+        User otherUser = new User();
+        otherUser.setId(UUID.randomUUID());
+        otherUser.setEmail("other@example.com");
+        otherUser.setStatus(UserStatus.ACTIVE);
+
+        Income income = new Income();
+        income.setId(incomeId);
+        income.setUser(otherUser);
+
+        when(userRepository.findByEmail(testEmail)).thenReturn(Optional.of(testUser));
+        when(incomeRepository.findById(incomeId)).thenReturn(Optional.of(income));
+
+        AuthException exception = assertThrows(AuthException.class, () -> incomeService.deleteIncome(testEmail, incomeId));
+
+        assertEquals(ErrorCode.INCOME_ACCESS_DENIED, exception.getErrorCode());
+        verify(incomeRepository, never()).delete(any(Income.class));
     }
 }

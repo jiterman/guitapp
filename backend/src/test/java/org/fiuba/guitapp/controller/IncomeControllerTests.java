@@ -28,6 +28,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
+@SuppressWarnings("null")
 class IncomeControllerTests {
 
     @Autowired
@@ -144,5 +145,28 @@ class IncomeControllerTests {
                 .andExpect(status().isForbidden());
 
         verify(incomeService, never()).addIncome(anyString(), any(AddIncomeRequest.class));
+    }
+
+    @Test
+    @WithMockUser(username = "test@example.com")
+    void deleteIncome_ShouldReturnNoContent_WhenAuthenticated() throws Exception {
+        UUID incomeId = UUID.randomUUID();
+
+        doNothing().when(incomeService).deleteIncome("test@example.com", incomeId);
+
+        mockMvc.perform(delete("/api/incomes/{incomeId}", incomeId))
+                .andExpect(status().isNoContent());
+
+        verify(incomeService, times(1)).deleteIncome("test@example.com", incomeId);
+    }
+
+    @Test
+    void deleteIncome_ShouldReturnUnauthorized_WhenNotAuthenticated() throws Exception {
+        UUID incomeId = UUID.randomUUID();
+
+        mockMvc.perform(delete("/api/incomes/{incomeId}", incomeId))
+                .andExpect(status().isForbidden());
+
+        verify(incomeService, never()).deleteIncome(anyString(), any(UUID.class));
     }
 }

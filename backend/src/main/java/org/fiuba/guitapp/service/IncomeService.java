@@ -1,6 +1,8 @@
 package org.fiuba.guitapp.service;
 
 import java.time.LocalDateTime;
+import java.util.Objects;
+import java.util.UUID;
 
 import org.fiuba.guitapp.dto.AddIncomeRequest;
 import org.fiuba.guitapp.dto.IncomeResponse;
@@ -42,5 +44,21 @@ public class IncomeService {
                 saved.getDescription(),
                 saved.getCategory(),
                 saved.getDate());
+    }
+
+    @Transactional
+    public void deleteIncome(String email, UUID incomeId) {
+        Objects.requireNonNull(incomeId, "incomeId");
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new AuthException(ErrorCode.USER_NOT_FOUND, "User not found"));
+
+        Income income = incomeRepository.findById(incomeId)
+                .orElseThrow(() -> new AuthException(ErrorCode.INCOME_NOT_FOUND, "Income not found"));
+
+        if (income.getUser() == null || income.getUser().getId() == null || !income.getUser().getId().equals(user.getId())) {
+            throw new AuthException(ErrorCode.INCOME_ACCESS_DENIED, "Income does not belong to user");
+        }
+
+        incomeRepository.delete(income);
     }
 }
