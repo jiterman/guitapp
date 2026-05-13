@@ -78,6 +78,11 @@ const IncomeDetailScreen: React.FC = () => {
     return income.description ?? income.category ?? 'Ingreso';
   }, [isLoading, income]);
 
+  const categoryLabel = useMemo(() => {
+    if (!income) return null;
+    return INCOME_CATEGORIES.find(c => c.value === income.category) ?? null;
+  }, [income]);
+
   const onDeletePress = () => {
     if (!incomeId) return;
     Alert.alert('Eliminar ingreso', '¿Seguro que querés eliminar este ingreso?', [
@@ -214,12 +219,14 @@ const IncomeDetailScreen: React.FC = () => {
               <Text style={styles.amount}>+${formatMoney(Number(income.amount))}</Text>
             </View>
             <View style={styles.row}>
-              <Text appearance="hint">Categoría</Text>
-              <Text>{income.category}</Text>
-            </View>
-            <View style={styles.row}>
               <Text appearance="hint">Descripción</Text>
               <Text>{income.description ?? '-'}</Text>
+            </View>
+            <View style={styles.row}>
+              <Text appearance="hint">Categoría</Text>
+              <Text>
+                {categoryLabel ? `${categoryLabel.icon}  ${categoryLabel.label}` : income.category}
+              </Text>
             </View>
             <View style={styles.row}>
               <Text appearance="hint">Fecha</Text>
