@@ -28,6 +28,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
+@SuppressWarnings("null")
 class ExpenseServiceTests {
 
     @Mock
@@ -139,5 +140,152 @@ class ExpenseServiceTests {
         expenseService.addExpense(testEmail, request);
 
         verify(expenseRepository, times(1)).save(any(Expense.class));
+    }
+
+    @Test
+    void deleteExpense_ShouldDeleteExpense_WhenExpenseBelongsToUser() {
+        UUID expenseId = UUID.randomUUID();
+
+        Expense expense = new Expense();
+        expense.setId(expenseId);
+        expense.setUser(testUser);
+
+        when(userRepository.findByEmail(testEmail)).thenReturn(Optional.of(testUser));
+        when(expenseRepository.findById(expenseId)).thenReturn(Optional.of(expense));
+
+        expenseService.deleteExpense(testEmail, expenseId);
+
+        verify(expenseRepository, times(1)).delete(expense);
+    }
+
+    @Test
+    void deleteExpense_ShouldThrowAuthException_WhenExpenseNotFound() {
+        UUID expenseId = UUID.randomUUID();
+
+        when(userRepository.findByEmail(testEmail)).thenReturn(Optional.of(testUser));
+        when(expenseRepository.findById(expenseId)).thenReturn(Optional.empty());
+
+        AuthException exception = assertThrows(AuthException.class, () -> expenseService.deleteExpense(testEmail, expenseId));
+
+        assertEquals(ErrorCode.EXPENSE_NOT_FOUND, exception.getErrorCode());
+        verify(expenseRepository, never()).delete(any(Expense.class));
+    }
+
+    @Test
+    void deleteExpense_ShouldThrowAuthException_WhenExpenseBelongsToAnotherUser() {
+        UUID expenseId = UUID.randomUUID();
+
+        User otherUser = new User();
+        otherUser.setId(UUID.randomUUID());
+        otherUser.setEmail("other@example.com");
+        otherUser.setStatus(UserStatus.ACTIVE);
+
+        Expense expense = new Expense();
+        expense.setId(expenseId);
+        expense.setUser(otherUser);
+
+        when(userRepository.findByEmail(testEmail)).thenReturn(Optional.of(testUser));
+        when(expenseRepository.findById(expenseId)).thenReturn(Optional.of(expense));
+
+        AuthException exception = assertThrows(AuthException.class, () -> expenseService.deleteExpense(testEmail, expenseId));
+
+        assertEquals(ErrorCode.EXPENSE_ACCESS_DENIED, exception.getErrorCode());
+        verify(expenseRepository, never()).delete(any(Expense.class));
+    }
+
+    @Test
+    void deleteExpense_ShouldThrowAuthException_WhenExpenseHasNoUser() {
+        UUID expenseId = UUID.randomUUID();
+
+        Expense expense = new Expense();
+        expense.setId(expenseId);
+        expense.setUser(null);
+
+        when(userRepository.findByEmail(testEmail)).thenReturn(Optional.of(testUser));
+        when(expenseRepository.findById(expenseId)).thenReturn(Optional.of(expense));
+
+        AuthException exception = assertThrows(AuthException.class, () -> expenseService.deleteExpense(testEmail, expenseId));
+
+        assertEquals(ErrorCode.EXPENSE_ACCESS_DENIED, exception.getErrorCode());
+        verify(expenseRepository, never()).delete(any(Expense.class));
+    }
+
+    @Test
+    void getExpenseById_ShouldReturnExpenseResponse_WhenExpenseBelongsToUser() {
+        UUID expenseId = UUID.randomUUID();
+        LocalDateTime now = LocalDateTime.now();
+
+        Expense expense = new Expense();
+        expense.setId(expenseId);
+        expense.setAmount(new BigDecimal("99.99"));
+        expense.setDescription("Coffee");
+        expense.setCategory(ExpenseCategory.CAFE);
+        expense.setType(ExpenseType.VARIABLE);
+        expense.setDate(now);
+        expense.setUser(testUser);
+
+        when(userRepository.findByEmail(testEmail)).thenReturn(Optional.of(testUser));
+        when(expenseRepository.findById(expenseId)).thenReturn(Optional.of(expense));
+
+        ExpenseResponse response = expenseService.getExpenseById(testEmail, expenseId);
+
+        assertEquals(expenseId, response.id());
+        assertEquals(new BigDecimal("99.99"), response.amount());
+        assertEquals("Coffee", response.description());
+        assertEquals(ExpenseCategory.CAFE, response.category());
+        assertEquals(ExpenseType.VARIABLE, response.type());
+        assertEquals(now, response.date());
+    }
+
+    @Test
+    void getExpenseById_ShouldThrowAuthException_WhenExpenseNotFound() {
+        UUID expenseId = UUID.randomUUID();
+
+        when(userRepository.findByEmail(testEmail)).thenReturn(Optional.of(testUser));
+        when(expenseRepository.findById(expenseId)).thenReturn(Optional.empty());
+
+        AuthException exception = assertThrows(AuthException.class, () -> expenseService.getExpenseById(testEmail, expenseId));
+
+        assertEquals(ErrorCode.EXPENSE_NOT_FOUND, exception.getErrorCode());
+    }
+
+    @Test
+    void getExpenseById_ShouldThrowAuthException_WhenExpenseBelongsToAnotherUser() {
+        UUID expenseId = UUID.randomUUID();
+
+        User otherUser = new User();
+        otherUser.setId(UUID.randomUUID());
+        otherUser.setEmail("other@example.com");
+        otherUser.setStatus(UserStatus.ACTIVE);
+
+        Expense expense = new Expense();
+        expense.setId(expenseId);
+        expense.setUser(otherUser);
+
+        when(userRepository.findByEmail(testEmail)).thenReturn(Optional.of(testUser));
+        when(expenseRepository.findById(expenseId)).thenReturn(Optional.of(expense));
+
+        AuthException exception = assertThrows(AuthException.class, () -> expenseService.getExpenseById(testEmail, expenseId));
+
+        assertEquals(ErrorCode.EXPENSE_ACCESS_DENIED, exception.getErrorCode());
+    }
+
+    @Test
+    void getExpenseById_ShouldThrowAuthException_WhenExpenseHasUserWithoutId() {
+        UUID expenseId = UUID.randomUUID();
+
+        User userWithoutId = new User();
+        userWithoutId.setId(null);
+
+        Expense expense = new Expense();
+        expense.setId(expenseId);
+        expense.setUser(userWithoutId);
+
+        when(userRepository.findByEmail(testEmail)).thenReturn(Optional.of(testUser));
+        when(expenseRepository.findById(expenseId)).thenReturn(Optional.of(expense));
+
+        AuthException exception = assertThrows(AuthException.class, () -> expenseService.getExpenseById(testEmail, expenseId));
+
+        assertEquals(ErrorCode.EXPENSE_ACCESS_DENIED, exception.getErrorCode());
     }
 }

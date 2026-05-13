@@ -1,6 +1,8 @@
 package org.fiuba.guitapp.service;
 
 import java.time.LocalDateTime;
+import java.util.Objects;
+import java.util.UUID;
 
 import org.fiuba.guitapp.dto.AddExpenseRequest;
 import org.fiuba.guitapp.dto.ExpenseResponse;
@@ -21,6 +23,24 @@ public class ExpenseService {
 
     private final ExpenseRepository expenseRepository;
     private final UserRepository userRepository;
+
+    private Expense findUserExpense(String email, UUID expenseId) {
+        Objects.requireNonNull(expenseId, "expenseId");
+
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new AuthException(ErrorCode.USER_NOT_FOUND, "User not found"));
+
+        Expense expense = expenseRepository.findById(expenseId)
+                .orElseThrow(() -> new AuthException(ErrorCode.EXPENSE_NOT_FOUND, "Expense not found"));
+
+        if (expense.getUser() == null
+                || expense.getUser().getId() == null
+                || !expense.getUser().getId().equals(user.getId())) {
+            throw new AuthException(ErrorCode.EXPENSE_ACCESS_DENIED, "Expense does not belong to user");
+        }
+
+        return expense;
+    }
 
     @Transactional
     public ExpenseResponse addExpense(String email, AddExpenseRequest request) {
@@ -44,5 +64,23 @@ public class ExpenseService {
                 saved.getCategory(),
                 saved.getType(),
                 saved.getDate());
+    }
+
+    @Transactional
+    public void deleteExpense(String email, UUID expenseId) {
+        Expense expense = Objects.requireNonNull(findUserExpense(email, expenseId), "expense");
+        expenseRepository.delete(expense);
+    }
+
+    @Transactional(readOnly = true)
+    public ExpenseResponse getExpenseById(String email, UUID expenseId) {
+        Expense expense = Objects.requireNonNull(findUserExpense(email, expenseId), "expense");
+        return new ExpenseResponse(
+                expense.getId(),
+                expense.getAmount(),
+                expense.getDescription(),
+                expense.getCategory(),
+                expense.getType(),
+                expense.getDate());
     }
 }
