@@ -45,6 +45,13 @@ export interface ExpenseResponse {
   date: string;
 }
 
+export interface UpdateExpenseRequest {
+  amount?: number;
+  description?: string;
+  category?: ExpenseCategory;
+  type?: ExpenseType;
+}
+
 const addExpense = async (request: AddExpenseRequest): Promise<ExpenseResponse> => {
   const token = await authService.getToken();
   const response = await fetch(`${API_URL}/api/expenses`, {
@@ -59,6 +66,28 @@ const addExpense = async (request: AddExpenseRequest): Promise<ExpenseResponse> 
   if (!response.ok) {
     const error = await response.json();
     throw { code: error.code, message: error.message };
+  }
+
+  return response.json();
+};
+
+const updateExpense = async (
+  expenseId: string,
+  request: UpdateExpenseRequest
+): Promise<ExpenseResponse> => {
+  const token = await authService.getToken();
+  const response = await fetch(`${API_URL}/api/expenses/${encodeURIComponent(expenseId)}`, {
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(request),
+  });
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({}));
+    throw { code: error.code, message: error.message ?? 'Update expense failed' };
   }
 
   return response.json();
@@ -96,4 +125,9 @@ const deleteExpense = async (expenseId: string): Promise<void> => {
   }
 };
 
-export const expenseService = { getExpenseById, deleteExpense, addExpense };
+export const expenseService = {
+  getExpenseById,
+  updateExpense,
+  deleteExpense,
+  addExpense,
+};

@@ -383,14 +383,12 @@ class ExpenseServiceTests {
     @Test
     void updateExpense_ShouldThrowAuthException_WhenExpenseNotFound() {
         UUID expenseId = UUID.randomUUID();
-        UpdateExpenseRequest request =
-                new UpdateExpenseRequest(new BigDecimal("1.00"), "x", ExpenseCategory.OTHER, ExpenseType.VARIABLE);
+        UpdateExpenseRequest request = new UpdateExpenseRequest(new BigDecimal("1.00"), "x", ExpenseCategory.OTHER, ExpenseType.VARIABLE);
 
         when(userRepository.findByEmail(testEmail)).thenReturn(Optional.of(testUser));
         when(expenseRepository.findById(expenseId)).thenReturn(Optional.empty());
 
-        AuthException exception =
-                assertThrows(AuthException.class, () -> expenseService.updateExpense(testEmail, expenseId, request));
+        AuthException exception = assertThrows(AuthException.class, () -> expenseService.updateExpense(testEmail, expenseId, request));
 
         assertEquals(ErrorCode.EXPENSE_NOT_FOUND, exception.getErrorCode());
         verify(expenseRepository, never()).save(any(Expense.class));
@@ -409,14 +407,12 @@ class ExpenseServiceTests {
         expense.setId(expenseId);
         expense.setUser(otherUser);
 
-        UpdateExpenseRequest request =
-                new UpdateExpenseRequest(new BigDecimal("1.00"), "x", ExpenseCategory.OTHER, ExpenseType.VARIABLE);
+        UpdateExpenseRequest request = new UpdateExpenseRequest(new BigDecimal("1.00"), "x", ExpenseCategory.OTHER, ExpenseType.VARIABLE);
 
         when(userRepository.findByEmail(testEmail)).thenReturn(Optional.of(testUser));
         when(expenseRepository.findById(expenseId)).thenReturn(Optional.of(expense));
 
-        AuthException exception =
-                assertThrows(AuthException.class, () -> expenseService.updateExpense(testEmail, expenseId, request));
+        AuthException exception = assertThrows(AuthException.class, () -> expenseService.updateExpense(testEmail, expenseId, request));
 
         assertEquals(ErrorCode.EXPENSE_ACCESS_DENIED, exception.getErrorCode());
         verify(expenseRepository, never()).save(any(Expense.class));

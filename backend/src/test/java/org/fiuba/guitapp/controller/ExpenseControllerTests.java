@@ -232,8 +232,8 @@ class ExpenseControllerTests {
                 .thenReturn(response);
 
         mockMvc.perform(patch("/api/expenses/{expenseId}", expenseId)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(expenseId.toString()))
                 .andExpect(jsonPath("$.amount").value(88.50))
@@ -255,8 +255,8 @@ class ExpenseControllerTests {
                 ExpenseType.VARIABLE);
 
         mockMvc.perform(patch("/api/expenses/{expenseId}", expenseId)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isBadRequest());
 
         verify(expenseService, never()).updateExpense(anyString(), any(UUID.class), any(UpdateExpenseRequest.class));
@@ -268,8 +268,8 @@ class ExpenseControllerTests {
         String body = "{\"amount\": 10.00, \"category\": \"OTHER\", \"type\": \"FIXED\"}";
 
         mockMvc.perform(patch("/api/expenses/{expenseId}", expenseId)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(body))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(body))
                 .andExpect(status().isForbidden());
 
         verify(expenseService, never()).updateExpense(anyString(), any(UUID.class), any(UpdateExpenseRequest.class));
