@@ -27,7 +27,8 @@
           "icon": "./assets/icon.png",
           "color": "#ffffff"
         }
-      ]
+      ],
+      "@react-native-community/datetimepicker"
     ],
     "ios": {
       "supportsTablet": true
@@ -45,9 +46,9 @@
     },
     "extra": {
       "eas": {
-        "projectId": "393fae22-3b84-4104-83d8-aae5420604f6"
+        "projectId": "2aa93de6-4bf5-41bf-ab64-42d1120c19d7"
       }
     },
-    "owner": "guitapp"
+    "owner": "guitapp-gdsi"
   }
 }
