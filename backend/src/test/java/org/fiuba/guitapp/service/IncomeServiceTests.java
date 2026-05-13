@@ -191,6 +191,23 @@ class IncomeServiceTests {
     }
 
     @Test
+    void deleteIncome_ShouldThrowAuthException_WhenIncomeHasNoUser() {
+        UUID incomeId = UUID.randomUUID();
+
+        Income income = new Income();
+        income.setId(incomeId);
+        income.setUser(null);
+
+        when(userRepository.findByEmail(testEmail)).thenReturn(Optional.of(testUser));
+        when(incomeRepository.findById(incomeId)).thenReturn(Optional.of(income));
+
+        AuthException exception = assertThrows(AuthException.class, () -> incomeService.deleteIncome(testEmail, incomeId));
+
+        assertEquals(ErrorCode.INCOME_ACCESS_DENIED, exception.getErrorCode());
+        verify(incomeRepository, never()).delete(any(Income.class));
+    }
+
+    @Test
     void getIncomeById_ShouldReturnIncomeResponse_WhenIncomeBelongsToUser() {
         UUID incomeId = UUID.randomUUID();
         LocalDateTime now = LocalDateTime.now();
@@ -239,6 +256,25 @@ class IncomeServiceTests {
         Income income = new Income();
         income.setId(incomeId);
         income.setUser(otherUser);
+
+        when(userRepository.findByEmail(testEmail)).thenReturn(Optional.of(testUser));
+        when(incomeRepository.findById(incomeId)).thenReturn(Optional.of(income));
+
+        AuthException exception = assertThrows(AuthException.class, () -> incomeService.getIncomeById(testEmail, incomeId));
+
+        assertEquals(ErrorCode.INCOME_ACCESS_DENIED, exception.getErrorCode());
+    }
+
+    @Test
+    void getIncomeById_ShouldThrowAuthException_WhenIncomeHasUserWithoutId() {
+        UUID incomeId = UUID.randomUUID();
+
+        User userWithoutId = new User();
+        userWithoutId.setId(null);
+
+        Income income = new Income();
+        income.setId(incomeId);
+        income.setUser(userWithoutId);
 
         when(userRepository.findByEmail(testEmail)).thenReturn(Optional.of(testUser));
         when(incomeRepository.findById(incomeId)).thenReturn(Optional.of(income));
