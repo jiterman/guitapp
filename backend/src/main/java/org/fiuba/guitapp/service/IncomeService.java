@@ -67,13 +67,13 @@ public class IncomeService {
 
     @Transactional
     public void deleteIncome(String email, UUID incomeId) {
-        Income income = Objects.requireNonNull(findUserIncome(email, incomeId), "income");
+        Income income = findUserIncome(email, incomeId);
         incomeRepository.delete(income);
     }
 
     @Transactional(readOnly = true)
     public IncomeResponse getIncomeById(String email, UUID incomeId) {
-        Income income = Objects.requireNonNull(findUserIncome(email, incomeId), "income");
+        Income income = findUserIncome(email, incomeId);
         return new IncomeResponse(
                 income.getId(),
                 income.getAmount(),
@@ -84,7 +84,7 @@ public class IncomeService {
 
     @Transactional
     public IncomeResponse updateIncome(String email, UUID incomeId, UpdateIncomeRequest request) {
-        Income income = Objects.requireNonNull(findUserIncome(email, incomeId), "income");
+        Income income = findUserIncome(email, incomeId);
 
         if (request.amount() != null) {
             income.setAmount(request.amount());

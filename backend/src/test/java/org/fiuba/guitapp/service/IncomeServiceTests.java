@@ -285,7 +285,7 @@ class IncomeServiceTests {
     }
 
     @Test
-    void updateIncome_ShouldUpdateAmountDescriptionAndCategory_WhenProvided() {
+    void updateIncome_ShouldUpdateFields_WhenProvided() {
         UUID incomeId = UUID.randomUUID();
         LocalDateTime now = LocalDateTime.now();
 
