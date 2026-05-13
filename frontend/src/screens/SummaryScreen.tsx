@@ -128,8 +128,14 @@ const SummaryScreen: React.FC = () => {
           <TransactionCard
             movement={item}
             onPress={movement => {
-              if (movement.type !== 'INCOME') return;
-              router.push({ pathname: '/income/[incomeId]', params: { incomeId: movement.id } });
+              if (movement.type === 'INCOME') {
+                router.push({ pathname: '/income/[incomeId]', params: { incomeId: movement.id } });
+              } else if (movement.type === 'EXPENSE') {
+                router.push({
+                  pathname: '/expense/[expenseId]',
+                  params: { expenseId: movement.id },
+                });
+              }
             }}
           />
         )}
