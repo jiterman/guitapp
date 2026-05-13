@@ -5,6 +5,8 @@ import { movementService, MovementResponse } from '../services/movementService';
 import MovementFilter, { FilterState } from '../components/MovementFilter/MovementFilter';
 import TransactionCard from '../components/TransactionCard/TransactionCard';
 import BalanceCard from '../components/BalanceCard/BalanceCard';
+import { router } from 'expo-router';
+import { useIsFocused } from '@react-navigation/native';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 const vh = screenHeight / 100;
@@ -57,8 +59,10 @@ const SummaryScreen: React.FC = () => {
   const [movements, setMovements] = useState<MovementResponse[]>([]);
   const [periodMovements, setPeriodMovements] = useState<MovementResponse[]>([]);
   const [filterState, setFilterState] = useState<FilterState>(() => buildInitialFilter());
+  const isFocused = useIsFocused();
 
   useEffect(() => {
+    if (!isFocused) return;
     let mounted = true;
     (async () => {
       try {
@@ -90,7 +94,7 @@ const SummaryScreen: React.FC = () => {
     return () => {
       mounted = false;
     };
-  }, [filterState]);
+  }, [filterState, isFocused]);
 
   const totals = useMemo(() => {
     return periodMovements.reduce(
@@ -120,7 +124,15 @@ const SummaryScreen: React.FC = () => {
         style={styles.movementsList}
         data={movements}
         keyExtractor={item => item.id}
-        renderItem={({ item }) => <TransactionCard movement={item} />}
+        renderItem={({ item }) => (
+          <TransactionCard
+            movement={item}
+            onPress={movement => {
+              if (movement.type !== 'INCOME') return;
+              router.push({ pathname: '/income/[incomeId]', params: { incomeId: movement.id } });
+            }}
+          />
+        )}
         ItemSeparatorComponent={() => <View style={styles.separator} />}
         ListEmptyComponent={
           <View style={styles.emptyContainer}>

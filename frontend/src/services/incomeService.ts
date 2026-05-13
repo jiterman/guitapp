@@ -16,6 +16,23 @@ export interface IncomeResponse {
   date: string;
 }
 
+const getIncomeById = async (incomeId: string): Promise<IncomeResponse> => {
+  const token = await authService.getToken();
+  const response = await fetch(`${API_URL}/api/incomes/${encodeURIComponent(incomeId)}`, {
+    method: 'GET',
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({}));
+    throw { code: error.code, message: error.message ?? 'Get income failed' };
+  }
+
+  return response.json();
+};
+
 const addIncome = async (request: AddIncomeRequest): Promise<IncomeResponse> => {
   const token = await authService.getToken();
   const response = await fetch(`${API_URL}/api/incomes`, {
@@ -35,4 +52,19 @@ const addIncome = async (request: AddIncomeRequest): Promise<IncomeResponse> => 
   return response.json();
 };
 
-export const incomeService = { addIncome };
+const deleteIncome = async (incomeId: string): Promise<void> => {
+  const token = await authService.getToken();
+  const response = await fetch(`${API_URL}/api/incomes/${encodeURIComponent(incomeId)}`, {
+    method: 'DELETE',
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({}));
+    throw { code: error.code, message: error.message ?? 'Delete income failed' };
+  }
+};
+
+export const incomeService = { getIncomeById, addIncome, deleteIncome };
