@@ -11,6 +11,7 @@ import java.util.UUID;
 
 import org.fiuba.guitapp.dto.AddIncomeRequest;
 import org.fiuba.guitapp.dto.IncomeResponse;
+import org.fiuba.guitapp.dto.UpdateIncomeRequest;
 import org.fiuba.guitapp.exception.AuthException;
 import org.fiuba.guitapp.exception.ErrorCode;
 import org.fiuba.guitapp.model.Income;
@@ -245,5 +246,100 @@ class IncomeServiceTests {
         AuthException exception = assertThrows(AuthException.class, () -> incomeService.getIncomeById(testEmail, incomeId));
 
         assertEquals(ErrorCode.INCOME_ACCESS_DENIED, exception.getErrorCode());
+    }
+
+    @Test
+    void updateIncome_ShouldUpdateAmountDescriptionAndCategory_WhenProvided() {
+        UUID incomeId = UUID.randomUUID();
+        LocalDateTime now = LocalDateTime.now();
+
+        Income income = new Income();
+        income.setId(incomeId);
+        income.setAmount(new BigDecimal("100.00"));
+        income.setDescription("Old");
+        income.setCategory(IncomeCategory.OTHER);
+        income.setDate(now);
+        income.setUser(testUser);
+
+        UpdateIncomeRequest request = new UpdateIncomeRequest(
+                new BigDecimal("250.00"),
+                "New description",
+                IncomeCategory.SALARY);
+
+        when(userRepository.findByEmail(testEmail)).thenReturn(Optional.of(testUser));
+        when(incomeRepository.findById(incomeId)).thenReturn(Optional.of(income));
+        when(incomeRepository.save(any(Income.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        IncomeResponse response = incomeService.updateIncome(testEmail, incomeId, request);
+
+        assertEquals(incomeId, response.id());
+        assertEquals(new BigDecimal("250.00"), response.amount());
+        assertEquals("New description", response.description());
+        assertEquals(IncomeCategory.SALARY, response.category());
+        assertEquals(now, response.date());
+    }
+
+    @Test
+    void updateIncome_ShouldKeepExistingValues_WhenFieldsAreNull() {
+        UUID incomeId = UUID.randomUUID();
+        LocalDateTime now = LocalDateTime.now();
+
+        Income income = new Income();
+        income.setId(incomeId);
+        income.setAmount(new BigDecimal("100.00"));
+        income.setDescription("Keep me");
+        income.setCategory(IncomeCategory.FREELANCE);
+        income.setDate(now);
+        income.setUser(testUser);
+
+        UpdateIncomeRequest request = new UpdateIncomeRequest(null, null, null);
+
+        when(userRepository.findByEmail(testEmail)).thenReturn(Optional.of(testUser));
+        when(incomeRepository.findById(incomeId)).thenReturn(Optional.of(income));
+        when(incomeRepository.save(any(Income.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        IncomeResponse response = incomeService.updateIncome(testEmail, incomeId, request);
+
+        assertEquals(new BigDecimal("100.00"), response.amount());
+        assertEquals("Keep me", response.description());
+        assertEquals(IncomeCategory.FREELANCE, response.category());
+    }
+
+    @Test
+    void updateIncome_ShouldThrowAuthException_WhenIncomeNotFound() {
+        UUID incomeId = UUID.randomUUID();
+        UpdateIncomeRequest request = new UpdateIncomeRequest(new BigDecimal("1.00"), "x", IncomeCategory.OTHER);
+
+        when(userRepository.findByEmail(testEmail)).thenReturn(Optional.of(testUser));
+        when(incomeRepository.findById(incomeId)).thenReturn(Optional.empty());
+
+        AuthException exception = assertThrows(AuthException.class, () -> incomeService.updateIncome(testEmail, incomeId, request));
+
+        assertEquals(ErrorCode.INCOME_NOT_FOUND, exception.getErrorCode());
+        verify(incomeRepository, never()).save(any(Income.class));
+    }
+
+    @Test
+    void updateIncome_ShouldThrowAuthException_WhenIncomeBelongsToAnotherUser() {
+        UUID incomeId = UUID.randomUUID();
+
+        User otherUser = new User();
+        otherUser.setId(UUID.randomUUID());
+        otherUser.setEmail("other@example.com");
+        otherUser.setStatus(UserStatus.ACTIVE);
+
+        Income income = new Income();
+        income.setId(incomeId);
+        income.setUser(otherUser);
+
+        UpdateIncomeRequest request = new UpdateIncomeRequest(new BigDecimal("1.00"), "x", IncomeCategory.OTHER);
+
+        when(userRepository.findByEmail(testEmail)).thenReturn(Optional.of(testUser));
+        when(incomeRepository.findById(incomeId)).thenReturn(Optional.of(income));
+
+        AuthException exception = assertThrows(AuthException.class, () -> incomeService.updateIncome(testEmail, incomeId, request));
+
+        assertEquals(ErrorCode.INCOME_ACCESS_DENIED, exception.getErrorCode());
+        verify(incomeRepository, never()).save(any(Income.class));
     }
 }
