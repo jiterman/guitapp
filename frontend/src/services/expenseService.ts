@@ -64,4 +64,36 @@ const addExpense = async (request: AddExpenseRequest): Promise<ExpenseResponse> 
   return response.json();
 };
 
-export const expenseService = { addExpense };
+const getExpenseById = async (expenseId: string): Promise<ExpenseResponse> => {
+  const token = await authService.getToken();
+  const response = await fetch(`${API_URL}/api/expenses/${encodeURIComponent(expenseId)}`, {
+    method: 'GET',
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({}));
+    throw { code: error.code, message: error.message ?? 'Get expense failed' };
+  }
+
+  return response.json();
+};
+
+const deleteExpense = async (expenseId: string): Promise<void> => {
+  const token = await authService.getToken();
+  const response = await fetch(`${API_URL}/api/expenses/${encodeURIComponent(expenseId)}`, {
+    method: 'DELETE',
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({}));
+    throw { code: error.code, message: error.message ?? 'Delete expense failed' };
+  }
+};
+
+export const expenseService = { getExpenseById, deleteExpense, addExpense };

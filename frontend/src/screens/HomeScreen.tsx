@@ -117,11 +117,17 @@ const HomeScreen = () => {
                 <TransactionCard
                   movement={m}
                   onPress={movement => {
-                    if (movement.type !== 'INCOME') return;
-                    router.push({
-                      pathname: '/income/[incomeId]',
-                      params: { incomeId: movement.id },
-                    });
+                    if (movement.type === 'INCOME') {
+                      router.push({
+                        pathname: '/income/[incomeId]',
+                        params: { incomeId: movement.id },
+                      });
+                    } else if (movement.type === 'EXPENSE') {
+                      router.push({
+                        pathname: '/expense/[expenseId]',
+                        params: { expenseId: movement.id },
+                      });
+                    }
                   }}
                 />
                 <View style={{ height: 1, backgroundColor: '#EEF6FB' }} />
