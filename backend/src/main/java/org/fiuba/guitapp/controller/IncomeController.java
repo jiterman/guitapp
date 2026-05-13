@@ -8,6 +8,7 @@ import org.fiuba.guitapp.dto.IncomeResponse;
 import org.fiuba.guitapp.service.IncomeService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -36,5 +37,11 @@ public class IncomeController {
     public ResponseEntity<Void> deleteIncome(Principal principal, @PathVariable UUID incomeId) {
         incomeService.deleteIncome(principal.getName(), incomeId);
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/{incomeId}")
+    public ResponseEntity<IncomeResponse> getIncomeById(Principal principal, @PathVariable UUID incomeId) {
+        IncomeResponse response = incomeService.getIncomeById(principal.getName(), incomeId);
+        return ResponseEntity.ok(response);
     }
 }

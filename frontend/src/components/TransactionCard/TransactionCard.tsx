@@ -1,16 +1,18 @@
 import React from 'react';
-import { View, StyleSheet } from 'react-native';
+import { View, StyleSheet, TouchableOpacity } from 'react-native';
 import { Text } from '@ui-kitten/components';
 import { Ionicons } from '@expo/vector-icons';
 import { MovementResponse } from '../../services/movementService';
 
 interface Props {
   movement: MovementResponse;
+  onPress?: (movement: MovementResponse) => void;
 }
 
-const TransactionCard: React.FC<Props> = ({ movement }) => {
+const TransactionCard: React.FC<Props> = ({ movement, onPress }) => {
+  const Container = onPress ? TouchableOpacity : View;
   return (
-    <View style={styles.row}>
+    <Container style={styles.row} onPress={onPress ? () => onPress(movement) : undefined}>
       <View style={styles.left}>
         <View
           style={[
@@ -47,7 +49,7 @@ const TransactionCard: React.FC<Props> = ({ movement }) => {
           {new Intl.NumberFormat('es-AR').format(Number(movement.amount))}
         </Text>
       </View>
-    </View>
+    </Container>
   );
 };
 
