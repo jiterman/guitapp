@@ -353,6 +353,34 @@ class ExpenseServiceTests {
     }
 
     @Test
+    void updateExpense_ShouldSetDescriptionToEmpty_WhenEmptyStringProvided() {
+        UUID expenseId = UUID.randomUUID();
+        LocalDateTime now = LocalDateTime.now();
+
+        Expense expense = new Expense();
+        expense.setId(expenseId);
+        expense.setAmount(new BigDecimal("40.00"));
+        expense.setDescription("Note");
+        expense.setCategory(ExpenseCategory.BAR);
+        expense.setType(ExpenseType.VARIABLE);
+        expense.setDate(now);
+        expense.setUser(testUser);
+
+        UpdateExpenseRequest request = new UpdateExpenseRequest(null, "", null, null);
+
+        when(userRepository.findByEmail(testEmail)).thenReturn(Optional.of(testUser));
+        when(expenseRepository.findById(expenseId)).thenReturn(Optional.of(expense));
+        when(expenseRepository.save(any(Expense.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        ExpenseResponse response = expenseService.updateExpense(testEmail, expenseId, request);
+
+        assertEquals("", response.description());
+        assertEquals(new BigDecimal("40.00"), response.amount());
+        assertEquals(ExpenseCategory.BAR, response.category());
+        assertEquals(ExpenseType.VARIABLE, response.type());
+    }
+
+    @Test
     void updateExpense_ShouldThrowAuthException_WhenExpenseNotFound() {
         UUID expenseId = UUID.randomUUID();
         UpdateExpenseRequest request =

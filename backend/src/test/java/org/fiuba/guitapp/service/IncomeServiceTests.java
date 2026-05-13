@@ -342,6 +342,32 @@ class IncomeServiceTests {
     }
 
     @Test
+    void updateIncome_ShouldSetDescriptionToEmpty_WhenEmptyStringProvided() {
+        UUID incomeId = UUID.randomUUID();
+        LocalDateTime now = LocalDateTime.now();
+
+        Income income = new Income();
+        income.setId(incomeId);
+        income.setAmount(new BigDecimal("100.00"));
+        income.setDescription("Old text");
+        income.setCategory(IncomeCategory.SALARY);
+        income.setDate(now);
+        income.setUser(testUser);
+
+        UpdateIncomeRequest request = new UpdateIncomeRequest(null, "", null);
+
+        when(userRepository.findByEmail(testEmail)).thenReturn(Optional.of(testUser));
+        when(incomeRepository.findById(incomeId)).thenReturn(Optional.of(income));
+        when(incomeRepository.save(any(Income.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        IncomeResponse response = incomeService.updateIncome(testEmail, incomeId, request);
+
+        assertEquals("", response.description());
+        assertEquals(new BigDecimal("100.00"), response.amount());
+        assertEquals(IncomeCategory.SALARY, response.category());
+    }
+
+    @Test
     void updateIncome_ShouldThrowAuthException_WhenIncomeNotFound() {
         UUID incomeId = UUID.randomUUID();
         UpdateIncomeRequest request = new UpdateIncomeRequest(new BigDecimal("1.00"), "x", IncomeCategory.OTHER);

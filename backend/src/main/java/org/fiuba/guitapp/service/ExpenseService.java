@@ -1,7 +1,6 @@
 package org.fiuba.guitapp.service;
 
 import java.time.LocalDateTime;
-import java.util.Objects;
 import java.util.UUID;
 
 import org.fiuba.guitapp.dto.AddExpenseRequest;
@@ -25,9 +24,8 @@ public class ExpenseService {
     private final ExpenseRepository expenseRepository;
     private final UserRepository userRepository;
 
+    @SuppressWarnings("null")
     private Expense findUserExpense(String email, UUID expenseId) {
-        Objects.requireNonNull(expenseId, "expenseId");
-
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new AuthException(ErrorCode.USER_NOT_FOUND, "User not found"));
 
@@ -67,6 +65,7 @@ public class ExpenseService {
                 saved.getDate());
     }
 
+    @SuppressWarnings("null")
     @Transactional
     public void deleteExpense(String email, UUID expenseId) {
         Expense expense = findUserExpense(email, expenseId);
@@ -85,6 +84,7 @@ public class ExpenseService {
                 expense.getDate());
     }
 
+    @SuppressWarnings("null")
     @Transactional
     public ExpenseResponse updateExpense(String email, UUID expenseId, UpdateExpenseRequest request) {
         Expense expense = findUserExpense(email, expenseId);
