@@ -6,6 +6,7 @@ import java.util.UUID;
 
 import org.fiuba.guitapp.dto.AddIncomeRequest;
 import org.fiuba.guitapp.dto.IncomeResponse;
+import org.fiuba.guitapp.dto.UpdateIncomeRequest;
 import org.fiuba.guitapp.exception.AuthException;
 import org.fiuba.guitapp.exception.ErrorCode;
 import org.fiuba.guitapp.model.Income;
@@ -79,5 +80,28 @@ public class IncomeService {
                 income.getDescription(),
                 income.getCategory(),
                 income.getDate());
+    }
+
+    @Transactional
+    public IncomeResponse updateIncome(String email, UUID incomeId, UpdateIncomeRequest request) {
+        Income income = Objects.requireNonNull(findUserIncome(email, incomeId), "income");
+
+        if (request.amount() != null) {
+            income.setAmount(request.amount());
+        }
+        if (request.description() != null) {
+            income.setDescription(request.description());
+        }
+        if (request.category() != null) {
+            income.setCategory(request.category());
+        }
+
+        Income saved = incomeRepository.save(income);
+        return new IncomeResponse(
+                saved.getId(),
+                saved.getAmount(),
+                saved.getDescription(),
+                saved.getCategory(),
+                saved.getDate());
     }
 }
