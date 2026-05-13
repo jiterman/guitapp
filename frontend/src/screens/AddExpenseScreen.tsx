@@ -267,13 +267,13 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     color: '#003366',
-    marginBottom: vh * 0.6,
+    marginBottom: vh * 0.5,
   },
   typeLabel: {
     fontSize: 16,
     fontWeight: '600',
     color: '#003366',
-    marginBottom: vh * 0.7,
+    marginBottom: vh * 0.5,
     marginTop: vh * 2.5,
   },
   input: {
