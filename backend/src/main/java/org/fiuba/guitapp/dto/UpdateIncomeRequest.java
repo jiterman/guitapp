@@ -12,4 +12,3 @@ public record UpdateIncomeRequest(
         @Size(max = 255) String description,
         IncomeCategory category) {
 }
-
