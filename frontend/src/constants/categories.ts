@@ -67,3 +67,41 @@ export const getCategoryOption = (
   }
   return CATEGORIES.find(c => c.value === category) ?? null;
 };
+
+export const getCategoryIcon = (category: string): string => {
+  const iconMap: Record<string, string> = {
+    // Expense categories
+    SUPERMARKET: 'cart-outline',
+    RESTAURANT: 'restaurant-outline',
+    CAFE: 'cafe-outline',
+    DELIVERY: 'bicycle-outline',
+    PUBLIC_TRANSPORT: 'bus-outline',
+    FUEL: 'water-outline',
+    TAXI: 'car-outline',
+    UTILITIES: 'flash-outline',
+    RENT: 'home-outline',
+    HOME: 'hammer-outline',
+    HOA_FEES: 'business-outline',
+    VEHICLE: 'car-sport-outline',
+    DOCTOR: 'medical-outline',
+    PHARMACY: 'medical-outline',
+    SUBSCRIPTIONS: 'phone-portrait-outline',
+    OUTINGS: 'happy-outline',
+    BAR: 'beer-outline',
+    GYM: 'barbell-outline',
+    TRAVEL: 'airplane-outline',
+    CLOTHING: 'shirt-outline',
+    EDUCATION: 'school-outline',
+    TECHNOLOGY: 'laptop-outline',
+    BEAUTY: 'cut-outline',
+    PETS: 'paw-outline',
+    // Income categories
+    SALARY: 'briefcase-outline',
+    FREELANCE: 'code-slash-outline',
+    GIFT: 'gift-outline',
+    INVESTMENT: 'trending-up-outline',
+    // Default
+    OTHER: 'cube-outline',
+  };
+  return iconMap[category] ?? 'cube-outline';
+};

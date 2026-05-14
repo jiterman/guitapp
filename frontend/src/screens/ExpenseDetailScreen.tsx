@@ -10,10 +10,16 @@ import {
   View,
 } from 'react-native';
 import { Button, Input, Layout, Text } from '@ui-kitten/components';
+import { Ionicons } from '@expo/vector-icons';
 import { router, useLocalSearchParams } from 'expo-router';
 import type { ExpenseCategory, ExpenseResponse, ExpenseType } from '../services/expenseService';
 import { expenseService } from '../services/expenseService';
-import { CATEGORIES, ExpenseCategoryOption, getCategoryLabel } from '../constants/categories';
+import {
+  CATEGORIES,
+  ExpenseCategoryOption,
+  getCategoryLabel,
+  getCategoryIcon,
+} from '../constants/categories';
 import { useCurrencyInput } from '../hooks/useCurrencyInput';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
@@ -171,10 +177,6 @@ const ExpenseDetailScreen: React.FC = () => {
   return (
     <>
       <Layout style={styles.container}>
-        <Text category="h6" style={styles.title}>
-          {title}
-        </Text>
-
         {isLoading ? (
           <Text appearance="hint">Cargando...</Text>
         ) : !expense ? (
@@ -274,41 +276,111 @@ const ExpenseDetailScreen: React.FC = () => {
           </View>
         ) : (
           <View style={styles.card}>
-            <View style={styles.row}>
-              <Text appearance="hint">Monto</Text>
-              <Text style={styles.amount}>-${formatMoney(Number(expense.amount))}</Text>
+            {/* Header with title and actions */}
+            <View style={styles.cardHeader}>
+              <Text style={styles.cardTitle}>{title}</Text>
+              <View style={styles.cardActions}>
+                <TouchableOpacity
+                  onPress={() => setIsEditing(true)}
+                  disabled={!expense}
+                  style={styles.iconButtonEdit}
+                >
+                  <Ionicons name="pencil-outline" size={18} color="#07a3e4" />
+                </TouchableOpacity>
+                <TouchableOpacity
+                  onPress={onDeletePress}
+                  disabled={!expense || isDeleting}
+                  style={styles.iconButtonDelete}
+                >
+                  <Ionicons name="trash-outline" size={18} color="#c0392b" />
+                </TouchableOpacity>
+              </View>
             </View>
-            <View style={styles.row}>
-              <Text appearance="hint">Descripción</Text>
-              <Text>{expense.description?.trim() ? expense.description : '-'}</Text>
+
+            {/* Amount Section */}
+            <View style={styles.amountSection}>
+              <View style={styles.iconCircle}>
+                <Ionicons name="trending-down" size={28} color="#c0392b" />
+              </View>
+              <View style={styles.amountContent}>
+                <Text style={styles.amountLabel}>Monto</Text>
+                <Text style={styles.amountValue}>-${formatMoney(Number(expense.amount))}</Text>
+              </View>
             </View>
-            <View style={styles.row}>
-              <Text appearance="hint">Categoría</Text>
-              <Text>{getCategoryLabel(expense.category, 'EXPENSE')}</Text>
+
+            {/* Description */}
+            <View style={styles.detailRow}>
+              <View style={[styles.iconContainer, styles.iconContainerGray]}>
+                <Ionicons name="document-text-outline" size={24} color="#666" />
+              </View>
+              <View style={styles.detailContent}>
+                <Text style={styles.detailLabel}>Descripción</Text>
+                <Text
+                  style={[
+                    styles.detailValue,
+                    !expense.description?.trim() && styles.detailValueItalic,
+                  ]}
+                >
+                  {expense.description?.trim() ? expense.description : 'Sin descripción'}
+                </Text>
+              </View>
             </View>
-            <View style={styles.row}>
-              <Text appearance="hint">Tipo</Text>
-              <Text>{typeLabelEs(expense.type)}</Text>
+
+            {/* Category */}
+            <View style={styles.detailRow}>
+              <View style={[styles.iconContainer, styles.iconContainerBlue]}>
+                <Ionicons
+                  name={getCategoryIcon(expense.category) as keyof typeof Ionicons.glyphMap}
+                  size={24}
+                  color="#07a3e4"
+                />
+              </View>
+              <View style={styles.detailContent}>
+                <Text style={styles.detailLabel}>Categoría</Text>
+                <Text style={styles.detailValue}>
+                  {getCategoryLabel(expense.category, 'EXPENSE')}
+                </Text>
+              </View>
             </View>
-            <View style={styles.row}>
-              <Text appearance="hint">Fecha</Text>
-              <Text>{new Date(expense.date).toLocaleString()}</Text>
+
+            {/* Type */}
+            <View style={styles.detailRow}>
+              <View
+                style={[
+                  styles.iconContainer,
+                  expense.type === 'FIXED' ? styles.iconContainerPurple : styles.iconContainerGreen,
+                ]}
+              >
+                <Ionicons
+                  name={expense.type === 'FIXED' ? 'repeat-outline' : 'stats-chart-outline'}
+                  size={24}
+                  color={expense.type === 'FIXED' ? '#8e44ad' : '#27ae60'}
+                />
+              </View>
+              <View style={styles.detailContent}>
+                <Text style={styles.detailLabel}>Tipo</Text>
+                <Text style={styles.detailValue}>{typeLabelEs(expense.type)}</Text>
+              </View>
+            </View>
+
+            {/* Date */}
+            <View style={styles.detailRow}>
+              <View style={[styles.iconContainer, styles.iconContainerOrange]}>
+                <Ionicons name="calendar-outline" size={24} color="#f39c12" />
+              </View>
+              <View style={styles.detailContent}>
+                <Text style={styles.detailLabel}>Fecha</Text>
+                <Text style={styles.detailValue}>{new Date(expense.date).toLocaleString()}</Text>
+              </View>
             </View>
           </View>
         )}
 
-        {!isEditing && (
-          <View style={styles.actions}>
-            <Button appearance="outline" onPress={() => router.back()}>
-              Volver
-            </Button>
-            <Button onPress={() => setIsEditing(true)} disabled={!expense}>
-              Editar
-            </Button>
-            <Button status="danger" onPress={onDeletePress} disabled={!expense || isDeleting}>
-              Eliminar
-            </Button>
-          </View>
+        {!isLoading && expense && !isEditing && (
+          <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+            <Ionicons name="arrow-back" size={20} color="#003366" />
+            <Text style={styles.backButtonText}>Volver</Text>
+          </TouchableOpacity>
         )}
       </Layout>
 
@@ -381,10 +453,18 @@ const styles = StyleSheet.create({
     padding: screenWidth * 0.05,
     backgroundColor: '#E6F2FC',
   },
-  title: {
-    marginBottom: vh * 1.2,
+  backButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: vh * 2,
+    paddingVertical: vh * 1.5,
+    gap: 8,
+  },
+  backButtonText: {
+    fontSize: 16,
     color: '#003366',
-    fontWeight: '700',
+    fontWeight: '600',
   },
   label: {
     fontSize: 16,
@@ -488,20 +568,123 @@ const styles = StyleSheet.create({
   card: {
     backgroundColor: '#fff',
     borderRadius: 14,
-    padding: vh * 2,
+    padding: vh * 2.5,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.08,
     shadowRadius: 6,
     elevation: 3,
   },
-  row: {
-    marginBottom: vh * 1.2,
+  cardHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: vh * 2,
   },
-  amount: {
-    color: '#c0392b',
+  cardTitle: {
+    fontSize: 22,
+    fontWeight: '700',
+    color: '#003366',
+    flex: 1,
+  },
+  cardActions: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  iconButtonEdit: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#e6f7ff',
+  },
+  iconButtonDelete: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#ffe6e6',
+  },
+  amountSection: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: vh * 2,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f0f0f0',
+    marginBottom: vh * 2,
+  },
+  iconCircle: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: '#fce8e6',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 16,
+  },
+  amountContent: {
+    flex: 1,
+  },
+  amountLabel: {
+    fontSize: 13,
+    color: '#666',
+    marginBottom: 4,
+  },
+  amountValue: {
+    fontSize: 32,
     fontWeight: '800',
-    marginTop: 4,
+    color: '#c0392b',
+    marginBottom: 6,
+  },
+  detailRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    paddingVertical: vh * 1.8,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f8f8f8',
+  },
+  iconContainer: {
+    width: 48,
+    height: 48,
+    borderRadius: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 14,
+  },
+  iconContainerGray: {
+    backgroundColor: '#f5f5f5',
+  },
+  iconContainerBlue: {
+    backgroundColor: '#e6f7ff',
+  },
+  iconContainerPurple: {
+    backgroundColor: '#f4e8ff',
+  },
+  iconContainerGreen: {
+    backgroundColor: '#e8f8f0',
+  },
+  iconContainerOrange: {
+    backgroundColor: '#fff4e6',
+  },
+  detailContent: {
+    flex: 1,
+    justifyContent: 'center',
+  },
+  detailLabel: {
+    fontSize: 13,
+    color: '#666',
+    marginBottom: 4,
+  },
+  detailValue: {
+    fontSize: 15,
+    color: '#003366',
+    fontWeight: '500',
+  },
+  detailValueItalic: {
+    fontStyle: 'italic',
+    color: '#999',
   },
   actions: {
     marginTop: vh * 2.2,
