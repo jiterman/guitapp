@@ -40,11 +40,6 @@ export default function AppLayout() {
             Hola, <Text style={styles.nameBold}>{user?.firstName ?? 'Usuario'}</Text>
           </Text>
         </View>
-
-        <TouchableOpacity onPress={onLogoutPress} style={styles.logoutButton}>
-          <Icon name="log-out-outline" style={styles.logoutIcon} fill="#003366" />
-          <Text style={styles.logoutText}>Salir</Text>
-        </TouchableOpacity>
       </View>
 
       <Stack screenOptions={{ headerShown: false }} />
@@ -58,9 +53,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#c8dff0',
   },
   header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
     paddingHorizontal: screenWidth * 0.05,
     paddingVertical: vh * 1.5,
     paddingTop: vh * 2,
