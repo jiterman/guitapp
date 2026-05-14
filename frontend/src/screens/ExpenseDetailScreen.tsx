@@ -14,6 +14,7 @@ import { router, useLocalSearchParams } from 'expo-router';
 import type { ExpenseCategory, ExpenseResponse, ExpenseType } from '../services/expenseService';
 import { expenseService } from '../services/expenseService';
 import { CATEGORIES, ExpenseCategoryOption } from '../constants/categories';
+import { useCurrencyInput } from '../hooks/useCurrencyInput';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 const vh = screenHeight / 100;
@@ -31,7 +32,7 @@ const ExpenseDetailScreen: React.FC = () => {
   const [isEditing, setIsEditing] = useState<boolean>(false);
   const [isSaving, setIsSaving] = useState<boolean>(false);
 
-  const [amount, setAmount] = useState<string>('');
+  const { formattedAmount, amount, handleAmountChange, setAmount } = useCurrencyInput();
   const [description, setDescription] = useState<string>('');
   const [selectedCategory, setSelectedCategory] = useState<ExpenseCategoryOption | null>(null);
   const [selectedType, setSelectedType] = useState<ExpenseType | null>(null);
@@ -77,7 +78,7 @@ const ExpenseDetailScreen: React.FC = () => {
       setModalVisible(false);
       setSearch('');
     }
-  }, [expense, isEditing]);
+  }, [expense, isEditing, setAmount]);
 
   const categoryLabel = useMemo(() => {
     if (!expense) return null;
@@ -188,12 +189,12 @@ const ExpenseDetailScreen: React.FC = () => {
           <View style={styles.card}>
             <Text style={styles.label}>Monto *</Text>
             <Input
-              value={amount}
+              value={formattedAmount}
               onChangeText={text => {
-                setAmount(text);
+                handleAmountChange(text);
                 if (amountError) setAmountError(null);
               }}
-              placeholder="Ej. 1500"
+              placeholder="$ 0,00"
               keyboardType="decimal-pad"
               style={styles.input}
               status={amountError ? 'danger' : 'basic'}

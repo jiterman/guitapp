@@ -14,6 +14,7 @@ import { router, useLocalSearchParams } from 'expo-router';
 import type { IncomeCategory, IncomeResponse } from '../services/incomeService';
 import { incomeService } from '../services/incomeService';
 import { INCOME_CATEGORIES, IncomeCategoryOption } from '../constants/categories';
+import { useCurrencyInput } from '../hooks/useCurrencyInput';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 const vh = screenHeight / 100;
@@ -28,7 +29,7 @@ const IncomeDetailScreen: React.FC = () => {
   const [isEditing, setIsEditing] = useState<boolean>(false);
   const [isSaving, setIsSaving] = useState<boolean>(false);
 
-  const [amount, setAmount] = useState<string>('');
+  const { formattedAmount, amount, handleAmountChange, setAmount } = useCurrencyInput();
   const [description, setDescription] = useState<string>('');
   const [selectedCategory, setSelectedCategory] = useState<IncomeCategoryOption | null>(null);
   const [modalVisible, setModalVisible] = useState(false);
@@ -70,7 +71,7 @@ const IncomeDetailScreen: React.FC = () => {
       setModalVisible(false);
       setSearch('');
     }
-  }, [income, isEditing]);
+  }, [income, isEditing, setAmount]);
 
   const categoryLabel = useMemo(() => {
     if (!income) return null;
@@ -170,12 +171,12 @@ const IncomeDetailScreen: React.FC = () => {
           <View style={styles.card}>
             <Text style={styles.label}>Monto *</Text>
             <Input
-              value={amount}
+              value={formattedAmount}
               onChangeText={text => {
-                setAmount(text);
+                handleAmountChange(text);
                 if (amountError) setAmountError(null);
               }}
-              placeholder="Ej. 1500"
+              placeholder="$ 0,00"
               keyboardType="decimal-pad"
               style={styles.input}
               status={amountError ? 'danger' : 'basic'}

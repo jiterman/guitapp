@@ -14,12 +14,13 @@ import { router } from 'expo-router';
 import { incomeService } from '../services/incomeService';
 import type { IncomeCategory } from '../services/incomeService';
 import { INCOME_CATEGORIES, IncomeCategoryOption } from '../constants/categories';
+import { useCurrencyInput } from '../hooks/useCurrencyInput';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 const vh = screenHeight / 100;
 
 const AddIncomeScreen = () => {
-  const [amount, setAmount] = useState('');
+  const { formattedAmount, amount, handleAmountChange } = useCurrencyInput();
   const [description, setDescription] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<IncomeCategoryOption | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -83,12 +84,12 @@ const AddIncomeScreen = () => {
 
         <Text style={styles.label}>Monto *</Text>
         <Input
-          value={amount}
+          value={formattedAmount}
           onChangeText={text => {
-            setAmount(text);
+            handleAmountChange(text);
             if (amountError) setAmountError(null);
           }}
-          placeholder="Ej. 1500"
+          placeholder="$ 0,00"
           keyboardType="decimal-pad"
           style={styles.input}
           status={amountError ? 'danger' : 'basic'}
