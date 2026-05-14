@@ -223,82 +223,95 @@ const IncomeDetailScreen: React.FC = () => {
             </View>
           </View>
         ) : (
-          <View style={styles.card}>
-            {/* Header with title and actions */}
-            <View style={styles.cardHeader}>
-              <Text style={styles.cardTitle}>{title}</Text>
-              <View style={styles.cardActions}>
-                <TouchableOpacity
-                  onPress={() => setIsEditing(true)}
-                  disabled={!income}
-                  style={styles.iconButtonEdit}
-                >
-                  <Feather name="edit-3" size={19} color="#07a3e4" />
-                </TouchableOpacity>
-                <TouchableOpacity
-                  onPress={onDeletePress}
-                  disabled={!income || isDeleting}
-                  style={styles.iconButtonDelete}
-                >
-                  <Feather name="trash-2" size={19} color="#c0392b" />
-                </TouchableOpacity>
+          <View style={styles.cardWrapper}>
+            <View style={styles.cardTopBorder} />
+            <View style={styles.cardContent}>
+              {/* Header with title and actions */}
+              <View style={styles.cardHeader}>
+                <Text style={styles.cardTitle}>{title}</Text>
+                <View style={styles.cardActions}>
+                  <TouchableOpacity
+                    onPress={() => setIsEditing(true)}
+                    disabled={!income}
+                    style={styles.iconButtonEdit}
+                  >
+                    <Feather name="edit-3" size={19} color="#07a3e4" />
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    onPress={onDeletePress}
+                    disabled={!income || isDeleting}
+                    style={styles.iconButtonDelete}
+                  >
+                    <Feather name="trash-2" size={19} color="#c0392b" />
+                  </TouchableOpacity>
+                </View>
               </View>
-            </View>
 
-            {/* Amount Section */}
-            <View style={styles.amountSection}>
-              <View style={styles.iconCircle}>
-                <Ionicons name="trending-up" size={28} color="#1a9e5c" />
+              {/* Amount Section */}
+              <View style={styles.amountSection}>
+                <View style={styles.iconCircle}>
+                  <Ionicons name="trending-up" size={28} color="#1a9e5c" />
+                </View>
+                <View style={styles.amountContent}>
+                  <Text style={styles.amountLabel}>Monto</Text>
+                  <Text style={styles.amountValue}>+${formatMoney(Number(income.amount))}</Text>
+                </View>
               </View>
-              <View style={styles.amountContent}>
-                <Text style={styles.amountLabel}>Monto</Text>
-                <Text style={styles.amountValue}>+${formatMoney(Number(income.amount))}</Text>
-              </View>
-            </View>
 
-            {/* Description */}
-            <View style={styles.detailRow}>
-              <View style={[styles.iconContainer, styles.iconContainerGray]}>
-                <Ionicons name="document-text-outline" size={24} color="#666" />
+              {/* Description */}
+              <View
+                style={[styles.detailRow, styles.detailRowWithBg, { backgroundColor: '#f5f5f5' }]}
+              >
+                <View style={[styles.iconContainer, styles.iconContainerGray]}>
+                  <Ionicons name="document-text-outline" size={24} color="#666" />
+                </View>
+                <View style={styles.detailContent}>
+                  <Text style={styles.detailLabel}>Descripción</Text>
+                  <Text
+                    style={[
+                      styles.detailValue,
+                      !income.description?.trim() && styles.detailValueItalic,
+                    ]}
+                  >
+                    {income.description?.trim() ? income.description : 'Sin descripción'}
+                  </Text>
+                </View>
               </View>
-              <View style={styles.detailContent}>
-                <Text style={styles.detailLabel}>Descripción</Text>
-                <Text
-                  style={[
-                    styles.detailValue,
-                    !income.description?.trim() && styles.detailValueItalic,
-                  ]}
-                >
-                  {income.description?.trim() ? income.description : 'Sin descripción'}
-                </Text>
-              </View>
-            </View>
 
-            {/* Category */}
-            <View style={styles.detailRow}>
-              <View style={[styles.iconContainer, styles.iconContainerBlue]}>
-                <Ionicons
-                  name={getCategoryIcon(income.category) as keyof typeof Ionicons.glyphMap}
-                  size={24}
-                  color="#07a3e4"
-                />
+              {/* Category */}
+              <View
+                style={[styles.detailRow, styles.detailRowWithBg, { backgroundColor: '#e6f7ff' }]}
+              >
+                <View style={[styles.iconContainer, styles.iconContainerBlue]}>
+                  <Ionicons
+                    name={getCategoryIcon(income.category) as keyof typeof Ionicons.glyphMap}
+                    size={24}
+                    color="#07a3e4"
+                  />
+                </View>
+                <View style={styles.detailContent}>
+                  <Text style={styles.detailLabel}>Categoría</Text>
+                  <Text style={styles.detailValue}>
+                    {getCategoryLabel(income.category, 'INCOME')}
+                  </Text>
+                </View>
               </View>
-              <View style={styles.detailContent}>
-                <Text style={styles.detailLabel}>Categoría</Text>
-                <Text style={styles.detailValue}>
-                  {getCategoryLabel(income.category, 'INCOME')}
-                </Text>
-              </View>
-            </View>
 
-            {/* Date */}
-            <View style={styles.detailRowLast}>
-              <View style={[styles.iconContainer, styles.iconContainerOrange]}>
-                <Ionicons name="calendar-outline" size={24} color="#f39c12" />
-              </View>
-              <View style={styles.detailContent}>
-                <Text style={styles.detailLabel}>Fecha</Text>
-                <Text style={styles.detailValue}>{new Date(income.date).toLocaleString()}</Text>
+              {/* Date */}
+              <View
+                style={[
+                  styles.detailRowLast,
+                  styles.detailRowWithBg,
+                  { backgroundColor: '#fff4e6' },
+                ]}
+              >
+                <View style={[styles.iconContainer, styles.iconContainerOrange]}>
+                  <Ionicons name="calendar-outline" size={24} color="#f39c12" />
+                </View>
+                <View style={styles.detailContent}>
+                  <Text style={styles.detailLabel}>Fecha</Text>
+                  <Text style={styles.detailValue}>{new Date(income.date).toLocaleString()}</Text>
+                </View>
               </View>
             </View>
           </View>
@@ -440,9 +453,28 @@ const styles = StyleSheet.create({
     fontSize: 11,
     color: '#006699',
   },
+  cardWrapper: {
+    borderRadius: 20,
+    borderTopWidth: 4,
+    borderTopColor: '#FFBB00',
+    backgroundColor: '#fff',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 6,
+    elevation: 3,
+    overflow: 'hidden',
+  },
+  cardTopBorder: {
+    height: 0,
+  },
+  cardContent: {
+    padding: vh * 2.5,
+    paddingTop: vh * 2.1,
+  },
   card: {
     backgroundColor: '#fff',
-    borderRadius: 14,
+    borderRadius: 20,
     padding: vh * 2.5,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
@@ -459,7 +491,7 @@ const styles = StyleSheet.create({
   cardTitle: {
     fontSize: 22,
     fontWeight: '700',
-    color: '#003366',
+    color: '#105fb0',
     flex: 1,
   },
   cardActions: {
@@ -486,9 +518,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     paddingVertical: vh * 2,
-    borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f0',
-    marginBottom: 0,
+    borderBottomWidth: 0,
+    marginBottom: vh,
   },
   iconCircle: {
     width: 56,
@@ -530,16 +561,20 @@ const styles = StyleSheet.create({
   detailRow: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    paddingVertical: vh * 1.8,
-    borderBottomWidth: 1,
-    borderBottomColor: '#f8f8f8',
+    paddingVertical: vh * 1.2,
+    borderBottomWidth: 0,
+    marginBottom: vh * 1.5,
+  },
+  detailRowWithBg: {
+    borderRadius: 12,
+    paddingHorizontal: vh * 1.5,
   },
   detailRowLast: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    paddingTop: vh * 1.8,
-    paddingBottom: 3,
+    paddingVertical: vh * 1.2,
     borderBottomWidth: 0,
+    marginBottom: 0,
   },
   iconContainer: {
     width: 48,
@@ -550,13 +585,13 @@ const styles = StyleSheet.create({
     marginRight: 14,
   },
   iconContainerGray: {
-    backgroundColor: '#f5f5f5',
+    backgroundColor: '#e8e8e8',
   },
   iconContainerBlue: {
-    backgroundColor: '#e6f7ff',
+    backgroundColor: '#cceeff',
   },
   iconContainerOrange: {
-    backgroundColor: '#fff4e6',
+    backgroundColor: '#ffe8c5',
   },
   detailContent: {
     flex: 1,
