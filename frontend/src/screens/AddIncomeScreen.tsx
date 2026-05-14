@@ -14,12 +14,13 @@ import { router } from 'expo-router';
 import { incomeService } from '../services/incomeService';
 import type { IncomeCategory } from '../services/incomeService';
 import { INCOME_CATEGORIES, IncomeCategoryOption } from '../constants/categories';
+import { useCurrencyInput } from '../hooks/useCurrencyInput';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 const vh = screenHeight / 100;
 
 const AddIncomeScreen = () => {
-  const [amount, setAmount] = useState('');
+  const { displayValue, amount, handleAmountChange } = useCurrencyInput();
   const [description, setDescription] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<IncomeCategoryOption | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -83,15 +84,16 @@ const AddIncomeScreen = () => {
 
         <Text style={styles.label}>Monto *</Text>
         <Input
-          value={amount}
+          value={displayValue}
           onChangeText={text => {
-            setAmount(text);
+            handleAmountChange(text);
             if (amountError) setAmountError(null);
           }}
-          placeholder="Ej. 1500"
+          placeholder="0,00"
           keyboardType="decimal-pad"
           style={styles.input}
           status={amountError ? 'danger' : 'basic'}
+          accessoryLeft={() => <Text style={styles.currencySymbol}>$</Text>}
         />
         {amountError && <Text style={styles.errorText}>{amountError}</Text>}
 
@@ -220,6 +222,11 @@ const styles = StyleSheet.create({
     marginBottom: vh * 2,
     borderRadius: 10,
     backgroundColor: '#fff',
+  },
+  currencySymbol: {
+    fontSize: 16,
+    color: '#003366',
+    marginLeft: 8,
   },
   errorText: {
     color: '#FF3333',

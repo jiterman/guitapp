@@ -19,36 +19,36 @@ const BalanceCard: React.FC<BalanceCardProps> = ({ title, income, expense }) => 
 
   return (
     <View style={styles.balanceCard}>
+      <Ionicons name="sunny" size={50} color="#FFBB00" style={styles.sunIcon} />
       <View style={styles.balanceTop}>
         <View>
           <Text style={styles.balanceLabel}>{title}</Text>
           <Text style={styles.balanceAmount}>${formatCurrency(total)}</Text>
         </View>
-        <Ionicons name="sunny" size={56} color="#FFBB00" style={styles.sunIcon} />
       </View>
       <View style={styles.balanceRow}>
         <View style={styles.balanceSubCard}>
-          <View style={styles.balanceSubCardInner}>
+          <View style={styles.labelRow}>
             <View style={styles.iconCircleGreen}>
               <Ionicons name="trending-up" size={16} color="#1a9e5c" />
             </View>
-            <View>
-              <Text style={styles.balanceItemLabel}>Ingresos</Text>
-              <Text style={styles.incomeText}>${formatCurrency(income)}</Text>
-            </View>
+            <Text style={styles.balanceItemLabel}>Ingresos</Text>
           </View>
+          <Text style={styles.incomeText} adjustsFontSizeToFit numberOfLines={1}>
+            ${formatCurrency(income)}
+          </Text>
         </View>
         <View style={styles.balanceDivider} />
         <View style={styles.balanceSubCard}>
-          <View style={styles.balanceSubCardInner}>
+          <View style={styles.labelRow}>
             <View style={styles.iconCircleRed}>
               <Ionicons name="trending-down" size={16} color="#c0392b" />
             </View>
-            <View>
-              <Text style={styles.balanceItemLabel}>Gastos</Text>
-              <Text style={styles.expenseText}>${formatCurrency(expense)}</Text>
-            </View>
+            <Text style={styles.balanceItemLabel}>Gastos</Text>
           </View>
+          <Text style={styles.expenseText} adjustsFontSizeToFit numberOfLines={1}>
+            ${formatCurrency(expense)}
+          </Text>
         </View>
       </View>
     </View>
@@ -68,17 +68,19 @@ const styles = StyleSheet.create({
     shadowRadius: 12,
     elevation: 6,
     overflow: 'hidden',
+    position: 'relative',
   },
   balanceTop: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
     paddingHorizontal: screenWidth * 0.05,
     paddingTop: vh * 2,
     paddingBottom: vh * 2,
   },
   sunIcon: {
     opacity: 0.95,
+    position: 'absolute',
+    right: 7,
+    top: vh,
+    zIndex: 0,
   },
   balanceLabel: {
     color: 'rgba(255,255,255,0.85)',
@@ -104,13 +106,13 @@ const styles = StyleSheet.create({
   },
   balanceSubCard: {
     flex: 1,
-    alignItems: 'center',
-    gap: 4,
+    paddingHorizontal: 12,
   },
-  balanceSubCardInner: {
+  labelRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 10,
+    gap: 8,
+    marginBottom: vh * 0.3,
   },
   iconCircleGreen: {
     width: 32,
@@ -142,12 +144,14 @@ const styles = StyleSheet.create({
   incomeText: {
     color: '#1a9e5c',
     fontWeight: 'bold',
-    fontSize: 22,
+    fontSize: 18,
+    textAlign: 'center',
   },
   expenseText: {
     color: '#c0392b',
     fontWeight: 'bold',
-    fontSize: 22,
+    fontSize: 18,
+    textAlign: 'center',
   },
 });
 

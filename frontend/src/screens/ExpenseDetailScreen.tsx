@@ -1,22 +1,18 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import {
-  Alert,
-  Dimensions,
-  FlatList,
-  Modal,
-  StyleSheet,
-  TextInput,
-  TouchableOpacity,
-  View,
-} from 'react-native';
+import { Alert, FlatList, Modal, TextInput, TouchableOpacity, View } from 'react-native';
 import { Button, Input, Layout, Text } from '@ui-kitten/components';
+import { Ionicons, Feather } from '@expo/vector-icons';
 import { router, useLocalSearchParams } from 'expo-router';
 import type { ExpenseCategory, ExpenseResponse, ExpenseType } from '../services/expenseService';
 import { expenseService } from '../services/expenseService';
-import { CATEGORIES, ExpenseCategoryOption } from '../constants/categories';
-
-const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
-const vh = screenHeight / 100;
+import {
+  CATEGORIES,
+  ExpenseCategoryOption,
+  getCategoryLabel,
+  getCategoryIcon,
+} from '../constants/categories';
+import { useCurrencyInput } from '../hooks/useCurrencyInput';
+import { detailScreenStyles } from '../styles/detailScreenStyles';
 
 const formatMoney = (amount: number) => new Intl.NumberFormat('es-AR').format(Number(amount));
 
@@ -31,7 +27,7 @@ const ExpenseDetailScreen: React.FC = () => {
   const [isEditing, setIsEditing] = useState<boolean>(false);
   const [isSaving, setIsSaving] = useState<boolean>(false);
 
-  const [amount, setAmount] = useState<string>('');
+  const { displayValue, amount, handleAmountChange, setAmount } = useCurrencyInput();
   const [description, setDescription] = useState<string>('');
   const [selectedCategory, setSelectedCategory] = useState<ExpenseCategoryOption | null>(null);
   const [selectedType, setSelectedType] = useState<ExpenseType | null>(null);
@@ -77,21 +73,16 @@ const ExpenseDetailScreen: React.FC = () => {
       setModalVisible(false);
       setSearch('');
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [expense, isEditing]);
-
-  const categoryLabel = useMemo(() => {
-    if (!expense) return null;
-    return CATEGORIES.find(c => c.value === expense.category) ?? null;
-  }, [expense]);
 
   const title = useMemo(() => {
     if (isLoading) return 'Detalle';
     if (!expense) return 'Gasto';
     const desc = expense.description?.trim();
     if (desc) return desc;
-    if (categoryLabel) return `${categoryLabel.icon}  ${categoryLabel.label}`;
-    return expense.category ?? 'Gasto';
-  }, [isLoading, expense, categoryLabel]);
+    return getCategoryLabel(expense.category, 'EXPENSE');
+  }, [isLoading, expense]);
 
   const onDeletePress = () => {
     if (!expenseId) return;
@@ -156,9 +147,10 @@ const ExpenseDetailScreen: React.FC = () => {
 
     try {
       setIsSaving(true);
+      const trimmedDescription = description.trim();
       const updated = await expenseService.updateExpense(expenseId, {
         amount: parsedAmount,
-        description: description.trim(),
+        description: trimmedDescription || undefined,
         category: selectedCategory!.value as ExpenseCategory,
         type: selectedType!,
       });
@@ -174,9 +166,12 @@ const ExpenseDetailScreen: React.FC = () => {
   return (
     <>
       <Layout style={styles.container}>
-        <Text category="h6" style={styles.title}>
-          {title}
-        </Text>
+        {!isLoading && expense && !isEditing && (
+          <TouchableOpacity onPress={() => router.back()} style={styles.backButtonTop}>
+            <Ionicons name="arrow-back" size={20} color="#07a3e4" />
+            <Text style={styles.backButtonTopText}>Movimientos</Text>
+          </TouchableOpacity>
+        )}
 
         {isLoading ? (
           <Text appearance="hint">Cargando...</Text>
@@ -188,15 +183,16 @@ const ExpenseDetailScreen: React.FC = () => {
           <View style={styles.card}>
             <Text style={styles.label}>Monto *</Text>
             <Input
-              value={amount}
+              value={displayValue}
               onChangeText={text => {
-                setAmount(text);
+                handleAmountChange(text);
                 if (amountError) setAmountError(null);
               }}
-              placeholder="Ej. 1500"
+              placeholder="0,00"
               keyboardType="decimal-pad"
               style={styles.input}
               status={amountError ? 'danger' : 'basic'}
+              accessoryLeft={() => <Text style={styles.currencySymbol}>$</Text>}
             />
             {amountError && <Text style={styles.errorText}>{amountError}</Text>}
 
@@ -266,52 +262,125 @@ const ExpenseDetailScreen: React.FC = () => {
             {typeError && <Text style={styles.typeErrorText}>{typeError}</Text>}
 
             <View style={styles.actions}>
-              <Button appearance="outline" onPress={() => setIsEditing(false)} disabled={isSaving}>
-                Cancelar
-              </Button>
               <Button onPress={onSavePress} disabled={isSaving}>
                 {isSaving ? 'Guardando...' : 'Guardar cambios'}
+              </Button>
+              <Button appearance="outline" onPress={() => setIsEditing(false)} disabled={isSaving}>
+                Cancelar
               </Button>
             </View>
           </View>
         ) : (
           <View style={styles.card}>
-            <View style={styles.row}>
-              <Text appearance="hint">Monto</Text>
-              <Text style={styles.amount}>-${formatMoney(Number(expense.amount))}</Text>
+            {/* Header with title and actions */}
+            <View style={styles.cardHeader}>
+              <Text style={styles.cardTitle}>{title}</Text>
+              <View style={styles.cardActions}>
+                <TouchableOpacity
+                  onPress={() => setIsEditing(true)}
+                  disabled={!expense}
+                  style={styles.iconButtonEdit}
+                >
+                  <Feather name="edit-3" size={19} color="#07a3e4" />
+                </TouchableOpacity>
+                <TouchableOpacity
+                  onPress={onDeletePress}
+                  disabled={!expense || isDeleting}
+                  style={styles.iconButtonDelete}
+                >
+                  <Feather name="trash-2" size={19} color="#c0392b" />
+                </TouchableOpacity>
+              </View>
             </View>
-            <View style={styles.row}>
-              <Text appearance="hint">Descripción</Text>
-              <Text>{expense.description?.trim() ? expense.description : '-'}</Text>
-            </View>
-            <View style={styles.row}>
-              <Text appearance="hint">Categoría</Text>
-              <Text>
-                {categoryLabel ? `${categoryLabel.icon}  ${categoryLabel.label}` : expense.category}
-              </Text>
-            </View>
-            <View style={styles.row}>
-              <Text appearance="hint">Tipo</Text>
-              <Text>{typeLabelEs(expense.type)}</Text>
-            </View>
-            <View style={styles.row}>
-              <Text appearance="hint">Fecha</Text>
-              <Text>{new Date(expense.date).toLocaleString()}</Text>
-            </View>
-          </View>
-        )}
 
-        {!isEditing && (
-          <View style={styles.actions}>
-            <Button appearance="outline" onPress={() => router.back()}>
-              Volver
-            </Button>
-            <Button onPress={() => setIsEditing(true)} disabled={!expense}>
-              Editar
-            </Button>
-            <Button status="danger" onPress={onDeletePress} disabled={!expense || isDeleting}>
-              Eliminar
-            </Button>
+            {/* Amount Section */}
+            <View style={styles.amountSection}>
+              <View style={styles.iconCircle}>
+                <Ionicons name="trending-down" size={28} color="#c0392b" />
+              </View>
+              <View style={styles.amountContent}>
+                <Text style={styles.amountLabel}>Monto</Text>
+                <Text style={styles.amountValue}>-${formatMoney(Number(expense.amount))}</Text>
+              </View>
+            </View>
+
+            {/* Description */}
+            <View
+              style={[styles.detailRow, styles.detailRowWithBg, { backgroundColor: '#f5f5f5' }]}
+            >
+              <View style={[styles.iconContainer, styles.iconContainerGray]}>
+                <Ionicons name="document-text-outline" size={24} color="#666" />
+              </View>
+              <View style={styles.detailContent}>
+                <Text style={styles.detailLabel}>Descripción</Text>
+                <Text
+                  style={[
+                    styles.detailValue,
+                    !expense.description?.trim() && styles.detailValueItalic,
+                  ]}
+                >
+                  {expense.description?.trim() ? expense.description : 'Sin descripción'}
+                </Text>
+              </View>
+            </View>
+
+            {/* Category */}
+            <View
+              style={[styles.detailRow, styles.detailRowWithBg, { backgroundColor: '#e6f7ff' }]}
+            >
+              <View style={[styles.iconContainer, styles.iconContainerBlue]}>
+                <Ionicons
+                  name={getCategoryIcon(expense.category) as keyof typeof Ionicons.glyphMap}
+                  size={24}
+                  color="#07a3e4"
+                />
+              </View>
+              <View style={styles.detailContent}>
+                <Text style={styles.detailLabel}>Categoría</Text>
+                <Text style={styles.detailValue}>
+                  {getCategoryLabel(expense.category, 'EXPENSE')}
+                </Text>
+              </View>
+            </View>
+
+            {/* Type */}
+            <View
+              style={[
+                styles.detailRow,
+                styles.detailRowWithBg,
+                { backgroundColor: expense.type === 'FIXED' ? '#f4e8ff' : '#e8f8f0' },
+              ]}
+            >
+              <View
+                style={[
+                  styles.iconContainer,
+                  expense.type === 'FIXED' ? styles.iconContainerPurple : styles.iconContainerGreen,
+                ]}
+              >
+                <Ionicons
+                  name={expense.type === 'FIXED' ? 'repeat-outline' : 'stats-chart-outline'}
+                  size={24}
+                  color={expense.type === 'FIXED' ? '#8e44ad' : '#27ae60'}
+                />
+              </View>
+              <View style={styles.detailContent}>
+                <Text style={styles.detailLabel}>Tipo</Text>
+                <Text style={styles.detailValue}>{typeLabelEs(expense.type)}</Text>
+              </View>
+            </View>
+
+            {/* Date */}
+            <View
+              style={[styles.detailRowLast, styles.detailRowWithBg, { backgroundColor: '#fff4e6' }]}
+            >
+              <View style={[styles.iconContainer, styles.iconContainerOrange]}>
+                <Ionicons name="calendar-outline" size={24} color="#f39c12" />
+              </View>
+              <View style={styles.detailContent}>
+                <Text style={styles.detailLabel}>Fecha</Text>
+                <Text style={styles.detailValue}>{new Date(expense.date).toLocaleString()}</Text>
+              </View>
+            </View>
           </View>
         )}
       </Layout>
@@ -379,189 +448,16 @@ const ExpenseDetailScreen: React.FC = () => {
   );
 };
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: screenWidth * 0.05,
-    backgroundColor: '#E6F2FC',
+const styles = {
+  ...detailScreenStyles,
+  iconCircle: {
+    ...detailScreenStyles.iconCircle,
+    backgroundColor: '#fce8e6',
   },
-  title: {
-    marginBottom: vh * 1.2,
-    color: '#003366',
-    fontWeight: '700',
-  },
-  label: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#003366',
-    marginBottom: vh * 0.5,
-  },
-  input: {
-    marginBottom: vh * 2,
-    borderRadius: 10,
-    backgroundColor: '#fff',
-  },
-  errorText: {
-    color: '#FF3333',
-    fontSize: 13,
-    marginTop: -vh * 1.5,
-    marginBottom: vh * 1.5,
-  },
-  categoryErrorText: {
-    color: '#FF3333',
-    fontSize: 13,
-    marginTop: vh * 0.6,
-    marginBottom: vh * 1,
-  },
-  typeLabel: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#003366',
-    marginBottom: vh * 0.5,
-    marginTop: vh * 0.5,
-  },
-  typeErrorText: {
-    color: '#FF3333',
-    fontSize: 13,
-    marginTop: vh * 0.6,
-    marginBottom: vh * 1,
-  },
-  dropdownButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: '#fff',
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: '#ddd',
-    paddingHorizontal: 14,
-    paddingVertical: vh * 1.5,
-    marginBottom: 0,
-  },
-  dropdownButtonError: {
-    borderColor: '#FF3333',
-  },
-  dropdownButtonText: {
-    fontSize: 15,
-    color: '#003366',
-  },
-  dropdownPlaceholder: {
-    fontSize: 15,
-    color: '#aaa',
-  },
-  dropdownArrow: {
-    fontSize: 11,
-    color: '#006699',
-  },
-  typeContainer: {
-    flexDirection: 'row',
-    gap: 10,
-    marginBottom: vh * 2,
-  },
-  typeButton: {
-    flex: 1,
-    paddingVertical: vh * 1.3,
-    borderRadius: 10,
-    borderWidth: 1.5,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  typeButtonActive: {
-    backgroundColor: '#3498db',
-    borderColor: '#3498db',
-  },
-  typeButtonInactive: {
-    backgroundColor: '#fff',
-    borderColor: '#ddd',
-  },
-  typeButtonText: {
-    fontSize: 15,
-    fontWeight: '600',
-  },
-  typeButtonTextActive: {
-    color: '#ffffff',
-  },
-  typeButtonTextInactive: {
-    color: '#003366',
-  },
-  card: {
-    backgroundColor: '#fff',
-    borderRadius: 14,
-    padding: vh * 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 6,
-    elevation: 3,
-  },
-  row: {
-    marginBottom: vh * 1.2,
-  },
-  amount: {
+  amountValue: {
+    ...detailScreenStyles.amountValue,
     color: '#c0392b',
-    fontWeight: '800',
-    marginTop: 4,
   },
-  actions: {
-    marginTop: vh * 2.2,
-    gap: vh * 1.2,
-  },
-  modalFullScreen: {
-    flex: 1,
-    backgroundColor: '#fff',
-  },
-  modalContainer: {
-    flex: 1,
-    backgroundColor: '#fff',
-  },
-  modalHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingVertical: vh * 2,
-    borderBottomWidth: 1,
-    borderBottomColor: '#eee',
-  },
-  modalTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#003366',
-  },
-  modalClose: {
-    fontSize: 18,
-    color: '#006699',
-  },
-  searchInput: {
-    margin: 16,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-    backgroundColor: '#f5f5f5',
-    borderRadius: 10,
-    fontSize: 15,
-    color: '#003366',
-  },
-  categoryItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingVertical: 14,
-  },
-  categoryItemSelected: {
-    backgroundColor: '#E6F2FC',
-  },
-  categoryIcon: {
-    fontSize: 22,
-    marginRight: 14,
-  },
-  categoryLabel: {
-    fontSize: 15,
-    color: '#003366',
-  },
-  categoryLabelSelected: {
-    color: '#006699',
-    fontWeight: '600',
-  },
-});
+};
 
 export default ExpenseDetailScreen;

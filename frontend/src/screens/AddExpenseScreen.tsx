@@ -13,12 +13,13 @@ import { Layout, Text, Button, Input } from '@ui-kitten/components';
 import { router } from 'expo-router';
 import { expenseService, type ExpenseType } from '../services/expenseService';
 import { CATEGORIES, ExpenseCategoryOption } from '../constants/categories';
+import { useCurrencyInput } from '../hooks/useCurrencyInput';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 const vh = screenHeight / 100;
 
 const AddExpenseScreen = () => {
-  const [amount, setAmount] = useState('');
+  const { displayValue, amount, handleAmountChange } = useCurrencyInput();
   const [description, setDescription] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<ExpenseCategoryOption | null>(null);
   const [selectedType, setSelectedType] = useState<ExpenseType | null>(null);
@@ -95,15 +96,16 @@ const AddExpenseScreen = () => {
 
         <Text style={styles.label}>Monto *</Text>
         <Input
-          value={amount}
+          value={displayValue}
           onChangeText={text => {
-            setAmount(text);
+            handleAmountChange(text);
             if (amountError) setAmountError(null);
           }}
-          placeholder="Ej. 1500"
+          placeholder="0,00"
           keyboardType="decimal-pad"
           style={styles.input}
           status={amountError ? 'danger' : 'basic'}
+          accessoryLeft={() => <Text style={styles.currencySymbol}>$</Text>}
         />
         {amountError && <Text style={styles.errorText}>{amountError}</Text>}
 
@@ -280,6 +282,11 @@ const styles = StyleSheet.create({
     marginBottom: vh * 2,
     borderRadius: 10,
     backgroundColor: '#fff',
+  },
+  currencySymbol: {
+    fontSize: 16,
+    color: '#003366',
+    marginLeft: 8,
   },
   errorText: {
     color: '#FF3333',
