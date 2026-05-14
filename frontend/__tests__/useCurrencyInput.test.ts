@@ -165,37 +165,39 @@ describe('useCurrencyInput', () => {
     expect(result.current.formattedAmount).toBe('$ 100,00');
   });
 
-  it('should reject dots in input (invalid format)', () => {
-    const { result } = renderHook(() => useCurrencyInput('100'));
+  it('should strip dots from formatted input', () => {
+    const { result } = renderHook(() => useCurrencyInput());
 
     act(() => {
-      result.current.handleAmountChange('1.500.50');
+      result.current.handleAmountChange('1.500,50');
     });
 
-    // Invalid input should be rejected, amount stays unchanged
-    expect(result.current.amount).toBe('100');
-    expect(result.current.formattedAmount).toBe('$ 100,00');
+    // Dots are stripped, comma is used for decimals
+    expect(result.current.amount).toBe('1500.50');
+    expect(result.current.formattedAmount).toBe('$ 1.500,50');
   });
 
-  it('should reject single dot as decimal separator', () => {
-    const { result } = renderHook(() => useCurrencyInput('50'));
+  it('should handle pasting formatted currency', () => {
+    const { result } = renderHook(() => useCurrencyInput());
 
     act(() => {
-      result.current.handleAmountChange('100.50');
+      result.current.handleAmountChange('$ 1.234.567,89');
     });
 
-    // Should reject dot, amount stays unchanged
-    expect(result.current.amount).toBe('50');
+    // Should strip all formatting and parse correctly
+    expect(result.current.amount).toBe('1234567.89');
+    expect(result.current.formattedAmount).toBe('$ 1.234.567,89');
   });
 
-  it('should reject any input containing dots', () => {
-    const { result } = renderHook(() => useCurrencyInput('200'));
+  it('should handle multiple dots as thousands separators', () => {
+    const { result } = renderHook(() => useCurrencyInput());
 
     act(() => {
-      result.current.handleAmountChange('1.000');
+      result.current.handleAmountChange('1.000.000');
     });
 
-    // Should reject, amount stays unchanged
-    expect(result.current.amount).toBe('200');
+    // Dots are stripped, treated as integer
+    expect(result.current.amount).toBe('1000000');
+    expect(result.current.formattedAmount).toBe('$ 1.000.000,00');
   });
 });

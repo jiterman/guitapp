@@ -35,14 +35,8 @@ export const useCurrencyInput = (initialValue = ''): UseCurrencyInputReturn => {
   };
 
   const handleAmountChange = (text: string) => {
-    // Remove currency symbol and spaces
-    let cleaned = text.replace(/[$\s]/g, '');
-
-    // If input contains dots, it's likely a formatting error - reject it
-    // Users should only use commas for decimals
-    if (cleaned.includes('.')) {
-      return; // Invalid input, don't update
-    }
+    // Remove currency symbol, spaces, and dots (thousands separators from formatting)
+    let cleaned = text.replace(/[$\s.]/g, '');
 
     // Replace comma with dot for internal representation
     cleaned = cleaned.replace(/,/g, '.');
