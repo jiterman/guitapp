@@ -3,6 +3,7 @@ import { View, StyleSheet, TouchableOpacity } from 'react-native';
 import { Text } from '@ui-kitten/components';
 import { Ionicons } from '@expo/vector-icons';
 import { MovementResponse } from '../../services/movementService';
+import { getCategoryLabel } from '../../constants/categories';
 
 interface Props {
   movement: MovementResponse;
@@ -11,6 +12,8 @@ interface Props {
 
 const TransactionCard: React.FC<Props> = ({ movement, onPress }) => {
   const Container = onPress ? TouchableOpacity : View;
+  const displayText = movement.description || getCategoryLabel(movement.category, movement.type);
+
   return (
     <Container style={styles.row} onPress={onPress ? () => onPress(movement) : undefined}>
       <View style={styles.left}>
@@ -27,7 +30,7 @@ const TransactionCard: React.FC<Props> = ({ movement, onPress }) => {
           />
         </View>
         <View>
-          <Text category="s1">{movement.description ?? movement.category}</Text>
+          <Text category="s1">{displayText}</Text>
           <Text appearance="hint" category="c1">
             {new Date(movement.date).toLocaleString()}
           </Text>

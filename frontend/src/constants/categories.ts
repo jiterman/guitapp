@@ -48,3 +48,22 @@ export const INCOME_CATEGORIES: IncomeCategoryOption[] = [
   { label: 'Inversión', value: 'INVESTMENT', icon: '📈' },
   { label: 'Otros', value: 'OTHER', icon: '📦' },
 ];
+
+export const getCategoryLabel = (category: string, type: 'INCOME' | 'EXPENSE'): string => {
+  if (type === 'INCOME') {
+    const found = INCOME_CATEGORIES.find(c => c.value === category);
+    return found?.label ?? category;
+  }
+  const found = CATEGORIES.find(c => c.value === category);
+  return found?.label ?? category;
+};
+
+export const getCategoryOption = (
+  category: string,
+  type: 'INCOME' | 'EXPENSE'
+): ExpenseCategoryOption | IncomeCategoryOption | null => {
+  if (type === 'INCOME') {
+    return INCOME_CATEGORIES.find(c => c.value === category) ?? null;
+  }
+  return CATEGORIES.find(c => c.value === category) ?? null;
+};

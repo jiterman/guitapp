@@ -13,7 +13,7 @@ import { Button, Input, Layout, Text } from '@ui-kitten/components';
 import { router, useLocalSearchParams } from 'expo-router';
 import type { ExpenseCategory, ExpenseResponse, ExpenseType } from '../services/expenseService';
 import { expenseService } from '../services/expenseService';
-import { CATEGORIES, ExpenseCategoryOption } from '../constants/categories';
+import { CATEGORIES, ExpenseCategoryOption, getCategoryLabel } from '../constants/categories';
 import { useCurrencyInput } from '../hooks/useCurrencyInput';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
@@ -81,19 +81,13 @@ const ExpenseDetailScreen: React.FC = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [expense, isEditing]);
 
-  const categoryLabel = useMemo(() => {
-    if (!expense) return null;
-    return CATEGORIES.find(c => c.value === expense.category) ?? null;
-  }, [expense]);
-
   const title = useMemo(() => {
     if (isLoading) return 'Detalle';
     if (!expense) return 'Gasto';
     const desc = expense.description?.trim();
     if (desc) return desc;
-    if (categoryLabel) return `${categoryLabel.icon}  ${categoryLabel.label}`;
-    return expense.category ?? 'Gasto';
-  }, [isLoading, expense, categoryLabel]);
+    return getCategoryLabel(expense.category, 'EXPENSE');
+  }, [isLoading, expense]);
 
   const onDeletePress = () => {
     if (!expenseId) return;
@@ -289,9 +283,7 @@ const ExpenseDetailScreen: React.FC = () => {
             </View>
             <View style={styles.row}>
               <Text appearance="hint">Categoría</Text>
-              <Text>
-                {categoryLabel ? `${categoryLabel.icon}  ${categoryLabel.label}` : expense.category}
-              </Text>
+              <Text>{getCategoryLabel(expense.category, 'EXPENSE')}</Text>
             </View>
             <View style={styles.row}>
               <Text appearance="hint">Tipo</Text>

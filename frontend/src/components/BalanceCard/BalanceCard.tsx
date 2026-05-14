@@ -144,13 +144,13 @@ const styles = StyleSheet.create({
   incomeText: {
     color: '#1a9e5c',
     fontWeight: 'bold',
-    fontSize: 22,
+    fontSize: 18,
     textAlign: 'center',
   },
   expenseText: {
     color: '#c0392b',
     fontWeight: 'bold',
-    fontSize: 22,
+    fontSize: 18,
     textAlign: 'center',
   },
 });
