@@ -91,16 +91,16 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   avatar: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 46,
+    height: 46,
+    borderRadius: 24,
     borderWidth: 2,
     borderColor: '#07a3e4',
   },
   avatarPlaceholder: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 46,
+    height: 46,
+    borderRadius: 23,
     backgroundColor: '#E6F2FC',
     justifyContent: 'center',
     alignItems: 'center',
@@ -108,8 +108,8 @@ const styles = StyleSheet.create({
     borderColor: '#07a3e4',
   },
   avatarIcon: {
-    width: 20,
-    height: 20,
+    width: 23,
+    height: 23,
   },
   name: {
     fontSize: 18,
