@@ -10,7 +10,7 @@ import {
   View,
 } from 'react-native';
 import { Button, Input, Layout, Text } from '@ui-kitten/components';
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons, Feather } from '@expo/vector-icons';
 import { router, useLocalSearchParams } from 'expo-router';
 import type { ExpenseCategory, ExpenseResponse, ExpenseType } from '../services/expenseService';
 import { expenseService } from '../services/expenseService';
@@ -177,6 +177,13 @@ const ExpenseDetailScreen: React.FC = () => {
   return (
     <>
       <Layout style={styles.container}>
+        {!isLoading && expense && !isEditing && (
+          <TouchableOpacity onPress={() => router.back()} style={styles.backButtonTop}>
+            <Ionicons name="arrow-back" size={20} color="#07a3e4" />
+            <Text style={styles.backButtonTopText}>Movimientos</Text>
+          </TouchableOpacity>
+        )}
+
         {isLoading ? (
           <Text appearance="hint">Cargando...</Text>
         ) : !expense ? (
@@ -285,14 +292,14 @@ const ExpenseDetailScreen: React.FC = () => {
                   disabled={!expense}
                   style={styles.iconButtonEdit}
                 >
-                  <Ionicons name="pencil-outline" size={18} color="#07a3e4" />
+                  <Feather name="edit-3" size={19} color="#07a3e4" />
                 </TouchableOpacity>
                 <TouchableOpacity
                   onPress={onDeletePress}
                   disabled={!expense || isDeleting}
                   style={styles.iconButtonDelete}
                 >
-                  <Ionicons name="trash-outline" size={18} color="#c0392b" />
+                  <Feather name="trash-2" size={19} color="#c0392b" />
                 </TouchableOpacity>
               </View>
             </View>
@@ -364,7 +371,7 @@ const ExpenseDetailScreen: React.FC = () => {
             </View>
 
             {/* Date */}
-            <View style={styles.detailRow}>
+            <View style={styles.detailRowLast}>
               <View style={[styles.iconContainer, styles.iconContainerOrange]}>
                 <Ionicons name="calendar-outline" size={24} color="#f39c12" />
               </View>
@@ -374,13 +381,6 @@ const ExpenseDetailScreen: React.FC = () => {
               </View>
             </View>
           </View>
-        )}
-
-        {!isLoading && expense && !isEditing && (
-          <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-            <Ionicons name="arrow-back" size={20} color="#003366" />
-            <Text style={styles.backButtonText}>Volver</Text>
-          </TouchableOpacity>
         )}
       </Layout>
 
@@ -453,18 +453,16 @@ const styles = StyleSheet.create({
     padding: screenWidth * 0.05,
     backgroundColor: '#E6F2FC',
   },
-  backButton: {
+  backButtonTop: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: vh * 2,
-    paddingVertical: vh * 1.5,
-    gap: 8,
+    gap: 6,
+    marginBottom: vh * 1.5,
   },
-  backButtonText: {
-    fontSize: 16,
-    color: '#003366',
-    fontWeight: '600',
+  backButtonTopText: {
+    fontSize: 14,
+    color: '#07a3e4',
+    fontWeight: '400',
   },
   label: {
     fontSize: 16,
@@ -592,17 +590,17 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   iconButtonEdit: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: '#e6f7ff',
   },
   iconButtonDelete: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: '#ffe6e6',
@@ -613,7 +611,7 @@ const styles = StyleSheet.create({
     paddingVertical: vh * 2,
     borderBottomWidth: 1,
     borderBottomColor: '#f0f0f0',
-    marginBottom: vh * 2,
+    marginBottom: 0,
   },
   iconCircle: {
     width: 56,
@@ -628,7 +626,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   amountLabel: {
-    fontSize: 13,
+    fontSize: 14,
     color: '#666',
     marginBottom: 4,
   },
@@ -644,6 +642,13 @@ const styles = StyleSheet.create({
     paddingVertical: vh * 1.8,
     borderBottomWidth: 1,
     borderBottomColor: '#f8f8f8',
+  },
+  detailRowLast: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    paddingTop: vh * 1.8,
+    paddingBottom: 3,
+    borderBottomWidth: 0,
   },
   iconContainer: {
     width: 48,
@@ -673,7 +678,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   detailLabel: {
-    fontSize: 13,
+    fontSize: 14,
     color: '#666',
     marginBottom: 4,
   },
