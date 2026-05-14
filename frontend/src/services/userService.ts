@@ -21,7 +21,8 @@ export const userService = {
   completeOnboarding: async (
     firstName: string,
     targetFixedExpenses: number,
-    targetVariableExpenses: number
+    targetVariableExpenses: number,
+    estimatedMonthlyIncome: number
   ) => {
     const token = await authService.getToken();
     const response = await fetch(`${API_URL}/api/users/me/onboarding`, {
@@ -34,6 +35,7 @@ export const userService = {
         firstName,
         targetFixedExpenses,
         targetVariableExpenses,
+        estimatedMonthlyIncome,
       }),
     });
 

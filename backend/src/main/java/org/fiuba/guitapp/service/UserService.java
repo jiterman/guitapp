@@ -41,6 +41,7 @@ public class UserService {
                 user.getLastName(),
                 user.getAvatarUrl(),
                 user.isOnboardingCompleted(),
+                user.getEstimatedMonthlyIncome(),
                 user.getTargetFixedExpenses(),
                 user.getTargetVariableExpenses(),
                 user.getTargetSavings());
@@ -65,6 +66,7 @@ public class UserService {
         user.setTargetFixedExpenses(request.targetFixedExpenses());
         user.setTargetVariableExpenses(request.targetVariableExpenses());
         user.setTargetSavings(savings);
+        user.setEstimatedMonthlyIncome(request.estimatedMonthlyIncome());
         user.setOnboardingCompleted(true);
 
         userRepository.save(user);
@@ -91,6 +93,7 @@ public class UserService {
                 user.getLastName(),
                 user.getAvatarUrl(),
                 user.isOnboardingCompleted(),
+                user.getEstimatedMonthlyIncome(),
                 user.getTargetFixedExpenses(),
                 user.getTargetVariableExpenses(),
                 user.getTargetSavings());
@@ -135,6 +138,7 @@ public class UserService {
                     user.getLastName(),
                     user.getAvatarUrl(),
                     user.isOnboardingCompleted(),
+                    user.getEstimatedMonthlyIncome(),
                     user.getTargetFixedExpenses(),
                     user.getTargetVariableExpenses(),
                     user.getTargetSavings());

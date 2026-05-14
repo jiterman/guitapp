@@ -5,6 +5,7 @@ import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
+import java.math.BigDecimal;
 import java.util.UUID;
 
 import org.fiuba.guitapp.dto.InitiateEmailChangeRequest;
@@ -51,6 +52,7 @@ class UserControllerTests {
                 "Doe",
                 "https://avatar.png",
                 true,
+                BigDecimal.valueOf(5000),
                 30,
                 50,
                 20);
@@ -66,6 +68,7 @@ class UserControllerTests {
                 .andExpect(jsonPath("$.lastName").value("Doe"))
                 .andExpect(jsonPath("$.avatarUrl").value("https://avatar.png"))
                 .andExpect(jsonPath("$.onboardingCompleted").value(true))
+                .andExpect(jsonPath("$.estimatedMonthlyIncome").value(5000))
                 .andExpect(jsonPath("$.targetFixedExpenses").value(30))
                 .andExpect(jsonPath("$.targetVariableExpenses").value(50))
                 .andExpect(jsonPath("$.targetSavings").value(20));
@@ -76,7 +79,7 @@ class UserControllerTests {
     @Test
     @WithMockUser(username = "test@example.com")
     void completeOnboarding_ShouldReturnSuccessMessage() throws Exception {
-        OnboardingRequest request = new OnboardingRequest("Maria", 30, 50);
+        OnboardingRequest request = new OnboardingRequest("Maria", 30, 50, BigDecimal.valueOf(5000));
 
         doNothing().when(userService).completeOnboarding(eq("test@example.com"), any(OnboardingRequest.class));
 
@@ -92,7 +95,7 @@ class UserControllerTests {
     @Test
     @WithMockUser(username = "test@example.com")
     void completeOnboarding_ShouldReturnBadRequest_WithInvalidData() throws Exception {
-        OnboardingRequest request = new OnboardingRequest("", 30, 50);
+        OnboardingRequest request = new OnboardingRequest("", 30, 50, BigDecimal.valueOf(5000));
 
         mockMvc.perform(put("/api/users/me/onboarding")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -105,7 +108,7 @@ class UserControllerTests {
     @Test
     @WithMockUser(username = "test@example.com")
     void completeOnboarding_ShouldReturnBadRequest_WhenExpensesTooHigh() throws Exception {
-        OnboardingRequest request = new OnboardingRequest("John", 99, 50);
+        OnboardingRequest request = new OnboardingRequest("John", 99, 50, BigDecimal.valueOf(5000));
 
         mockMvc.perform(put("/api/users/me/onboarding")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -131,6 +134,7 @@ class UserControllerTests {
                 "Doe",
                 "https://avatar.png",
                 true,
+                BigDecimal.valueOf(5000),
                 30,
                 50,
                 20);
@@ -165,6 +169,7 @@ class UserControllerTests {
                 "Doe",
                 "https://avatar.png",
                 true,
+                BigDecimal.valueOf(5000),
                 30,
                 50,
                 20);

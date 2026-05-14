@@ -72,6 +72,7 @@ describe('OnboardingScreen', () => {
     fireEvent.press(getByText('Continuar'));
 
     expect(getByText('Tus Objetivos')).toBeTruthy();
+    expect(getByText('Ingresos Mensuales Estimados')).toBeTruthy();
     expect(getByText('Gastos Fijos (%)')).toBeTruthy();
   });
 
@@ -106,6 +107,20 @@ describe('OnboardingScreen', () => {
     });
   });
 
+  it('should show error if income is 0 or less', async () => {
+    const { getByText, getByPlaceholderText } = await renderScreen();
+
+    fireEvent.changeText(getByPlaceholderText('Ej. Chris'), 'Chris');
+    fireEvent.press(getByText('Continuar'));
+
+    fireEvent.changeText(getByPlaceholderText('Ej. 5000'), '0');
+    fireEvent.press(getByText('Finalizar Onboarding'));
+
+    await waitFor(() => {
+      expect(getByText('El ingreso estimado debe ser mayor a 0.')).toBeTruthy();
+    });
+  });
+
   it('should call userService and redirect on success', async () => {
     (userService.completeOnboarding as jest.Mock).mockResolvedValueOnce({});
 
@@ -114,12 +129,13 @@ describe('OnboardingScreen', () => {
     fireEvent.changeText(getByPlaceholderText('Ej. Chris'), 'Chris');
     fireEvent.press(getByText('Continuar'));
 
+    fireEvent.changeText(getByPlaceholderText('Ej. 5000'), '5000');
     fireEvent.changeText(getByPlaceholderText('Ej. 50'), '50');
     fireEvent.changeText(getByPlaceholderText('Ej. 30'), '30');
     fireEvent.press(getByText('Finalizar Onboarding'));
 
     await waitFor(() => {
-      expect(userService.completeOnboarding).toHaveBeenCalledWith('Chris', 50, 30);
+      expect(userService.completeOnboarding).toHaveBeenCalledWith('Chris', 50, 30, 5000);
       expect(router.replace).toHaveBeenCalledWith('/home');
     });
   });
