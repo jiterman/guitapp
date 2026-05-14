@@ -32,7 +32,7 @@ const ExpenseDetailScreen: React.FC = () => {
   const [isEditing, setIsEditing] = useState<boolean>(false);
   const [isSaving, setIsSaving] = useState<boolean>(false);
 
-  const { formattedAmount, amount, handleAmountChange, setAmount } = useCurrencyInput();
+  const { displayValue, amount, handleAmountChange, setAmount } = useCurrencyInput();
   const [description, setDescription] = useState<string>('');
   const [selectedCategory, setSelectedCategory] = useState<ExpenseCategoryOption | null>(null);
   const [selectedType, setSelectedType] = useState<ExpenseType | null>(null);
@@ -78,7 +78,8 @@ const ExpenseDetailScreen: React.FC = () => {
       setModalVisible(false);
       setSearch('');
     }
-  }, [expense, isEditing, setAmount]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [expense, isEditing]);
 
   const categoryLabel = useMemo(() => {
     if (!expense) return null;
@@ -189,15 +190,16 @@ const ExpenseDetailScreen: React.FC = () => {
           <View style={styles.card}>
             <Text style={styles.label}>Monto *</Text>
             <Input
-              value={formattedAmount}
+              value={displayValue}
               onChangeText={text => {
                 handleAmountChange(text);
                 if (amountError) setAmountError(null);
               }}
-              placeholder="$ 0,00"
+              placeholder="0,00"
               keyboardType="decimal-pad"
               style={styles.input}
               status={amountError ? 'danger' : 'basic'}
+              accessoryLeft={() => <Text style={styles.currencySymbol}>$</Text>}
             />
             {amountError && <Text style={styles.errorText}>{amountError}</Text>}
 
@@ -401,6 +403,11 @@ const styles = StyleSheet.create({
     marginBottom: vh * 2,
     borderRadius: 10,
     backgroundColor: '#fff',
+  },
+  currencySymbol: {
+    fontSize: 16,
+    color: '#003366',
+    marginLeft: 8,
   },
   errorText: {
     color: '#FF3333',

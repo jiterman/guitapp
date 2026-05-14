@@ -1,47 +1,55 @@
 import { useState } from 'react';
 
 interface UseCurrencyInputReturn {
-  formattedAmount: string;
+  displayValue: string;
   amount: string;
   handleAmountChange: (text: string) => void;
   setAmount: (value: string) => void;
 }
 
+/**
+ * Custom hook for handling currency input with automatic formatting.
+ * Formats numbers with thousands separators and decimal places while typing.
+ *
+ * @param initialValue - Initial amount value (as string number, e.g., "1500.50")
+ * @returns Object with displayValue (formatted), amount (raw), and handlers
+ */
 export const useCurrencyInput = (initialValue = ''): UseCurrencyInputReturn => {
   const [amount, setAmountInternal] = useState(initialValue);
 
+  /**
+   * Formats a numeric string to display with thousands separators and decimals.
+   * Example: "1500.5" -> "1.500,5"
+   */
   const formatCurrency = (value: string): string => {
-    // Remove all non-numeric characters except comma and dot
-    const cleaned = value.replace(/[^\d.,]/g, '');
+    if (!value) {
+      return '';
+    }
 
-    // Split into integer and decimal parts
-    const parts = cleaned.split(/[.,]/);
+    const cleaned = value.replace(/[^\d.]/g, '');
+    const parts = cleaned.split('.');
     let integerPart = parts[0] || '';
-    let decimalPart = parts[1] || '';
+    const decimalPart = parts[1];
 
-    // Remove leading zeros but keep at least one digit
     integerPart = integerPart.replace(/^0+/, '') || '0';
-
-    // Limit decimal to 2 digits
-    decimalPart = decimalPart.slice(0, 2);
-
-    // Add thousands separator
     const withSeparator = integerPart.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
 
-    // Always show 2 decimal places, padding with zeros if needed
-    const paddedDecimal = decimalPart.padEnd(2, '0');
+    if (decimalPart !== undefined) {
+      const limitedDecimal = decimalPart.slice(0, 2);
+      return `${withSeparator},${limitedDecimal}`;
+    }
 
-    return `$ ${withSeparator},${paddedDecimal}`;
+    return withSeparator;
   };
 
+  /**
+   * Handles text input changes, removing formatting and validating numeric input.
+   * Accepts commas as decimal separator and limits to 2 decimal places.
+   */
   const handleAmountChange = (text: string) => {
-    // Remove currency symbol, spaces, and dots (thousands separators from formatting)
     let cleaned = text.replace(/[$\s.]/g, '');
-
-    // Replace comma with dot for internal representation
     cleaned = cleaned.replace(/,/g, '.');
 
-    // Truncate decimals to 2 places if needed
     if (cleaned.includes('.')) {
       const [integerPart, decimalPart] = cleaned.split('.');
       if (decimalPart && decimalPart.length > 2) {
@@ -49,22 +57,24 @@ export const useCurrencyInput = (initialValue = ''): UseCurrencyInputReturn => {
       }
     }
 
-    // Validate it's a valid number format
     if (cleaned && !/^\d*\.?\d{0,2}$/.test(cleaned)) {
-      return; // Don't update if invalid format
+      return;
     }
 
     setAmountInternal(cleaned);
   };
 
+  /**
+   * Sets the amount directly (used for programmatic updates like loading existing values).
+   */
   const setAmount = (value: string) => {
     setAmountInternal(value);
   };
 
-  const formattedAmount = formatCurrency(amount);
+  const displayValue = formatCurrency(amount);
 
   return {
-    formattedAmount,
+    displayValue,
     amount,
     handleAmountChange,
     setAmount,
