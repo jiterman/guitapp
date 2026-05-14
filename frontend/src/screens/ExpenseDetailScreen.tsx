@@ -273,132 +273,123 @@ const ExpenseDetailScreen: React.FC = () => {
             {typeError && <Text style={styles.typeErrorText}>{typeError}</Text>}
 
             <View style={styles.actions}>
-              <Button appearance="outline" onPress={() => setIsEditing(false)} disabled={isSaving}>
-                Cancelar
-              </Button>
               <Button onPress={onSavePress} disabled={isSaving}>
                 {isSaving ? 'Guardando...' : 'Guardar cambios'}
+              </Button>
+              <Button appearance="outline" onPress={() => setIsEditing(false)} disabled={isSaving}>
+                Cancelar
               </Button>
             </View>
           </View>
         ) : (
-          <View style={styles.cardWrapper}>
-            <View style={styles.cardTopBorder} />
-            <View style={styles.cardContent}>
-              {/* Header with title and actions */}
-              <View style={styles.cardHeader}>
-                <Text style={styles.cardTitle}>{title}</Text>
-                <View style={styles.cardActions}>
-                  <TouchableOpacity
-                    onPress={() => setIsEditing(true)}
-                    disabled={!expense}
-                    style={styles.iconButtonEdit}
-                  >
-                    <Feather name="edit-3" size={19} color="#07a3e4" />
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    onPress={onDeletePress}
-                    disabled={!expense || isDeleting}
-                    style={styles.iconButtonDelete}
-                  >
-                    <Feather name="trash-2" size={19} color="#c0392b" />
-                  </TouchableOpacity>
-                </View>
+          <View style={styles.card}>
+            {/* Header with title and actions */}
+            <View style={styles.cardHeader}>
+              <Text style={styles.cardTitle}>{title}</Text>
+              <View style={styles.cardActions}>
+                <TouchableOpacity
+                  onPress={() => setIsEditing(true)}
+                  disabled={!expense}
+                  style={styles.iconButtonEdit}
+                >
+                  <Feather name="edit-3" size={19} color="#07a3e4" />
+                </TouchableOpacity>
+                <TouchableOpacity
+                  onPress={onDeletePress}
+                  disabled={!expense || isDeleting}
+                  style={styles.iconButtonDelete}
+                >
+                  <Feather name="trash-2" size={19} color="#c0392b" />
+                </TouchableOpacity>
               </View>
+            </View>
 
-              {/* Amount Section */}
-              <View style={styles.amountSection}>
-                <View style={styles.iconCircle}>
-                  <Ionicons name="trending-down" size={28} color="#c0392b" />
-                </View>
-                <View style={styles.amountContent}>
-                  <Text style={styles.amountLabel}>Monto</Text>
-                  <Text style={styles.amountValue}>-${formatMoney(Number(expense.amount))}</Text>
-                </View>
+            {/* Amount Section */}
+            <View style={styles.amountSection}>
+              <View style={styles.iconCircle}>
+                <Ionicons name="trending-down" size={28} color="#c0392b" />
               </View>
-
-              {/* Description */}
-              <View
-                style={[styles.detailRow, styles.detailRowWithBg, { backgroundColor: '#f5f5f5' }]}
-              >
-                <View style={[styles.iconContainer, styles.iconContainerGray]}>
-                  <Ionicons name="document-text-outline" size={24} color="#666" />
-                </View>
-                <View style={styles.detailContent}>
-                  <Text style={styles.detailLabel}>Descripción</Text>
-                  <Text
-                    style={[
-                      styles.detailValue,
-                      !expense.description?.trim() && styles.detailValueItalic,
-                    ]}
-                  >
-                    {expense.description?.trim() ? expense.description : 'Sin descripción'}
-                  </Text>
-                </View>
+              <View style={styles.amountContent}>
+                <Text style={styles.amountLabel}>Monto</Text>
+                <Text style={styles.amountValue}>-${formatMoney(Number(expense.amount))}</Text>
               </View>
+            </View>
 
-              {/* Category */}
-              <View
-                style={[styles.detailRow, styles.detailRowWithBg, { backgroundColor: '#e6f7ff' }]}
-              >
-                <View style={[styles.iconContainer, styles.iconContainerBlue]}>
-                  <Ionicons
-                    name={getCategoryIcon(expense.category) as keyof typeof Ionicons.glyphMap}
-                    size={24}
-                    color="#07a3e4"
-                  />
-                </View>
-                <View style={styles.detailContent}>
-                  <Text style={styles.detailLabel}>Categoría</Text>
-                  <Text style={styles.detailValue}>
-                    {getCategoryLabel(expense.category, 'EXPENSE')}
-                  </Text>
-                </View>
+            {/* Description */}
+            <View
+              style={[styles.detailRow, styles.detailRowWithBg, { backgroundColor: '#f5f5f5' }]}
+            >
+              <View style={[styles.iconContainer, styles.iconContainerGray]}>
+                <Ionicons name="document-text-outline" size={24} color="#666" />
               </View>
-
-              {/* Type */}
-              <View
-                style={[
-                  styles.detailRow,
-                  styles.detailRowWithBg,
-                  { backgroundColor: expense.type === 'FIXED' ? '#f4e8ff' : '#e8f8f0' },
-                ]}
-              >
-                <View
+              <View style={styles.detailContent}>
+                <Text style={styles.detailLabel}>Descripción</Text>
+                <Text
                   style={[
-                    styles.iconContainer,
-                    expense.type === 'FIXED'
-                      ? styles.iconContainerPurple
-                      : styles.iconContainerGreen,
+                    styles.detailValue,
+                    !expense.description?.trim() && styles.detailValueItalic,
                   ]}
                 >
-                  <Ionicons
-                    name={expense.type === 'FIXED' ? 'repeat-outline' : 'stats-chart-outline'}
-                    size={24}
-                    color={expense.type === 'FIXED' ? '#8e44ad' : '#27ae60'}
-                  />
-                </View>
-                <View style={styles.detailContent}>
-                  <Text style={styles.detailLabel}>Tipo</Text>
-                  <Text style={styles.detailValue}>{typeLabelEs(expense.type)}</Text>
-                </View>
+                  {expense.description?.trim() ? expense.description : 'Sin descripción'}
+                </Text>
               </View>
+            </View>
 
-              {/* Date */}
+            {/* Category */}
+            <View
+              style={[styles.detailRow, styles.detailRowWithBg, { backgroundColor: '#e6f7ff' }]}
+            >
+              <View style={[styles.iconContainer, styles.iconContainerBlue]}>
+                <Ionicons
+                  name={getCategoryIcon(expense.category) as keyof typeof Ionicons.glyphMap}
+                  size={24}
+                  color="#07a3e4"
+                />
+              </View>
+              <View style={styles.detailContent}>
+                <Text style={styles.detailLabel}>Categoría</Text>
+                <Text style={styles.detailValue}>
+                  {getCategoryLabel(expense.category, 'EXPENSE')}
+                </Text>
+              </View>
+            </View>
+
+            {/* Type */}
+            <View
+              style={[
+                styles.detailRow,
+                styles.detailRowWithBg,
+                { backgroundColor: expense.type === 'FIXED' ? '#f4e8ff' : '#e8f8f0' },
+              ]}
+            >
               <View
                 style={[
-                  styles.detailRowLast,
-                  styles.detailRowWithBg,
-                  { backgroundColor: '#fff4e6' },
+                  styles.iconContainer,
+                  expense.type === 'FIXED' ? styles.iconContainerPurple : styles.iconContainerGreen,
                 ]}
               >
-                <View style={[styles.iconContainer, styles.iconContainerOrange]}>
-                  <Ionicons name="calendar-outline" size={24} color="#f39c12" />
-                </View>
-                <View style={styles.detailContent}>
-                  <Text style={styles.detailLabel}>Fecha</Text>
-                  <Text style={styles.detailValue}>{new Date(expense.date).toLocaleString()}</Text>
-                </View>
+                <Ionicons
+                  name={expense.type === 'FIXED' ? 'repeat-outline' : 'stats-chart-outline'}
+                  size={24}
+                  color={expense.type === 'FIXED' ? '#8e44ad' : '#27ae60'}
+                />
+              </View>
+              <View style={styles.detailContent}>
+                <Text style={styles.detailLabel}>Tipo</Text>
+                <Text style={styles.detailValue}>{typeLabelEs(expense.type)}</Text>
+              </View>
+            </View>
+
+            {/* Date */}
+            <View
+              style={[styles.detailRowLast, styles.detailRowWithBg, { backgroundColor: '#fff4e6' }]}
+            >
+              <View style={[styles.iconContainer, styles.iconContainerOrange]}>
+                <Ionicons name="calendar-outline" size={24} color="#f39c12" />
+              </View>
+              <View style={styles.detailContent}>
+                <Text style={styles.detailLabel}>Fecha</Text>
+                <Text style={styles.detailValue}>{new Date(expense.date).toLocaleString()}</Text>
               </View>
             </View>
           </View>
@@ -584,28 +575,11 @@ const styles = StyleSheet.create({
   typeButtonTextInactive: {
     color: '#003366',
   },
-  cardWrapper: {
-    borderRadius: 20,
-    borderTopWidth: 4,
-    borderTopColor: '#FFBB00',
-    backgroundColor: '#fff',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 6,
-    elevation: 3,
-    overflow: 'hidden',
-  },
-  cardTopBorder: {
-    height: 0,
-  },
-  cardContent: {
-    padding: vh * 2.5,
-    paddingTop: vh * 2.1,
-  },
   card: {
     backgroundColor: '#fff',
     borderRadius: 20,
+    borderTopWidth: 4,
+    borderTopColor: '#FFBB00',
     padding: vh * 2.5,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
