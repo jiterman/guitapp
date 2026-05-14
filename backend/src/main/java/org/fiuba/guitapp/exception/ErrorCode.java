@@ -13,5 +13,4 @@ public enum ErrorCode {
     VALIDATION_FAILED,
     RATE_LIMIT_EXCEEDED,
     UNKNOWN_ERROR,
-    EXPENSE_NOT_FOUND
 }
