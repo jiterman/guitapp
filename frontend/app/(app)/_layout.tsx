@@ -30,16 +30,34 @@ export default function AppLayout() {
     <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
       <View style={styles.header}>
         <View style={styles.greetingRow}>
-          <Image
-            source={require('../../assets/images/logo.png')}
-            style={styles.logo}
-            resizeMode="contain"
-          />
+          {user?.avatarUrl ? (
+            <Image source={{ uri: user.avatarUrl }} style={styles.avatar} resizeMode="cover" />
+          ) : (
+            <View style={styles.avatarPlaceholder}>
+              <Icon name="person-outline" style={styles.avatarIcon} fill="#07a3e4" />
+            </View>
+          )}
 
-          <Text style={styles.name}>
-            Hola, <Text style={styles.nameBold}>{user?.firstName ?? 'Usuario'}</Text>
-          </Text>
+          <View style={styles.greetingTextContainer}>
+            <Text style={styles.name}>
+              Hola, <Text style={styles.nameBold}>{user?.firstName ?? 'Usuario'}</Text>
+            </Text>
+            <View style={styles.dateRow}>
+              <Icon name="calendar-outline" style={styles.dateIcon} fill="#6b8aa1" />
+              <Text style={styles.dateText}>
+                {new Date().toLocaleDateString('es-ES', {
+                  weekday: 'long',
+                  day: 'numeric',
+                  month: 'long',
+                })}
+              </Text>
+            </View>
+          </View>
         </View>
+
+        <TouchableOpacity style={styles.notificationButton}>
+          <Icon name="bell-outline" style={styles.notificationIcon} fill="#003366" />
+        </TouchableOpacity>
       </View>
 
       <Stack screenOptions={{ headerShown: false }} />
@@ -53,6 +71,9 @@ const styles = StyleSheet.create({
     backgroundColor: '#c8dff0',
   },
   header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     paddingHorizontal: screenWidth * 0.05,
     paddingVertical: vh * 1.5,
     paddingTop: vh * 2,
@@ -63,11 +84,32 @@ const styles = StyleSheet.create({
   greetingRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: 12,
+    flex: 1,
   },
-  logo: {
-    width: 32,
-    height: 32,
+  greetingTextContainer: {
+    flex: 1,
+  },
+  avatar: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    borderWidth: 2,
+    borderColor: '#07a3e4',
+  },
+  avatarPlaceholder: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#E6F2FC',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: '#07a3e4',
+  },
+  avatarIcon: {
+    width: 20,
+    height: 20,
   },
   name: {
     fontSize: 18,
@@ -78,6 +120,39 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: 'bold',
     color: '#003366',
+  },
+  dateRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    marginTop: 2,
+  },
+  dateIcon: {
+    width: 14,
+    height: 14,
+  },
+  dateText: {
+    fontSize: 13,
+    color: '#6b8aa1',
+  },
+  notificationButton: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: '#fff',
+    borderWidth: 2,
+    borderColor: '#FFBB00',
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  notificationIcon: {
+    width: 24,
+    height: 24,
   },
   logoutButton: {
     backgroundColor: '#fff',
