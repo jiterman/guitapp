@@ -152,9 +152,10 @@ const ExpenseDetailScreen: React.FC = () => {
 
     try {
       setIsSaving(true);
+      const trimmedDescription = description.trim();
       const updated = await expenseService.updateExpense(expenseId, {
         amount: parsedAmount,
-        description: description.trim(),
+        description: trimmedDescription || undefined,
         category: selectedCategory!.value as ExpenseCategory,
         type: selectedType!,
       });

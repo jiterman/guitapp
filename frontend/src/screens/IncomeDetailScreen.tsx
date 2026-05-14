@@ -135,9 +135,10 @@ const IncomeDetailScreen: React.FC = () => {
 
     try {
       setIsSaving(true);
+      const trimmedDescription = description.trim();
       const updated = await incomeService.updateIncome(incomeId, {
         amount: parsedAmount,
-        description: description.trim(),
+        description: trimmedDescription || undefined,
         category: selectedCategory!.value as unknown as IncomeCategory,
       });
       setIncome(updated);
