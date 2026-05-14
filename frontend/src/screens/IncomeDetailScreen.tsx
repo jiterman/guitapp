@@ -72,16 +72,19 @@ const IncomeDetailScreen: React.FC = () => {
     }
   }, [income, isEditing]);
 
-  const title = useMemo(() => {
-    if (isLoading) return 'Detalle';
-    if (!income) return 'Ingreso';
-    return income.description ?? income.category ?? 'Ingreso';
-  }, [isLoading, income]);
-
   const categoryLabel = useMemo(() => {
     if (!income) return null;
     return INCOME_CATEGORIES.find(c => c.value === income.category) ?? null;
   }, [income]);
+
+  const title = useMemo(() => {
+    if (isLoading) return 'Detalle';
+    if (!income) return 'Ingreso';
+    const desc = income.description?.trim();
+    if (desc) return desc;
+    if (categoryLabel) return `${categoryLabel.icon}  ${categoryLabel.label}`;
+    return income.category ?? 'Ingreso';
+  }, [isLoading, income, categoryLabel]);
 
   const onDeletePress = () => {
     if (!incomeId) return;
@@ -138,7 +141,7 @@ const IncomeDetailScreen: React.FC = () => {
       setIsSaving(true);
       const updated = await incomeService.updateIncome(incomeId, {
         amount: parsedAmount,
-        description: description.trim() || undefined,
+        description: description.trim(),
         category: selectedCategory!.value as unknown as IncomeCategory,
       });
       setIncome(updated);
@@ -220,7 +223,7 @@ const IncomeDetailScreen: React.FC = () => {
             </View>
             <View style={styles.row}>
               <Text appearance="hint">Descripción</Text>
-              <Text>{income.description ?? '-'}</Text>
+              <Text>{income.description?.trim() ? income.description : '-'}</Text>
             </View>
             <View style={styles.row}>
               <Text appearance="hint">Categoría</Text>

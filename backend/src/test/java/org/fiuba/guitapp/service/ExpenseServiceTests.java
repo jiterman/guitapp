@@ -11,6 +11,7 @@ import java.util.UUID;
 
 import org.fiuba.guitapp.dto.AddExpenseRequest;
 import org.fiuba.guitapp.dto.ExpenseResponse;
+import org.fiuba.guitapp.dto.UpdateExpenseRequest;
 import org.fiuba.guitapp.exception.AuthException;
 import org.fiuba.guitapp.exception.ErrorCode;
 import org.fiuba.guitapp.model.Expense;
@@ -287,5 +288,133 @@ class ExpenseServiceTests {
         AuthException exception = assertThrows(AuthException.class, () -> expenseService.getExpenseById(testEmail, expenseId));
 
         assertEquals(ErrorCode.EXPENSE_ACCESS_DENIED, exception.getErrorCode());
+    }
+
+    @Test
+    void updateExpense_ShouldUpdateFields_WhenProvided() {
+        UUID expenseId = UUID.randomUUID();
+        LocalDateTime now = LocalDateTime.now();
+
+        Expense expense = new Expense();
+        expense.setId(expenseId);
+        expense.setAmount(new BigDecimal("50.00"));
+        expense.setDescription("Old");
+        expense.setCategory(ExpenseCategory.CAFE);
+        expense.setType(ExpenseType.VARIABLE);
+        expense.setDate(now);
+        expense.setUser(testUser);
+
+        UpdateExpenseRequest request = new UpdateExpenseRequest(
+                new BigDecimal("120.00"),
+                "Updated lunch",
+                ExpenseCategory.RESTAURANT,
+                ExpenseType.FIXED);
+
+        when(userRepository.findByEmail(testEmail)).thenReturn(Optional.of(testUser));
+        when(expenseRepository.findById(expenseId)).thenReturn(Optional.of(expense));
+        when(expenseRepository.save(any(Expense.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        ExpenseResponse response = expenseService.updateExpense(testEmail, expenseId, request);
+
+        assertEquals(expenseId, response.id());
+        assertEquals(new BigDecimal("120.00"), response.amount());
+        assertEquals("Updated lunch", response.description());
+        assertEquals(ExpenseCategory.RESTAURANT, response.category());
+        assertEquals(ExpenseType.FIXED, response.type());
+        assertEquals(now, response.date());
+    }
+
+    @Test
+    void updateExpense_ShouldKeepExistingValues_WhenFieldsAreNull() {
+        UUID expenseId = UUID.randomUUID();
+        LocalDateTime now = LocalDateTime.now();
+
+        Expense expense = new Expense();
+        expense.setId(expenseId);
+        expense.setAmount(new BigDecimal("50.00"));
+        expense.setDescription("Keep");
+        expense.setCategory(ExpenseCategory.GYM);
+        expense.setType(ExpenseType.FIXED);
+        expense.setDate(now);
+        expense.setUser(testUser);
+
+        UpdateExpenseRequest request = new UpdateExpenseRequest(null, null, null, null);
+
+        when(userRepository.findByEmail(testEmail)).thenReturn(Optional.of(testUser));
+        when(expenseRepository.findById(expenseId)).thenReturn(Optional.of(expense));
+        when(expenseRepository.save(any(Expense.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        ExpenseResponse response = expenseService.updateExpense(testEmail, expenseId, request);
+
+        assertEquals(new BigDecimal("50.00"), response.amount());
+        assertEquals("Keep", response.description());
+        assertEquals(ExpenseCategory.GYM, response.category());
+        assertEquals(ExpenseType.FIXED, response.type());
+    }
+
+    @Test
+    void updateExpense_ShouldSetDescriptionToEmpty_WhenEmptyStringProvided() {
+        UUID expenseId = UUID.randomUUID();
+        LocalDateTime now = LocalDateTime.now();
+
+        Expense expense = new Expense();
+        expense.setId(expenseId);
+        expense.setAmount(new BigDecimal("40.00"));
+        expense.setDescription("Note");
+        expense.setCategory(ExpenseCategory.BAR);
+        expense.setType(ExpenseType.VARIABLE);
+        expense.setDate(now);
+        expense.setUser(testUser);
+
+        UpdateExpenseRequest request = new UpdateExpenseRequest(null, "", null, null);
+
+        when(userRepository.findByEmail(testEmail)).thenReturn(Optional.of(testUser));
+        when(expenseRepository.findById(expenseId)).thenReturn(Optional.of(expense));
+        when(expenseRepository.save(any(Expense.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        ExpenseResponse response = expenseService.updateExpense(testEmail, expenseId, request);
+
+        assertEquals("", response.description());
+        assertEquals(new BigDecimal("40.00"), response.amount());
+        assertEquals(ExpenseCategory.BAR, response.category());
+        assertEquals(ExpenseType.VARIABLE, response.type());
+    }
+
+    @Test
+    void updateExpense_ShouldThrowAuthException_WhenExpenseNotFound() {
+        UUID expenseId = UUID.randomUUID();
+        UpdateExpenseRequest request = new UpdateExpenseRequest(new BigDecimal("1.00"), "x", ExpenseCategory.OTHER, ExpenseType.VARIABLE);
+
+        when(userRepository.findByEmail(testEmail)).thenReturn(Optional.of(testUser));
+        when(expenseRepository.findById(expenseId)).thenReturn(Optional.empty());
+
+        AuthException exception = assertThrows(AuthException.class, () -> expenseService.updateExpense(testEmail, expenseId, request));
+
+        assertEquals(ErrorCode.EXPENSE_NOT_FOUND, exception.getErrorCode());
+        verify(expenseRepository, never()).save(any(Expense.class));
+    }
+
+    @Test
+    void updateExpense_ShouldThrowAuthException_WhenExpenseBelongsToAnotherUser() {
+        UUID expenseId = UUID.randomUUID();
+
+        User otherUser = new User();
+        otherUser.setId(UUID.randomUUID());
+        otherUser.setEmail("other@example.com");
+        otherUser.setStatus(UserStatus.ACTIVE);
+
+        Expense expense = new Expense();
+        expense.setId(expenseId);
+        expense.setUser(otherUser);
+
+        UpdateExpenseRequest request = new UpdateExpenseRequest(new BigDecimal("1.00"), "x", ExpenseCategory.OTHER, ExpenseType.VARIABLE);
+
+        when(userRepository.findByEmail(testEmail)).thenReturn(Optional.of(testUser));
+        when(expenseRepository.findById(expenseId)).thenReturn(Optional.of(expense));
+
+        AuthException exception = assertThrows(AuthException.class, () -> expenseService.updateExpense(testEmail, expenseId, request));
+
+        assertEquals(ErrorCode.EXPENSE_ACCESS_DENIED, exception.getErrorCode());
+        verify(expenseRepository, never()).save(any(Expense.class));
     }
 }

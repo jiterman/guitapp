@@ -1,7 +1,6 @@
 package org.fiuba.guitapp.service;
 
 import java.time.LocalDateTime;
-import java.util.Objects;
 import java.util.UUID;
 
 import org.fiuba.guitapp.dto.AddIncomeRequest;
@@ -25,9 +24,8 @@ public class IncomeService {
     private final IncomeRepository incomeRepository;
     private final UserRepository userRepository;
 
+    @SuppressWarnings("null")
     private Income findUserIncome(String email, UUID incomeId) {
-        Objects.requireNonNull(incomeId, "incomeId");
-
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new AuthException(ErrorCode.USER_NOT_FOUND, "User not found"));
 
@@ -65,15 +63,16 @@ public class IncomeService {
                 saved.getDate());
     }
 
+    @SuppressWarnings("null")
     @Transactional
     public void deleteIncome(String email, UUID incomeId) {
-        Income income = Objects.requireNonNull(findUserIncome(email, incomeId), "income");
+        Income income = findUserIncome(email, incomeId);
         incomeRepository.delete(income);
     }
 
     @Transactional(readOnly = true)
     public IncomeResponse getIncomeById(String email, UUID incomeId) {
-        Income income = Objects.requireNonNull(findUserIncome(email, incomeId), "income");
+        Income income = findUserIncome(email, incomeId);
         return new IncomeResponse(
                 income.getId(),
                 income.getAmount(),
@@ -82,9 +81,10 @@ public class IncomeService {
                 income.getDate());
     }
 
+    @SuppressWarnings("null")
     @Transactional
     public IncomeResponse updateIncome(String email, UUID incomeId, UpdateIncomeRequest request) {
-        Income income = Objects.requireNonNull(findUserIncome(email, incomeId), "income");
+        Income income = findUserIncome(email, incomeId);
 
         if (request.amount() != null) {
             income.setAmount(request.amount());

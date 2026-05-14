@@ -1,11 +1,11 @@
 package org.fiuba.guitapp.service;
 
 import java.time.LocalDateTime;
-import java.util.Objects;
 import java.util.UUID;
 
 import org.fiuba.guitapp.dto.AddExpenseRequest;
 import org.fiuba.guitapp.dto.ExpenseResponse;
+import org.fiuba.guitapp.dto.UpdateExpenseRequest;
 import org.fiuba.guitapp.exception.AuthException;
 import org.fiuba.guitapp.exception.ErrorCode;
 import org.fiuba.guitapp.model.Expense;
@@ -24,9 +24,8 @@ public class ExpenseService {
     private final ExpenseRepository expenseRepository;
     private final UserRepository userRepository;
 
+    @SuppressWarnings("null")
     private Expense findUserExpense(String email, UUID expenseId) {
-        Objects.requireNonNull(expenseId, "expenseId");
-
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new AuthException(ErrorCode.USER_NOT_FOUND, "User not found"));
 
@@ -66,15 +65,16 @@ public class ExpenseService {
                 saved.getDate());
     }
 
+    @SuppressWarnings("null")
     @Transactional
     public void deleteExpense(String email, UUID expenseId) {
-        Expense expense = Objects.requireNonNull(findUserExpense(email, expenseId), "expense");
+        Expense expense = findUserExpense(email, expenseId);
         expenseRepository.delete(expense);
     }
 
     @Transactional(readOnly = true)
     public ExpenseResponse getExpenseById(String email, UUID expenseId) {
-        Expense expense = Objects.requireNonNull(findUserExpense(email, expenseId), "expense");
+        Expense expense = findUserExpense(email, expenseId);
         return new ExpenseResponse(
                 expense.getId(),
                 expense.getAmount(),
@@ -82,5 +82,33 @@ public class ExpenseService {
                 expense.getCategory(),
                 expense.getType(),
                 expense.getDate());
+    }
+
+    @SuppressWarnings("null")
+    @Transactional
+    public ExpenseResponse updateExpense(String email, UUID expenseId, UpdateExpenseRequest request) {
+        Expense expense = findUserExpense(email, expenseId);
+
+        if (request.amount() != null) {
+            expense.setAmount(request.amount());
+        }
+        if (request.description() != null) {
+            expense.setDescription(request.description());
+        }
+        if (request.category() != null) {
+            expense.setCategory(request.category());
+        }
+        if (request.type() != null) {
+            expense.setType(request.type());
+        }
+
+        Expense saved = expenseRepository.save(expense);
+        return new ExpenseResponse(
+                saved.getId(),
+                saved.getAmount(),
+                saved.getDescription(),
+                saved.getCategory(),
+                saved.getType(),
+                saved.getDate());
     }
 }

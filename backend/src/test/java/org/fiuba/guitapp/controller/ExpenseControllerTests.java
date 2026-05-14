@@ -11,6 +11,7 @@ import java.util.UUID;
 
 import org.fiuba.guitapp.dto.AddExpenseRequest;
 import org.fiuba.guitapp.dto.ExpenseResponse;
+import org.fiuba.guitapp.dto.UpdateExpenseRequest;
 import org.fiuba.guitapp.model.ExpenseCategory;
 import org.fiuba.guitapp.model.ExpenseType;
 import org.fiuba.guitapp.service.ExpenseService;
@@ -207,5 +208,70 @@ class ExpenseControllerTests {
                 .andExpect(status().isForbidden());
 
         verify(expenseService, never()).deleteExpense(anyString(), any(UUID.class));
+    }
+
+    @Test
+    @WithMockUser(username = "test@example.com")
+    void updateExpense_ShouldReturnExpenseResponse_WhenRequestIsValid() throws Exception {
+        UUID expenseId = UUID.randomUUID();
+        UpdateExpenseRequest request = new UpdateExpenseRequest(
+                new BigDecimal("88.50"),
+                "Groceries",
+                ExpenseCategory.SUPERMARKET,
+                ExpenseType.VARIABLE);
+
+        ExpenseResponse response = new ExpenseResponse(
+                expenseId,
+                new BigDecimal("88.50"),
+                "Groceries",
+                ExpenseCategory.SUPERMARKET,
+                ExpenseType.VARIABLE,
+                LocalDateTime.now());
+
+        when(expenseService.updateExpense(eq("test@example.com"), eq(expenseId), any(UpdateExpenseRequest.class)))
+                .thenReturn(response);
+
+        mockMvc.perform(patch("/api/expenses/{expenseId}", expenseId)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(expenseId.toString()))
+                .andExpect(jsonPath("$.amount").value(88.50))
+                .andExpect(jsonPath("$.description").value("Groceries"))
+                .andExpect(jsonPath("$.category").value("SUPERMARKET"))
+                .andExpect(jsonPath("$.type").value("VARIABLE"));
+
+        verify(expenseService, times(1)).updateExpense(eq("test@example.com"), eq(expenseId), any(UpdateExpenseRequest.class));
+    }
+
+    @Test
+    @WithMockUser(username = "test@example.com")
+    void updateExpense_ShouldReturnBadRequest_WhenAmountIsNegative() throws Exception {
+        UUID expenseId = UUID.randomUUID();
+        UpdateExpenseRequest request = new UpdateExpenseRequest(
+                new BigDecimal("-1.00"),
+                "Bad",
+                ExpenseCategory.OTHER,
+                ExpenseType.VARIABLE);
+
+        mockMvc.perform(patch("/api/expenses/{expenseId}", expenseId)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isBadRequest());
+
+        verify(expenseService, never()).updateExpense(anyString(), any(UUID.class), any(UpdateExpenseRequest.class));
+    }
+
+    @Test
+    void updateExpense_ShouldReturnUnauthorized_WhenNotAuthenticated() throws Exception {
+        UUID expenseId = UUID.randomUUID();
+        String body = "{\"amount\": 10.00, \"category\": \"OTHER\", \"type\": \"FIXED\"}";
+
+        mockMvc.perform(patch("/api/expenses/{expenseId}", expenseId)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(body))
+                .andExpect(status().isForbidden());
+
+        verify(expenseService, never()).updateExpense(anyString(), any(UUID.class), any(UpdateExpenseRequest.class));
     }
 }
