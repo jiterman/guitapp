@@ -4,12 +4,14 @@ import java.time.LocalDateTime;
 
 import org.fiuba.guitapp.dto.AddExpenseRequest;
 import org.fiuba.guitapp.dto.ExpenseResponse;
+import org.fiuba.guitapp.event.ExpenseCreatedEvent;
 import org.fiuba.guitapp.exception.AuthException;
 import org.fiuba.guitapp.exception.ErrorCode;
 import org.fiuba.guitapp.model.Expense;
 import org.fiuba.guitapp.model.User;
 import org.fiuba.guitapp.repository.ExpenseRepository;
 import org.fiuba.guitapp.repository.UserRepository;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -21,7 +23,7 @@ public class ExpenseService {
 
     private final ExpenseRepository expenseRepository;
     private final UserRepository userRepository;
-    private final NotificationService notificationService;
+    private final ApplicationEventPublisher applicationEventPublisher;
 
     @Transactional
     public ExpenseResponse addExpense(String email, AddExpenseRequest request) {
@@ -37,7 +39,11 @@ public class ExpenseService {
 
         Expense saved = expenseRepository.save(expense);
 
-        notificationService.sendExpenseNotification(user, saved);
+        applicationEventPublisher.publishEvent(new ExpenseCreatedEvent(
+                saved.getId(),
+                user.getEmail(),
+                saved.getAmount(),
+                saved.getDate()));
 
         return new ExpenseResponse(
                 saved.getId(),

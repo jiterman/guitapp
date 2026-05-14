@@ -11,6 +11,7 @@ import java.util.UUID;
 
 import org.fiuba.guitapp.dto.AddExpenseRequest;
 import org.fiuba.guitapp.dto.ExpenseResponse;
+import org.fiuba.guitapp.event.ExpenseCreatedEvent;
 import org.fiuba.guitapp.exception.AuthException;
 import org.fiuba.guitapp.exception.ErrorCode;
 import org.fiuba.guitapp.model.Expense;
@@ -25,6 +26,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
 
 @ExtendWith(MockitoExtension.class)
 class ExpenseServiceTests {
@@ -36,7 +38,7 @@ class ExpenseServiceTests {
     private UserRepository userRepository;
 
     @Mock
-    private NotificationService notificationService;
+    private ApplicationEventPublisher applicationEventPublisher; // Mock ApplicationEventPublisher
 
     @InjectMocks
     private ExpenseService expenseService;
@@ -79,7 +81,7 @@ class ExpenseServiceTests {
         assertNotNull(response.date());
         verify(userRepository, times(1)).findByEmail(testEmail);
         verify(expenseRepository, times(1)).save(any(Expense.class));
-        verify(notificationService, times(1)).sendExpenseNotification(eq(testUser), any(Expense.class));
+        verify(applicationEventPublisher, times(1)).publishEvent(any(ExpenseCreatedEvent.class)); // Verify ExpenseCreatedEvent publishing
     }
 
     @Test
@@ -93,6 +95,7 @@ class ExpenseServiceTests {
 
         assertEquals(ErrorCode.USER_NOT_FOUND, exception.getErrorCode());
         verify(expenseRepository, never()).save(any(Expense.class));
+        verify(applicationEventPublisher, never()).publishEvent(any(ExpenseCreatedEvent.class)); // No event published if user not found
     }
 
     @Test
@@ -115,7 +118,7 @@ class ExpenseServiceTests {
 
         assertNull(response.description());
         verify(expenseRepository, times(1)).save(any(Expense.class));
-        verify(notificationService, times(1)).sendExpenseNotification(eq(testUser), any(Expense.class));
+        verify(applicationEventPublisher, times(1)).publishEvent(any(ExpenseCreatedEvent.class)); // Verify ExpenseCreatedEvent publishing
     }
 
     @Test
@@ -140,6 +143,6 @@ class ExpenseServiceTests {
         expenseService.addExpense(testEmail, request);
 
         verify(expenseRepository, times(1)).save(any(Expense.class));
-        verify(notificationService, times(1)).sendExpenseNotification(eq(testUser), any(Expense.class));
+        verify(applicationEventPublisher, times(1)).publishEvent(any(ExpenseCreatedEvent.class)); // Verify ExpenseCreatedEvent publishing
     }
 }
