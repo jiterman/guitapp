@@ -1,7 +1,5 @@
 package org.fiuba.guitapp.service;
 
-import java.math.BigDecimal;
-
 import org.fiuba.guitapp.model.User;
 import org.springframework.stereotype.Service;
 
@@ -15,7 +13,7 @@ import lombok.extern.slf4j.Slf4j;
 @Service
 public class NotificationService {
 
-    public void sendExpenseThresholdExceededNotification(User user, BigDecimal totalMonthlyExpenses) {
+    public void sendExpenseThresholdExceededNotification(User user, String body) {
         if (user.getFcmToken() == null || user.getFcmToken().isEmpty()) {
             return;
         }
@@ -23,14 +21,12 @@ public class NotificationService {
         try {
             Notification notification = Notification.builder()
                     .setTitle("Límite de gastos excedido")
-                    .setBody(String.format("Tus gastos mensuales han superado los %.2f con un total de %.2f",
-                            new BigDecimal("100000"), totalMonthlyExpenses))
+                    .setBody(body)
                     .build();
 
             Message message = Message.builder()
                     .setToken(user.getFcmToken())
                     .setNotification(notification)
-                    .putData("totalMonthlyExpenses", totalMonthlyExpenses.toString())
                     .build();
 
             String response = FirebaseMessaging.getInstance().send(message);

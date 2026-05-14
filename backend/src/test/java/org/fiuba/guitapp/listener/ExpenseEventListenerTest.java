@@ -17,7 +17,7 @@ import org.fiuba.guitapp.event.ExpenseCreatedEvent;
 import org.fiuba.guitapp.exception.AuthException;
 import org.fiuba.guitapp.exception.ErrorCode;
 import org.fiuba.guitapp.model.Expense;
-import org.fiuba.guitapp.model.ExpenseCategory;
+import org.fiuba.guitapp.model.ExpenseType;
 import org.fiuba.guitapp.model.User;
 import org.fiuba.guitapp.model.UserStatus;
 import org.fiuba.guitapp.repository.ExpenseRepository;
@@ -46,7 +46,6 @@ class ExpenseEventListenerTest {
     private ExpenseEventListener expenseEventListener;
 
     private User testUser;
-    private Expense testExpense;
     private ExpenseCreatedEvent testExpenseCreatedEvent;
 
     private final UUID expenseId = UUID.randomUUID();
@@ -62,88 +61,104 @@ class ExpenseEventListenerTest {
         testUser.setFirstName("John");
         testUser.setStatus(UserStatus.ACTIVE);
         testUser.setFcmToken("some_fcm_token");
-
-        testExpense = new Expense();
-        testExpense.setId(expenseId);
-        testExpense.setAmount(amount);
-        testExpense.setDescription("Lunch");
-        testExpense.setCategory(ExpenseCategory.RESTAURANT);
-        testExpense.setDate(date);
-        testExpense.setUser(testUser);
+        testUser.setEstimatedMonthlyIncome(new BigDecimal("100000"));
+        testUser.setTargetFixedExpenses(50); // Limit: 50,000
+        testUser.setTargetVariableExpenses(30); // Limit: 30,000
 
         testExpenseCreatedEvent = new ExpenseCreatedEvent(expenseId, userEmail, amount, date);
-
     }
 
     @Test
-    void handleExpenseCreatedEvent_ShouldSendThresholdExceededNotification_WhenThresholdExceeded() {
+    void handleExpenseCreatedEvent_ShouldSendCombinedNotification_WhenBothThresholdsExceeded() {
         when(userRepository.findByEmail(userEmail)).thenReturn(Optional.of(testUser));
-        when(expenseRepository.findById(expenseId)).thenReturn(Optional.of(testExpense));
 
-        // Given
-        Expense existingExpense1 = new Expense();
-        existingExpense1.setAmount(new BigDecimal("60000"));
-        Expense existingExpense2 = new Expense();
-        existingExpense2.setAmount(new BigDecimal("45000"));
+        Expense fixedExpense = new Expense();
+        fixedExpense.setAmount(new BigDecimal("60000"));
+        fixedExpense.setType(ExpenseType.FIXED);
+
+        Expense variableExpense = new Expense();
+        variableExpense.setAmount(new BigDecimal("40000"));
+        variableExpense.setType(ExpenseType.VARIABLE);
 
         when(expenseRepository.findByUserAndDateBetween(eq(testUser), any(LocalDateTime.class), any(LocalDateTime.class)))
-                .thenReturn(Arrays.asList(existingExpense1, existingExpense2));
+                .thenReturn(Arrays.asList(fixedExpense, variableExpense));
 
-        // When
         expenseEventListener.handleExpenseCreatedEvent(testExpenseCreatedEvent);
 
-        // Then
-        verify(notificationService, times(1)).sendExpenseThresholdExceededNotification(eq(testUser), any(BigDecimal.class));
-
+        verify(notificationService, times(1)).sendExpenseThresholdExceededNotification(eq(testUser),
+            argThat(s -> s.contains("gastos fijos") && s.contains("gastos variables")));
     }
 
     @Test
-    void handleExpenseCreatedEvent_ShouldSendIndividualExpenseNotification_WhenThresholdNotExceeded() {
+    void handleExpenseCreatedEvent_ShouldSendFixedNotification_WhenFixedExceeded() {
         when(userRepository.findByEmail(userEmail)).thenReturn(Optional.of(testUser));
-        when(expenseRepository.findById(expenseId)).thenReturn(Optional.of(testExpense));
 
-        // Given
-        Expense existingExpense = new Expense();
-        existingExpense.setAmount(new BigDecimal("10000"));
+        Expense fixedExpense = new Expense();
+        fixedExpense.setAmount(new BigDecimal("60000"));
+        fixedExpense.setType(ExpenseType.FIXED);
+
         when(expenseRepository.findByUserAndDateBetween(eq(testUser), any(LocalDateTime.class), any(LocalDateTime.class)))
-                .thenReturn(Collections.singletonList(existingExpense));
+                .thenReturn(Collections.singletonList(fixedExpense));
 
-        // When
         expenseEventListener.handleExpenseCreatedEvent(testExpenseCreatedEvent);
 
-        // Then
-
-        verify(notificationService, never()).sendExpenseThresholdExceededNotification(any(User.class), any(BigDecimal.class));
+        verify(notificationService, times(1)).sendExpenseThresholdExceededNotification(eq(testUser),
+            argThat(s -> s.contains("gastos fijos") && !s.contains("gastos variables")));
     }
 
     @Test
-    void handleExpenseCreatedEvent_ShouldThrowAuthException_WhenUserNotFound() {
-        // Given
-        when(userRepository.findByEmail(userEmail)).thenReturn(Optional.empty());
+    void handleExpenseCreatedEvent_ShouldSendVariableNotification_WhenVariableExceeded() {
+        when(userRepository.findByEmail(userEmail)).thenReturn(Optional.of(testUser));
 
-        // When & Then
-        AuthException thrown = assertThrows(AuthException.class, () -> {
-            expenseEventListener.handleExpenseCreatedEvent(testExpenseCreatedEvent);
-        });
+        Expense variableExpense = new Expense();
+        variableExpense.setAmount(new BigDecimal("35000"));
+        variableExpense.setType(ExpenseType.VARIABLE);
 
-        assertEquals(ErrorCode.USER_NOT_FOUND, thrown.getErrorCode());
+        when(expenseRepository.findByUserAndDateBetween(eq(testUser), any(LocalDateTime.class), any(LocalDateTime.class)))
+                .thenReturn(Collections.singletonList(variableExpense));
+
+        expenseEventListener.handleExpenseCreatedEvent(testExpenseCreatedEvent);
+
+        verify(notificationService, times(1)).sendExpenseThresholdExceededNotification(eq(testUser),
+            argThat(s -> !s.contains("gastos fijos") && s.contains("gastos variables")));
+    }
+
+    @Test
+    void handleExpenseCreatedEvent_ShouldNotSendNotification_WhenThresholdsNotExceeded() {
+        when(userRepository.findByEmail(userEmail)).thenReturn(Optional.of(testUser));
+
+        Expense fixedExpense = new Expense();
+        fixedExpense.setAmount(new BigDecimal("10000"));
+        fixedExpense.setType(ExpenseType.FIXED);
+
+        when(expenseRepository.findByUserAndDateBetween(eq(testUser), any(LocalDateTime.class), any(LocalDateTime.class)))
+                .thenReturn(Collections.singletonList(fixedExpense));
+
+        expenseEventListener.handleExpenseCreatedEvent(testExpenseCreatedEvent);
 
         verify(notificationService, never()).sendExpenseThresholdExceededNotification(any(), any());
     }
 
     @Test
-    void handleExpenseCreatedEvent_ShouldThrowAuthException_WhenExpenseNotFound() {
+    void handleExpenseCreatedEvent_ShouldNotSendNotification_WhenIncomeIsZero() {
+        testUser.setEstimatedMonthlyIncome(BigDecimal.ZERO);
         when(userRepository.findByEmail(userEmail)).thenReturn(Optional.of(testUser));
-        // Given
-        when(expenseRepository.findById(expenseId)).thenReturn(Optional.empty());
 
-        // When & Then
+        expenseEventListener.handleExpenseCreatedEvent(testExpenseCreatedEvent);
+
+        verify(notificationService, never()).sendExpenseThresholdExceededNotification(any(), any());
+        verify(expenseRepository, never()).findByUserAndDateBetween(any(), any(), any());
+    }
+
+    @Test
+    void handleExpenseCreatedEvent_ShouldThrowAuthException_WhenUserNotFound() {
+        when(userRepository.findByEmail(userEmail)).thenReturn(Optional.empty());
+
         AuthException thrown = assertThrows(AuthException.class, () -> {
             expenseEventListener.handleExpenseCreatedEvent(testExpenseCreatedEvent);
         });
 
-        assertEquals(ErrorCode.EXPENSE_NOT_FOUND, thrown.getErrorCode());
-
+        assertEquals(ErrorCode.USER_NOT_FOUND, thrown.getErrorCode());
         verify(notificationService, never()).sendExpenseThresholdExceededNotification(any(), any());
     }
 }
