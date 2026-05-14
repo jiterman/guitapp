@@ -5,13 +5,12 @@ import java.math.BigDecimal;
 import org.fiuba.guitapp.model.ExpenseCategory;
 import org.fiuba.guitapp.model.ExpenseType;
 
-import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.Size;
 
-public record AddExpenseRequest(
-        @NotNull @Positive BigDecimal amount,
+public record UpdateExpenseRequest(
+        @Positive BigDecimal amount,
         @Size(max = 255) String description,
-        @NotNull ExpenseCategory category,
-        @NotNull ExpenseType type) {
+        ExpenseCategory category,
+        ExpenseType type) {
 }

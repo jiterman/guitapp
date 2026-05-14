@@ -4,6 +4,8 @@ import { Layout, Text } from '@ui-kitten/components';
 import { movementService, MovementResponse } from '../services/movementService';
 import TransactionCard from '../components/TransactionCard/TransactionCard';
 import MovementFilter, { FilterState } from '../components/MovementFilter/MovementFilter';
+import { router } from 'expo-router';
+import { useIsFocused } from '@react-navigation/native';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 const vh = screenHeight / 100;
@@ -32,8 +34,10 @@ const applyTypeFilter = (data: MovementResponse[], movementType: FilterState['mo
 const TransactionsScreen: React.FC = () => {
   const [movements, setMovements] = useState<MovementResponse[]>([]);
   const [filterState, setFilterState] = useState<FilterState>(() => buildInitialFilter());
+  const isFocused = useIsFocused();
 
   useEffect(() => {
+    if (!isFocused) return;
     let mounted = true;
     (async () => {
       try {
@@ -59,9 +63,20 @@ const TransactionsScreen: React.FC = () => {
     return () => {
       mounted = false;
     };
-  }, [filterState]);
+  }, [filterState, isFocused]);
 
-  const renderItem = ({ item }: { item: MovementResponse }) => <TransactionCard movement={item} />;
+  const renderItem = ({ item }: { item: MovementResponse }) => (
+    <TransactionCard
+      movement={item}
+      onPress={movement => {
+        if (movement.type === 'INCOME') {
+          router.push({ pathname: '/income/[incomeId]', params: { incomeId: movement.id } });
+        } else if (movement.type === 'EXPENSE') {
+          router.push({ pathname: '/expense/[expenseId]', params: { expenseId: movement.id } });
+        }
+      }}
+    />
+  );
 
   return (
     <Layout style={styles.container}>

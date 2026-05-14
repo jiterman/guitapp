@@ -6,6 +6,7 @@ import { router } from 'expo-router';
 import { movementService, MovementResponse } from '../services/movementService';
 import TransactionCard from '../components/TransactionCard/TransactionCard';
 import BalanceCard from '../components/BalanceCard/BalanceCard';
+import { useIsFocused } from '@react-navigation/native';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 const vh = screenHeight / 100;
@@ -14,8 +15,10 @@ const HomeScreen = () => {
   const [movements, setMovements] = useState<MovementResponse[]>([]);
   const [incomeSum, setIncomeSum] = useState<number>(0);
   const [expenseSum, setExpenseSum] = useState<number>(0);
+  const isFocused = useIsFocused();
 
   useEffect(() => {
+    if (!isFocused) return;
     let mounted = true;
     (async () => {
       try {
@@ -28,7 +31,7 @@ const HomeScreen = () => {
     return () => {
       mounted = false;
     };
-  }, []);
+  }, [isFocused]);
 
   useEffect(() => {
     const now = new Date();
@@ -111,7 +114,22 @@ const HomeScreen = () => {
           <ScrollView style={styles.movementsList} nestedScrollEnabled>
             {movements.map(m => (
               <View key={m.id}>
-                <TransactionCard movement={m} />
+                <TransactionCard
+                  movement={m}
+                  onPress={movement => {
+                    if (movement.type === 'INCOME') {
+                      router.push({
+                        pathname: '/income/[incomeId]',
+                        params: { incomeId: movement.id },
+                      });
+                    } else if (movement.type === 'EXPENSE') {
+                      router.push({
+                        pathname: '/expense/[expenseId]',
+                        params: { expenseId: movement.id },
+                      });
+                    }
+                  }}
+                />
                 <View style={{ height: 1, backgroundColor: '#EEF6FB' }} />
               </View>
             ))}

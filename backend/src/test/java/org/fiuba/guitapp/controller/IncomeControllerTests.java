@@ -11,6 +11,7 @@ import java.util.UUID;
 
 import org.fiuba.guitapp.dto.AddIncomeRequest;
 import org.fiuba.guitapp.dto.IncomeResponse;
+import org.fiuba.guitapp.dto.UpdateIncomeRequest;
 import org.fiuba.guitapp.model.IncomeCategory;
 import org.fiuba.guitapp.service.IncomeService;
 import org.junit.jupiter.api.Test;
@@ -28,6 +29,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
+@SuppressWarnings("null")
 class IncomeControllerTests {
 
     @Autowired
@@ -144,5 +146,123 @@ class IncomeControllerTests {
                 .andExpect(status().isForbidden());
 
         verify(incomeService, never()).addIncome(anyString(), any(AddIncomeRequest.class));
+    }
+
+    @Test
+    @WithMockUser(username = "test@example.com")
+    void deleteIncome_ShouldReturnNoContent_WhenAuthenticated() throws Exception {
+        UUID incomeId = UUID.randomUUID();
+
+        doNothing().when(incomeService).deleteIncome("test@example.com", incomeId);
+
+        mockMvc.perform(delete("/api/incomes/{incomeId}", incomeId))
+                .andExpect(status().isNoContent());
+
+        verify(incomeService, times(1)).deleteIncome("test@example.com", incomeId);
+    }
+
+    @Test
+    void deleteIncome_ShouldReturnUnauthorized_WhenNotAuthenticated() throws Exception {
+        UUID incomeId = UUID.randomUUID();
+
+        mockMvc.perform(delete("/api/incomes/{incomeId}", incomeId))
+                .andExpect(status().isForbidden());
+
+        verify(incomeService, never()).deleteIncome(anyString(), any(UUID.class));
+    }
+
+    @Test
+    @WithMockUser(username = "test@example.com")
+    void getIncomeById_ShouldReturnIncomeResponse_WhenAuthenticated() throws Exception {
+        UUID incomeId = UUID.randomUUID();
+
+        IncomeResponse response = new IncomeResponse(
+                incomeId,
+                new BigDecimal("1500.00"),
+                "Freelance",
+                IncomeCategory.FREELANCE,
+                LocalDateTime.now());
+
+        when(incomeService.getIncomeById("test@example.com", incomeId)).thenReturn(response);
+
+        mockMvc.perform(get("/api/incomes/{incomeId}", incomeId))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(incomeId.toString()))
+                .andExpect(jsonPath("$.amount").value(1500.00))
+                .andExpect(jsonPath("$.description").value("Freelance"))
+                .andExpect(jsonPath("$.category").value("FREELANCE"));
+
+        verify(incomeService, times(1)).getIncomeById("test@example.com", incomeId);
+    }
+
+    @Test
+    void getIncomeById_ShouldReturnUnauthorized_WhenNotAuthenticated() throws Exception {
+        UUID incomeId = UUID.randomUUID();
+
+        mockMvc.perform(get("/api/incomes/{incomeId}", incomeId))
+                .andExpect(status().isForbidden());
+
+        verify(incomeService, never()).getIncomeById(anyString(), any(UUID.class));
+    }
+
+    @Test
+    @WithMockUser(username = "test@example.com")
+    void updateIncome_ShouldReturnIncomeResponse_WhenRequestIsValid() throws Exception {
+        UUID incomeId = UUID.randomUUID();
+        UpdateIncomeRequest request = new UpdateIncomeRequest(
+                new BigDecimal("2000.00"),
+                "Updated",
+                IncomeCategory.SALARY);
+
+        IncomeResponse response = new IncomeResponse(
+                incomeId,
+                new BigDecimal("2000.00"),
+                "Updated",
+                IncomeCategory.SALARY,
+                LocalDateTime.now());
+
+        when(incomeService.updateIncome(eq("test@example.com"), eq(incomeId), any(UpdateIncomeRequest.class)))
+                .thenReturn(response);
+
+        mockMvc.perform(patch("/api/incomes/{incomeId}", incomeId)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(incomeId.toString()))
+                .andExpect(jsonPath("$.amount").value(2000.00))
+                .andExpect(jsonPath("$.description").value("Updated"))
+                .andExpect(jsonPath("$.category").value("SALARY"));
+
+        verify(incomeService, times(1)).updateIncome(eq("test@example.com"), eq(incomeId), any(UpdateIncomeRequest.class));
+    }
+
+    @Test
+    @WithMockUser(username = "test@example.com")
+    void updateIncome_ShouldReturnBadRequest_WhenAmountIsNegative() throws Exception {
+        UUID incomeId = UUID.randomUUID();
+        UpdateIncomeRequest request = new UpdateIncomeRequest(
+                new BigDecimal("-1.00"),
+                "Updated",
+                IncomeCategory.SALARY);
+
+        mockMvc.perform(patch("/api/incomes/{incomeId}", incomeId)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isBadRequest());
+
+        verify(incomeService, never()).updateIncome(anyString(), any(UUID.class), any(UpdateIncomeRequest.class));
+    }
+
+    @Test
+    void updateIncome_ShouldReturnUnauthorized_WhenNotAuthenticated() throws Exception {
+        UUID incomeId = UUID.randomUUID();
+        String body = "{\"amount\": 100.00, \"category\": \"SALARY\"}";
+
+        mockMvc.perform(patch("/api/incomes/{incomeId}", incomeId)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(body))
+                .andExpect(status().isForbidden());
+
+        verify(incomeService, never()).updateIncome(anyString(), any(UUID.class), any(UpdateIncomeRequest.class));
     }
 }

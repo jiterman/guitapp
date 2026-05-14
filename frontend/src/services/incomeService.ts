@@ -16,6 +16,51 @@ export interface IncomeResponse {
   date: string;
 }
 
+export interface UpdateIncomeRequest {
+  amount?: number;
+  description?: string;
+  category?: IncomeCategory;
+}
+
+const getIncomeById = async (incomeId: string): Promise<IncomeResponse> => {
+  const token = await authService.getToken();
+  const response = await fetch(`${API_URL}/api/incomes/${encodeURIComponent(incomeId)}`, {
+    method: 'GET',
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({}));
+    throw { code: error.code, message: error.message ?? 'Get income failed' };
+  }
+
+  return response.json();
+};
+
+const updateIncome = async (
+  incomeId: string,
+  request: UpdateIncomeRequest
+): Promise<IncomeResponse> => {
+  const token = await authService.getToken();
+  const response = await fetch(`${API_URL}/api/incomes/${encodeURIComponent(incomeId)}`, {
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(request),
+  });
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({}));
+    throw { code: error.code, message: error.message ?? 'Update income failed' };
+  }
+
+  return response.json();
+};
+
 const addIncome = async (request: AddIncomeRequest): Promise<IncomeResponse> => {
   const token = await authService.getToken();
   const response = await fetch(`${API_URL}/api/incomes`, {
@@ -35,4 +80,19 @@ const addIncome = async (request: AddIncomeRequest): Promise<IncomeResponse> => 
   return response.json();
 };
 
-export const incomeService = { addIncome };
+const deleteIncome = async (incomeId: string): Promise<void> => {
+  const token = await authService.getToken();
+  const response = await fetch(`${API_URL}/api/incomes/${encodeURIComponent(incomeId)}`, {
+    method: 'DELETE',
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({}));
+    throw { code: error.code, message: error.message ?? 'Delete income failed' };
+  }
+};
+
+export const incomeService = { getIncomeById, updateIncome, addIncome, deleteIncome };

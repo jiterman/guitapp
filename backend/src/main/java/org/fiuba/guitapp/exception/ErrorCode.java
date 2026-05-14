@@ -3,6 +3,10 @@ package org.fiuba.guitapp.exception;
 public enum ErrorCode {
     MAIL_ALREADY_USED,
     USER_NOT_FOUND,
+    INCOME_NOT_FOUND,
+    INCOME_ACCESS_DENIED,
+    EXPENSE_NOT_FOUND,
+    EXPENSE_ACCESS_DENIED,
     INVALID_OTP,
     OTP_EXPIRED,
     USER_ALREADY_VERIFIED,
