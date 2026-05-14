@@ -53,7 +53,7 @@ export const detailScreenStyles = StyleSheet.create({
     fontWeight: '600',
     color: '#003366',
     marginBottom: vh * 0.5,
-    marginTop: vh * 0.5,
+    marginTop: vh * 2,
   },
   typeErrorText: {
     color: '#FF3333',
