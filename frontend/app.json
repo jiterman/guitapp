@@ -10,7 +10,8 @@
     "splash": {
       "image": "./assets/splash-icon.png",
       "resizeMode": "contain",
-      "backgroundColor": "#dff3ff"
+      "backgroundColor": "#dff3ff",
+      "imageWidth": 220
     },
     "plugins": [
       [
@@ -18,7 +19,8 @@
         {
           "image": "./assets/splash-icon.png",
           "resizeMode": "contain",
-          "backgroundColor": "#dff3ff"
+          "backgroundColor": "#dff3ff",
+          "imageWidth": 220
         }
       ]
     ],
@@ -30,16 +32,16 @@
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#dff3ff"
       },
-      "package": "com.guitapp"
+      "package": "org.fiuba.guitapp"
     },
     "web": {
       "favicon": "./assets/favicon.png"
     },
     "extra": {
       "eas": {
-        "projectId": "393fae22-3b84-4104-83d8-aae5420604f6"
+        "projectId": "2aa93de6-4bf5-41bf-ab64-42d1120c19d7"
       }
     },
-    "owner": "jiterman"
+    "owner": "guitapp-gdsi"
   }
 }
