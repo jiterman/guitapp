@@ -3,7 +3,7 @@ package org.fiuba.guitapp.event;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 import java.util.UUID;
 
 import org.fiuba.guitapp.model.ExpenseType;
@@ -16,7 +16,7 @@ class ExpenseCreatedEventTests {
         UUID expenseId = UUID.randomUUID();
         String userEmail = "test@example.com";
         BigDecimal amount = new BigDecimal("100.00");
-        LocalDateTime date = LocalDateTime.now();
+        LocalDate date = LocalDate.now();
         ExpenseType type = ExpenseType.FIXED;
 
         ExpenseCreatedEvent event = new ExpenseCreatedEvent(expenseId, userEmail, amount, date, type);
