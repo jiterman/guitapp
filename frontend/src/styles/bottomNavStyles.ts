@@ -11,7 +11,7 @@ export const bottomNavStyles = StyleSheet.create({
   },
   button: {
     flex: 1,
-    paddingVertical: 16,
+    paddingVertical: 12,
     alignItems: 'center',
     justifyContent: 'center',
   },

@@ -89,7 +89,10 @@ const ProfileScreen: React.FC = () => {
   return (
     <>
       <Layout style={styles.container}>
-        <ScrollView showsVerticalScrollIndicator={false}>
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={styles.scrollContent}
+        >
           {/* Profile Card */}
           <View style={styles.profileCard}>
             <View style={styles.avatarContainer}>
@@ -166,7 +169,29 @@ const ProfileScreen: React.FC = () => {
             </TouchableOpacity>
           </View>
 
-          <View style={{ height: vh * 3 }} />
+          {/* Cerrar sesión */}
+          <View style={styles.menuCard}>
+            <TouchableOpacity
+              style={styles.logoutItem}
+              onPress={async () => {
+                await authService.removeToken();
+                setUser(null);
+                router.replace('/login');
+              }}
+            >
+              <View
+                style={[styles.logoutIconCircle, { backgroundColor: 'rgba(108, 117, 125, 0.12)' }]}
+              >
+                <Ionicons name="log-out-outline" size={20} color="#6c757d" />
+              </View>
+
+              <View style={styles.menuText}>
+                <Text style={styles.menuLabel}>Cerrar sesión</Text>
+              </View>
+
+              <Ionicons name="chevron-forward" size={18} color="#6c757d" />
+            </TouchableOpacity>
+          </View>
         </ScrollView>
       </Layout>
 
@@ -222,8 +247,11 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#E6F2FC',
+  },
+  scrollContent: {
     padding: screenWidth * 0.05,
     paddingTop: vh * 2,
+    paddingBottom: vh * 3,
   },
   profileCard: {
     backgroundColor: '#fff',
@@ -308,6 +336,20 @@ const styles = StyleSheet.create({
     height: 1,
     backgroundColor: '#EEF6FB',
     marginHorizontal: screenWidth * 0.04,
+  },
+  logoutItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: screenWidth * 0.04,
+    paddingVertical: vh * 1,
+    gap: 12,
+  },
+  logoutIconCircle: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 
   // Bottom Sheet
