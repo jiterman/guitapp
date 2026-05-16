@@ -21,15 +21,62 @@ export const detailScreenStyles = StyleSheet.create({
     fontWeight: '400',
   },
   label: {
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: '600',
     color: '#003366',
-    marginBottom: vh * 0.5,
+    marginBottom: vh * 0.8,
+    marginTop: vh * 1.5,
   },
   input: {
     marginBottom: vh * 2,
     borderRadius: 10,
     backgroundColor: '#fff',
+  },
+  amountInputContainer: {
+    backgroundColor: '#FFF8E1',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#FFE082',
+    paddingVertical: vh * 2,
+    paddingHorizontal: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: vh * 1,
+  },
+  amountInputError: {
+    borderColor: '#FF3333',
+  },
+  amountCurrencySymbol: {
+    fontSize: 32,
+    fontWeight: '600',
+    color: '#FFA726',
+    marginRight: 8,
+  },
+  amountInput: {
+    flex: 1,
+    fontSize: 32,
+    fontWeight: '600',
+    color: '#FFA726',
+    padding: 0,
+  },
+  inputWithIcon: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#fff',
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
+    paddingHorizontal: 14,
+    paddingVertical: vh * 1.3,
+  },
+  inputIcon: {
+    marginRight: 10,
+  },
+  textInput: {
+    flex: 1,
+    fontSize: 15,
+    color: '#003366',
+    padding: 0,
   },
   currencySymbol: {
     fontSize: 16,
@@ -39,21 +86,21 @@ export const detailScreenStyles = StyleSheet.create({
   errorText: {
     color: '#FF3333',
     fontSize: 13,
-    marginTop: -vh * 1.5,
-    marginBottom: vh * 1.5,
+    marginTop: vh * 0.5,
+    marginBottom: vh * 0.5,
   },
   categoryErrorText: {
     color: '#FF3333',
     fontSize: 13,
     marginTop: vh * 0.6,
-    marginBottom: vh * 1,
+    marginBottom: vh * 0.5,
   },
   typeLabel: {
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: '600',
     color: '#003366',
-    marginBottom: vh * 0.5,
-    marginTop: vh * 2,
+    marginBottom: vh * 0.8,
+    marginTop: vh * 1.5,
   },
   typeErrorText: {
     color: '#FF3333',
@@ -68,13 +115,20 @@ export const detailScreenStyles = StyleSheet.create({
     backgroundColor: '#fff',
     borderRadius: 10,
     borderWidth: 1,
-    borderColor: '#ddd',
+    borderColor: '#E0E0E0',
     paddingHorizontal: 14,
     paddingVertical: vh * 1.5,
-    marginBottom: 0,
   },
   dropdownButtonError: {
     borderColor: '#FF3333',
+  },
+  dropdownContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  dropdownIcon: {
+    marginRight: 10,
   },
   dropdownButtonText: {
     fontSize: 15,
@@ -82,7 +136,7 @@ export const detailScreenStyles = StyleSheet.create({
   },
   dropdownPlaceholder: {
     fontSize: 15,
-    color: '#aaa',
+    color: '#B0BEC5',
   },
   dropdownArrow: {
     fontSize: 11,
@@ -91,7 +145,6 @@ export const detailScreenStyles = StyleSheet.create({
   typeContainer: {
     flexDirection: 'row',
     gap: 10,
-    marginBottom: vh * 2,
   },
   typeButton: {
     flex: 1,
@@ -102,12 +155,12 @@ export const detailScreenStyles = StyleSheet.create({
     justifyContent: 'center',
   },
   typeButtonActive: {
-    backgroundColor: '#3498db',
-    borderColor: '#3498db',
+    backgroundColor: '#42A5F5',
+    borderColor: '#42A5F5',
   },
   typeButtonInactive: {
     backgroundColor: '#fff',
-    borderColor: '#ddd',
+    borderColor: '#E0E0E0',
   },
   typeButtonText: {
     fontSize: 15,
@@ -117,7 +170,7 @@ export const detailScreenStyles = StyleSheet.create({
     color: '#ffffff',
   },
   typeButtonTextInactive: {
-    color: '#003366',
+    color: '#757575',
   },
   card: {
     backgroundColor: '#fff',
@@ -253,6 +306,47 @@ export const detailScreenStyles = StyleSheet.create({
   actions: {
     marginTop: vh * 2.2,
     gap: vh * 1.2,
+  },
+  saveButton: {
+    backgroundColor: '#FFBB00',
+    borderRadius: 12,
+    paddingVertical: vh * 1.5,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: vh * 3,
+  },
+  saveButtonDisabled: {
+    opacity: 0.6,
+  },
+  saveIcon: {
+    marginRight: 8,
+  },
+  saveButtonText: {
+    color: '#000',
+    fontWeight: 'bold',
+    fontSize: 16,
+  },
+  cancelButton: {
+    alignItems: 'center',
+    paddingVertical: vh * 1.5,
+    marginTop: vh * 1,
+  },
+  cancelButtonText: {
+    color: '#07a3e4',
+    fontSize: 15,
+    fontWeight: '500',
+  },
+  dateButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#fff',
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
+    paddingHorizontal: 14,
+    paddingVertical: vh * 1.5,
   },
   modalFullScreen: {
     flex: 1,

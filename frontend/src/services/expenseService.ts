@@ -34,6 +34,7 @@ export interface AddExpenseRequest {
   description?: string;
   category: ExpenseCategory;
   type: ExpenseType;
+  date: string;
 }
 
 export interface ExpenseResponse {
@@ -50,6 +51,7 @@ export interface UpdateExpenseRequest {
   description?: string;
   category?: ExpenseCategory;
   type?: ExpenseType;
+  date?: string;
 }
 
 const addExpense = async (request: AddExpenseRequest): Promise<ExpenseResponse> => {

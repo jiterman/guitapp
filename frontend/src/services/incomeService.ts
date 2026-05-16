@@ -6,6 +6,7 @@ export interface AddIncomeRequest {
   amount: number;
   description?: string;
   category: IncomeCategory;
+  date: string;
 }
 
 export interface IncomeResponse {
@@ -20,6 +21,7 @@ export interface UpdateIncomeRequest {
   amount?: number;
   description?: string;
   category?: IncomeCategory;
+  date?: string;
 }
 
 const getIncomeById = async (incomeId: string): Promise<IncomeResponse> => {

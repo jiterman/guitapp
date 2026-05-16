@@ -1,7 +1,8 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Alert, FlatList, Modal, TextInput, TouchableOpacity, View } from 'react-native';
 import { Button, Input, Layout, Text } from '@ui-kitten/components';
-import { Ionicons, Feather } from '@expo/vector-icons';
+import { Ionicons, Feather, MaterialIcons } from '@expo/vector-icons';
+import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import { router, useLocalSearchParams } from 'expo-router';
 import type { IncomeCategory, IncomeResponse } from '../services/incomeService';
 import { incomeService } from '../services/incomeService';
@@ -27,6 +28,8 @@ const IncomeDetailScreen: React.FC = () => {
   const { displayValue, amount, handleAmountChange, setAmount } = useCurrencyInput();
   const [description, setDescription] = useState<string>('');
   const [selectedCategory, setSelectedCategory] = useState<IncomeCategoryOption | null>(null);
+  const [selectedDate, setSelectedDate] = useState(new Date());
+  const [showDatePicker, setShowDatePicker] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
   const [search, setSearch] = useState('');
   const [amountError, setAmountError] = useState<string | null>(null);
@@ -60,11 +63,13 @@ const IncomeDetailScreen: React.FC = () => {
       setDescription(income.description ?? '');
       const selected = INCOME_CATEGORIES.find(c => c.value === income.category) ?? null;
       setSelectedCategory(selected);
+      setSelectedDate(new Date(income.date));
     } else {
       setAmountError(null);
       setCategoryError(null);
       setModalVisible(false);
       setSearch('');
+      setShowDatePicker(false);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [income, isEditing]);
@@ -110,6 +115,34 @@ const IncomeDetailScreen: React.FC = () => {
     setSearch('');
   };
 
+  const onDateChange = (event: DateTimePickerEvent, date?: Date) => {
+    setShowDatePicker(false);
+    if (event.type === 'set' && date) {
+      setSelectedDate(date);
+    }
+  };
+
+  const formatDate = (date: Date) => {
+    const day = date.getDate();
+    const monthNames = [
+      'enero',
+      'febrero',
+      'marzo',
+      'abril',
+      'mayo',
+      'junio',
+      'julio',
+      'agosto',
+      'septiembre',
+      'octubre',
+      'noviembre',
+      'diciembre',
+    ];
+    const month = monthNames[date.getMonth()];
+    const year = date.getFullYear();
+    return `${day} ${month} ${year}`;
+  };
+
   const onSavePress = async () => {
     if (!incomeId || !income) return;
 
@@ -131,10 +164,12 @@ const IncomeDetailScreen: React.FC = () => {
     try {
       setIsSaving(true);
       const trimmedDescription = description.trim();
+      const dateString = selectedDate.toISOString().split('T')[0];
       const updated = await incomeService.updateIncome(incomeId, {
         amount: parsedAmount,
         description: trimmedDescription || undefined,
         category: selectedCategory!.value as unknown as IncomeCategory,
+        date: dateString,
       });
       setIncome(updated);
       setIsEditing(false);
@@ -164,52 +199,89 @@ const IncomeDetailScreen: React.FC = () => {
         ) : isEditing ? (
           <View style={styles.card}>
             <Text style={styles.label}>Monto *</Text>
-            <Input
-              value={displayValue}
-              onChangeText={text => {
-                handleAmountChange(text);
-                if (amountError) setAmountError(null);
-              }}
-              placeholder="0,00"
-              keyboardType="decimal-pad"
-              style={styles.input}
-              status={amountError ? 'danger' : 'basic'}
-              accessoryLeft={() => <Text style={styles.currencySymbol}>$</Text>}
-            />
+            <View
+              style={[styles.amountInputContainer, amountError ? styles.amountInputError : null]}
+            >
+              <Text style={styles.amountCurrencySymbol}>$</Text>
+              <TextInput
+                value={displayValue}
+                onChangeText={text => {
+                  handleAmountChange(text);
+                  if (amountError) setAmountError(null);
+                }}
+                placeholder="0,00"
+                keyboardType="decimal-pad"
+                style={styles.amountInput}
+                placeholderTextColor="#FFC947"
+              />
+            </View>
             {amountError && <Text style={styles.errorText}>{amountError}</Text>}
 
             <Text style={styles.label}>Descripción</Text>
-            <Input
-              value={description}
-              onChangeText={setDescription}
-              placeholder="Ej. Pago por proyecto"
-              style={styles.input}
-            />
+            <View style={styles.inputWithIcon}>
+              <Ionicons
+                name="document-text-outline"
+                size={20}
+                color="#B0BEC5"
+                style={styles.inputIcon}
+              />
+              <TextInput
+                value={description}
+                onChangeText={setDescription}
+                placeholder="Ej. Pago por proyecto (opcional)"
+                style={styles.textInput}
+                placeholderTextColor="#B0BEC5"
+              />
+            </View>
 
             <Text style={styles.label}>Categoría *</Text>
             <TouchableOpacity
               style={[styles.dropdownButton, categoryError ? styles.dropdownButtonError : null]}
               onPress={() => setModalVisible(true)}
             >
-              <Text
-                style={selectedCategory ? styles.dropdownButtonText : styles.dropdownPlaceholder}
-              >
-                {selectedCategory
-                  ? `${selectedCategory.icon}  ${selectedCategory.label}`
-                  : 'Seleccioná una categoría'}
-              </Text>
-              <Text style={styles.dropdownArrow}>▼</Text>
+              <View style={styles.dropdownContent}>
+                <Ionicons
+                  name={selectedCategory?.icon || 'cash-outline'}
+                  size={20}
+                  color="#07a3e4"
+                  style={styles.dropdownIcon}
+                />
+                <Text
+                  style={selectedCategory ? styles.dropdownButtonText : styles.dropdownPlaceholder}
+                >
+                  {selectedCategory ? selectedCategory.label : 'Seleccioná una categoría'}
+                </Text>
+              </View>
+              <Ionicons name="chevron-down" size={20} color="#07a3e4" />
             </TouchableOpacity>
             {categoryError && <Text style={styles.categoryErrorText}>{categoryError}</Text>}
 
-            <View style={styles.actions}>
-              <Button onPress={onSavePress} disabled={isSaving}>
+            <Text style={styles.label}>Fecha *</Text>
+            <TouchableOpacity style={styles.dateButton} onPress={() => setShowDatePicker(true)}>
+              <Ionicons
+                name="calendar-outline"
+                size={20}
+                color="#07a3e4"
+                style={styles.dropdownIcon}
+              />
+              <Text style={styles.dropdownButtonText}>{formatDate(selectedDate)}</Text>
+              <Ionicons name="chevron-forward" size={20} color="#07a3e4" />
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[styles.saveButton, isSaving && styles.saveButtonDisabled]}
+              onPress={onSavePress}
+              disabled={isSaving}
+            >
+              <MaterialIcons name="save" size={20} color="#000" style={styles.saveIcon} />
+              <Text style={styles.saveButtonText}>
                 {isSaving ? 'Guardando...' : 'Guardar cambios'}
-              </Button>
-              <Button appearance="outline" onPress={() => setIsEditing(false)} disabled={isSaving}>
-                Cancelar
-              </Button>
-            </View>
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity onPress={() => setIsEditing(false)} style={styles.cancelButton}>
+              <Text style={styles.cancelButtonText}>Cancelar</Text>
+            </TouchableOpacity>
           </View>
         ) : (
           <View style={styles.card}>
@@ -359,6 +431,16 @@ const IncomeDetailScreen: React.FC = () => {
           </View>
         </View>
       </Modal>
+
+      {showDatePicker && (
+        <DateTimePicker
+          mode="date"
+          value={selectedDate}
+          display="default"
+          onChange={onDateChange}
+          maximumDate={new Date()}
+        />
+      )}
     </>
   );
 };

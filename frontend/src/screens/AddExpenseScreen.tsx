@@ -10,6 +10,8 @@ import {
   TextInput,
 } from 'react-native';
 import { Layout, Text, Button, Input } from '@ui-kitten/components';
+import { Ionicons, MaterialIcons } from '@expo/vector-icons';
+import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import { router } from 'expo-router';
 import { expenseService, type ExpenseType } from '../services/expenseService';
 import { CATEGORIES, ExpenseCategoryOption } from '../constants/categories';
@@ -23,6 +25,8 @@ const AddExpenseScreen = () => {
   const [description, setDescription] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<ExpenseCategoryOption | null>(null);
   const [selectedType, setSelectedType] = useState<ExpenseType | null>(null);
+  const [selectedDate, setSelectedDate] = useState(new Date());
+  const [showDatePicker, setShowDatePicker] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
   const [search, setSearch] = useState('');
@@ -44,6 +48,34 @@ const AddExpenseScreen = () => {
   const onSelectType = (type: ExpenseType) => {
     setSelectedType(type);
     setTypeError(null);
+  };
+
+  const onDateChange = (event: DateTimePickerEvent, date?: Date) => {
+    setShowDatePicker(false);
+    if (event.type === 'set' && date) {
+      setSelectedDate(date);
+    }
+  };
+
+  const formatDate = (date: Date) => {
+    const day = date.getDate();
+    const monthNames = [
+      'enero',
+      'febrero',
+      'marzo',
+      'abril',
+      'mayo',
+      'junio',
+      'julio',
+      'agosto',
+      'septiembre',
+      'octubre',
+      'noviembre',
+      'diciembre',
+    ];
+    const month = monthNames[date.getMonth()];
+    const year = date.getFullYear();
+    return `${day} ${month} ${year}`;
   };
 
   const onSubmit = async () => {
@@ -68,11 +100,13 @@ const AddExpenseScreen = () => {
 
     setSubmitting(true);
     try {
+      const dateString = selectedDate.toISOString().split('T')[0];
       await expenseService.addExpense({
         amount: parseFloat(amount),
         description: description.trim() || undefined,
         category: selectedCategory!.value,
         type: selectedType!,
+        date: dateString,
       });
       router.back();
     } catch {
@@ -95,41 +129,65 @@ const AddExpenseScreen = () => {
         </View>
 
         <Text style={styles.label}>Monto *</Text>
-        <Input
-          value={displayValue}
-          onChangeText={text => {
-            handleAmountChange(text);
-            if (amountError) setAmountError(null);
-          }}
-          placeholder="0,00"
-          keyboardType="decimal-pad"
-          style={styles.input}
-          status={amountError ? 'danger' : 'basic'}
-          accessoryLeft={() => <Text style={styles.currencySymbol}>$</Text>}
-        />
+        <View style={[styles.amountInputContainer, amountError ? styles.amountInputError : null]}>
+          <Text style={styles.amountCurrencySymbol}>$</Text>
+          <TextInput
+            value={displayValue}
+            onChangeText={text => {
+              handleAmountChange(text);
+              if (amountError) setAmountError(null);
+            }}
+            placeholder="0,00"
+            keyboardType="decimal-pad"
+            style={styles.amountInput}
+            placeholderTextColor="#FFC947"
+          />
+        </View>
         {amountError && <Text style={styles.errorText}>{amountError}</Text>}
 
         <Text style={styles.label}>Descripción</Text>
-        <Input
-          value={description}
-          onChangeText={setDescription}
-          placeholder="Ej. Almuerzo"
-          style={styles.input}
-        />
+        <View style={styles.inputWithIcon}>
+          <Ionicons
+            name="document-text-outline"
+            size={20}
+            color="#B0BEC5"
+            style={styles.inputIcon}
+          />
+          <TextInput
+            value={description}
+            onChangeText={setDescription}
+            placeholder="Ej. Compra del mes (opcional)"
+            style={styles.textInput}
+            placeholderTextColor="#B0BEC5"
+          />
+        </View>
 
         <Text style={styles.label}>Categoría *</Text>
         <TouchableOpacity
           style={[styles.dropdownButton, categoryError ? styles.dropdownButtonError : null]}
           onPress={() => setModalVisible(true)}
         >
-          <Text style={selectedCategory ? styles.dropdownButtonText : styles.dropdownPlaceholder}>
-            {selectedCategory
-              ? `${selectedCategory.icon}  ${selectedCategory.label}`
-              : 'Seleccioná una categoría'}
-          </Text>
-          <Text style={styles.dropdownArrow}>▼</Text>
+          <View style={styles.dropdownContent}>
+            <Ionicons
+              name={selectedCategory?.icon || 'cart-outline'}
+              size={20}
+              color="#07a3e4"
+              style={styles.dropdownIcon}
+            />
+            <Text style={selectedCategory ? styles.dropdownButtonText : styles.dropdownPlaceholder}>
+              {selectedCategory ? selectedCategory.label : 'Seleccioná una categoría'}
+            </Text>
+          </View>
+          <Ionicons name="chevron-down" size={20} color="#07a3e4" />
         </TouchableOpacity>
         {categoryError && <Text style={styles.categoryErrorText}>{categoryError}</Text>}
+
+        <Text style={styles.label}>Fecha *</Text>
+        <TouchableOpacity style={styles.dateButton} onPress={() => setShowDatePicker(true)}>
+          <Ionicons name="calendar-outline" size={20} color="#07a3e4" style={styles.dropdownIcon} />
+          <Text style={styles.dropdownButtonText}>{formatDate(selectedDate)}</Text>
+          <Ionicons name="chevron-forward" size={20} color="#07a3e4" />
+        </TouchableOpacity>
 
         <Text style={styles.typeLabel}>Tipo de gasto *</Text>
         <View style={styles.typeContainer}>
@@ -166,17 +224,26 @@ const AddExpenseScreen = () => {
                   : styles.typeButtonTextInactive,
               ]}
             >
-              Variable
+              <Ionicons name="trending-up" size={14} /> Variable
             </Text>
           </TouchableOpacity>
         </View>
         {typeError && <Text style={styles.typeErrorText}>{typeError}</Text>}
 
-        <Button style={styles.button} onPress={onSubmit} disabled={submitting}>
-          {() => (
-            <Text style={styles.buttonText}>{submitting ? 'Guardando...' : 'Guardar gasto'}</Text>
-          )}
-        </Button>
+        <TouchableOpacity
+          style={[styles.saveButton, submitting && styles.saveButtonDisabled]}
+          onPress={onSubmit}
+          disabled={submitting}
+        >
+          <MaterialIcons name="save" size={20} color="#000" style={styles.saveIcon} />
+          <Text style={styles.saveButtonText}>
+            {submitting ? 'Guardando...' : 'Guardar cambios'}
+          </Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity onPress={() => router.back()} style={styles.cancelButton}>
+          <Text style={styles.cancelButtonText}>Cancelar</Text>
+        </TouchableOpacity>
       </Layout>
 
       <Modal
@@ -238,6 +305,16 @@ const AddExpenseScreen = () => {
           </View>
         </View>
       </Modal>
+
+      {showDatePicker && (
+        <DateTimePicker
+          mode="date"
+          value={selectedDate}
+          display="default"
+          onChange={onDateChange}
+          maximumDate={new Date()}
+        />
+      )}
     </>
   );
 };
@@ -266,45 +343,82 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   label: {
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: '600',
     color: '#003366',
-    marginBottom: vh * 0.5,
+    marginBottom: vh * 0.8,
+    marginTop: vh * 1.5,
   },
   typeLabel: {
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: '600',
     color: '#003366',
-    marginBottom: vh * 0.5,
-    marginTop: vh * 2.5,
+    marginBottom: vh * 0.8,
+    marginTop: vh * 1.5,
   },
-  input: {
-    marginBottom: vh * 2,
-    borderRadius: 10,
+  amountInputContainer: {
+    backgroundColor: '#FFF8E1',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#FFE082',
+    paddingVertical: vh * 2,
+    paddingHorizontal: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: vh * 1,
+  },
+  amountInputError: {
+    borderColor: '#FF3333',
+  },
+  amountCurrencySymbol: {
+    fontSize: 32,
+    fontWeight: '600',
+    color: '#FFA726',
+    marginRight: 8,
+  },
+  amountInput: {
+    flex: 1,
+    fontSize: 32,
+    fontWeight: '600',
+    color: '#FFA726',
+    padding: 0,
+  },
+  inputWithIcon: {
+    flexDirection: 'row',
+    alignItems: 'center',
     backgroundColor: '#fff',
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
+    paddingHorizontal: 14,
+    paddingVertical: vh * 1.3,
   },
-  currencySymbol: {
-    fontSize: 16,
+  inputIcon: {
+    marginRight: 10,
+  },
+  textInput: {
+    flex: 1,
+    fontSize: 15,
     color: '#003366',
-    marginLeft: 8,
+    padding: 0,
   },
   errorText: {
     color: '#FF3333',
     fontSize: 13,
-    marginTop: -vh * 1.5,
-    marginBottom: vh * 1.5,
+    marginTop: vh * 0.5,
+    marginBottom: vh * 0.5,
   },
   categoryErrorText: {
     color: '#FF3333',
     fontSize: 13,
     marginTop: vh * 0.6,
-    marginBottom: vh * 1,
+    marginBottom: vh * 0.5,
   },
   typeErrorText: {
     color: '#FF3333',
     fontSize: 13,
     marginTop: vh * 0.6,
-    marginBottom: vh * 1,
+    marginBottom: vh * 0.5,
   },
   dropdownButton: {
     flexDirection: 'row',
@@ -313,13 +427,20 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     borderRadius: 10,
     borderWidth: 1,
-    borderColor: '#ddd',
+    borderColor: '#E0E0E0',
     paddingHorizontal: 14,
     paddingVertical: vh * 1.5,
-    marginBottom: 0,
   },
   dropdownButtonError: {
     borderColor: '#FF3333',
+  },
+  dropdownContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  dropdownIcon: {
+    marginRight: 10,
   },
   dropdownButtonText: {
     fontSize: 15,
@@ -327,16 +448,11 @@ const styles = StyleSheet.create({
   },
   dropdownPlaceholder: {
     fontSize: 15,
-    color: '#aaa',
-  },
-  dropdownArrow: {
-    fontSize: 11,
-    color: '#006699',
+    color: '#B0BEC5',
   },
   typeContainer: {
     flexDirection: 'row',
     gap: 10,
-    marginBottom: vh * 2,
   },
   typeButton: {
     flex: 1,
@@ -347,12 +463,12 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   typeButtonActive: {
-    backgroundColor: '#3498db',
-    borderColor: '#3498db',
+    backgroundColor: '#42A5F5',
+    borderColor: '#42A5F5',
   },
   typeButtonInactive: {
     backgroundColor: '#fff',
-    borderColor: '#ddd',
+    borderColor: '#E0E0E0',
   },
   typeButtonText: {
     fontSize: 15,
@@ -362,19 +478,48 @@ const styles = StyleSheet.create({
     color: '#ffffff',
   },
   typeButtonTextInactive: {
-    color: '#003366',
+    color: '#757575',
   },
-  button: {
-    borderRadius: 12,
+  saveButton: {
     backgroundColor: '#FFBB00',
-    borderColor: '#FFBB00',
-    paddingVertical: vh * 1.2,
+    borderRadius: 12,
+    paddingVertical: vh * 1.5,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
     marginTop: vh * 3,
   },
-  buttonText: {
-    color: '#000000',
+  saveButtonDisabled: {
+    opacity: 0.6,
+  },
+  saveIcon: {
+    marginRight: 8,
+  },
+  saveButtonText: {
+    color: '#000',
     fontWeight: 'bold',
     fontSize: 16,
+  },
+  cancelButton: {
+    alignItems: 'center',
+    paddingVertical: vh * 1.5,
+    marginTop: vh * 1,
+  },
+  cancelButtonText: {
+    color: '#07a3e4',
+    fontSize: 15,
+    fontWeight: '500',
+  },
+  dateButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#fff',
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
+    paddingHorizontal: 14,
+    paddingVertical: vh * 1.5,
   },
   modalFullScreen: {
     flex: 1,
