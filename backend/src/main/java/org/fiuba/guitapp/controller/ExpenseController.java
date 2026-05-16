@@ -6,6 +6,7 @@ import java.util.UUID;
 import org.fiuba.guitapp.dto.AddExpenseRequest;
 import org.fiuba.guitapp.dto.ExpenseResponse;
 import org.fiuba.guitapp.dto.ExpenseStatisticsResponse;
+import org.fiuba.guitapp.dto.FixedAndVariableStatisticsResponse;
 import org.fiuba.guitapp.dto.UpdateExpenseRequest;
 import org.fiuba.guitapp.service.ExpenseService;
 import org.springframework.http.ResponseEntity;
@@ -66,6 +67,18 @@ public class ExpenseController {
             @RequestParam(required = false) Integer month,
             @RequestParam(required = false) Integer day) {
         ExpenseStatisticsResponse response = expenseService.getExpenseStatistics(
+                principal.getName(), period, year, month, day);
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/statistics/fixed-variable")
+    public ResponseEntity<FixedAndVariableStatisticsResponse> getFixedAndVariableStatistics(
+            Principal principal,
+            @RequestParam(defaultValue = "monthly") String period,
+            @RequestParam(required = false) Integer year,
+            @RequestParam(required = false) Integer month,
+            @RequestParam(required = false) Integer day) {
+        FixedAndVariableStatisticsResponse response = expenseService.getFixedAndVariableStatistics(
                 principal.getName(), period, year, month, day);
         return ResponseEntity.ok(response);
     }

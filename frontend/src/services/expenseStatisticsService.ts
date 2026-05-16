@@ -13,6 +13,14 @@ export interface ExpenseStatisticsResponse {
   categories: ExpenseCategoryStatistics[];
 }
 
+export interface FixedAndVariableStatisticsResponse {
+  totalAmount: number;
+  fixedAmount: number;
+  variableAmount: number;
+  fixedPercentage: number;
+  variablePercentage: number;
+}
+
 export type PeriodType = 'all' | 'monthly' | 'daily';
 
 export interface ExpenseStatisticsParams {
@@ -22,10 +30,7 @@ export interface ExpenseStatisticsParams {
   day?: number;
 }
 
-const getExpenseStatistics = async (
-  params: ExpenseStatisticsParams
-): Promise<ExpenseStatisticsResponse> => {
-  const token = await authService.getToken();
+const buildQueryParams = (params: ExpenseStatisticsParams): URLSearchParams => {
   const queryParams = new URLSearchParams({ period: params.period });
 
   if (params.year !== undefined) {
@@ -37,6 +42,15 @@ const getExpenseStatistics = async (
   if (params.day !== undefined) {
     queryParams.append('day', params.day.toString());
   }
+
+  return queryParams;
+};
+
+const getExpenseStatistics = async (
+  params: ExpenseStatisticsParams
+): Promise<ExpenseStatisticsResponse> => {
+  const token = await authService.getToken();
+  const queryParams = buildQueryParams(params);
 
   const response = await fetch(`${API_URL}/api/expenses/statistics?${queryParams.toString()}`, {
     method: 'GET',
@@ -53,6 +67,31 @@ const getExpenseStatistics = async (
   return response.json();
 };
 
+const getFixedAndVariableStatistics = async (
+  params: ExpenseStatisticsParams
+): Promise<FixedAndVariableStatisticsResponse> => {
+  const token = await authService.getToken();
+  const queryParams = buildQueryParams(params);
+
+  const response = await fetch(
+    `${API_URL}/api/expenses/statistics/fixed-variable?${queryParams.toString()}`,
+    {
+      method: 'GET',
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    }
+  );
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({}));
+    throw { code: error.code, message: error.message ?? 'Get fixed vs variable statistics failed' };
+  }
+
+  return response.json();
+};
+
 export const expenseStatisticsService = {
   getExpenseStatistics,
+  getFixedAndVariableStatistics,
 };
