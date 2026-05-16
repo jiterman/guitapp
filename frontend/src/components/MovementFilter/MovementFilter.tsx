@@ -36,6 +36,8 @@ interface MovementFilterProps {
   initialYear?: number;
   initialMovementType?: MovementTypeFilter;
   hideMovementTypeFilter?: boolean;
+  externalModalVisible?: boolean;
+  onExternalModalClose?: () => void;
 }
 
 const FILTER_OPTIONS: { key: FilterKind; label: string }[] = [
@@ -68,6 +70,8 @@ const MovementFilter: React.FC<MovementFilterProps> = ({
   initialYear,
   initialMovementType = 'all',
   hideMovementTypeFilter = false,
+  externalModalVisible,
+  onExternalModalClose,
 }) => {
   const now = useMemo(() => new Date(), []);
   const [filterIndex, setFilterIndex] = useState(() =>
@@ -143,6 +147,9 @@ const MovementFilter: React.FC<MovementFilterProps> = ({
     }).start(() => {
       setIsModalVisible(false);
       setIsDayPickerVisible(false);
+      if (onExternalModalClose) {
+        onExternalModalClose();
+      }
     });
   };
 
@@ -176,6 +183,16 @@ const MovementFilter: React.FC<MovementFilterProps> = ({
   };
 
   useEffect(() => {
+    if (externalModalVisible !== undefined) {
+      if (externalModalVisible && !isModalVisible) {
+        openModal();
+      } else if (!externalModalVisible && isModalVisible) {
+        closeModal();
+      }
+    }
+  }, [externalModalVisible]);
+
+  useEffect(() => {
     if (!isModalVisible) return;
     sheetAnim.setValue(0);
     Animated.timing(sheetAnim, {
@@ -185,36 +202,40 @@ const MovementFilter: React.FC<MovementFilterProps> = ({
     }).start();
   }, [isModalVisible, sheetAnim]);
 
+  const isExternallyControlled = externalModalVisible !== undefined;
+
   return (
     <View style={styles.filterContainer}>
-      <View style={styles.actionsRow}>
-        {!hideMovementTypeFilter && (
-          <>
-            <TouchableOpacity
-              onPress={() => toggleMovementType('income')}
-              style={[
-                styles.typeButton,
-                movementType === 'income' && styles.typeButtonIncomeActive,
-              ]}
-            >
-              <Text style={[styles.typeLabel, styles.incomeText]}>Ingresos</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              onPress={() => toggleMovementType('expense')}
-              style={[
-                styles.typeButton,
-                movementType === 'expense' && styles.typeButtonExpenseActive,
-              ]}
-            >
-              <Text style={[styles.typeLabel, styles.expenseText]}>Gastos</Text>
-            </TouchableOpacity>
-          </>
-        )}
-        <TouchableOpacity onPress={openModal} style={styles.filterButton}>
-          <SvgXml xml={FILTER_ICON} width={18} height={18} />
-          <Text style={styles.filterButtonText}>Filtros</Text>
-        </TouchableOpacity>
-      </View>
+      {!isExternallyControlled && (
+        <View style={styles.actionsRow}>
+          {!hideMovementTypeFilter && (
+            <>
+              <TouchableOpacity
+                onPress={() => toggleMovementType('income')}
+                style={[
+                  styles.typeButton,
+                  movementType === 'income' && styles.typeButtonIncomeActive,
+                ]}
+              >
+                <Text style={[styles.typeLabel, styles.incomeText]}>Ingresos</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={() => toggleMovementType('expense')}
+                style={[
+                  styles.typeButton,
+                  movementType === 'expense' && styles.typeButtonExpenseActive,
+                ]}
+              >
+                <Text style={[styles.typeLabel, styles.expenseText]}>Gastos</Text>
+              </TouchableOpacity>
+            </>
+          )}
+          <TouchableOpacity onPress={openModal} style={styles.filterButton}>
+            <SvgXml xml={FILTER_ICON} width={18} height={18} />
+            <Text style={styles.filterButtonText}>Filtros</Text>
+          </TouchableOpacity>
+        </View>
+      )}
 
       <Modal visible={isModalVisible} transparent animationType="none" onRequestClose={closeModal}>
         <Pressable style={styles.modalOverlay} onPress={closeModal}>

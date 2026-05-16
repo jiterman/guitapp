@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, Dimensions, TouchableOpacity } from 'react-native';
-import { Text } from '@ui-kitten/components';
+import { View, StyleSheet, Dimensions, Text } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { PieChart } from 'react-native-gifted-charts';
 import { ExpenseCategoryStatistics } from '../../services/expenseStatisticsService';
@@ -47,6 +46,8 @@ const ExpenseChart: React.FC<ExpenseChartProps> = ({ data, totalAmount }) => {
       focused: isSelected,
       onPress: () => handleCategoryClick(item.category),
       text: `${item.percentage.toFixed(0)}%`,
+      strokeColor: '#fff',
+      strokeWidth: isSelected ? 4 : 2,
     };
   });
 
@@ -55,106 +56,63 @@ const ExpenseChart: React.FC<ExpenseChartProps> = ({ data, totalAmount }) => {
     : null;
 
   const chartRadius = screenWidth * 0.35;
-  const iconSize = 32;
-  const iconMargin = 10;
-  const wrapperSize = chartRadius * 2 + iconSize + iconMargin * 2;
-
-  const calculateIconPosition = (startAngle: number, angleSize: number) => {
-    const midAngle = startAngle + angleSize / 2 - 90;
-    const angleInRadians = (midAngle * Math.PI) / 180;
-
-    const iconRadius = chartRadius + iconMargin + iconSize / 2;
-    const centerOffset = wrapperSize / 2;
-
-    const iconX = centerOffset + iconRadius * Math.cos(angleInRadians);
-    const iconY = centerOffset + iconRadius * Math.sin(angleInRadians);
-
-    return { iconX, iconY };
-  };
-
-  const MIN_PERCENTAGE_FOR_LABEL = 5;
-
-  let cumulativeAngle = 0;
-  const labelsData = data
-    .map(item => {
-      const angleSize = (Number(item.totalAmount) / totalAmount) * 360;
-      const shouldShowLabel = item.percentage >= MIN_PERCENTAGE_FOR_LABEL;
-      const position = calculateIconPosition(cumulativeAngle, angleSize);
-      cumulativeAngle += angleSize;
-
-      return shouldShowLabel
-        ? {
-            ...position,
-            icon: getCategoryIcon(item.category),
-            color: EXPENSE_CATEGORY_COLORS[item.category],
-            category: item.category,
-          }
-        : null;
-    })
-    .filter((item): item is NonNullable<typeof item> => item !== null);
+  const innerRadius = screenWidth * 0.2;
+  const selectedColor = selectedData ? EXPENSE_CATEGORY_COLORS[selectedData.category] : null;
+  const selectedIcon = selectedData ? getCategoryIcon(selectedData.category) : null;
 
   return (
-    <View style={styles.container}>
-      <View style={styles.chartContainer}>
-        <View style={[styles.chartWrapper, { width: wrapperSize, height: wrapperSize }]}>
-          <View style={styles.chartInner} pointerEvents="box-none">
-            <PieChart
-              data={chartData}
-              radius={chartRadius}
-              innerRadius={screenWidth * 0.2}
-              donut
-              focusOnPress
-              extraRadius={8}
-              centerLabelComponent={() => (
-                <View style={styles.centerInfo}>
-                  <Text style={styles.totalLabel}>
-                    {selectedData ? getCategoryLabel(selectedData.category, 'EXPENSE') : 'Total'}
-                  </Text>
-                  <Text style={styles.totalAmount}>
-                    ${formatCurrency(selectedData ? Number(selectedData.totalAmount) : totalAmount)}
-                  </Text>
-                  {selectedData && (
-                    <Text style={styles.percentageLabel}>
-                      {selectedData.percentage.toFixed(1)}%
-                    </Text>
-                  )}
-                </View>
-              )}
-              showText={false}
-              strokeWidth={2}
-              strokeColor="#fff"
-            />
-          </View>
-
-          {labelsData.map((labelData, index) => {
-            const iconName = labelData.icon as keyof typeof Ionicons.glyphMap;
-            const iconX = labelData.iconX - iconSize / 2;
-            const iconY = labelData.iconY - iconSize / 2;
-            const isSelected = selectedCategory === labelData.category;
-
-            return (
-              <TouchableOpacity
-                key={index}
-                style={[
-                  styles.iconLabel,
-                  {
-                    left: iconX,
-                    top: iconY,
-                    width: iconSize,
-                    height: iconSize,
-                    borderRadius: iconSize / 2,
-                    backgroundColor: isSelected ? labelData.color : '#fff',
-                    borderWidth: 2,
-                    borderColor: labelData.color,
-                  },
-                ]}
-                onPress={() => handleCategoryClick(labelData.category)}
-                activeOpacity={0.7}
-              >
-                <Ionicons name={iconName} size={18} color={isSelected ? '#fff' : labelData.color} />
-              </TouchableOpacity>
-            );
-          })}
+    <>
+      <View style={styles.chartCard}>
+        <View style={styles.chartHeader}>
+          <Text style={styles.chartTitle}>Distribución de gastos</Text>
+          <Text style={styles.chartSubtitle}>Así se repartió tu dinero en este período</Text>
+        </View>
+        <View style={styles.chartContainer}>
+          <PieChart
+            data={chartData}
+            radius={chartRadius}
+            innerRadius={innerRadius}
+            donut
+            focusOnPress
+            extraRadius={10}
+            sectionAutoFocus
+            centerLabelComponent={() => (
+              <View style={styles.centerInfo}>
+                {selectedData && selectedIcon && (
+                  <View
+                    style={[
+                      styles.centerIconContainer,
+                      {
+                        borderColor: selectedColor || '#ccc',
+                        backgroundColor: `${selectedColor}15`,
+                      },
+                    ]}
+                  >
+                    <Ionicons
+                      name={selectedIcon as keyof typeof Ionicons.glyphMap}
+                      size={20}
+                      color={selectedColor}
+                    />
+                  </View>
+                )}
+                <Text style={styles.totalLabel}>
+                  {selectedData ? getCategoryLabel(selectedData.category, 'EXPENSE') : 'Total'}
+                </Text>
+                <Text style={styles.totalAmount}>
+                  ${formatCurrency(selectedData ? Number(selectedData.totalAmount) : totalAmount)}
+                </Text>
+                {selectedData && (
+                  <Text style={styles.percentageLabel}>{selectedData.percentage.toFixed(1)}%</Text>
+                )}
+              </View>
+            )}
+            showText={false}
+            strokeWidth={2}
+            strokeColor="#fff"
+            innerCircleColor="#fff"
+            innerCircleBorderWidth={selectedData ? 3 : 0}
+            innerCircleBorderColor={selectedColor ?? 'transparent'}
+          />
         </View>
       </View>
 
@@ -183,39 +141,55 @@ const ExpenseChart: React.FC<ExpenseChartProps> = ({ data, totalAmount }) => {
           })}
         </View>
       </View>
-    </View>
+    </>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
+  chartCard: {
+    backgroundColor: '#fff',
+    borderRadius: 14,
+    padding: vh * 2,
+    marginHorizontal: screenWidth * 0.05,
+    marginBottom: vh * 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 6,
+    elevation: 3,
+    overflow: 'visible',
+  },
+  chartHeader: {
+    marginBottom: vh * 1.5,
+  },
+  chartTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#003366',
+    marginBottom: 4,
+  },
+  chartSubtitle: {
+    fontSize: 12,
+    color: '#6b8aa1',
   },
   chartContainer: {
     alignItems: 'center',
-    marginBottom: vh * 3,
-  },
-  chartWrapper: {
-    position: 'relative',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  labelsSvg: {
-    position: 'absolute',
-  },
-  chartInner: {
-    position: 'absolute',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  iconLabel: {
-    position: 'absolute',
-    alignItems: 'center',
-    justifyContent: 'center',
+    paddingVertical: vh,
+    paddingHorizontal: 10,
+    overflow: 'visible',
   },
   centerInfo: {
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  centerIconContainer: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    borderWidth: 2,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 8,
   },
   totalLabel: {
     fontSize: 12,
