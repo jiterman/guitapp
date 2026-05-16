@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { View } from 'react-native';
-import { Stack, useSegments } from 'expo-router';
+import { Stack, useSegments, useRouter } from 'expo-router';
 import * as eva from '@eva-design/eva';
 import { ApplicationProvider, IconRegistry } from '@ui-kitten/components';
 import { EvaIconsPack } from '@ui-kitten/eva-icons';
@@ -8,7 +8,8 @@ import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import BottomNavBar from '../src/components/BottomNavBar';
 import * as SplashScreen from 'expo-splash-screen';
-import { UserProvider } from '../src/context/UserContext';
+import { UserProvider, useUser } from '../src/context/UserContext';
+import { ShareIntentProvider, useShareIntent } from 'expo-share-intent';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -23,6 +24,33 @@ const customTheme = {
   'color-basic-600': '#7f8c8d',
 };
 
+function ShareIntentHandler() {
+  const { hasShareIntent, shareIntent, resetShareIntent, error } = useShareIntent();
+  const { user, isLoading } = useUser();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (error) {
+      console.error('Share Intent Error:', error);
+    }
+  }, [error]);
+
+  useEffect(() => {
+    if (hasShareIntent && shareIntent.type === 'image' && !isLoading && user) {
+      const imageUri = shareIntent.files?.[0]?.path;
+      if (imageUri) {
+        router.push({
+          pathname: '/(app)/add-expense',
+          params: { imageUri },
+        });
+        resetShareIntent();
+      }
+    }
+  }, [hasShareIntent, shareIntent, user, isLoading, router, resetShareIntent]);
+
+  return null;
+}
+
 export default function RootLayout() {
   useEffect(() => {
     SplashScreen.hideAsync();
@@ -34,12 +62,15 @@ export default function RootLayout() {
     <SafeAreaProvider>
       <IconRegistry icons={EvaIconsPack} />
       <ApplicationProvider {...eva} theme={customTheme}>
-        <UserProvider>
-          <View style={{ flex: 1 }}>
-            <Stack screenOptions={{ headerShown: false }} />
-            {segments[0] !== '(auth)' && <BottomNavBar />}
-          </View>
-        </UserProvider>
+        <ShareIntentProvider>
+          <UserProvider>
+            <View style={{ flex: 1 }}>
+              <ShareIntentHandler />
+              <Stack screenOptions={{ headerShown: false }} />
+              {segments[0] !== '(auth)' && <BottomNavBar />}
+            </View>
+          </UserProvider>
+        </ShareIntentProvider>
 
         <StatusBar style="auto" />
       </ApplicationProvider>

@@ -8,9 +8,11 @@ import {
   Modal,
   FlatList,
   TextInput,
+  Image,
+  ScrollView,
 } from 'react-native';
-import { Layout, Text, Button, Input } from '@ui-kitten/components';
-import { router } from 'expo-router';
+import { Layout, Text, Button, Input, Icon } from '@ui-kitten/components';
+import { router, useLocalSearchParams } from 'expo-router';
 import { expenseService, type ExpenseType } from '../services/expenseService';
 import { CATEGORIES, ExpenseCategoryOption } from '../constants/categories';
 import { useCurrencyInput } from '../hooks/useCurrencyInput';
@@ -19,6 +21,8 @@ const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 const vh = screenHeight / 100;
 
 const AddExpenseScreen = () => {
+  const params = useLocalSearchParams<{ imageUri?: string }>();
+  const [imageUri, setImageUri] = useState<string | null>(params.imageUri || null);
   const { displayValue, amount, handleAmountChange } = useCurrencyInput();
   const [description, setDescription] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<ExpenseCategoryOption | null>(null);
@@ -85,98 +89,113 @@ const AddExpenseScreen = () => {
   return (
     <>
       <Layout style={styles.container}>
-        <View style={styles.subHeader}>
-          <Text category="h4" style={styles.title}>
-            Agregar gasto
-          </Text>
-          <TouchableOpacity onPress={() => router.back()}>
-            <Text style={styles.closeButton}>✕</Text>
-          </TouchableOpacity>
-        </View>
-
-        <Text style={styles.label}>Monto *</Text>
-        <Input
-          value={displayValue}
-          onChangeText={text => {
-            handleAmountChange(text);
-            if (amountError) setAmountError(null);
-          }}
-          placeholder="0,00"
-          keyboardType="decimal-pad"
-          style={styles.input}
-          status={amountError ? 'danger' : 'basic'}
-          accessoryLeft={() => <Text style={styles.currencySymbol}>$</Text>}
-        />
-        {amountError && <Text style={styles.errorText}>{amountError}</Text>}
-
-        <Text style={styles.label}>Descripción</Text>
-        <Input
-          value={description}
-          onChangeText={setDescription}
-          placeholder="Ej. Almuerzo"
-          style={styles.input}
-        />
-
-        <Text style={styles.label}>Categoría *</Text>
-        <TouchableOpacity
-          style={[styles.dropdownButton, categoryError ? styles.dropdownButtonError : null]}
-          onPress={() => setModalVisible(true)}
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={styles.scrollContent}
         >
-          <Text style={selectedCategory ? styles.dropdownButtonText : styles.dropdownPlaceholder}>
-            {selectedCategory
-              ? `${selectedCategory.icon}  ${selectedCategory.label}`
-              : 'Seleccioná una categoría'}
-          </Text>
-          <Text style={styles.dropdownArrow}>▼</Text>
-        </TouchableOpacity>
-        {categoryError && <Text style={styles.categoryErrorText}>{categoryError}</Text>}
-
-        <Text style={styles.typeLabel}>Tipo de gasto *</Text>
-        <View style={styles.typeContainer}>
-          <TouchableOpacity
-            style={[
-              styles.typeButton,
-              selectedType === 'FIXED' ? styles.typeButtonActive : styles.typeButtonInactive,
-            ]}
-            onPress={() => onSelectType('FIXED')}
-          >
-            <Text
-              style={[
-                styles.typeButtonText,
-                selectedType === 'FIXED'
-                  ? styles.typeButtonTextActive
-                  : styles.typeButtonTextInactive,
-              ]}
-            >
-              Fijo
+          <View style={styles.subHeader}>
+            <Text category="h4" style={styles.title}>
+              Agregar gasto
             </Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[
-              styles.typeButton,
-              selectedType === 'VARIABLE' ? styles.typeButtonActive : styles.typeButtonInactive,
-            ]}
-            onPress={() => onSelectType('VARIABLE')}
-          >
-            <Text
-              style={[
-                styles.typeButtonText,
-                selectedType === 'VARIABLE'
-                  ? styles.typeButtonTextActive
-                  : styles.typeButtonTextInactive,
-              ]}
-            >
-              Variable
-            </Text>
-          </TouchableOpacity>
-        </View>
-        {typeError && <Text style={styles.typeErrorText}>{typeError}</Text>}
+            <TouchableOpacity onPress={() => router.back()}>
+              <Text style={styles.closeButton}>✕</Text>
+            </TouchableOpacity>
+          </View>
 
-        <Button style={styles.button} onPress={onSubmit} disabled={submitting}>
-          {() => (
-            <Text style={styles.buttonText}>{submitting ? 'Guardando...' : 'Guardar gasto'}</Text>
+          {imageUri && (
+            <View style={styles.imageContainer}>
+              <Image source={{ uri: imageUri }} style={styles.sharedImage} resizeMode="contain" />
+              <TouchableOpacity style={styles.removeImageButton} onPress={() => setImageUri(null)}>
+                <Icon name="close" fill="#fff" style={styles.removeImageIcon} />
+              </TouchableOpacity>
+              <Text style={styles.imageInfo}>Imagen adjunta del gasto</Text>
+            </View>
           )}
-        </Button>
+
+          <Text style={styles.label}>Monto *</Text>
+          <Input
+            value={displayValue}
+            onChangeText={text => {
+              handleAmountChange(text);
+              if (amountError) setAmountError(null);
+            }}
+            placeholder="0,00"
+            keyboardType="decimal-pad"
+            style={styles.input}
+            status={amountError ? 'danger' : 'basic'}
+            accessoryLeft={() => <Text style={styles.currencySymbol}>$</Text>}
+          />
+          {amountError && <Text style={styles.errorText}>{amountError}</Text>}
+
+          <Text style={styles.label}>Descripción</Text>
+          <Input
+            value={description}
+            onChangeText={setDescription}
+            placeholder="Ej. Almuerzo"
+            style={styles.input}
+          />
+
+          <Text style={styles.label}>Categoría *</Text>
+          <TouchableOpacity
+            style={[styles.dropdownButton, categoryError ? styles.dropdownButtonError : null]}
+            onPress={() => setModalVisible(true)}
+          >
+            <Text style={selectedCategory ? styles.dropdownButtonText : styles.dropdownPlaceholder}>
+              {selectedCategory
+                ? `${selectedCategory.icon}  ${selectedCategory.label}`
+                : 'Seleccioná una categoría'}
+            </Text>
+            <Text style={styles.dropdownArrow}>▼</Text>
+          </TouchableOpacity>
+          {categoryError && <Text style={styles.categoryErrorText}>{categoryError}</Text>}
+
+          <Text style={styles.typeLabel}>Tipo de gasto *</Text>
+          <View style={styles.typeContainer}>
+            <TouchableOpacity
+              style={[
+                styles.typeButton,
+                selectedType === 'FIXED' ? styles.typeButtonActive : styles.typeButtonInactive,
+              ]}
+              onPress={() => onSelectType('FIXED')}
+            >
+              <Text
+                style={[
+                  styles.typeButtonText,
+                  selectedType === 'FIXED'
+                    ? styles.typeButtonTextActive
+                    : styles.typeButtonTextInactive,
+                ]}
+              >
+                Fijo
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[
+                styles.typeButton,
+                selectedType === 'VARIABLE' ? styles.typeButtonActive : styles.typeButtonInactive,
+              ]}
+              onPress={() => onSelectType('VARIABLE')}
+            >
+              <Text
+                style={[
+                  styles.typeButtonText,
+                  selectedType === 'VARIABLE'
+                    ? styles.typeButtonTextActive
+                    : styles.typeButtonTextInactive,
+                ]}
+              >
+                Variable
+              </Text>
+            </TouchableOpacity>
+          </View>
+          {typeError && <Text style={styles.typeErrorText}>{typeError}</Text>}
+
+          <Button style={styles.button} onPress={onSubmit} disabled={submitting}>
+            {() => (
+              <Text style={styles.buttonText}>{submitting ? 'Guardando...' : 'Guardar gasto'}</Text>
+            )}
+          </Button>
+        </ScrollView>
       </Layout>
 
       <Modal
@@ -246,8 +265,11 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#E6F2FC',
+  },
+  scrollContent: {
     paddingHorizontal: screenWidth * 0.05,
     paddingTop: vh * 2,
+    paddingBottom: vh * 5,
   },
   subHeader: {
     flexDirection: 'row',
@@ -431,6 +453,47 @@ const styles = StyleSheet.create({
   categoryLabelSelected: {
     color: '#006699',
     fontWeight: '600',
+  },
+  imageContainer: {
+    width: '100%',
+    height: vh * 25,
+    backgroundColor: '#f0f0f0',
+    borderRadius: 12,
+    marginBottom: vh * 3,
+    overflow: 'hidden',
+    position: 'relative',
+    borderWidth: 1,
+    borderColor: '#ddd',
+  },
+  sharedImage: {
+    width: '100%',
+    height: '100%',
+  },
+  removeImageButton: {
+    position: 'absolute',
+    top: 10,
+    right: 10,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    borderRadius: 15,
+    width: 30,
+    height: 30,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  removeImageIcon: {
+    width: 20,
+    height: 20,
+  },
+  imageInfo: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: 'rgba(0,0,0,0.4)',
+    color: '#fff',
+    paddingVertical: 4,
+    textAlign: 'center',
+    fontSize: 12,
   },
 });
 
