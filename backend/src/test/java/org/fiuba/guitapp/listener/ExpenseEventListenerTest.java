@@ -188,4 +188,26 @@ class ExpenseEventListenerTest {
         assertEquals(ErrorCode.USER_NOT_FOUND, thrown.getErrorCode());
         verify(notificationService, never()).sendExpenseThresholdExceededNotification(any(), any());
     }
+
+    @Test
+    void handleExpenseCreatedEvent_ShouldNotSendNotification_WhenTargetFixedExpensesIsNull() {
+        testExpenseCreatedEvent = new ExpenseCreatedEvent(expenseId, userEmail, amount, date, ExpenseType.FIXED);
+        testUser.setTargetFixedExpenses(null);
+        when(userRepository.findByEmail(userEmail)).thenReturn(Optional.of(testUser));
+
+        expenseEventListener.handleExpenseCreatedEvent(testExpenseCreatedEvent);
+
+        verify(notificationService, never()).sendExpenseThresholdExceededNotification(any(), any());
+    }
+
+    @Test
+    void handleExpenseCreatedEvent_ShouldNotSendNotification_WhenTargetVariableExpensesIsNull() {
+        testExpenseCreatedEvent = new ExpenseCreatedEvent(expenseId, userEmail, amount, date, ExpenseType.VARIABLE);
+        testUser.setTargetVariableExpenses(null);
+        when(userRepository.findByEmail(userEmail)).thenReturn(Optional.of(testUser));
+
+        expenseEventListener.handleExpenseCreatedEvent(testExpenseCreatedEvent);
+
+        verify(notificationService, never()).sendExpenseThresholdExceededNotification(any(), any());
+    }
 }

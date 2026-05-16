@@ -62,4 +62,17 @@ class NotificationServiceTest {
             verify(firebaseMessaging, never()).send(any(Message.class));
         }
     }
+
+    @Test
+    void sendExpenseThresholdExceededNotification_ShouldLogAndHandleException_WhenFirebaseFails() throws Exception {
+        try (MockedStatic<FirebaseMessaging> mockedFirebaseMessaging = mockStatic(FirebaseMessaging.class)) {
+            mockedFirebaseMessaging.when(FirebaseMessaging::getInstance).thenReturn(firebaseMessaging);
+            when(firebaseMessaging.send(any(Message.class))).thenThrow(new RuntimeException("Firebase error"));
+
+            // Should not throw exception
+            notificationService.sendExpenseThresholdExceededNotification(testUser, "Test Message");
+
+            verify(firebaseMessaging, times(1)).send(any(Message.class));
+        }
+    }
 }

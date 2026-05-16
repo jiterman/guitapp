@@ -463,4 +463,15 @@ class UserServiceTests {
         assertEquals(ErrorCode.OTP_EXPIRED, exception.getErrorCode());
         verify(userRepository, never()).save(any(User.class));
     }
+
+    @Test
+    void updateFcmToken_ShouldUpdateToken_WhenUserExists() {
+        String fcmToken = "new-fcm-token";
+        when(userRepository.findByEmail(testEmail)).thenReturn(Optional.of(testUser));
+
+        userService.updateFcmToken(testEmail, fcmToken);
+
+        assertEquals(fcmToken, testUser.getFcmToken());
+        verify(userRepository, times(1)).save(testUser);
+    }
 }

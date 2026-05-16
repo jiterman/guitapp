@@ -10,6 +10,7 @@ import java.util.UUID;
 
 import org.fiuba.guitapp.dto.InitiateEmailChangeRequest;
 import org.fiuba.guitapp.dto.OnboardingRequest;
+import org.fiuba.guitapp.dto.UpdateFcmTokenRequest;
 import org.fiuba.guitapp.dto.UpdateUserProfileRequest;
 import org.fiuba.guitapp.dto.UserProfileResponse;
 import org.fiuba.guitapp.dto.VerifyEmailChangeRequest;
@@ -224,5 +225,21 @@ class UserControllerTests {
                 .andExpect(jsonPath("$.message").value("Email updated successfully"));
 
         verify(userService, times(1)).verifyEmailChange(eq("test@example.com"), any(VerifyEmailChangeRequest.class));
+    }
+
+    @Test
+    @WithMockUser(username = "test@example.com")
+    void updateFcmToken_ShouldReturnSuccessMessage() throws Exception {
+        UpdateFcmTokenRequest request = new UpdateFcmTokenRequest("some-fcm-token");
+
+        doNothing().when(userService).updateFcmToken(eq("test@example.com"), anyString());
+
+        mockMvc.perform(patch("/api/users/me/fcm-token")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.message").value("FCM token updated successfully"));
+
+        verify(userService, times(1)).updateFcmToken(eq("test@example.com"), eq("some-fcm-token"));
     }
 }
