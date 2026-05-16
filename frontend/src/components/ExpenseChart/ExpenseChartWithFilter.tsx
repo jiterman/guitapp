@@ -41,7 +41,24 @@ const ExpenseChartWithFilter: React.FC = () => {
       setLoading(true);
       setError(null);
       const period = mapFilterKindToPeriod(filterState.kind);
-      const statistics = await expenseStatisticsService.getExpenseStatistics(period);
+
+      const params: {
+        period: PeriodType;
+        year?: number;
+        month?: number;
+        day?: number;
+      } = { period };
+
+      if (filterState.kind === 'day' && filterState.day) {
+        params.year = filterState.day.getFullYear();
+        params.month = filterState.day.getMonth() + 1;
+        params.day = filterState.day.getDate();
+      } else if (filterState.kind === 'month') {
+        params.year = filterState.year;
+        params.month = filterState.month;
+      }
+
+      const statistics = await expenseStatisticsService.getExpenseStatistics(params);
       setData(statistics);
     } catch (err) {
       const error = err as { message?: string };
@@ -49,7 +66,7 @@ const ExpenseChartWithFilter: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [filterState.kind]);
+  }, [filterState.kind, filterState.day, filterState.month, filterState.year]);
 
   useEffect(() => {
     loadData();

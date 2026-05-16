@@ -61,8 +61,12 @@ public class ExpenseController {
     @GetMapping("/statistics")
     public ResponseEntity<ExpenseStatisticsResponse> getExpenseStatistics(
             Principal principal,
-            @RequestParam(defaultValue = "monthly") String period) {
-        ExpenseStatisticsResponse response = expenseService.getExpenseStatistics(principal.getName(), period);
+            @RequestParam(defaultValue = "monthly") String period,
+            @RequestParam(required = false) Integer year,
+            @RequestParam(required = false) Integer month,
+            @RequestParam(required = false) Integer day) {
+        ExpenseStatisticsResponse response = expenseService.getExpenseStatistics(
+                principal.getName(), period, year, month, day);
         return ResponseEntity.ok(response);
     }
 }

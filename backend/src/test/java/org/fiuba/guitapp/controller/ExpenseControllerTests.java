@@ -290,7 +290,8 @@ class ExpenseControllerTests {
         ExpenseStatisticsResponse response = new ExpenseStatisticsResponse(
                 new BigDecimal("1000.00"), categories);
 
-        when(expenseService.getExpenseStatistics("test@example.com", "monthly")).thenReturn(response);
+        when(expenseService.getExpenseStatistics("test@example.com", "monthly", null, null, null))
+                .thenReturn(response);
 
         mockMvc.perform(get("/api/expenses/statistics"))
                 .andExpect(status().isOk())
@@ -301,7 +302,7 @@ class ExpenseControllerTests {
                 .andExpect(jsonPath("$.categories[0].count").value(5))
                 .andExpect(jsonPath("$.categories[0].percentage").value(50.0));
 
-        verify(expenseService, times(1)).getExpenseStatistics("test@example.com", "monthly");
+        verify(expenseService, times(1)).getExpenseStatistics("test@example.com", "monthly", null, null, null);
     }
 
     @Test
@@ -313,7 +314,8 @@ class ExpenseControllerTests {
         ExpenseStatisticsResponse response = new ExpenseStatisticsResponse(
                 new BigDecimal("50.00"), categories);
 
-        when(expenseService.getExpenseStatistics("test@example.com", "daily")).thenReturn(response);
+        when(expenseService.getExpenseStatistics("test@example.com", "daily", null, null, null))
+                .thenReturn(response);
 
         mockMvc.perform(get("/api/expenses/statistics")
                 .param("period", "daily"))
@@ -321,7 +323,7 @@ class ExpenseControllerTests {
                 .andExpect(jsonPath("$.totalAmount").value(50.00))
                 .andExpect(jsonPath("$.categories[0].category").value("CAFE"));
 
-        verify(expenseService, times(1)).getExpenseStatistics("test@example.com", "daily");
+        verify(expenseService, times(1)).getExpenseStatistics("test@example.com", "daily", null, null, null);
     }
 
     @Test
@@ -333,7 +335,8 @@ class ExpenseControllerTests {
         ExpenseStatisticsResponse response = new ExpenseStatisticsResponse(
                 new BigDecimal("5000.00"), categories);
 
-        when(expenseService.getExpenseStatistics("test@example.com", "all")).thenReturn(response);
+        when(expenseService.getExpenseStatistics("test@example.com", "all", null, null, null))
+                .thenReturn(response);
 
         mockMvc.perform(get("/api/expenses/statistics")
                 .param("period", "all"))
@@ -341,7 +344,7 @@ class ExpenseControllerTests {
                 .andExpect(jsonPath("$.totalAmount").value(5000.00))
                 .andExpect(jsonPath("$.categories[0].category").value("RENT"));
 
-        verify(expenseService, times(1)).getExpenseStatistics("test@example.com", "all");
+        verify(expenseService, times(1)).getExpenseStatistics("test@example.com", "all", null, null, null);
     }
 
     @Test
@@ -349,6 +352,53 @@ class ExpenseControllerTests {
         mockMvc.perform(get("/api/expenses/statistics"))
                 .andExpect(status().isForbidden());
 
-        verify(expenseService, never()).getExpenseStatistics(anyString(), anyString());
+        verify(expenseService, never()).getExpenseStatistics(anyString(), anyString(), any(), any(), any());
+    }
+
+    @Test
+    @WithMockUser(username = "test@example.com")
+    void getExpenseStatistics_ShouldReturnStatistics_WithSpecificMonthAndYear() throws Exception {
+        List<ExpenseCategoryStatistics> categories = Arrays.asList(
+                new ExpenseCategoryStatistics(ExpenseCategory.RESTAURANT, new BigDecimal("300.00"), 3L, 100.0));
+
+        ExpenseStatisticsResponse response = new ExpenseStatisticsResponse(
+                new BigDecimal("300.00"), categories);
+
+        when(expenseService.getExpenseStatistics("test@example.com", "monthly", 2024, 5, null))
+                .thenReturn(response);
+
+        mockMvc.perform(get("/api/expenses/statistics")
+                .param("period", "monthly")
+                .param("year", "2024")
+                .param("month", "5"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.totalAmount").value(300.00))
+                .andExpect(jsonPath("$.categories[0].category").value("RESTAURANT"));
+
+        verify(expenseService, times(1)).getExpenseStatistics("test@example.com", "monthly", 2024, 5, null);
+    }
+
+    @Test
+    @WithMockUser(username = "test@example.com")
+    void getExpenseStatistics_ShouldReturnStatistics_WithSpecificDate() throws Exception {
+        List<ExpenseCategoryStatistics> categories = Arrays.asList(
+                new ExpenseCategoryStatistics(ExpenseCategory.CAFE, new BigDecimal("25.00"), 1L, 100.0));
+
+        ExpenseStatisticsResponse response = new ExpenseStatisticsResponse(
+                new BigDecimal("25.00"), categories);
+
+        when(expenseService.getExpenseStatistics("test@example.com", "daily", 2024, 5, 15))
+                .thenReturn(response);
+
+        mockMvc.perform(get("/api/expenses/statistics")
+                .param("period", "daily")
+                .param("year", "2024")
+                .param("month", "5")
+                .param("day", "15"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.totalAmount").value(25.00))
+                .andExpect(jsonPath("$.categories[0].category").value("CAFE"));
+
+        verify(expenseService, times(1)).getExpenseStatistics("test@example.com", "daily", 2024, 5, 15);
     }
 }

@@ -15,9 +15,30 @@ export interface ExpenseStatisticsResponse {
 
 export type PeriodType = 'all' | 'monthly' | 'daily';
 
-const getExpenseStatistics = async (period: PeriodType): Promise<ExpenseStatisticsResponse> => {
+export interface ExpenseStatisticsParams {
+  period: PeriodType;
+  year?: number;
+  month?: number;
+  day?: number;
+}
+
+const getExpenseStatistics = async (
+  params: ExpenseStatisticsParams
+): Promise<ExpenseStatisticsResponse> => {
   const token = await authService.getToken();
-  const response = await fetch(`${API_URL}/api/expenses/statistics?period=${period}`, {
+  const queryParams = new URLSearchParams({ period: params.period });
+
+  if (params.year !== undefined) {
+    queryParams.append('year', params.year.toString());
+  }
+  if (params.month !== undefined) {
+    queryParams.append('month', params.month.toString());
+  }
+  if (params.day !== undefined) {
+    queryParams.append('day', params.day.toString());
+  }
+
+  const response = await fetch(`${API_URL}/api/expenses/statistics?${queryParams.toString()}`, {
     method: 'GET',
     headers: {
       Authorization: `Bearer ${token}`,

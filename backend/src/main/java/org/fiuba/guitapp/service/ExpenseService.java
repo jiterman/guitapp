@@ -122,11 +122,12 @@ public class ExpenseService {
     }
 
     @Transactional(readOnly = true)
-    public ExpenseStatisticsResponse getExpenseStatistics(String email, String period) {
+    public ExpenseStatisticsResponse getExpenseStatistics(
+            String email, String period, Integer year, Integer month, Integer day) {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new AuthException(ErrorCode.USER_NOT_FOUND, "User not found"));
 
-        List<Expense> expenses = getExpensesByPeriod(user, period);
+        List<Expense> expenses = getExpensesByPeriod(user, period, year, month, day);
 
         BigDecimal totalAmount = expenses.stream()
                 .map(Expense::getAmount)
@@ -157,21 +158,30 @@ public class ExpenseService {
         return new ExpenseStatisticsResponse(totalAmount, categoryStats);
     }
 
-    private List<Expense> getExpensesByPeriod(User user, String period) {
-        LocalDateTime now = LocalDateTime.now();
+    private List<Expense> getExpensesByPeriod(
+            User user, String period, Integer year, Integer month, Integer day) {
+        LocalDateTime referenceDate = buildReferenceDate(year, month, day);
         return switch (period.toLowerCase()) {
         case "daily" -> {
-            LocalDateTime startOfDay = now.toLocalDate().atStartOfDay();
+            LocalDateTime startOfDay = referenceDate.toLocalDate().atStartOfDay();
             LocalDateTime endOfDay = startOfDay.plusDays(1);
             yield expenseRepository.findAllByUserAndDateBetween(user, startOfDay, endOfDay);
         }
         case "monthly" -> {
-            LocalDateTime startOfMonth = LocalDate.now().withDayOfMonth(1).atStartOfDay();
+            LocalDateTime startOfMonth = referenceDate.toLocalDate().withDayOfMonth(1).atStartOfDay();
             LocalDateTime endOfMonth = startOfMonth.plusMonths(1);
             yield expenseRepository.findAllByUserAndDateBetween(user, startOfMonth, endOfMonth);
         }
         case "all" -> expenseRepository.findAllByUser(user);
         default -> throw new IllegalArgumentException("Invalid period: " + period);
         };
+    }
+
+    private LocalDateTime buildReferenceDate(Integer year, Integer month, Integer day) {
+        LocalDate now = LocalDate.now();
+        int effectiveYear = year != null ? year : now.getYear();
+        int effectiveMonth = month != null ? month : now.getMonthValue();
+        int effectiveDay = day != null ? day : now.getDayOfMonth();
+        return LocalDate.of(effectiveYear, effectiveMonth, effectiveDay).atStartOfDay();
     }
 }
