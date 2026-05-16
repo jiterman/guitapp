@@ -15,7 +15,6 @@ public enum ExpenseCategory {
     PHARMACY,
     SUBSCRIPTIONS,
     OUTINGS,
-    BAR,
     GYM,
     TRAVEL,
     CLOTHING,

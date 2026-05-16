@@ -20,7 +20,6 @@ export const EXPENSE_CATEGORY_COLORS: Record<ExpenseCategory, string> = {
   PHARMACY: '#5FD99F',
   SUBSCRIPTIONS: '#9966FF',
   OUTINGS: '#FF99CC',
-  BAR: '#FF8833',
   GYM: '#54B8F5',
   TRAVEL: '#B088FF',
   CLOTHING: '#FF7399',

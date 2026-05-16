@@ -7,7 +7,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import java.math.BigDecimal;
 import java.security.Principal;
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 
@@ -36,7 +36,7 @@ class MovementControllerTest {
 
     @Test
     void getAllMovementsReturnsOk() throws Exception {
-        MovementResponse r = new MovementResponse(UUID.randomUUID(), "INCOME", BigDecimal.TEN, "desc", "CAT", null, LocalDateTime.now());
+        MovementResponse r = new MovementResponse(UUID.randomUUID(), "INCOME", BigDecimal.TEN, "desc", "CAT", null, LocalDate.now());
         when(movementService.getAllMovements("test@example.com")).thenReturn(List.of(r));
 
         Principal p = () -> "test@example.com";
@@ -48,22 +48,22 @@ class MovementControllerTest {
 
     @Test
     void dayMonthYearEndpoints() throws Exception {
-        MovementResponse r = new MovementResponse(UUID.randomUUID(), "INCOME", BigDecimal.TEN, "desc", "CAT", null, LocalDateTime.now());
-        when(movementService.getMovementsByDay("test@example.com", java.time.LocalDate.now())).thenReturn(List.of(r));
-        when(movementService.getMovementsByMonth("test@example.com", java.time.LocalDate.now().getYear(), java.time.LocalDate.now().getMonthValue())).thenReturn(List.of(r));
-        when(movementService.getMovementsByYear("test@example.com", java.time.LocalDate.now().getYear())).thenReturn(List.of(r));
+        MovementResponse r = new MovementResponse(UUID.randomUUID(), "INCOME", BigDecimal.TEN, "desc", "CAT", null, LocalDate.now());
+        when(movementService.getMovementsByDay("test@example.com", LocalDate.now())).thenReturn(List.of(r));
+        when(movementService.getMovementsByMonth("test@example.com", LocalDate.now().getYear(), LocalDate.now().getMonthValue())).thenReturn(List.of(r));
+        when(movementService.getMovementsByYear("test@example.com", LocalDate.now().getYear())).thenReturn(List.of(r));
 
         Principal p = () -> "test@example.com";
 
-        mockMvc.perform(get("/api/movements/day").param("date", java.time.LocalDate.now().toString()).principal(p))
+        mockMvc.perform(get("/api/movements/day").param("date", LocalDate.now().toString()).principal(p))
                 .andExpect(status().isOk());
 
-        mockMvc.perform(get("/api/movements/month").param("year", String.valueOf(java.time.LocalDate.now().getYear()))
-                .param("month", String.valueOf(java.time.LocalDate.now().getMonthValue()))
+        mockMvc.perform(get("/api/movements/month").param("year", String.valueOf(LocalDate.now().getYear()))
+                .param("month", String.valueOf(LocalDate.now().getMonthValue()))
                 .principal(p))
                 .andExpect(status().isOk());
 
-        mockMvc.perform(get("/api/movements/year").param("year", String.valueOf(java.time.LocalDate.now().getYear())).principal(p))
+        mockMvc.perform(get("/api/movements/year").param("year", String.valueOf(LocalDate.now().getYear())).principal(p))
                 .andExpect(status().isOk());
     }
 }

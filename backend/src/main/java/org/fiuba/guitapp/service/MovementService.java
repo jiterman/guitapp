@@ -71,7 +71,7 @@ public class MovementService {
         List<MovementResponse> movements = new ArrayList<>();
 
         for (Income i : incomes) {
-            if (i.getDate().toLocalDate().equals(day)) {
+            if (i.getDate().equals(day)) {
                 movements.add(new MovementResponse(
                         i.getId(),
                         "INCOME",
@@ -84,7 +84,7 @@ public class MovementService {
         }
 
         for (Expense e : expenses) {
-            if (e.getDate().toLocalDate().equals(day)) {
+            if (e.getDate().equals(day)) {
                 movements.add(new MovementResponse(
                         e.getId(),
                         "EXPENSE",
