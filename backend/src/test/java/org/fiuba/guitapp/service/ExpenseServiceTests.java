@@ -6,11 +6,14 @@ import static org.mockito.Mockito.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
 import org.fiuba.guitapp.dto.AddExpenseRequest;
 import org.fiuba.guitapp.dto.ExpenseResponse;
+import org.fiuba.guitapp.dto.ExpenseStatisticsResponse;
 import org.fiuba.guitapp.dto.UpdateExpenseRequest;
 import org.fiuba.guitapp.exception.AuthException;
 import org.fiuba.guitapp.exception.ErrorCode;
@@ -416,5 +419,182 @@ class ExpenseServiceTests {
 
         assertEquals(ErrorCode.EXPENSE_ACCESS_DENIED, exception.getErrorCode());
         verify(expenseRepository, never()).save(any(Expense.class));
+    }
+
+    @Test
+    void getExpenseStatistics_ShouldReturnStatistics_WithMonthlyPeriodAndSpecificDate() {
+        LocalDateTime januaryFirst = LocalDateTime.of(2024, 1, 1, 0, 0);
+        LocalDateTime januaryEnd = LocalDateTime.of(2024, 2, 1, 0, 0);
+
+        Expense expense1 = new Expense();
+        expense1.setId(UUID.randomUUID());
+        expense1.setAmount(new BigDecimal("100.00"));
+        expense1.setCategory(ExpenseCategory.RESTAURANT);
+        expense1.setType(ExpenseType.VARIABLE);
+        expense1.setDate(LocalDateTime.of(2024, 1, 15, 12, 0));
+        expense1.setUser(testUser);
+
+        Expense expense2 = new Expense();
+        expense2.setId(UUID.randomUUID());
+        expense2.setAmount(new BigDecimal("200.00"));
+        expense2.setCategory(ExpenseCategory.RESTAURANT);
+        expense2.setType(ExpenseType.VARIABLE);
+        expense2.setDate(LocalDateTime.of(2024, 1, 20, 15, 30));
+        expense2.setUser(testUser);
+
+        List<Expense> expenses = Arrays.asList(expense1, expense2);
+
+        when(userRepository.findByEmail(testEmail)).thenReturn(Optional.of(testUser));
+        when(expenseRepository.findAllByUserAndDateBetween(testUser, januaryFirst, januaryEnd))
+                .thenReturn(expenses);
+
+        ExpenseStatisticsResponse response = expenseService.getExpenseStatistics(testEmail, "monthly", 2024, 1, null);
+
+        assertNotNull(response);
+        assertEquals(new BigDecimal("300.00"), response.totalAmount());
+        assertEquals(1, response.categories().size());
+        assertEquals(ExpenseCategory.RESTAURANT, response.categories().get(0).category());
+        assertEquals(new BigDecimal("300.00"), response.categories().get(0).totalAmount());
+        assertEquals(2L, response.categories().get(0).count());
+        assertEquals(100.0, response.categories().get(0).percentage());
+
+        verify(expenseRepository, times(1)).findAllByUserAndDateBetween(testUser, januaryFirst, januaryEnd);
+    }
+
+    @Test
+    void getExpenseStatistics_ShouldReturnStatistics_WithDailyPeriodAndSpecificDate() {
+        LocalDateTime dayStart = LocalDateTime.of(2024, 5, 15, 0, 0);
+        LocalDateTime dayEnd = LocalDateTime.of(2024, 5, 16, 0, 0);
+
+        Expense expense1 = new Expense();
+        expense1.setId(UUID.randomUUID());
+        expense1.setAmount(new BigDecimal("50.00"));
+        expense1.setCategory(ExpenseCategory.CAFE);
+        expense1.setType(ExpenseType.VARIABLE);
+        expense1.setDate(LocalDateTime.of(2024, 5, 15, 8, 30));
+        expense1.setUser(testUser);
+
+        List<Expense> expenses = Arrays.asList(expense1);
+
+        when(userRepository.findByEmail(testEmail)).thenReturn(Optional.of(testUser));
+        when(expenseRepository.findAllByUserAndDateBetween(testUser, dayStart, dayEnd))
+                .thenReturn(expenses);
+
+        ExpenseStatisticsResponse response = expenseService.getExpenseStatistics(testEmail, "daily", 2024, 5, 15);
+
+        assertNotNull(response);
+        assertEquals(new BigDecimal("50.00"), response.totalAmount());
+        assertEquals(1, response.categories().size());
+        assertEquals(ExpenseCategory.CAFE, response.categories().get(0).category());
+
+        verify(expenseRepository, times(1)).findAllByUserAndDateBetween(testUser, dayStart, dayEnd);
+    }
+
+    @Test
+    void getExpenseStatistics_ShouldReturnStatistics_WithAllPeriod() {
+        Expense expense1 = new Expense();
+        expense1.setId(UUID.randomUUID());
+        expense1.setAmount(new BigDecimal("100.00"));
+        expense1.setCategory(ExpenseCategory.RENT);
+        expense1.setType(ExpenseType.FIXED);
+        expense1.setDate(LocalDateTime.now());
+        expense1.setUser(testUser);
+
+        Expense expense2 = new Expense();
+        expense2.setId(UUID.randomUUID());
+        expense2.setAmount(new BigDecimal("150.00"));
+        expense2.setCategory(ExpenseCategory.SUPERMARKET);
+        expense2.setType(ExpenseType.VARIABLE);
+        expense2.setDate(LocalDateTime.now());
+        expense2.setUser(testUser);
+
+        List<Expense> expenses = Arrays.asList(expense1, expense2);
+
+        when(userRepository.findByEmail(testEmail)).thenReturn(Optional.of(testUser));
+        when(expenseRepository.findAllByUser(testUser)).thenReturn(expenses);
+
+        ExpenseStatisticsResponse response = expenseService.getExpenseStatistics(testEmail, "all", null, null, null);
+
+        assertNotNull(response);
+        assertEquals(new BigDecimal("250.00"), response.totalAmount());
+        assertEquals(2, response.categories().size());
+
+        verify(expenseRepository, times(1)).findAllByUser(testUser);
+    }
+
+    @Test
+    void getExpenseStatistics_ShouldHandleMultipleCategories() {
+        LocalDateTime monthStart = LocalDateTime.of(2024, 3, 1, 0, 0);
+        LocalDateTime monthEnd = LocalDateTime.of(2024, 4, 1, 0, 0);
+
+        Expense expense1 = new Expense();
+        expense1.setId(UUID.randomUUID());
+        expense1.setAmount(new BigDecimal("100.00"));
+        expense1.setCategory(ExpenseCategory.RESTAURANT);
+        expense1.setType(ExpenseType.VARIABLE);
+        expense1.setDate(LocalDateTime.of(2024, 3, 10, 12, 0));
+        expense1.setUser(testUser);
+
+        Expense expense2 = new Expense();
+        expense2.setId(UUID.randomUUID());
+        expense2.setAmount(new BigDecimal("50.00"));
+        expense2.setCategory(ExpenseCategory.CAFE);
+        expense2.setType(ExpenseType.VARIABLE);
+        expense2.setDate(LocalDateTime.of(2024, 3, 15, 9, 0));
+        expense2.setUser(testUser);
+
+        Expense expense3 = new Expense();
+        expense3.setId(UUID.randomUUID());
+        expense3.setAmount(new BigDecimal("150.00"));
+        expense3.setCategory(ExpenseCategory.RESTAURANT);
+        expense3.setType(ExpenseType.VARIABLE);
+        expense3.setDate(LocalDateTime.of(2024, 3, 20, 19, 0));
+        expense3.setUser(testUser);
+
+        List<Expense> expenses = Arrays.asList(expense1, expense2, expense3);
+
+        when(userRepository.findByEmail(testEmail)).thenReturn(Optional.of(testUser));
+        when(expenseRepository.findAllByUserAndDateBetween(testUser, monthStart, monthEnd))
+                .thenReturn(expenses);
+
+        ExpenseStatisticsResponse response = expenseService.getExpenseStatistics(testEmail, "monthly", 2024, 3, null);
+
+        assertNotNull(response);
+        assertEquals(new BigDecimal("300.00"), response.totalAmount());
+        assertEquals(2, response.categories().size());
+        assertEquals(ExpenseCategory.RESTAURANT, response.categories().get(0).category());
+        assertEquals(new BigDecimal("250.00"), response.categories().get(0).totalAmount());
+        assertEquals(2L, response.categories().get(0).count());
+        assertEquals(ExpenseCategory.CAFE, response.categories().get(1).category());
+        assertEquals(new BigDecimal("50.00"), response.categories().get(1).totalAmount());
+        assertEquals(1L, response.categories().get(1).count());
+    }
+
+    @Test
+    void getExpenseStatistics_ShouldReturnEmptyList_WhenNoExpenses() {
+        LocalDateTime monthStart = LocalDateTime.of(2024, 6, 1, 0, 0);
+        LocalDateTime monthEnd = LocalDateTime.of(2024, 7, 1, 0, 0);
+
+        when(userRepository.findByEmail(testEmail)).thenReturn(Optional.of(testUser));
+        when(expenseRepository.findAllByUserAndDateBetween(testUser, monthStart, monthEnd))
+                .thenReturn(Arrays.asList());
+
+        ExpenseStatisticsResponse response = expenseService.getExpenseStatistics(testEmail, "monthly", 2024, 6, null);
+
+        assertNotNull(response);
+        assertEquals(BigDecimal.ZERO, response.totalAmount());
+        assertEquals(0, response.categories().size());
+    }
+
+    @Test
+    void getExpenseStatistics_ShouldThrowAuthException_WhenUserNotFound() {
+        when(userRepository.findByEmail(testEmail)).thenReturn(Optional.empty());
+
+        AuthException exception = assertThrows(AuthException.class,
+                () -> expenseService.getExpenseStatistics(testEmail, "monthly", 2024, 1, null));
+
+        assertEquals(ErrorCode.USER_NOT_FOUND, exception.getErrorCode());
+        verify(expenseRepository, never()).findAllByUser(any());
+        verify(expenseRepository, never()).findAllByUserAndDateBetween(any(), any(), any());
     }
 }

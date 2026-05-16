@@ -5,6 +5,7 @@ import java.util.UUID;
 
 import org.fiuba.guitapp.dto.AddExpenseRequest;
 import org.fiuba.guitapp.dto.ExpenseResponse;
+import org.fiuba.guitapp.dto.ExpenseStatisticsResponse;
 import org.fiuba.guitapp.dto.UpdateExpenseRequest;
 import org.fiuba.guitapp.service.ExpenseService;
 import org.springframework.http.ResponseEntity;
@@ -15,6 +16,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import jakarta.validation.Valid;
@@ -53,6 +55,18 @@ public class ExpenseController {
             @PathVariable UUID expenseId,
             @Valid @RequestBody UpdateExpenseRequest request) {
         ExpenseResponse response = expenseService.updateExpense(principal.getName(), expenseId, request);
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/statistics")
+    public ResponseEntity<ExpenseStatisticsResponse> getExpenseStatistics(
+            Principal principal,
+            @RequestParam(defaultValue = "monthly") String period,
+            @RequestParam(required = false) Integer year,
+            @RequestParam(required = false) Integer month,
+            @RequestParam(required = false) Integer day) {
+        ExpenseStatisticsResponse response = expenseService.getExpenseStatistics(
+                principal.getName(), period, year, month, day);
         return ResponseEntity.ok(response);
     }
 }

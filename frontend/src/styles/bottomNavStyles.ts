@@ -11,13 +11,19 @@ export const bottomNavStyles = StyleSheet.create({
   },
   button: {
     flex: 1,
-    paddingVertical: 12,
+    paddingVertical: 8,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  label: {
-    fontSize: 12,
-    color: '#333',
+  iconWrapper: {
+    backgroundColor: '#E6F2FC',
+    borderRadius: 20,
+    paddingVertical: 6,
+    paddingHorizontal: 20,
+  },
+  iconWrapperInactive: {
+    paddingVertical: 6,
+    paddingHorizontal: 20,
   },
 });
 
