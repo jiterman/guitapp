@@ -47,10 +47,10 @@ public class ExpenseEventListener {
         }
 
         YearMonth currentMonth = YearMonth.from(event.getDate());
-        List<Expense> monthlyExpenses = expenseRepository.findByUserAndDateBetween(
+        List<Expense> monthlyExpenses = expenseRepository.findAllByUserAndDateBetween(
                 user,
-                currentMonth.atDay(1).atStartOfDay(),
-                currentMonth.atEndOfMonth().atTime(23, 59, 59));
+                currentMonth.atDay(1),
+                currentMonth.atEndOfMonth());
 
         if (event.getType() == ExpenseType.FIXED) {
             checkFixedThreshold(user, monthlyExpenses);

@@ -7,7 +7,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Optional;
@@ -51,7 +51,7 @@ class ExpenseEventListenerTest {
     private final UUID expenseId = UUID.randomUUID();
     private final String userEmail = "test@example.com";
     private final BigDecimal amount = new BigDecimal("50000");
-    private final LocalDateTime date = LocalDateTime.of(2026, 5, 15, 10, 0);
+    private final LocalDate date = LocalDate.of(2026, 5, 15);
 
     @BeforeEach
     void setUp() {
@@ -81,7 +81,7 @@ class ExpenseEventListenerTest {
         variableExpense.setAmount(new BigDecimal("40000"));
         variableExpense.setType(ExpenseType.VARIABLE);
 
-        when(expenseRepository.findByUserAndDateBetween(eq(testUser), any(LocalDateTime.class), any(LocalDateTime.class)))
+        when(expenseRepository.findAllByUserAndDateBetween(eq(testUser), any(LocalDate.class), any(LocalDate.class)))
                 .thenReturn(Arrays.asList(fixedExpense, variableExpense));
 
         expenseEventListener.handleExpenseCreatedEvent(testExpenseCreatedEvent);
@@ -104,7 +104,7 @@ class ExpenseEventListenerTest {
         variableExpense.setAmount(new BigDecimal("40000"));
         variableExpense.setType(ExpenseType.VARIABLE);
 
-        when(expenseRepository.findByUserAndDateBetween(eq(testUser), any(LocalDateTime.class), any(LocalDateTime.class)))
+        when(expenseRepository.findAllByUserAndDateBetween(eq(testUser), any(LocalDate.class), any(LocalDate.class)))
                 .thenReturn(Arrays.asList(fixedExpense, variableExpense));
 
         expenseEventListener.handleExpenseCreatedEvent(testExpenseCreatedEvent);
@@ -123,7 +123,7 @@ class ExpenseEventListenerTest {
         fixedExpense.setAmount(new BigDecimal("60000"));
         fixedExpense.setType(ExpenseType.FIXED);
 
-        when(expenseRepository.findByUserAndDateBetween(eq(testUser), any(LocalDateTime.class), any(LocalDateTime.class)))
+        when(expenseRepository.findAllByUserAndDateBetween(eq(testUser), any(LocalDate.class), any(LocalDate.class)))
                 .thenReturn(Collections.singletonList(fixedExpense));
 
         expenseEventListener.handleExpenseCreatedEvent(testExpenseCreatedEvent);
@@ -141,7 +141,7 @@ class ExpenseEventListenerTest {
         variableExpense.setAmount(new BigDecimal("35000"));
         variableExpense.setType(ExpenseType.VARIABLE);
 
-        when(expenseRepository.findByUserAndDateBetween(eq(testUser), any(LocalDateTime.class), any(LocalDateTime.class)))
+        when(expenseRepository.findAllByUserAndDateBetween(eq(testUser), any(LocalDate.class), any(LocalDate.class)))
                 .thenReturn(Collections.singletonList(variableExpense));
 
         expenseEventListener.handleExpenseCreatedEvent(testExpenseCreatedEvent);
@@ -158,7 +158,7 @@ class ExpenseEventListenerTest {
         fixedExpense.setAmount(new BigDecimal("10000"));
         fixedExpense.setType(ExpenseType.FIXED);
 
-        when(expenseRepository.findByUserAndDateBetween(eq(testUser), any(LocalDateTime.class), any(LocalDateTime.class)))
+        when(expenseRepository.findAllByUserAndDateBetween(eq(testUser), any(LocalDate.class), any(LocalDate.class)))
                 .thenReturn(Collections.singletonList(fixedExpense));
 
         expenseEventListener.handleExpenseCreatedEvent(testExpenseCreatedEvent);
@@ -174,7 +174,7 @@ class ExpenseEventListenerTest {
         expenseEventListener.handleExpenseCreatedEvent(testExpenseCreatedEvent);
 
         verify(notificationService, never()).sendExpenseThresholdExceededNotification(any(), any());
-        verify(expenseRepository, never()).findByUserAndDateBetween(any(), any(), any());
+        verify(expenseRepository, never()).findAllByUserAndDateBetween(any(), any(), any());
     }
 
     @Test
