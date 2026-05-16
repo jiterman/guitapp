@@ -10,6 +10,8 @@ import { getCategoryLabel, getCategoryIcon } from '../../constants/categories';
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 const vh = screenHeight / 100;
 
+const formatCurrency = (value: number) => new Intl.NumberFormat('es-AR').format(value);
+
 interface ExpenseChartProps {
   data: ExpenseCategoryStatistics[];
   totalAmount: number;
@@ -67,7 +69,7 @@ const ExpenseChart: React.FC<ExpenseChartProps> = ({ data, totalAmount }) => {
                 {selectedData ? getCategoryLabel(selectedData.category, 'EXPENSE') : 'Total'}
               </Text>
               <Text style={styles.totalAmount}>
-                ${(selectedData ? Number(selectedData.totalAmount) : totalAmount).toFixed(2)}
+                ${formatCurrency(selectedData ? Number(selectedData.totalAmount) : totalAmount)}
               </Text>
               {selectedData && (
                 <Text style={styles.percentageLabel}>{selectedData.percentage.toFixed(1)}%</Text>
@@ -96,7 +98,9 @@ const ExpenseChart: React.FC<ExpenseChartProps> = ({ data, totalAmount }) => {
                 </View>
                 <View style={styles.legendRight}>
                   <Text style={styles.legendPercentage}>{item.percentage.toFixed(1)}%</Text>
-                  <Text style={styles.legendAmount}>${Number(item.totalAmount).toFixed(2)}</Text>
+                  <Text style={styles.legendAmount}>
+                    ${formatCurrency(Number(item.totalAmount))}
+                  </Text>
                 </View>
               </View>
             );
