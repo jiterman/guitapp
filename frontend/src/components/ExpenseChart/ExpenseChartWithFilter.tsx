@@ -2,7 +2,6 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { View, StyleSheet, Dimensions, TouchableOpacity, ScrollView, Text } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { SvgXml } from 'react-native-svg';
-import { LinearGradient } from 'expo-linear-gradient';
 import FILTER_ICON from '../../../assets/icons/filterIcon';
 import ExpenseChart from './ExpenseChart';
 import MovementFilter, { FilterState, FilterKind } from '../MovementFilter/MovementFilter';
@@ -42,23 +41,40 @@ const MONTH_LABELS = [
   'Diciembre',
 ];
 
-const getFilterLabel = (filterState: FilterState): string => {
+const getFilterButtonLabel = (filterState: FilterState): string => {
+  const now = new Date();
+  const isToday = (date: Date) =>
+    date.getDate() === now.getDate() &&
+    date.getMonth() === now.getMonth() &&
+    date.getFullYear() === now.getFullYear();
+  const isYesterday = (date: Date) => {
+    const yesterday = new Date(now);
+    yesterday.setDate(yesterday.getDate() - 1);
+    return (
+      date.getDate() === yesterday.getDate() &&
+      date.getMonth() === yesterday.getMonth() &&
+      date.getFullYear() === yesterday.getFullYear()
+    );
+  };
+
   switch (filterState.kind) {
     case 'day':
       if (filterState.day) {
-        const day = filterState.day.getDate().toString().padStart(2, '0');
-        const month = (filterState.day.getMonth() + 1).toString().padStart(2, '0');
+        if (isToday(filterState.day)) return 'Hoy';
+        if (isYesterday(filterState.day)) return 'Ayer';
+        const day = filterState.day.getDate();
+        const monthName = MONTH_LABELS[filterState.day.getMonth()].toLowerCase();
         const year = filterState.day.getFullYear();
-        return `Día · ${day}/${month}/${year}`;
+        return `${day} ${monthName} ${year}`;
       }
       return 'Día';
     case 'month':
       const monthName = MONTH_LABELS[filterState.month - 1];
-      return `Mes · ${monthName} ${filterState.year}`;
+      return `${monthName} ${filterState.year}`;
     case 'year':
-      return `Año · ${filterState.year}`;
+      return `${filterState.year}`;
     case 'all':
-      return 'Desde el inicio';
+      return 'Histórico';
   }
 };
 
@@ -118,16 +134,13 @@ const ExpenseChartWithFilter: React.FC = () => {
     <View style={styles.container}>
       <View style={styles.paddedContent}>
         <View style={styles.headerTop}>
-          <View style={styles.headerText}>
-            <Text style={styles.title}>Estadísticas</Text>
-            <Text style={styles.subtitle}>{getFilterLabel(filterState)}</Text>
-          </View>
+          <Text style={styles.title}>Estadísticas</Text>
           <TouchableOpacity
             style={styles.filterButton}
             onPress={() => setIsFilterVisible(!isFilterVisible)}
           >
             <SvgXml xml={FILTER_ICON} width={18} height={18} />
-            <Text style={styles.filterButtonText}>Filtros</Text>
+            <Text style={styles.filterButtonText}>{getFilterButtonLabel(filterState)}</Text>
           </TouchableOpacity>
         </View>
 
@@ -145,15 +158,10 @@ const ExpenseChartWithFilter: React.FC = () => {
             onPress={() => setSelectedChart('categories')}
           >
             {selectedChart === 'categories' ? (
-              <LinearGradient
-                colors={['#FFE8A3', '#FFF5CC']}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 0 }}
-                style={styles.chartTab}
-              >
-                <Ionicons name="pie-chart-outline" size={18} color="#d39700" />
+              <View style={[styles.chartTab, styles.chartTabActive]}>
+                <Ionicons name="pie-chart-outline" size={18} color="#FFBB00" />
                 <Text style={styles.chartTabTextActive}>Categorías</Text>
-              </LinearGradient>
+              </View>
             ) : (
               <View style={[styles.chartTab, styles.chartTabInactive]}>
                 <Ionicons name="pie-chart-outline" size={18} color="#6b8aa1" />
@@ -167,15 +175,10 @@ const ExpenseChartWithFilter: React.FC = () => {
             onPress={() => setSelectedChart('timeline')}
           >
             {selectedChart === 'timeline' ? (
-              <LinearGradient
-                colors={['#FFE8A3', '#FFF5CC']}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 0 }}
-                style={styles.chartTab}
-              >
-                <Ionicons name="swap-horizontal-outline" size={18} color="#d39700" />
+              <View style={[styles.chartTab, styles.chartTabActive]}>
+                <Ionicons name="swap-horizontal-outline" size={18} color="#FFBB00" />
                 <Text style={styles.chartTabTextActive}>Fijos vs variables</Text>
-              </LinearGradient>
+              </View>
             ) : (
               <View style={[styles.chartTab, styles.chartTabInactive]}>
                 <Ionicons name="swap-horizontal-outline" size={18} color="#6b8aa1" />
@@ -223,9 +226,6 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'flex-start',
   },
-  headerText: {
-    flex: 1,
-  },
   title: {
     fontSize: 22,
     fontWeight: '700',
@@ -249,7 +249,7 @@ const styles = StyleSheet.create({
   },
   filterButtonText: {
     fontSize: 14,
-    fontWeight: '700',
+    fontWeight: '400',
     color: '#003366',
   },
   filterContainer: {
@@ -278,8 +278,15 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#E8E8F0',
   },
+  chartTabActive: {
+    backgroundColor: '#fdf6e7',
+    borderWidth: 1.5,
+    borderColor: '#FFBB00',
+  },
   chartTabInactive: {
     backgroundColor: '#fff',
+    borderWidth: 1,
+    borderColor: '#E8E8F0',
   },
   chartTabText: {
     fontSize: 13,
@@ -287,7 +294,7 @@ const styles = StyleSheet.create({
   },
   chartTabTextActive: {
     fontSize: 13,
-    color: '#d39700',
+    color: '#E8AE1A',
   },
   comingSoon: {
     backgroundColor: '#fff',

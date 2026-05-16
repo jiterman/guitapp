@@ -65,8 +65,7 @@ const ExpenseChart: React.FC<ExpenseChartProps> = ({ data, totalAmount }) => {
     <>
       <View style={styles.chartCard}>
         <View style={styles.chartHeader}>
-          <Text style={styles.chartTitle}>Distribución de gastos</Text>
-          <Text style={styles.chartSubtitle}>Así se repartió tu dinero en este período</Text>
+          <Text style={styles.chartTitle}>¿En qué gastaste?</Text>
         </View>
         <View style={styles.chartContainer}>
           <PieChart
@@ -163,8 +162,8 @@ const ExpenseChart: React.FC<ExpenseChartProps> = ({ data, totalAmount }) => {
               </Text>
               <Ionicons
                 name={showAllCategories ? 'chevron-up' : 'chevron-down'}
-                size={16}
-                color="#6b8aa1"
+                size={18}
+                color="#6B84B1"
               />
             </TouchableOpacity>
           )}
@@ -181,11 +180,11 @@ const styles = StyleSheet.create({
     padding: vh * 2,
     marginHorizontal: screenWidth * 0.05,
     marginBottom: vh * 2,
-    shadowColor: '#000',
+    shadowColor: '#3a9fc0',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
+    shadowOpacity: 0.15,
     shadowRadius: 6,
-    elevation: 3,
+    elevation: 6,
     overflow: 'visible',
   },
   chartHeader: {
@@ -203,7 +202,7 @@ const styles = StyleSheet.create({
   },
   chartContainer: {
     alignItems: 'center',
-    paddingVertical: vh,
+    paddingBottom: vh,
     paddingHorizontal: 10,
     overflow: 'visible',
   },
@@ -245,11 +244,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: vh * 2,
     paddingTop: vh,
     paddingBottom: vh * 1.75,
-    shadowColor: '#000',
+    shadowColor: '#3a9fc0',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
+    shadowOpacity: 0.15,
     shadowRadius: 6,
-    elevation: 3,
+    elevation: 6,
   },
   legendItem: {
     paddingVertical: vh * 1.2,
@@ -307,17 +306,18 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: vh * 1.5,
-    gap: 6,
+    paddingVertical: vh * 1.8,
+    gap: 8,
     marginTop: vh,
+    backgroundColor: '#FDFDFE',
     borderWidth: 1,
-    borderColor: '#E0E7ED',
-    borderRadius: 8,
+    borderColor: '#E5EAF2',
+    borderRadius: 12,
   },
   showMoreText: {
     fontSize: 14,
-    color: '#6b8aa1',
-    fontWeight: '500',
+    color: '#6B84B1',
+    fontWeight: '600',
   },
   emptyContainer: {
     padding: vh * 3,
