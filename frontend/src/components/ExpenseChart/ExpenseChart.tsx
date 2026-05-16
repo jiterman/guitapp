@@ -91,7 +91,7 @@ const ExpenseChart: React.FC<ExpenseChartProps> = ({ data, totalAmount }) => {
                     <Ionicons
                       name={selectedIcon as keyof typeof Ionicons.glyphMap}
                       size={20}
-                      color={selectedColor}
+                      color={selectedColor || '#ccc'}
                     />
                   </View>
                 )}

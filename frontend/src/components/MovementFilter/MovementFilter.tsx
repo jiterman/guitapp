@@ -484,7 +484,7 @@ const styles = StyleSheet.create({
   modalFooter: {
     flexDirection: 'row',
     justifyContent: 'flex-end',
-    marginTop: vh * 1,
+    marginTop: vh,
   },
   saveButton: {
     backgroundColor: '#1a9e5c',
