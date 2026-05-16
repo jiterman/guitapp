@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, Dimensions, Text } from 'react-native';
+import { View, StyleSheet, Dimensions, Text, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { PieChart } from 'react-native-gifted-charts';
 import { ExpenseCategoryStatistics } from '../../services/expenseStatisticsService';
@@ -18,6 +18,7 @@ interface ExpenseChartProps {
 
 const ExpenseChart: React.FC<ExpenseChartProps> = ({ data, totalAmount }) => {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [showAllCategories, setShowAllCategories] = useState(false);
 
   if (data.length === 0) {
     return (
@@ -118,27 +119,55 @@ const ExpenseChart: React.FC<ExpenseChartProps> = ({ data, totalAmount }) => {
 
       <View style={styles.legendWrapper}>
         <View style={styles.legendContainer}>
-          {data.map((item, index) => {
+          {(showAllCategories ? data : data.slice(0, 5)).map((item, index) => {
             const color = EXPENSE_CATEGORY_COLORS[item.category];
             const label = getCategoryLabel(item.category, 'EXPENSE');
             const iconName = getCategoryIcon(item.category) as keyof typeof Ionicons.glyphMap;
             return (
               <View key={index} style={styles.legendItem}>
-                <View style={styles.legendLeft}>
-                  <View style={[styles.iconCircle, { backgroundColor: `${color}20` }]}>
-                    <Ionicons name={iconName} size={18} color={color} />
+                <View style={styles.legendHeader}>
+                  <View style={styles.legendLeft}>
+                    <View style={[styles.iconCircle, { backgroundColor: `${color}20` }]}>
+                      <Ionicons name={iconName} size={18} color={color} />
+                    </View>
+                    <Text style={styles.legendLabel}>{label}</Text>
                   </View>
-                  <Text style={styles.legendLabel}>{label}</Text>
+                  <View style={styles.legendRight}>
+                    <Text style={styles.legendAmount}>
+                      ${formatCurrency(Number(item.totalAmount))}
+                    </Text>
+                    <Text style={styles.legendPercentage}>{item.percentage.toFixed(1)}%</Text>
+                  </View>
                 </View>
-                <View style={styles.legendRight}>
-                  <Text style={styles.legendPercentage}>{item.percentage.toFixed(1)}%</Text>
-                  <Text style={styles.legendAmount}>
-                    ${formatCurrency(Number(item.totalAmount))}
-                  </Text>
+                <View style={styles.progressBarContainer}>
+                  <View
+                    style={[
+                      styles.progressBar,
+                      {
+                        width: `${item.percentage}%`,
+                        backgroundColor: color,
+                      },
+                    ]}
+                  />
                 </View>
               </View>
             );
           })}
+          {data.length > 5 && (
+            <TouchableOpacity
+              style={styles.showMoreButton}
+              onPress={() => setShowAllCategories(!showAllCategories)}
+            >
+              <Text style={styles.showMoreText}>
+                {showAllCategories ? 'Ver menos' : `Ver todas las categorías (${data.length})`}
+              </Text>
+              <Ionicons
+                name={showAllCategories ? 'chevron-up' : 'chevron-down'}
+                size={16}
+                color="#6b8aa1"
+              />
+            </TouchableOpacity>
+          )}
         </View>
       </View>
     </>
@@ -213,7 +242,9 @@ const styles = StyleSheet.create({
   legendContainer: {
     backgroundColor: '#fff',
     borderRadius: 14,
-    padding: vh * 2,
+    paddingHorizontal: vh * 2,
+    paddingTop: vh,
+    paddingBottom: vh * 1.75,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.08,
@@ -221,18 +252,31 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   legendItem: {
+    paddingVertical: vh * 1.2,
+    borderBottomWidth: 1,
+    borderBottomColor: '#EEF6FB',
+  },
+  legendHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingVertical: vh * 0.8,
-    borderBottomWidth: 1,
-    borderBottomColor: '#EEF6FB',
+    marginBottom: 8,
   },
   legendLeft: {
     flexDirection: 'row',
     alignItems: 'center',
     flex: 1,
     gap: 10,
+  },
+  progressBarContainer: {
+    height: 8,
+    backgroundColor: '#F5F8FA',
+    borderRadius: 4,
+    overflow: 'hidden',
+  },
+  progressBar: {
+    height: '100%',
+    borderRadius: 4,
   },
   iconCircle: {
     width: 32,
@@ -248,15 +292,32 @@ const styles = StyleSheet.create({
   },
   legendRight: {
     alignItems: 'flex-end',
+    gap: 2,
   },
   legendPercentage: {
+    fontSize: 12,
+    color: '#6b8aa1',
+  },
+  legendAmount: {
     fontSize: 14,
     fontWeight: '700',
     color: '#003366',
   },
-  legendAmount: {
-    fontSize: 12,
+  showMoreButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: vh * 1.5,
+    gap: 6,
+    marginTop: vh,
+    borderWidth: 1,
+    borderColor: '#E0E7ED',
+    borderRadius: 8,
+  },
+  showMoreText: {
+    fontSize: 14,
     color: '#6b8aa1',
+    fontWeight: '500',
   },
   emptyContainer: {
     padding: vh * 3,
