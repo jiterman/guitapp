@@ -14,6 +14,7 @@ import {
 } from '../constants/categories';
 import { useCurrencyInput } from '../hooks/useCurrencyInput';
 import { detailScreenStyles } from '../styles/detailScreenStyles';
+import { transactionFormStyles } from '../styles/transactionFormStyles';
 
 const formatMoney = (amount: number) => new Intl.NumberFormat('es-AR').format(Number(amount));
 
@@ -532,6 +533,7 @@ const ExpenseDetailScreen: React.FC = () => {
 
 const styles = {
   ...detailScreenStyles,
+  ...transactionFormStyles,
   iconCircle: {
     ...detailScreenStyles.iconCircle,
     backgroundColor: '#fce8e6',
