@@ -15,7 +15,6 @@ export type ExpenseCategory =
   | 'PHARMACY'
   | 'SUBSCRIPTIONS'
   | 'OUTINGS'
-  | 'BAR'
   | 'GYM'
   | 'TRAVEL'
   | 'CLOTHING'

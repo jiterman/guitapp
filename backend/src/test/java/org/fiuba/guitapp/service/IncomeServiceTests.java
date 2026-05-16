@@ -319,7 +319,7 @@ class IncomeServiceTests {
     @Test
     void updateIncome_ShouldKeepExistingValues_WhenFieldsAreNull() {
         UUID incomeId = UUID.randomUUID();
-        LocalDateTime now = LocalDateTime.now();
+        LocalDate now = LocalDate.now();
 
         Income income = new Income();
         income.setId(incomeId);
@@ -329,7 +329,7 @@ class IncomeServiceTests {
         income.setDate(now);
         income.setUser(testUser);
 
-        UpdateIncomeRequest request = new UpdateIncomeRequest(null, null, null);
+        UpdateIncomeRequest request = new UpdateIncomeRequest(null, null, null, null);
 
         when(userRepository.findByEmail(testEmail)).thenReturn(Optional.of(testUser));
         when(incomeRepository.findById(incomeId)).thenReturn(Optional.of(income));
@@ -345,7 +345,7 @@ class IncomeServiceTests {
     @Test
     void updateIncome_ShouldSetDescriptionToEmpty_WhenEmptyStringProvided() {
         UUID incomeId = UUID.randomUUID();
-        LocalDateTime now = LocalDateTime.now();
+        LocalDate now = LocalDate.now();
 
         Income income = new Income();
         income.setId(incomeId);
@@ -355,7 +355,7 @@ class IncomeServiceTests {
         income.setDate(now);
         income.setUser(testUser);
 
-        UpdateIncomeRequest request = new UpdateIncomeRequest(null, "", null);
+        UpdateIncomeRequest request = new UpdateIncomeRequest(null, "", null, null);
 
         when(userRepository.findByEmail(testEmail)).thenReturn(Optional.of(testUser));
         when(incomeRepository.findById(incomeId)).thenReturn(Optional.of(income));
@@ -371,7 +371,7 @@ class IncomeServiceTests {
     @Test
     void updateIncome_ShouldThrowAuthException_WhenIncomeNotFound() {
         UUID incomeId = UUID.randomUUID();
-        UpdateIncomeRequest request = new UpdateIncomeRequest(new BigDecimal("1.00"), "x", IncomeCategory.OTHER);
+        UpdateIncomeRequest request = new UpdateIncomeRequest(new BigDecimal("1.00"), "x", IncomeCategory.OTHER, LocalDate.now());
 
         when(userRepository.findByEmail(testEmail)).thenReturn(Optional.of(testUser));
         when(incomeRepository.findById(incomeId)).thenReturn(Optional.empty());
@@ -395,7 +395,7 @@ class IncomeServiceTests {
         income.setId(incomeId);
         income.setUser(otherUser);
 
-        UpdateIncomeRequest request = new UpdateIncomeRequest(new BigDecimal("1.00"), "x", IncomeCategory.OTHER);
+        UpdateIncomeRequest request = new UpdateIncomeRequest(new BigDecimal("1.00"), "x", IncomeCategory.OTHER, LocalDate.now());
 
         when(userRepository.findByEmail(testEmail)).thenReturn(Optional.of(testUser));
         when(incomeRepository.findById(incomeId)).thenReturn(Optional.of(income));

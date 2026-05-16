@@ -365,7 +365,7 @@ class ExpenseServiceTests {
         expense.setId(expenseId);
         expense.setAmount(new BigDecimal("40.00"));
         expense.setDescription("Note");
-        expense.setCategory(ExpenseCategory.BAR);
+        expense.setCategory(ExpenseCategory.OUTINGS);
         expense.setType(ExpenseType.VARIABLE);
         expense.setDate(now);
         expense.setUser(testUser);
@@ -380,7 +380,7 @@ class ExpenseServiceTests {
 
         assertEquals("", response.description());
         assertEquals(new BigDecimal("40.00"), response.amount());
-        assertEquals(ExpenseCategory.BAR, response.category());
+        assertEquals(ExpenseCategory.OUTINGS, response.category());
         assertEquals(ExpenseType.VARIABLE, response.type());
     }
 
