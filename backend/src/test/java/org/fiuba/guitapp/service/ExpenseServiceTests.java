@@ -5,7 +5,7 @@ import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
@@ -59,7 +59,7 @@ class ExpenseServiceTests {
     @Test
     void addExpense_ShouldReturnExpenseResponse_WhenUserExists() {
         AddExpenseRequest request = new AddExpenseRequest(
-                new BigDecimal("1500.00"), "Lunch", ExpenseCategory.RESTAURANT, ExpenseType.VARIABLE);
+                new BigDecimal("1500.00"), "Lunch", ExpenseCategory.RESTAURANT, ExpenseType.VARIABLE, LocalDate.now());
 
         Expense savedExpense = new Expense();
         savedExpense.setId(UUID.randomUUID());
@@ -67,7 +67,7 @@ class ExpenseServiceTests {
         savedExpense.setDescription(request.description());
         savedExpense.setCategory(request.category());
         savedExpense.setType(request.type());
-        savedExpense.setDate(LocalDateTime.now());
+        savedExpense.setDate(LocalDate.now());
         savedExpense.setUser(testUser);
 
         when(userRepository.findByEmail(testEmail)).thenReturn(Optional.of(testUser));
@@ -89,7 +89,7 @@ class ExpenseServiceTests {
     @Test
     void addExpense_ShouldThrowAuthException_WhenUserNotFound() {
         AddExpenseRequest request = new AddExpenseRequest(
-                new BigDecimal("100.00"), null, ExpenseCategory.OTHER, ExpenseType.FIXED);
+                new BigDecimal("100.00"), null, ExpenseCategory.OTHER, ExpenseType.FIXED, LocalDate.now());
 
         when(userRepository.findByEmail(testEmail)).thenReturn(Optional.empty());
 
@@ -102,14 +102,14 @@ class ExpenseServiceTests {
     @Test
     void addExpense_ShouldSaveExpenseWithNullDescription_WhenDescriptionIsNull() {
         AddExpenseRequest request = new AddExpenseRequest(
-                new BigDecimal("500.00"), null, ExpenseCategory.SUPERMARKET, ExpenseType.VARIABLE);
+                new BigDecimal("500.00"), null, ExpenseCategory.SUPERMARKET, ExpenseType.VARIABLE, LocalDate.now());
 
         Expense savedExpense = new Expense();
         savedExpense.setId(UUID.randomUUID());
         savedExpense.setAmount(request.amount());
         savedExpense.setDescription(null);
         savedExpense.setCategory(request.category());
-        savedExpense.setDate(LocalDateTime.now());
+        savedExpense.setDate(LocalDate.now());
         savedExpense.setUser(testUser);
 
         when(userRepository.findByEmail(testEmail)).thenReturn(Optional.of(testUser));
@@ -124,14 +124,14 @@ class ExpenseServiceTests {
     @Test
     void addExpense_ShouldAssociateExpenseWithUser() {
         AddExpenseRequest request = new AddExpenseRequest(
-                new BigDecimal("200.00"), "Transport", ExpenseCategory.PUBLIC_TRANSPORT, ExpenseType.FIXED);
+                new BigDecimal("200.00"), "Transport", ExpenseCategory.PUBLIC_TRANSPORT, ExpenseType.FIXED, LocalDate.now());
 
         Expense savedExpense = new Expense();
         savedExpense.setId(UUID.randomUUID());
         savedExpense.setAmount(request.amount());
         savedExpense.setCategory(request.category());
         savedExpense.setType(request.type());
-        savedExpense.setDate(LocalDateTime.now());
+        savedExpense.setDate(LocalDate.now());
         savedExpense.setUser(testUser);
 
         when(userRepository.findByEmail(testEmail)).thenReturn(Optional.of(testUser));
@@ -217,7 +217,7 @@ class ExpenseServiceTests {
     @Test
     void getExpenseById_ShouldReturnExpenseResponse_WhenExpenseBelongsToUser() {
         UUID expenseId = UUID.randomUUID();
-        LocalDateTime now = LocalDateTime.now();
+        LocalDate now = LocalDate.now();
 
         Expense expense = new Expense();
         expense.setId(expenseId);
@@ -296,7 +296,7 @@ class ExpenseServiceTests {
     @Test
     void updateExpense_ShouldUpdateFields_WhenProvided() {
         UUID expenseId = UUID.randomUUID();
-        LocalDateTime now = LocalDateTime.now();
+        LocalDate now = LocalDate.now();
 
         Expense expense = new Expense();
         expense.setId(expenseId);
@@ -311,7 +311,8 @@ class ExpenseServiceTests {
                 new BigDecimal("120.00"),
                 "Updated lunch",
                 ExpenseCategory.RESTAURANT,
-                ExpenseType.FIXED);
+                ExpenseType.FIXED,
+                LocalDate.now());
 
         when(userRepository.findByEmail(testEmail)).thenReturn(Optional.of(testUser));
         when(expenseRepository.findById(expenseId)).thenReturn(Optional.of(expense));
@@ -330,7 +331,7 @@ class ExpenseServiceTests {
     @Test
     void updateExpense_ShouldKeepExistingValues_WhenFieldsAreNull() {
         UUID expenseId = UUID.randomUUID();
-        LocalDateTime now = LocalDateTime.now();
+        LocalDate now = LocalDate.now();
 
         Expense expense = new Expense();
         expense.setId(expenseId);
@@ -341,7 +342,7 @@ class ExpenseServiceTests {
         expense.setDate(now);
         expense.setUser(testUser);
 
-        UpdateExpenseRequest request = new UpdateExpenseRequest(null, null, null, null);
+        UpdateExpenseRequest request = new UpdateExpenseRequest(null, null, null, null, null);
 
         when(userRepository.findByEmail(testEmail)).thenReturn(Optional.of(testUser));
         when(expenseRepository.findById(expenseId)).thenReturn(Optional.of(expense));
@@ -358,7 +359,7 @@ class ExpenseServiceTests {
     @Test
     void updateExpense_ShouldSetDescriptionToEmpty_WhenEmptyStringProvided() {
         UUID expenseId = UUID.randomUUID();
-        LocalDateTime now = LocalDateTime.now();
+        LocalDate now = LocalDate.now();
 
         Expense expense = new Expense();
         expense.setId(expenseId);
@@ -369,7 +370,7 @@ class ExpenseServiceTests {
         expense.setDate(now);
         expense.setUser(testUser);
 
-        UpdateExpenseRequest request = new UpdateExpenseRequest(null, "", null, null);
+        UpdateExpenseRequest request = new UpdateExpenseRequest(null, "", null, null, null);
 
         when(userRepository.findByEmail(testEmail)).thenReturn(Optional.of(testUser));
         when(expenseRepository.findById(expenseId)).thenReturn(Optional.of(expense));
@@ -386,7 +387,7 @@ class ExpenseServiceTests {
     @Test
     void updateExpense_ShouldThrowAuthException_WhenExpenseNotFound() {
         UUID expenseId = UUID.randomUUID();
-        UpdateExpenseRequest request = new UpdateExpenseRequest(new BigDecimal("1.00"), "x", ExpenseCategory.OTHER, ExpenseType.VARIABLE);
+        UpdateExpenseRequest request = new UpdateExpenseRequest(new BigDecimal("1.00"), "x", ExpenseCategory.OTHER, ExpenseType.VARIABLE, LocalDate.now());
 
         when(userRepository.findByEmail(testEmail)).thenReturn(Optional.of(testUser));
         when(expenseRepository.findById(expenseId)).thenReturn(Optional.empty());
@@ -410,7 +411,7 @@ class ExpenseServiceTests {
         expense.setId(expenseId);
         expense.setUser(otherUser);
 
-        UpdateExpenseRequest request = new UpdateExpenseRequest(new BigDecimal("1.00"), "x", ExpenseCategory.OTHER, ExpenseType.VARIABLE);
+        UpdateExpenseRequest request = new UpdateExpenseRequest(new BigDecimal("1.00"), "x", ExpenseCategory.OTHER, ExpenseType.VARIABLE, LocalDate.now());
 
         when(userRepository.findByEmail(testEmail)).thenReturn(Optional.of(testUser));
         when(expenseRepository.findById(expenseId)).thenReturn(Optional.of(expense));
@@ -423,15 +424,15 @@ class ExpenseServiceTests {
 
     @Test
     void getExpenseStatistics_ShouldReturnStatistics_WithMonthlyPeriodAndSpecificDate() {
-        LocalDateTime januaryFirst = LocalDateTime.of(2024, 1, 1, 0, 0);
-        LocalDateTime januaryEnd = LocalDateTime.of(2024, 2, 1, 0, 0);
+        LocalDate januaryFirst = LocalDate.of(2024, 1, 1);
+        LocalDate januaryEnd = LocalDate.of(2024, 2, 1);
 
         Expense expense1 = new Expense();
         expense1.setId(UUID.randomUUID());
         expense1.setAmount(new BigDecimal("100.00"));
         expense1.setCategory(ExpenseCategory.RESTAURANT);
         expense1.setType(ExpenseType.VARIABLE);
-        expense1.setDate(LocalDateTime.of(2024, 1, 15, 12, 0));
+        expense1.setDate(LocalDate.of(2024, 1, 15));
         expense1.setUser(testUser);
 
         Expense expense2 = new Expense();
@@ -439,7 +440,7 @@ class ExpenseServiceTests {
         expense2.setAmount(new BigDecimal("200.00"));
         expense2.setCategory(ExpenseCategory.RESTAURANT);
         expense2.setType(ExpenseType.VARIABLE);
-        expense2.setDate(LocalDateTime.of(2024, 1, 20, 15, 30));
+        expense2.setDate(LocalDate.of(2024, 1, 20));
         expense2.setUser(testUser);
 
         List<Expense> expenses = Arrays.asList(expense1, expense2);
@@ -463,15 +464,15 @@ class ExpenseServiceTests {
 
     @Test
     void getExpenseStatistics_ShouldReturnStatistics_WithDailyPeriodAndSpecificDate() {
-        LocalDateTime dayStart = LocalDateTime.of(2024, 5, 15, 0, 0);
-        LocalDateTime dayEnd = LocalDateTime.of(2024, 5, 16, 0, 0);
+        LocalDate dayStart = LocalDate.of(2024, 5, 15);
+        LocalDate dayEnd = LocalDate.of(2024, 5, 16);
 
         Expense expense1 = new Expense();
         expense1.setId(UUID.randomUUID());
         expense1.setAmount(new BigDecimal("50.00"));
         expense1.setCategory(ExpenseCategory.CAFE);
         expense1.setType(ExpenseType.VARIABLE);
-        expense1.setDate(LocalDateTime.of(2024, 5, 15, 8, 30));
+        expense1.setDate(LocalDate.of(2024, 5, 15));
         expense1.setUser(testUser);
 
         List<Expense> expenses = Arrays.asList(expense1);
@@ -497,7 +498,7 @@ class ExpenseServiceTests {
         expense1.setAmount(new BigDecimal("100.00"));
         expense1.setCategory(ExpenseCategory.RENT);
         expense1.setType(ExpenseType.FIXED);
-        expense1.setDate(LocalDateTime.now());
+        expense1.setDate(LocalDate.now());
         expense1.setUser(testUser);
 
         Expense expense2 = new Expense();
@@ -505,7 +506,7 @@ class ExpenseServiceTests {
         expense2.setAmount(new BigDecimal("150.00"));
         expense2.setCategory(ExpenseCategory.SUPERMARKET);
         expense2.setType(ExpenseType.VARIABLE);
-        expense2.setDate(LocalDateTime.now());
+        expense2.setDate(LocalDate.now());
         expense2.setUser(testUser);
 
         List<Expense> expenses = Arrays.asList(expense1, expense2);
@@ -524,15 +525,15 @@ class ExpenseServiceTests {
 
     @Test
     void getExpenseStatistics_ShouldHandleMultipleCategories() {
-        LocalDateTime monthStart = LocalDateTime.of(2024, 3, 1, 0, 0);
-        LocalDateTime monthEnd = LocalDateTime.of(2024, 4, 1, 0, 0);
+        LocalDate monthStart = LocalDate.of(2024, 3, 1);
+        LocalDate monthEnd = LocalDate.of(2024, 4, 1);
 
         Expense expense1 = new Expense();
         expense1.setId(UUID.randomUUID());
         expense1.setAmount(new BigDecimal("100.00"));
         expense1.setCategory(ExpenseCategory.RESTAURANT);
         expense1.setType(ExpenseType.VARIABLE);
-        expense1.setDate(LocalDateTime.of(2024, 3, 10, 12, 0));
+        expense1.setDate(LocalDate.of(2024, 3, 10));
         expense1.setUser(testUser);
 
         Expense expense2 = new Expense();
@@ -540,7 +541,7 @@ class ExpenseServiceTests {
         expense2.setAmount(new BigDecimal("50.00"));
         expense2.setCategory(ExpenseCategory.CAFE);
         expense2.setType(ExpenseType.VARIABLE);
-        expense2.setDate(LocalDateTime.of(2024, 3, 15, 9, 0));
+        expense2.setDate(LocalDate.of(2024, 3, 15));
         expense2.setUser(testUser);
 
         Expense expense3 = new Expense();
@@ -548,7 +549,7 @@ class ExpenseServiceTests {
         expense3.setAmount(new BigDecimal("150.00"));
         expense3.setCategory(ExpenseCategory.RESTAURANT);
         expense3.setType(ExpenseType.VARIABLE);
-        expense3.setDate(LocalDateTime.of(2024, 3, 20, 19, 0));
+        expense3.setDate(LocalDate.of(2024, 3, 20));
         expense3.setUser(testUser);
 
         List<Expense> expenses = Arrays.asList(expense1, expense2, expense3);
@@ -572,8 +573,8 @@ class ExpenseServiceTests {
 
     @Test
     void getExpenseStatistics_ShouldReturnEmptyList_WhenNoExpenses() {
-        LocalDateTime monthStart = LocalDateTime.of(2024, 6, 1, 0, 0);
-        LocalDateTime monthEnd = LocalDateTime.of(2024, 7, 1, 0, 0);
+        LocalDate monthStart = LocalDate.of(2024, 6, 1);
+        LocalDate monthEnd = LocalDate.of(2024, 7, 1);
 
         when(userRepository.findByEmail(testEmail)).thenReturn(Optional.of(testUser));
         when(expenseRepository.findAllByUserAndDateBetween(testUser, monthStart, monthEnd))

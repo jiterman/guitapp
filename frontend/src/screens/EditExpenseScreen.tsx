@@ -76,7 +76,9 @@ const EditExpenseScreen = () => {
 
   const onSelectCategory = (cat: ExpenseCategoryOption) => {
     setSelectedCategory(cat);
+    setSelectedType(cat.defaultType);
     setCategoryError(null);
+    setTypeError(null);
     setModalVisible(false);
     setSearch('');
   };
