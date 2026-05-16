@@ -4,6 +4,7 @@ import { Text } from '@ui-kitten/components';
 import { Ionicons } from '@expo/vector-icons';
 import { MovementResponse } from '../../services/movementService';
 import { getCategoryLabel } from '../../constants/categories';
+import { formatDate } from '../../utils/dateFormatter';
 
 interface Props {
   movement: MovementResponse;
@@ -34,7 +35,7 @@ const TransactionCard: React.FC<Props> = ({ movement, onPress }) => {
         <View>
           <Text category="s1">{displayText}</Text>
           <Text appearance="hint" category="c1">
-            {new Date(movement.date).toLocaleString()}
+            {formatDate(new Date(movement.date))}
           </Text>
         </View>
       </View>
