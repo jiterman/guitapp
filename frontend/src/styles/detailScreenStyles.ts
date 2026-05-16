@@ -93,6 +93,24 @@ export const detailScreenStyles = StyleSheet.create({
     alignItems: 'center',
     marginRight: 16,
   },
+  iconCircleIncome: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 16,
+    backgroundColor: '#e8f8f0',
+  },
+  iconCircleExpense: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 16,
+    backgroundColor: '#fce8e6',
+  },
   amountContent: {
     flex: 1,
   },
@@ -105,6 +123,18 @@ export const detailScreenStyles = StyleSheet.create({
     fontSize: 32,
     fontWeight: '800',
     marginBottom: 6,
+  },
+  amountValueIncome: {
+    fontSize: 32,
+    fontWeight: '800',
+    marginBottom: 6,
+    color: '#1a9e5c',
+  },
+  amountValueExpense: {
+    fontSize: 32,
+    fontWeight: '800',
+    marginBottom: 6,
+    color: '#c0392b',
   },
   detailRow: {
     flexDirection: 'row',

@@ -1,5 +1,13 @@
 import React, { useState } from 'react';
-import { View, Alert, TouchableOpacity, Modal, FlatList, TextInput } from 'react-native';
+import {
+  View,
+  Alert,
+  TouchableOpacity,
+  Modal,
+  FlatList,
+  TextInput,
+  ScrollView,
+} from 'react-native';
 import { Layout, Text } from '@ui-kitten/components';
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
@@ -7,7 +15,11 @@ import { router } from 'expo-router';
 import { expenseService, type ExpenseType } from '../services/expenseService';
 import { CATEGORIES, ExpenseCategoryOption } from '../constants/categories';
 import { useCurrencyInput } from '../hooks/useCurrencyInput';
-import { transactionFormStyles as styles } from '../styles/transactionFormStyles';
+import {
+  transactionFormStyles as styles,
+  ICON_SIZES,
+  ICON_COLORS,
+} from '../styles/transactionFormStyles';
 
 const AddExpenseScreen = () => {
   const { displayValue, amount, handleAmountChange } = useCurrencyInput();
@@ -117,122 +129,134 @@ const AddExpenseScreen = () => {
           </TouchableOpacity>
         </View>
 
-        <Text style={styles.label}>Monto *</Text>
-        <View style={[styles.amountInputContainer, amountError ? styles.amountInputError : null]}>
-          <Text style={styles.amountCurrencySymbol}>$</Text>
-          <TextInput
-            value={displayValue}
-            onChangeText={text => {
-              handleAmountChange(text);
-              if (amountError) setAmountError(null);
-            }}
-            placeholder="0,00"
-            keyboardType="decimal-pad"
-            style={styles.amountInput}
-            placeholderTextColor="#FFC947"
-          />
-        </View>
-        {amountError && <Text style={styles.errorText}>{amountError}</Text>}
-
-        <Text style={styles.label}>Descripción</Text>
-        <View style={styles.inputWithIcon}>
-          <Ionicons
-            name="document-text-outline"
-            size={20}
-            color="#B0BEC5"
-            style={styles.inputIcon}
-          />
-          <TextInput
-            value={description}
-            onChangeText={setDescription}
-            placeholder="Ej. Compra del mes (opcional)"
-            style={styles.textInput}
-            placeholderTextColor="#B0BEC5"
-          />
-        </View>
-
-        <Text style={styles.label}>Categoría *</Text>
-        <TouchableOpacity
-          style={[styles.dropdownButton, categoryError ? styles.dropdownButtonError : null]}
-          onPress={() => setModalVisible(true)}
-        >
-          <View style={styles.dropdownContent}>
-            <Ionicons
-              name={selectedCategory?.icon || 'cart-outline'}
-              size={20}
-              color="#07a3e4"
-              style={styles.dropdownIcon}
+        <ScrollView showsVerticalScrollIndicator={false}>
+          <Text style={styles.label}>Monto *</Text>
+          <View style={[styles.amountInputContainer, amountError ? styles.amountInputError : null]}>
+            <View style={styles.amountIconContainer}>
+              <Text style={styles.amountCurrencySymbol}>$</Text>
+            </View>
+            <TextInput
+              value={displayValue}
+              onChangeText={text => {
+                handleAmountChange(text);
+                if (amountError) setAmountError(null);
+              }}
+              placeholder="0,00"
+              keyboardType="decimal-pad"
+              style={styles.amountInput}
+              placeholderTextColor="#FFC947"
             />
-            <Text style={selectedCategory ? styles.dropdownButtonText : styles.dropdownPlaceholder}>
-              {selectedCategory ? selectedCategory.label : 'Seleccioná una categoría'}
-            </Text>
           </View>
-          <Ionicons name="chevron-down" size={20} color="#07a3e4" />
-        </TouchableOpacity>
-        {categoryError && <Text style={styles.categoryErrorText}>{categoryError}</Text>}
+          {amountError && <Text style={styles.errorText}>{amountError}</Text>}
 
-        <Text style={styles.label}>Fecha *</Text>
-        <TouchableOpacity style={styles.dateButton} onPress={() => setShowDatePicker(true)}>
-          <Ionicons name="calendar-outline" size={20} color="#07a3e4" style={styles.dropdownIcon} />
-          <Text style={styles.dropdownButtonText}>{formatDate(selectedDate)}</Text>
-          <Ionicons name="chevron-forward" size={20} color="#07a3e4" />
-        </TouchableOpacity>
+          <Text style={styles.label}>Descripción</Text>
+          <View style={styles.inputWithIcon}>
+            <View style={styles.inputIconContainer}>
+              <Ionicons
+                name="document-text-outline"
+                size={ICON_SIZES.small}
+                color={ICON_COLORS.gray}
+              />
+            </View>
+            <TextInput
+              value={description}
+              onChangeText={setDescription}
+              placeholder="Ej. Compra del mes (opcional)"
+              style={styles.textInput}
+              placeholderTextColor="#B0BEC5"
+            />
+          </View>
 
-        <Text style={styles.typeLabel}>Tipo de gasto *</Text>
-        <View style={styles.typeContainer}>
+          <Text style={styles.label}>Categoría *</Text>
           <TouchableOpacity
-            style={[
-              styles.typeButton,
-              selectedType === 'FIXED' ? styles.typeButtonActive : styles.typeButtonInactive,
-            ]}
-            onPress={() => onSelectType('FIXED')}
+            style={[styles.dropdownButton, categoryError ? styles.dropdownButtonError : null]}
+            onPress={() => setModalVisible(true)}
           >
-            <Text
+            <View style={styles.dropdownContent}>
+              <View style={styles.dropdownIconContainer}>
+                <Ionicons
+                  name={selectedCategory?.icon || 'cart-outline'}
+                  size={ICON_SIZES.small}
+                  color={ICON_COLORS.primary}
+                />
+              </View>
+              <Text
+                style={selectedCategory ? styles.dropdownButtonText : styles.dropdownPlaceholder}
+              >
+                {selectedCategory ? selectedCategory.label : 'Seleccioná una categoría'}
+              </Text>
+            </View>
+            <Ionicons name="chevron-down" size={ICON_SIZES.medium} color={ICON_COLORS.secondary} />
+          </TouchableOpacity>
+          {categoryError && <Text style={styles.categoryErrorText}>{categoryError}</Text>}
+
+          <Text style={styles.label}>Fecha *</Text>
+          <TouchableOpacity style={styles.dateButton} onPress={() => setShowDatePicker(true)}>
+            <View style={styles.dropdownIconContainer}>
+              <Ionicons
+                name="calendar-outline"
+                size={ICON_SIZES.small}
+                color={ICON_COLORS.primary}
+              />
+            </View>
+            <Text style={styles.dropdownButtonText}>{formatDate(selectedDate)}</Text>
+            <Ionicons
+              name="chevron-forward"
+              size={ICON_SIZES.medium}
+              color={ICON_COLORS.secondary}
+            />
+          </TouchableOpacity>
+
+          <Text style={styles.typeLabel}>Tipo de gasto *</Text>
+          <View style={styles.typeContainer}>
+            <TouchableOpacity
               style={[
-                styles.typeButtonText,
-                selectedType === 'FIXED'
-                  ? styles.typeButtonTextActive
-                  : styles.typeButtonTextInactive,
+                styles.typeButton,
+                selectedType === 'FIXED' ? styles.typeButtonActive : styles.typeButtonInactive,
               ]}
+              onPress={() => onSelectType('FIXED')}
             >
-              Fijo
+              <Text
+                style={[
+                  styles.typeButtonText,
+                  selectedType === 'FIXED'
+                    ? styles.typeButtonTextActive
+                    : styles.typeButtonTextInactive,
+                ]}
+              >
+                Fijo
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[
+                styles.typeButton,
+                selectedType === 'VARIABLE' ? styles.typeButtonActive : styles.typeButtonInactive,
+              ]}
+              onPress={() => onSelectType('VARIABLE')}
+            >
+              {selectedType === 'VARIABLE' ? (
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                  <Ionicons name="trending-up" size={16} color="#2383F2" />
+                  <Text style={[styles.typeButtonText, styles.typeButtonTextActive]}>Variable</Text>
+                </View>
+              ) : (
+                <Text style={[styles.typeButtonText, styles.typeButtonTextInactive]}>Variable</Text>
+              )}
+            </TouchableOpacity>
+          </View>
+          {typeError && <Text style={styles.typeErrorText}>{typeError}</Text>}
+
+          <TouchableOpacity
+            style={[styles.saveButton, submitting && styles.saveButtonDisabled]}
+            onPress={onSubmit}
+            disabled={submitting}
+          >
+            <MaterialIcons name="save" size={20} color="#000" style={styles.saveIcon} />
+            <Text style={styles.saveButtonText}>
+              {submitting ? 'Guardando...' : 'Guardar cambios'}
             </Text>
           </TouchableOpacity>
-          <TouchableOpacity
-            style={[
-              styles.typeButton,
-              selectedType === 'VARIABLE' ? styles.typeButtonActive : styles.typeButtonInactive,
-            ]}
-            onPress={() => onSelectType('VARIABLE')}
-          >
-            <Text
-              style={[
-                styles.typeButtonText,
-                selectedType === 'VARIABLE'
-                  ? styles.typeButtonTextActive
-                  : styles.typeButtonTextInactive,
-              ]}
-            >
-              <Ionicons name="trending-up" size={14} /> Variable
-            </Text>
-          </TouchableOpacity>
-        </View>
-        {typeError && <Text style={styles.typeErrorText}>{typeError}</Text>}
-
-        <TouchableOpacity
-          style={[styles.saveButton, submitting && styles.saveButtonDisabled]}
-          onPress={onSubmit}
-          disabled={submitting}
-        >
-          <MaterialIcons name="save" size={20} color="#000" style={styles.saveIcon} />
-          <Text style={styles.saveButtonText}>
-            {submitting ? 'Guardando...' : 'Guardar cambios'}
-          </Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity onPress={() => router.back()} style={styles.cancelButton}>
-          <Text style={styles.cancelButtonText}>Cancelar</Text>
-        </TouchableOpacity>
+        </ScrollView>
       </Layout>
 
       <Modal
@@ -279,7 +303,12 @@ const AddExpenseScreen = () => {
                   ]}
                   onPress={() => onSelectCategory(item)}
                 >
-                  <Text style={styles.categoryIcon}>{item.icon}</Text>
+                  <Ionicons
+                    name={item.icon as keyof typeof Ionicons.glyphMap}
+                    size={ICON_SIZES.large}
+                    color={ICON_COLORS.secondary}
+                    style={styles.categoryIconContainer}
+                  />
                   <Text
                     style={[
                       styles.categoryLabel,

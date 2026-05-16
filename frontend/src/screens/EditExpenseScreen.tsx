@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Alert,
@@ -11,10 +11,9 @@ import {
 import { Layout, Text } from '@ui-kitten/components';
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
-import { router } from 'expo-router';
-import { incomeService } from '../services/incomeService';
-import type { IncomeCategory } from '../services/incomeService';
-import { INCOME_CATEGORIES, IncomeCategoryOption } from '../constants/categories';
+import { router, useLocalSearchParams } from 'expo-router';
+import { expenseService, type ExpenseType, type ExpenseCategory } from '../services/expenseService';
+import { CATEGORIES, ExpenseCategoryOption } from '../constants/categories';
 import { useCurrencyInput } from '../hooks/useCurrencyInput';
 import {
   transactionFormStyles as styles,
@@ -22,27 +21,68 @@ import {
   ICON_COLORS,
 } from '../styles/transactionFormStyles';
 
-const AddIncomeScreen = () => {
-  const { displayValue, amount, handleAmountChange } = useCurrencyInput();
+const EditExpenseScreen = () => {
+  const { expenseId } = useLocalSearchParams<{ expenseId?: string }>();
+  const { displayValue, amount, handleAmountChange, setAmount } = useCurrencyInput();
   const [description, setDescription] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState<IncomeCategoryOption | null>(null);
+  const [selectedCategory, setSelectedCategory] = useState<ExpenseCategoryOption | null>(null);
+  const [selectedType, setSelectedType] = useState<ExpenseType | null>(null);
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [modalVisible, setModalVisible] = useState(false);
   const [search, setSearch] = useState('');
   const [amountError, setAmountError] = useState<string | null>(null);
   const [categoryError, setCategoryError] = useState<string | null>(null);
+  const [typeError, setTypeError] = useState<string | null>(null);
 
-  const filteredCategories = INCOME_CATEGORIES.filter(cat =>
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      try {
+        if (!expenseId) {
+          if (mounted) router.back();
+          return;
+        }
+        const expense = await expenseService.getExpenseById(expenseId);
+        if (mounted) {
+          setAmount(String(expense.amount));
+          setDescription(expense.description ?? '');
+          const selected = CATEGORIES.find(c => c.value === expense.category) ?? null;
+          setSelectedCategory(selected);
+          setSelectedType(expense.type);
+          setSelectedDate(new Date(expense.date));
+        }
+      } catch {
+        if (mounted) {
+          Alert.alert('Error', 'No se pudo cargar el gasto.');
+          router.back();
+        }
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    })();
+    return () => {
+      mounted = false;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [expenseId]);
+
+  const filteredCategories = CATEGORIES.filter(cat =>
     cat.label.toLowerCase().includes(search.toLowerCase())
   );
 
-  const onSelectCategory = (cat: IncomeCategoryOption) => {
+  const onSelectCategory = (cat: ExpenseCategoryOption) => {
     setSelectedCategory(cat);
     setCategoryError(null);
     setModalVisible(false);
     setSearch('');
+  };
+
+  const onSelectType = (type: ExpenseType) => {
+    setSelectedType(type);
+    setTypeError(null);
   };
 
   const onDateChange = (event: DateTimePickerEvent, date?: Date) => {
@@ -74,8 +114,11 @@ const AddIncomeScreen = () => {
   };
 
   const onSubmit = async () => {
+    if (!expenseId) return;
+
     setAmountError(null);
     setCategoryError(null);
+    setTypeError(null);
     let hasError = false;
 
     if (!amount || isNaN(parseFloat(amount)) || parseFloat(amount) <= 0) {
@@ -86,31 +129,44 @@ const AddIncomeScreen = () => {
       setCategoryError('Seleccioná una categoría.');
       hasError = true;
     }
+    if (!selectedType) {
+      setTypeError('Seleccioná si es un gasto fijo o variable.');
+      hasError = true;
+    }
     if (hasError) return;
 
     setSubmitting(true);
     try {
       const dateString = selectedDate.toISOString().split('T')[0];
-      await incomeService.addIncome({
+      await expenseService.updateExpense(expenseId, {
         amount: parseFloat(amount),
         description: description.trim() || undefined,
-        category: selectedCategory!.value as unknown as IncomeCategory,
+        category: selectedCategory!.value as ExpenseCategory,
+        type: selectedType!,
         date: dateString,
       });
       router.back();
     } catch {
-      Alert.alert('Error', 'No se pudo registrar el ingreso. Intentá de nuevo.');
+      Alert.alert('Error', 'No se pudo actualizar el gasto. Intentá de nuevo.');
     } finally {
       setSubmitting(false);
     }
   };
+
+  if (loading) {
+    return (
+      <Layout style={styles.container}>
+        <Text appearance="hint">Cargando...</Text>
+      </Layout>
+    );
+  }
 
   return (
     <>
       <Layout style={styles.container}>
         <View style={styles.subHeader}>
           <Text category="h4" style={styles.title}>
-            Agregar ingreso
+            Editar gasto
           </Text>
           <TouchableOpacity onPress={() => router.back()}>
             <Text style={styles.closeButton}>✕</Text>
@@ -149,7 +205,7 @@ const AddIncomeScreen = () => {
             <TextInput
               value={description}
               onChangeText={setDescription}
-              placeholder="Ej. Pago por proyecto (opcional)"
+              placeholder="Ej. Compra del mes (opcional)"
               style={styles.textInput}
               placeholderTextColor="#B0BEC5"
             />
@@ -163,7 +219,7 @@ const AddIncomeScreen = () => {
             <View style={styles.dropdownContent}>
               <View style={styles.dropdownIconContainer}>
                 <Ionicons
-                  name={selectedCategory?.icon || 'cash-outline'}
+                  name={selectedCategory?.icon || 'cart-outline'}
                   size={ICON_SIZES.small}
                   color={ICON_COLORS.primary}
                 />
@@ -194,6 +250,45 @@ const AddIncomeScreen = () => {
               color={ICON_COLORS.secondary}
             />
           </TouchableOpacity>
+
+          <Text style={styles.typeLabel}>Tipo de gasto *</Text>
+          <View style={styles.typeContainer}>
+            <TouchableOpacity
+              style={[
+                styles.typeButton,
+                selectedType === 'FIXED' ? styles.typeButtonActive : styles.typeButtonInactive,
+              ]}
+              onPress={() => onSelectType('FIXED')}
+            >
+              <Text
+                style={[
+                  styles.typeButtonText,
+                  selectedType === 'FIXED'
+                    ? styles.typeButtonTextActive
+                    : styles.typeButtonTextInactive,
+                ]}
+              >
+                Fijo
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[
+                styles.typeButton,
+                selectedType === 'VARIABLE' ? styles.typeButtonActive : styles.typeButtonInactive,
+              ]}
+              onPress={() => onSelectType('VARIABLE')}
+            >
+              {selectedType === 'VARIABLE' ? (
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                  <Ionicons name="trending-up" size={16} color="#2383F2" />
+                  <Text style={[styles.typeButtonText, styles.typeButtonTextActive]}>Variable</Text>
+                </View>
+              ) : (
+                <Text style={[styles.typeButtonText, styles.typeButtonTextInactive]}>Variable</Text>
+              )}
+            </TouchableOpacity>
+          </View>
+          {typeError && <Text style={styles.typeErrorText}>{typeError}</Text>}
 
           <TouchableOpacity
             style={[styles.saveButton, submitting && styles.saveButtonDisabled]}
@@ -286,4 +381,4 @@ const AddIncomeScreen = () => {
   );
 };
 
-export default AddIncomeScreen;
+export default EditExpenseScreen;

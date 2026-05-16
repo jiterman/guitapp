@@ -3,6 +3,19 @@ import { StyleSheet, Dimensions } from 'react-native';
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 const vh = screenHeight / 100;
 
+// Icon constants
+export const ICON_SIZES = {
+  small: 18,
+  medium: 20,
+  large: 22,
+};
+
+export const ICON_COLORS = {
+  primary: '#2383F2',
+  secondary: '#07a3e4',
+  gray: '#90A4AE',
+};
+
 export const transactionFormStyles = StyleSheet.create({
   container: {
     flex: 1,
@@ -14,7 +27,7 @@ export const transactionFormStyles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: vh * 3,
+    marginBottom: vh * 1.5,
   },
   closeButton: {
     fontSize: 20,
@@ -22,49 +35,63 @@ export const transactionFormStyles = StyleSheet.create({
     paddingHorizontal: 4,
   },
   title: {
+    fontSize: 20,
     color: '#003366',
     fontWeight: 'bold',
     textAlign: 'center',
   },
   label: {
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: 'bold',
     color: '#003366',
-    marginBottom: vh * 0.8,
-    marginTop: vh * 1.5,
+    marginBottom: vh * 0.6,
+    marginTop: vh * 1.2,
   },
   typeLabel: {
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: 'bold',
     color: '#003366',
-    marginBottom: vh * 0.8,
-    marginTop: vh * 1.5,
+    marginBottom: vh * 0.6,
+    marginTop: vh * 1.2,
   },
   amountInputContainer: {
-    backgroundColor: '#FFF8E1',
+    backgroundColor: '#FFF9EB',
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: '#FFE082',
-    paddingVertical: vh * 2,
-    paddingHorizontal: 16,
+    borderColor: '#F6C54F',
+    paddingVertical: vh * 1.2,
+    paddingHorizontal: 14,
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: vh * 1,
+    marginBottom: vh * 0.8,
+    shadowColor: '#506E96',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.06,
+    shadowRadius: 14,
+    elevation: 2,
   },
   amountInputError: {
     borderColor: '#FF3333',
   },
+  amountIconContainer: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#FFF2CC',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 10,
+  },
   amountCurrencySymbol: {
-    fontSize: 32,
+    fontSize: 24,
     fontWeight: '600',
-    color: '#FFA726',
-    marginRight: 8,
+    color: '#F2A900',
   },
   amountInput: {
     flex: 1,
     fontSize: 32,
     fontWeight: '600',
-    color: '#FFA726',
+    color: '#F2A900',
     padding: 0,
   },
   inputWithIcon: {
@@ -74,10 +101,21 @@ export const transactionFormStyles = StyleSheet.create({
     borderRadius: 10,
     borderWidth: 1,
     borderColor: '#E0E0E0',
-    paddingHorizontal: 14,
-    paddingVertical: vh * 1.3,
+    paddingHorizontal: 12,
+    paddingVertical: vh * 1,
+    shadowColor: '#506E96',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.06,
+    shadowRadius: 14,
+    elevation: 2,
   },
-  inputIcon: {
+  inputIconContainer: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: '#F5F5F5',
+    justifyContent: 'center',
+    alignItems: 'center',
     marginRight: 10,
   },
   textInput: {
@@ -89,8 +127,8 @@ export const transactionFormStyles = StyleSheet.create({
   errorText: {
     color: '#FF3333',
     fontSize: 13,
-    marginTop: vh * 0.5,
-    marginBottom: vh * 0.5,
+    marginTop: vh * 0.1,
+    marginBottom: vh * 0.4,
   },
   categoryErrorText: {
     color: '#FF3333',
@@ -112,8 +150,13 @@ export const transactionFormStyles = StyleSheet.create({
     borderRadius: 10,
     borderWidth: 1,
     borderColor: '#E0E0E0',
-    paddingHorizontal: 14,
-    paddingVertical: vh * 1.5,
+    paddingHorizontal: 12,
+    paddingVertical: vh * 1,
+    shadowColor: '#506E96',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.06,
+    shadowRadius: 14,
+    elevation: 2,
   },
   dropdownButtonError: {
     borderColor: '#FF3333',
@@ -123,7 +166,13 @@ export const transactionFormStyles = StyleSheet.create({
     alignItems: 'center',
     flex: 1,
   },
-  dropdownIcon: {
+  dropdownIconContainer: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: '#EDF5FF',
+    justifyContent: 'center',
+    alignItems: 'center',
     marginRight: 10,
   },
   dropdownButtonText: {
@@ -136,33 +185,42 @@ export const transactionFormStyles = StyleSheet.create({
   },
   typeContainer: {
     flexDirection: 'row',
-    gap: 10,
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
+    padding: 4,
+    shadowColor: '#506E96',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.06,
+    shadowRadius: 14,
+    elevation: 2,
   },
   typeButton: {
     flex: 1,
-    paddingVertical: vh * 1.3,
+    paddingVertical: vh * 1.4,
     borderRadius: 10,
-    borderWidth: 1.5,
     alignItems: 'center',
     justifyContent: 'center',
   },
   typeButtonActive: {
-    backgroundColor: '#42A5F5',
-    borderColor: '#42A5F5',
+    backgroundColor: '#EAF4FF',
+    borderWidth: 1,
+    borderColor: '#8EC2FF',
   },
   typeButtonInactive: {
-    backgroundColor: '#fff',
-    borderColor: '#E0E0E0',
+    backgroundColor: 'transparent',
+    borderWidth: 0,
   },
   typeButtonText: {
     fontSize: 15,
     fontWeight: '600',
   },
   typeButtonTextActive: {
-    color: '#ffffff',
+    color: '#2383F2',
   },
   typeButtonTextInactive: {
-    color: '#757575',
+    color: '#546E7A',
   },
   saveButton: {
     backgroundColor: '#FFBB00',
@@ -178,9 +236,10 @@ export const transactionFormStyles = StyleSheet.create({
   },
   saveIcon: {
     marginRight: 8,
+    color: '#0c2b52',
   },
   saveButtonText: {
-    color: '#000',
+    color: '#0c2b52',
     fontWeight: 'bold',
     fontSize: 16,
   },
@@ -202,8 +261,13 @@ export const transactionFormStyles = StyleSheet.create({
     borderRadius: 10,
     borderWidth: 1,
     borderColor: '#E0E0E0',
-    paddingHorizontal: 14,
-    paddingVertical: vh * 1.5,
+    paddingHorizontal: 12,
+    paddingVertical: vh * 1,
+    shadowColor: '#506E96',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.06,
+    shadowRadius: 14,
+    elevation: 2,
   },
   modalFullScreen: {
     flex: 1,
@@ -249,8 +313,7 @@ export const transactionFormStyles = StyleSheet.create({
   categoryItemSelected: {
     backgroundColor: '#E6F2FC',
   },
-  categoryIcon: {
-    fontSize: 22,
+  categoryIconContainer: {
     marginRight: 14,
   },
   categoryLabel: {
