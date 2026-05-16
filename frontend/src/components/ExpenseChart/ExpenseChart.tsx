@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, Dimensions } from 'react-native';
+import { View, StyleSheet, Dimensions, TouchableOpacity } from 'react-native';
 import { Text } from '@ui-kitten/components';
 import { Ionicons } from '@expo/vector-icons';
 import { PieChart } from 'react-native-gifted-charts';
@@ -46,6 +46,7 @@ const ExpenseChart: React.FC<ExpenseChartProps> = ({ data, totalAmount }) => {
       category: item.category,
       focused: isSelected,
       onPress: () => handleCategoryClick(item.category),
+      text: `${item.percentage.toFixed(0)}%`,
     };
   });
 
@@ -53,33 +54,108 @@ const ExpenseChart: React.FC<ExpenseChartProps> = ({ data, totalAmount }) => {
     ? data.find(item => item.category === selectedCategory)
     : null;
 
+  const chartRadius = screenWidth * 0.35;
+  const iconSize = 32;
+  const iconMargin = 10;
+  const wrapperSize = chartRadius * 2 + iconSize + iconMargin * 2;
+
+  const calculateIconPosition = (startAngle: number, angleSize: number) => {
+    const midAngle = startAngle + angleSize / 2 - 90;
+    const angleInRadians = (midAngle * Math.PI) / 180;
+
+    const iconRadius = chartRadius + iconMargin + iconSize / 2;
+    const centerOffset = wrapperSize / 2;
+
+    const iconX = centerOffset + iconRadius * Math.cos(angleInRadians);
+    const iconY = centerOffset + iconRadius * Math.sin(angleInRadians);
+
+    return { iconX, iconY };
+  };
+
+  const MIN_PERCENTAGE_FOR_LABEL = 5;
+
+  let cumulativeAngle = 0;
+  const labelsData = data
+    .map(item => {
+      const angleSize = (Number(item.totalAmount) / totalAmount) * 360;
+      const shouldShowLabel = item.percentage >= MIN_PERCENTAGE_FOR_LABEL;
+      const position = calculateIconPosition(cumulativeAngle, angleSize);
+      cumulativeAngle += angleSize;
+
+      return shouldShowLabel
+        ? {
+            ...position,
+            icon: getCategoryIcon(item.category),
+            color: EXPENSE_CATEGORY_COLORS[item.category],
+            category: item.category,
+          }
+        : null;
+    })
+    .filter((item): item is NonNullable<typeof item> => item !== null);
+
   return (
     <View style={styles.container}>
       <View style={styles.chartContainer}>
-        <PieChart
-          data={chartData}
-          radius={screenWidth * 0.35}
-          innerRadius={screenWidth * 0.23}
-          donut
-          focusOnPress
-          extraRadius={8}
-          centerLabelComponent={() => (
-            <View style={styles.centerInfo}>
-              <Text style={styles.totalLabel}>
-                {selectedData ? getCategoryLabel(selectedData.category, 'EXPENSE') : 'Total'}
-              </Text>
-              <Text style={styles.totalAmount}>
-                ${formatCurrency(selectedData ? Number(selectedData.totalAmount) : totalAmount)}
-              </Text>
-              {selectedData && (
-                <Text style={styles.percentageLabel}>{selectedData.percentage.toFixed(1)}%</Text>
+        <View style={[styles.chartWrapper, { width: wrapperSize, height: wrapperSize }]}>
+          <View style={styles.chartInner} pointerEvents="box-none">
+            <PieChart
+              data={chartData}
+              radius={chartRadius}
+              innerRadius={screenWidth * 0.2}
+              donut
+              focusOnPress
+              extraRadius={8}
+              centerLabelComponent={() => (
+                <View style={styles.centerInfo}>
+                  <Text style={styles.totalLabel}>
+                    {selectedData ? getCategoryLabel(selectedData.category, 'EXPENSE') : 'Total'}
+                  </Text>
+                  <Text style={styles.totalAmount}>
+                    ${formatCurrency(selectedData ? Number(selectedData.totalAmount) : totalAmount)}
+                  </Text>
+                  {selectedData && (
+                    <Text style={styles.percentageLabel}>
+                      {selectedData.percentage.toFixed(1)}%
+                    </Text>
+                  )}
+                </View>
               )}
-            </View>
-          )}
-          showValuesAsLabels={false}
-          strokeWidth={2}
-          strokeColor="#fff"
-        />
+              showText={false}
+              strokeWidth={2}
+              strokeColor="#fff"
+            />
+          </View>
+
+          {labelsData.map((labelData, index) => {
+            const iconName = labelData.icon as keyof typeof Ionicons.glyphMap;
+            const iconX = labelData.iconX - iconSize / 2;
+            const iconY = labelData.iconY - iconSize / 2;
+            const isSelected = selectedCategory === labelData.category;
+
+            return (
+              <TouchableOpacity
+                key={index}
+                style={[
+                  styles.iconLabel,
+                  {
+                    left: iconX,
+                    top: iconY,
+                    width: iconSize,
+                    height: iconSize,
+                    borderRadius: iconSize / 2,
+                    backgroundColor: isSelected ? labelData.color : '#fff',
+                    borderWidth: 2,
+                    borderColor: labelData.color,
+                  },
+                ]}
+                onPress={() => handleCategoryClick(labelData.category)}
+                activeOpacity={0.7}
+              >
+                <Ionicons name={iconName} size={18} color={isSelected ? '#fff' : labelData.color} />
+              </TouchableOpacity>
+            );
+          })}
+        </View>
       </View>
 
       <View style={styles.legendWrapper}>
@@ -117,8 +193,25 @@ const styles = StyleSheet.create({
   },
   chartContainer: {
     alignItems: 'center',
-    marginBottom: vh * 2,
-    paddingVertical: vh * 3,
+    marginBottom: vh * 3,
+  },
+  chartWrapper: {
+    position: 'relative',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  labelsSvg: {
+    position: 'absolute',
+  },
+  chartInner: {
+    position: 'absolute',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  iconLabel: {
+    position: 'absolute',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   centerInfo: {
     alignItems: 'center',
