@@ -6,12 +6,14 @@ import java.util.UUID;
 import org.fiuba.guitapp.dto.AddExpenseRequest;
 import org.fiuba.guitapp.dto.ExpenseResponse;
 import org.fiuba.guitapp.dto.UpdateExpenseRequest;
+import org.fiuba.guitapp.event.ExpenseCreatedEvent;
 import org.fiuba.guitapp.exception.AuthException;
 import org.fiuba.guitapp.exception.ErrorCode;
 import org.fiuba.guitapp.model.Expense;
 import org.fiuba.guitapp.model.User;
 import org.fiuba.guitapp.repository.ExpenseRepository;
 import org.fiuba.guitapp.repository.UserRepository;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -23,6 +25,7 @@ public class ExpenseService {
 
     private final ExpenseRepository expenseRepository;
     private final UserRepository userRepository;
+    private final ApplicationEventPublisher applicationEventPublisher;
 
     @SuppressWarnings("null")
     private Expense findUserExpense(String email, UUID expenseId) {
@@ -55,6 +58,13 @@ public class ExpenseService {
         expense.setUser(user);
 
         Expense saved = expenseRepository.save(expense);
+
+        applicationEventPublisher.publishEvent(new ExpenseCreatedEvent(
+                saved.getId(),
+                user.getEmail(),
+                saved.getAmount(),
+                saved.getDate(),
+                saved.getType()));
 
         return new ExpenseResponse(
                 saved.getId(),
@@ -103,6 +113,7 @@ public class ExpenseService {
         }
 
         Expense saved = expenseRepository.save(expense);
+
         return new ExpenseResponse(
                 saved.getId(),
                 saved.getAmount(),

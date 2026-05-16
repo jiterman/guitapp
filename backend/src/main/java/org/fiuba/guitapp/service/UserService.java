@@ -41,6 +41,7 @@ public class UserService {
                 user.getLastName(),
                 user.getAvatarUrl(),
                 user.isOnboardingCompleted(),
+                user.getEstimatedMonthlyIncome(),
                 user.getTargetFixedExpenses(),
                 user.getTargetVariableExpenses(),
                 user.getTargetSavings());
@@ -65,6 +66,7 @@ public class UserService {
         user.setTargetFixedExpenses(request.targetFixedExpenses());
         user.setTargetVariableExpenses(request.targetVariableExpenses());
         user.setTargetSavings(savings);
+        user.setEstimatedMonthlyIncome(request.estimatedMonthlyIncome());
         user.setOnboardingCompleted(true);
 
         userRepository.save(user);
@@ -91,6 +93,7 @@ public class UserService {
                 user.getLastName(),
                 user.getAvatarUrl(),
                 user.isOnboardingCompleted(),
+                user.getEstimatedMonthlyIncome(),
                 user.getTargetFixedExpenses(),
                 user.getTargetVariableExpenses(),
                 user.getTargetSavings());
@@ -135,6 +138,7 @@ public class UserService {
                     user.getLastName(),
                     user.getAvatarUrl(),
                     user.isOnboardingCompleted(),
+                    user.getEstimatedMonthlyIncome(),
                     user.getTargetFixedExpenses(),
                     user.getTargetVariableExpenses(),
                     user.getTargetSavings());
@@ -188,6 +192,15 @@ public class UserService {
         user.setVerificationOtp(null);
         user.setOtpCreatedAt(null);
 
+        userRepository.save(user);
+    }
+
+    @Transactional
+    public void updateFcmToken(String email, String fcmToken) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new AuthException(ErrorCode.USER_NOT_FOUND, "User not found"));
+
+        user.setFcmToken(fcmToken);
         userRepository.save(user);
     }
 }

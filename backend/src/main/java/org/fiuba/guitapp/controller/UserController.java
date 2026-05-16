@@ -5,6 +5,7 @@ import java.util.Map;
 
 import org.fiuba.guitapp.dto.InitiateEmailChangeRequest;
 import org.fiuba.guitapp.dto.OnboardingRequest;
+import org.fiuba.guitapp.dto.UpdateFcmTokenRequest;
 import org.fiuba.guitapp.dto.UpdateUserProfileRequest;
 import org.fiuba.guitapp.dto.UserProfileResponse;
 import org.fiuba.guitapp.dto.VerifyEmailChangeRequest;
@@ -78,5 +79,14 @@ public class UserController {
 
         userService.verifyEmailChange(principal.getName(), request);
         return ResponseEntity.ok(Map.of("message", "Email updated successfully"));
+    }
+
+    @PatchMapping("/me/fcm-token")
+    public ResponseEntity<?> updateFcmToken(
+            Principal principal,
+            @Valid @RequestBody UpdateFcmTokenRequest request) {
+
+        userService.updateFcmToken(principal.getName(), request.fcmToken());
+        return ResponseEntity.ok(Map.of("message", "FCM token updated successfully"));
     }
 }

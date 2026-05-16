@@ -22,17 +22,27 @@
           "backgroundColor": "#dff3ff",
           "imageWidth": 220
         }
-      ]
+      ],
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/adaptive-icon.png",
+          "color": "#dff3ff"
+        }
+      ],
+      "@react-native-community/datetimepicker"
     ],
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "org.fiuba.guitapp"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#dff3ff"
       },
-      "package": "org.fiuba.guitapp"
+      "package": "org.fiuba.guitapp",
+      "googleServicesFile": "./google-services.json"
     },
     "web": {
       "favicon": "./assets/favicon.png"

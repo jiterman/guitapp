@@ -21,7 +21,8 @@ export const userService = {
   completeOnboarding: async (
     firstName: string,
     targetFixedExpenses: number,
-    targetVariableExpenses: number
+    targetVariableExpenses: number,
+    estimatedMonthlyIncome: number
   ) => {
     const token = await authService.getToken();
     const response = await fetch(`${API_URL}/api/users/me/onboarding`, {
@@ -34,6 +35,7 @@ export const userService = {
         firstName,
         targetFixedExpenses,
         targetVariableExpenses,
+        estimatedMonthlyIncome,
       }),
     });
 
@@ -126,6 +128,28 @@ export const userService = {
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
       throw new Error(errorData.message || 'Error al verificar OTP');
+    }
+
+    return response.json();
+  },
+
+  updateFcmToken: async (fcmToken: string) => {
+    const token = await authService.getToken();
+
+    const response = await fetch(`${API_URL}/api/users/me/fcm-token`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        fcmToken,
+      }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || 'Error al actualizar FCM token');
     }
 
     return response.json();

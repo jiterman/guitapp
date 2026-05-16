@@ -40,7 +40,3 @@ yarn-error.*
 /ios
 /androidcoverage/
 coverage/
-google-services.json
-.env.local
-android/
-build-*

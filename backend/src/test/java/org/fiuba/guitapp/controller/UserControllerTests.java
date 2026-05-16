@@ -5,10 +5,12 @@ import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
+import java.math.BigDecimal;
 import java.util.UUID;
 
 import org.fiuba.guitapp.dto.InitiateEmailChangeRequest;
 import org.fiuba.guitapp.dto.OnboardingRequest;
+import org.fiuba.guitapp.dto.UpdateFcmTokenRequest;
 import org.fiuba.guitapp.dto.UpdateUserProfileRequest;
 import org.fiuba.guitapp.dto.UserProfileResponse;
 import org.fiuba.guitapp.dto.VerifyEmailChangeRequest;
@@ -51,6 +53,7 @@ class UserControllerTests {
                 "Doe",
                 "https://avatar.png",
                 true,
+                BigDecimal.valueOf(5000),
                 30,
                 50,
                 20);
@@ -66,6 +69,7 @@ class UserControllerTests {
                 .andExpect(jsonPath("$.lastName").value("Doe"))
                 .andExpect(jsonPath("$.avatarUrl").value("https://avatar.png"))
                 .andExpect(jsonPath("$.onboardingCompleted").value(true))
+                .andExpect(jsonPath("$.estimatedMonthlyIncome").value(5000))
                 .andExpect(jsonPath("$.targetFixedExpenses").value(30))
                 .andExpect(jsonPath("$.targetVariableExpenses").value(50))
                 .andExpect(jsonPath("$.targetSavings").value(20));
@@ -76,7 +80,7 @@ class UserControllerTests {
     @Test
     @WithMockUser(username = "test@example.com")
     void completeOnboarding_ShouldReturnSuccessMessage() throws Exception {
-        OnboardingRequest request = new OnboardingRequest("Maria", 30, 50);
+        OnboardingRequest request = new OnboardingRequest("Maria", 30, 50, BigDecimal.valueOf(5000));
 
         doNothing().when(userService).completeOnboarding(eq("test@example.com"), any(OnboardingRequest.class));
 
@@ -92,7 +96,7 @@ class UserControllerTests {
     @Test
     @WithMockUser(username = "test@example.com")
     void completeOnboarding_ShouldReturnBadRequest_WithInvalidData() throws Exception {
-        OnboardingRequest request = new OnboardingRequest("", 30, 50);
+        OnboardingRequest request = new OnboardingRequest("", 30, 50, BigDecimal.valueOf(5000));
 
         mockMvc.perform(put("/api/users/me/onboarding")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -105,7 +109,7 @@ class UserControllerTests {
     @Test
     @WithMockUser(username = "test@example.com")
     void completeOnboarding_ShouldReturnBadRequest_WhenExpensesTooHigh() throws Exception {
-        OnboardingRequest request = new OnboardingRequest("John", 99, 50);
+        OnboardingRequest request = new OnboardingRequest("John", 99, 50, BigDecimal.valueOf(5000));
 
         mockMvc.perform(put("/api/users/me/onboarding")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -131,6 +135,7 @@ class UserControllerTests {
                 "Doe",
                 "https://avatar.png",
                 true,
+                BigDecimal.valueOf(5000),
                 30,
                 50,
                 20);
@@ -165,6 +170,7 @@ class UserControllerTests {
                 "Doe",
                 "https://avatar.png",
                 true,
+                BigDecimal.valueOf(5000),
                 30,
                 50,
                 20);
@@ -219,5 +225,21 @@ class UserControllerTests {
                 .andExpect(jsonPath("$.message").value("Email updated successfully"));
 
         verify(userService, times(1)).verifyEmailChange(eq("test@example.com"), any(VerifyEmailChangeRequest.class));
+    }
+
+    @Test
+    @WithMockUser(username = "test@example.com")
+    void updateFcmToken_ShouldReturnSuccessMessage() throws Exception {
+        UpdateFcmTokenRequest request = new UpdateFcmTokenRequest("some-fcm-token");
+
+        doNothing().when(userService).updateFcmToken(eq("test@example.com"), anyString());
+
+        mockMvc.perform(patch("/api/users/me/fcm-token")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.message").value("FCM token updated successfully"));
+
+        verify(userService, times(1)).updateFcmToken(eq("test@example.com"), eq("some-fcm-token"));
     }
 }
