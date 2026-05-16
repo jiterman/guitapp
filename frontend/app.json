@@ -33,7 +33,8 @@
       "@react-native-community/datetimepicker"
     ],
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "org.fiuba.guitapp"
     },
     "android": {
       "adaptiveIcon": {

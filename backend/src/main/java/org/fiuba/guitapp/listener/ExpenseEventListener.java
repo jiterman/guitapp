@@ -102,7 +102,7 @@ public class ExpenseEventListener {
             Locale localeArg = Locale.of("es", "AR");
             NumberFormat formatter = NumberFormat.getCurrencyInstance(localeArg);
             String message = String.format(localeArg,
-                    "Te pasaste de tu presupuesto de gastos fijos. Llevás gastado %s de los %s de tu objetivo de este mes",
+                    "Te pasaste de tu presupuesto de gastos variables. Llevás gastado %s de los %s de tu objetivo de este mes",
                     formatter.format(totalVariable),
                     formatter.format(variableLimit));
             notificationService.sendExpenseThresholdExceededNotification(user, message);
