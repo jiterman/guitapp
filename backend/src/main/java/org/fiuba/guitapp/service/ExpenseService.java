@@ -63,7 +63,8 @@ public class ExpenseService {
                 saved.getId(),
                 user.getEmail(),
                 saved.getAmount(),
-                saved.getDate()));
+                saved.getDate(),
+                saved.getType()));
 
         return new ExpenseResponse(
                 saved.getId(),

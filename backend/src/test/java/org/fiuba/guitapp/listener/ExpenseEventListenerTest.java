@@ -65,11 +65,12 @@ class ExpenseEventListenerTest {
         testUser.setTargetFixedExpenses(50); // Limit: 50,000
         testUser.setTargetVariableExpenses(30); // Limit: 30,000
 
-        testExpenseCreatedEvent = new ExpenseCreatedEvent(expenseId, userEmail, amount, date);
+        testExpenseCreatedEvent = new ExpenseCreatedEvent(expenseId, userEmail, amount, date, ExpenseType.VARIABLE);
     }
 
     @Test
-    void handleExpenseCreatedEvent_ShouldSendCombinedNotification_WhenBothThresholdsExceeded() {
+    void handleExpenseCreatedEvent_ShouldOnlySendVariableNotification_WhenVariableExpenseCreatedAndBothExceeded() {
+        testExpenseCreatedEvent = new ExpenseCreatedEvent(expenseId, userEmail, amount, date, ExpenseType.VARIABLE);
         when(userRepository.findByEmail(userEmail)).thenReturn(Optional.of(testUser));
 
         Expense fixedExpense = new Expense();
@@ -85,12 +86,37 @@ class ExpenseEventListenerTest {
 
         expenseEventListener.handleExpenseCreatedEvent(testExpenseCreatedEvent);
 
+        // Should only send variable notification because the event was for a VARIABLE expense
         verify(notificationService, times(1)).sendExpenseThresholdExceededNotification(eq(testUser),
-            argThat(s -> s.contains("gastos fijos") && s.contains("gastos variables")));
+                argThat(s -> !s.contains("gastos fijos") && s.contains("gastos variables")));
+    }
+
+    @Test
+    void handleExpenseCreatedEvent_ShouldOnlySendFixedNotification_WhenFixedExpenseCreatedAndBothExceeded() {
+        testExpenseCreatedEvent = new ExpenseCreatedEvent(expenseId, userEmail, amount, date, ExpenseType.FIXED);
+        when(userRepository.findByEmail(userEmail)).thenReturn(Optional.of(testUser));
+
+        Expense fixedExpense = new Expense();
+        fixedExpense.setAmount(new BigDecimal("60000"));
+        fixedExpense.setType(ExpenseType.FIXED);
+
+        Expense variableExpense = new Expense();
+        variableExpense.setAmount(new BigDecimal("40000"));
+        variableExpense.setType(ExpenseType.VARIABLE);
+
+        when(expenseRepository.findByUserAndDateBetween(eq(testUser), any(LocalDateTime.class), any(LocalDateTime.class)))
+                .thenReturn(Arrays.asList(fixedExpense, variableExpense));
+
+        expenseEventListener.handleExpenseCreatedEvent(testExpenseCreatedEvent);
+
+        // Should only send fixed notification because the event was for a FIXED expense
+        verify(notificationService, times(1)).sendExpenseThresholdExceededNotification(eq(testUser),
+                argThat(s -> s.contains("gastos fijos") && !s.contains("gastos variables")));
     }
 
     @Test
     void handleExpenseCreatedEvent_ShouldSendFixedNotification_WhenFixedExceeded() {
+        testExpenseCreatedEvent = new ExpenseCreatedEvent(expenseId, userEmail, amount, date, ExpenseType.FIXED);
         when(userRepository.findByEmail(userEmail)).thenReturn(Optional.of(testUser));
 
         Expense fixedExpense = new Expense();
@@ -103,11 +129,12 @@ class ExpenseEventListenerTest {
         expenseEventListener.handleExpenseCreatedEvent(testExpenseCreatedEvent);
 
         verify(notificationService, times(1)).sendExpenseThresholdExceededNotification(eq(testUser),
-            argThat(s -> s.contains("gastos fijos") && !s.contains("gastos variables")));
+                argThat(s -> s.contains("gastos fijos") && !s.contains("gastos variables")));
     }
 
     @Test
     void handleExpenseCreatedEvent_ShouldSendVariableNotification_WhenVariableExceeded() {
+        testExpenseCreatedEvent = new ExpenseCreatedEvent(expenseId, userEmail, amount, date, ExpenseType.VARIABLE);
         when(userRepository.findByEmail(userEmail)).thenReturn(Optional.of(testUser));
 
         Expense variableExpense = new Expense();
@@ -120,7 +147,7 @@ class ExpenseEventListenerTest {
         expenseEventListener.handleExpenseCreatedEvent(testExpenseCreatedEvent);
 
         verify(notificationService, times(1)).sendExpenseThresholdExceededNotification(eq(testUser),
-            argThat(s -> !s.contains("gastos fijos") && s.contains("gastos variables")));
+                argThat(s -> !s.contains("gastos fijos") && s.contains("gastos variables")));
     }
 
     @Test

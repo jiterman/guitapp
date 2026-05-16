@@ -2,8 +2,10 @@ package org.fiuba.guitapp.listener;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.text.NumberFormat;
 import java.time.YearMonth;
 import java.util.List;
+import java.util.Locale;
 
 import org.fiuba.guitapp.event.ExpenseCreatedEvent;
 import org.fiuba.guitapp.exception.AuthException;
@@ -50,45 +52,60 @@ public class ExpenseEventListener {
                 currentMonth.atDay(1).atStartOfDay(),
                 currentMonth.atEndOfMonth().atTime(23, 59, 59));
 
+        if (event.getType() == ExpenseType.FIXED) {
+            checkFixedThreshold(user, monthlyExpenses);
+        } else if (event.getType() == ExpenseType.VARIABLE) {
+            checkVariableThreshold(user, monthlyExpenses);
+        }
+    }
+
+    private void checkFixedThreshold(User user, List<Expense> monthlyExpenses) {
+        if (user.getTargetFixedExpenses() == null)
+            return;
+
         BigDecimal totalFixed = monthlyExpenses.stream()
                 .filter(e -> e.getType() == ExpenseType.FIXED)
                 .map(Expense::getAmount)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        BigDecimal fixedLimit = user.getEstimatedMonthlyIncome()
+                .multiply(BigDecimal.valueOf(user.getTargetFixedExpenses()))
+                .divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP);
+
+        if (totalFixed.compareTo(fixedLimit) > 0) {
+            log.info("Enviando notificacion al usuario por limite de gastos fijos excedido");
+            Locale localeArg = Locale.of("es", "AR");
+            NumberFormat formatter = NumberFormat.getCurrencyInstance(localeArg);
+            String message = String.format(localeArg,
+                    "Te pasaste de tu presupuesto de gastos fijos. Llevás gastado %s de los %s de tu objetivo de este mes",
+                    formatter.format(totalFixed),
+                    formatter.format(fixedLimit));
+            notificationService.sendExpenseThresholdExceededNotification(user, message);
+        }
+    }
+
+    private void checkVariableThreshold(User user, List<Expense> monthlyExpenses) {
+        if (user.getTargetVariableExpenses() == null)
+            return;
 
         BigDecimal totalVariable = monthlyExpenses.stream()
                 .filter(e -> e.getType() == ExpenseType.VARIABLE)
                 .map(Expense::getAmount)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-        StringBuilder bodyBuilder = new StringBuilder();
+        BigDecimal variableLimit = user.getEstimatedMonthlyIncome()
+                .multiply(BigDecimal.valueOf(user.getTargetVariableExpenses()))
+                .divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP);
 
-        if (user.getTargetFixedExpenses() != null) {
-            BigDecimal fixedLimit = user.getEstimatedMonthlyIncome()
-                    .multiply(BigDecimal.valueOf(user.getTargetFixedExpenses()))
-                    .divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP);
-
-            if (totalFixed.compareTo(fixedLimit) > 0) {
-                bodyBuilder.append(String.format("Has superado el límite de gastos fijos: gastado %.2f (Límite: %.2f)\n",
-                        totalFixed, fixedLimit));
-            }
-        }
-
-        if (user.getTargetVariableExpenses() != null) {
-            BigDecimal variableLimit = user.getEstimatedMonthlyIncome()
-                    .multiply(BigDecimal.valueOf(user.getTargetVariableExpenses()))
-                    .divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP);
-
-            if (totalVariable.compareTo(variableLimit) > 0) {
-                bodyBuilder.append(String.format("Has superado el límite de gastos variables: gastado %.2f (Límite: %.2f)",
-                        totalVariable, variableLimit));
-            }
-        }
-
-        if (bodyBuilder.length() > 0) {
-            log.info("Enviando notificacion al usuario por limite excedido");
-            notificationService.sendExpenseThresholdExceededNotification(user, bodyBuilder.toString().trim());
-        } else {
-            log.info("No fue necesario enviar una notificación de limite excedido");
+        if (totalVariable.compareTo(variableLimit) > 0) {
+            log.info("Enviando notificacion al usuario por limite de gastos variables excedido");
+            Locale localeArg = Locale.of("es", "AR");
+            NumberFormat formatter = NumberFormat.getCurrencyInstance(localeArg);
+            String message = String.format(localeArg,
+                    "Te pasaste de tu presupuesto de gastos fijos. Llevás gastado %s de los %s de tu objetivo de este mes",
+                    formatter.format(totalVariable),
+                    formatter.format(variableLimit));
+            notificationService.sendExpenseThresholdExceededNotification(user, message);
         }
     }
 }

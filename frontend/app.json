@@ -19,14 +19,15 @@
         {
           "image": "./assets/splash-icon.png",
           "resizeMode": "contain",
-          "backgroundColor": "#dff3ff"
+          "backgroundColor": "#dff3ff",
+          "imageWidth": 220
         }
       ],
       [
         "expo-notifications",
         {
-          "icon": "./assets/icon.png",
-          "color": "#ffffff"
+          "icon": "./assets/adaptive-icon.png",
+          "color": "#dff3ff"
         }
       ],
       "@react-native-community/datetimepicker"

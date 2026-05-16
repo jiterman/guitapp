@@ -4,6 +4,8 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
+import org.fiuba.guitapp.model.ExpenseType;
+
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
@@ -15,4 +17,5 @@ public class ExpenseCreatedEvent {
     private final String userEmail;
     private final BigDecimal amount;
     private final LocalDateTime date;
+    private final ExpenseType type;
 }
