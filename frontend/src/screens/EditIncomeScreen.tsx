@@ -186,7 +186,9 @@ const EditIncomeScreen = () => {
             <View style={styles.dropdownContent}>
               <View style={styles.dropdownIconContainer}>
                 <Ionicons
-                  name={selectedCategory?.icon || 'cash-outline'}
+                  name={
+                    (selectedCategory?.icon || 'cash-outline') as keyof typeof Ionicons.glyphMap
+                  }
                   size={ICON_SIZES.small}
                   color={ICON_COLORS.primary}
                 />

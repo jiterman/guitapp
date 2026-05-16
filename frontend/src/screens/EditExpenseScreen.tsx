@@ -201,7 +201,9 @@ const EditExpenseScreen = () => {
             <View style={styles.dropdownContent}>
               <View style={styles.dropdownIconContainer}>
                 <Ionicons
-                  name={selectedCategory?.icon || 'cart-outline'}
+                  name={
+                    (selectedCategory?.icon || 'cart-outline') as keyof typeof Ionicons.glyphMap
+                  }
                   size={ICON_SIZES.small}
                   color={ICON_COLORS.primary}
                 />
