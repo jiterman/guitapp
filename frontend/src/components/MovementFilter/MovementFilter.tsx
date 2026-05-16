@@ -35,6 +35,7 @@ interface MovementFilterProps {
   initialMonth?: number;
   initialYear?: number;
   initialMovementType?: MovementTypeFilter;
+  hideMovementTypeFilter?: boolean;
 }
 
 const FILTER_OPTIONS: { key: FilterKind; label: string }[] = [
@@ -66,6 +67,7 @@ const MovementFilter: React.FC<MovementFilterProps> = ({
   initialMonth,
   initialYear,
   initialMovementType = 'all',
+  hideMovementTypeFilter = false,
 }) => {
   const now = useMemo(() => new Date(), []);
   const [filterIndex, setFilterIndex] = useState(() =>
@@ -186,18 +188,28 @@ const MovementFilter: React.FC<MovementFilterProps> = ({
   return (
     <View style={styles.filterContainer}>
       <View style={styles.actionsRow}>
-        <TouchableOpacity
-          onPress={() => toggleMovementType('income')}
-          style={[styles.typeButton, movementType === 'income' && styles.typeButtonIncomeActive]}
-        >
-          <Text style={[styles.typeLabel, styles.incomeText]}>Ingresos</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          onPress={() => toggleMovementType('expense')}
-          style={[styles.typeButton, movementType === 'expense' && styles.typeButtonExpenseActive]}
-        >
-          <Text style={[styles.typeLabel, styles.expenseText]}>Gastos</Text>
-        </TouchableOpacity>
+        {!hideMovementTypeFilter && (
+          <>
+            <TouchableOpacity
+              onPress={() => toggleMovementType('income')}
+              style={[
+                styles.typeButton,
+                movementType === 'income' && styles.typeButtonIncomeActive,
+              ]}
+            >
+              <Text style={[styles.typeLabel, styles.incomeText]}>Ingresos</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => toggleMovementType('expense')}
+              style={[
+                styles.typeButton,
+                movementType === 'expense' && styles.typeButtonExpenseActive,
+              ]}
+            >
+              <Text style={[styles.typeLabel, styles.expenseText]}>Gastos</Text>
+            </TouchableOpacity>
+          </>
+        )}
         <TouchableOpacity onPress={openModal} style={styles.filterButton}>
           <SvgXml xml={FILTER_ICON} width={18} height={18} />
           <Text style={styles.filterButtonText}>Filtros</Text>

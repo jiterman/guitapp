@@ -7,10 +7,14 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.Arrays;
+import java.util.List;
 import java.util.UUID;
 
 import org.fiuba.guitapp.dto.AddExpenseRequest;
+import org.fiuba.guitapp.dto.ExpenseCategoryStatistics;
 import org.fiuba.guitapp.dto.ExpenseResponse;
+import org.fiuba.guitapp.dto.ExpenseStatisticsResponse;
 import org.fiuba.guitapp.dto.UpdateExpenseRequest;
 import org.fiuba.guitapp.model.ExpenseCategory;
 import org.fiuba.guitapp.model.ExpenseType;
@@ -273,5 +277,78 @@ class ExpenseControllerTests {
                 .andExpect(status().isForbidden());
 
         verify(expenseService, never()).updateExpense(anyString(), any(UUID.class), any(UpdateExpenseRequest.class));
+    }
+
+    @Test
+    @WithMockUser(username = "test@example.com")
+    void getExpenseStatistics_ShouldReturnStatistics_WithDefaultPeriod() throws Exception {
+        List<ExpenseCategoryStatistics> categories = Arrays.asList(
+                new ExpenseCategoryStatistics(ExpenseCategory.RESTAURANT, new BigDecimal("500.00"), 5L, 50.0),
+                new ExpenseCategoryStatistics(ExpenseCategory.SUPERMARKET, new BigDecimal("300.00"), 3L, 30.0),
+                new ExpenseCategoryStatistics(ExpenseCategory.TAXI, new BigDecimal("200.00"), 2L, 20.0));
+
+        ExpenseStatisticsResponse response = new ExpenseStatisticsResponse(
+                new BigDecimal("1000.00"), categories);
+
+        when(expenseService.getExpenseStatistics("test@example.com", "monthly")).thenReturn(response);
+
+        mockMvc.perform(get("/api/expenses/statistics"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.totalAmount").value(1000.00))
+                .andExpect(jsonPath("$.categories").isArray())
+                .andExpect(jsonPath("$.categories[0].category").value("RESTAURANT"))
+                .andExpect(jsonPath("$.categories[0].totalAmount").value(500.00))
+                .andExpect(jsonPath("$.categories[0].count").value(5))
+                .andExpect(jsonPath("$.categories[0].percentage").value(50.0));
+
+        verify(expenseService, times(1)).getExpenseStatistics("test@example.com", "monthly");
+    }
+
+    @Test
+    @WithMockUser(username = "test@example.com")
+    void getExpenseStatistics_ShouldReturnStatistics_WithDailyPeriod() throws Exception {
+        List<ExpenseCategoryStatistics> categories = Arrays.asList(
+                new ExpenseCategoryStatistics(ExpenseCategory.CAFE, new BigDecimal("50.00"), 2L, 100.0));
+
+        ExpenseStatisticsResponse response = new ExpenseStatisticsResponse(
+                new BigDecimal("50.00"), categories);
+
+        when(expenseService.getExpenseStatistics("test@example.com", "daily")).thenReturn(response);
+
+        mockMvc.perform(get("/api/expenses/statistics")
+                .param("period", "daily"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.totalAmount").value(50.00))
+                .andExpect(jsonPath("$.categories[0].category").value("CAFE"));
+
+        verify(expenseService, times(1)).getExpenseStatistics("test@example.com", "daily");
+    }
+
+    @Test
+    @WithMockUser(username = "test@example.com")
+    void getExpenseStatistics_ShouldReturnStatistics_WithAllPeriod() throws Exception {
+        List<ExpenseCategoryStatistics> categories = Arrays.asList(
+                new ExpenseCategoryStatistics(ExpenseCategory.RENT, new BigDecimal("5000.00"), 10L, 100.0));
+
+        ExpenseStatisticsResponse response = new ExpenseStatisticsResponse(
+                new BigDecimal("5000.00"), categories);
+
+        when(expenseService.getExpenseStatistics("test@example.com", "all")).thenReturn(response);
+
+        mockMvc.perform(get("/api/expenses/statistics")
+                .param("period", "all"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.totalAmount").value(5000.00))
+                .andExpect(jsonPath("$.categories[0].category").value("RENT"));
+
+        verify(expenseService, times(1)).getExpenseStatistics("test@example.com", "all");
+    }
+
+    @Test
+    void getExpenseStatistics_ShouldReturnUnauthorized_WhenNotAuthenticated() throws Exception {
+        mockMvc.perform(get("/api/expenses/statistics"))
+                .andExpect(status().isForbidden());
+
+        verify(expenseService, never()).getExpenseStatistics(anyString(), anyString());
     }
 }

@@ -6,6 +6,7 @@ import { SvgXml } from 'react-native-svg';
 
 import HOME_ICON from '../../../assets/icons/homeIcon';
 import LIST_ICON from '../../../assets/icons/listIcon';
+import CHART_ICON from '../../../assets/icons/chartIcon';
 import PERSON_ICON from '../../../assets/icons/personIcon';
 import styles from '../../styles/bottomNavStyles';
 
@@ -13,7 +14,7 @@ const BottomNavBar: React.FC = () => {
   const router = useRouter();
   const insets = useSafeAreaInsets();
 
-  const order = ['/home', '/transactions', '/profile'];
+  const order = ['/home', '/statistics', '/transactions', '/profile'];
   const currentIndex = useRef<number>(0);
   // try to initialize from router.pathname if available
   try {
@@ -65,6 +66,16 @@ const BottomNavBar: React.FC = () => {
         style={styles.button}
         onPress={() => {
           currentIndex.current = 1;
+          router.push('/statistics');
+        }}
+        accessibilityRole="button"
+      >
+        <SvgXml xml={CHART_ICON} width={24} height={24} />
+      </Pressable>
+      <Pressable
+        style={styles.button}
+        onPress={() => {
+          currentIndex.current = 2;
           router.push('/transactions');
         }}
         accessibilityRole="button"
@@ -74,7 +85,7 @@ const BottomNavBar: React.FC = () => {
       <Pressable
         style={styles.button}
         onPress={() => {
-          currentIndex.current = 2;
+          currentIndex.current = 3;
           router.push('/profile');
         }}
         accessibilityRole="button"
