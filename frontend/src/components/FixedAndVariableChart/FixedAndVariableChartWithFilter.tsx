@@ -6,6 +6,7 @@ import {
   FixedAndVariableStatisticsResponse,
 } from '../../services/expenseStatisticsService';
 import FixedAndVariableChart from './FixedAndVariableChart';
+import { incomeService } from '../../services/incomeService';
 import { useUser } from '../../context/UserContext';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
@@ -19,7 +20,10 @@ const FixedAndVariableChartWithFilter: React.FC<FixedAndVariableChartWithFilterP
   params,
 }) => {
   const { user, isLoading: isUserLoading } = useUser();
-  const [data, setData] = useState<FixedAndVariableStatisticsResponse | null>(null);
+  const [data, setData] = useState<{
+    expenses: FixedAndVariableStatisticsResponse;
+    earningsAmount: number;
+  } | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -27,8 +31,15 @@ const FixedAndVariableChartWithFilter: React.FC<FixedAndVariableChartWithFilterP
     try {
       setLoading(true);
       setError(null);
-      const statistics = await expenseStatisticsService.getFixedAndVariableStatistics(params);
-      setData(statistics);
+      const [expenseStats, incomeStats] = await Promise.all([
+        expenseStatisticsService.getFixedAndVariableStatistics(params),
+        incomeService.getIncomeStatistics(params),
+      ]);
+
+      setData({
+        expenses: expenseStats,
+        earningsAmount: Number(incomeStats.totalAmount ?? 0),
+      });
     } catch (err) {
       const error = err as { message?: string };
       setError(error.message || 'Error al cargar estadisticas');
@@ -63,7 +74,8 @@ const FixedAndVariableChartWithFilter: React.FC<FixedAndVariableChartWithFilterP
 
   return (
     <FixedAndVariableChart
-      data={data}
+      data={data.expenses}
+      earningsAmount={data.earningsAmount}
       targets={
         user
           ? {

@@ -11,6 +11,7 @@ import java.util.UUID;
 
 import org.fiuba.guitapp.dto.AddIncomeRequest;
 import org.fiuba.guitapp.dto.IncomeResponse;
+import org.fiuba.guitapp.dto.IncomeStatisticsResponse;
 import org.fiuba.guitapp.dto.UpdateIncomeRequest;
 import org.fiuba.guitapp.model.IncomeCategory;
 import org.fiuba.guitapp.service.IncomeService;
@@ -264,5 +265,20 @@ class IncomeControllerTests {
                 .andExpect(status().isForbidden());
 
         verify(incomeService, never()).updateIncome(anyString(), any(UUID.class), any(UpdateIncomeRequest.class));
+    }
+
+    @Test
+    @WithMockUser(username = "test@example.com")
+    void getIncomeStatistics_ShouldReturnStatistics_WithDefaultPeriod() throws Exception {
+        IncomeStatisticsResponse response = new IncomeStatisticsResponse(new BigDecimal("1200.00"));
+
+        when(incomeService.getIncomeStatistics("test@example.com", "monthly", null, null, null))
+                .thenReturn(response);
+
+        mockMvc.perform(get("/api/incomes/statistics"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.totalAmount").value(1200.00));
+
+        verify(incomeService, times(1)).getIncomeStatistics("test@example.com", "monthly", null, null, null);
     }
 }

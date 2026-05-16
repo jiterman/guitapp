@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { View, StyleSheet, Dimensions, TouchableOpacity, ScrollView, Text } from 'react-native';
+import { View, StyleSheet, Dimensions, TouchableOpacity, Text } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { SvgXml } from 'react-native-svg';
 import FILTER_ICON from '../../../assets/icons/filterIcon';
@@ -152,7 +152,7 @@ const ExpenseChartWithFilter: React.FC = () => {
           onExternalModalClose={() => setIsFilterVisible(false)}
         />
 
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.chartTabs}>
+        <View style={styles.chartTabs}>
           <TouchableOpacity
             style={styles.chartTabWrapper}
             onPress={() => setSelectedChart('categories')}
@@ -186,7 +186,7 @@ const ExpenseChartWithFilter: React.FC = () => {
               </View>
             )}
           </TouchableOpacity>
-        </ScrollView>
+        </View>
       </View>
 
       {selectedChart === 'categories' && loading && (
@@ -256,9 +256,11 @@ const styles = StyleSheet.create({
   chartTabs: {
     marginBottom: vh * 2,
     overflow: 'visible',
+    flexDirection: 'row',
+    gap: 12,
   },
   chartTabWrapper: {
-    marginRight: 12,
+    flex: 1,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 3 },
     shadowOpacity: 0.15,
@@ -267,8 +269,10 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   chartTab: {
+    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
     paddingVertical: 10,
     paddingHorizontal: 14,
     borderRadius: 8,
