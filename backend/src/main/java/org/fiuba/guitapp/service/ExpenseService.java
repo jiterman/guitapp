@@ -1,15 +1,23 @@
 package org.fiuba.guitapp.service;
 
-import java.time.LocalDateTime;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.time.LocalDate;
+import java.util.List;
+import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import org.fiuba.guitapp.dto.AddExpenseRequest;
+import org.fiuba.guitapp.dto.ExpenseCategoryStatistics;
 import org.fiuba.guitapp.dto.ExpenseResponse;
+import org.fiuba.guitapp.dto.ExpenseStatisticsResponse;
 import org.fiuba.guitapp.dto.UpdateExpenseRequest;
 import org.fiuba.guitapp.event.ExpenseCreatedEvent;
 import org.fiuba.guitapp.exception.AuthException;
 import org.fiuba.guitapp.exception.ErrorCode;
 import org.fiuba.guitapp.model.Expense;
+import org.fiuba.guitapp.model.ExpenseCategory;
 import org.fiuba.guitapp.model.User;
 import org.fiuba.guitapp.repository.ExpenseRepository;
 import org.fiuba.guitapp.repository.UserRepository;
@@ -54,7 +62,7 @@ public class ExpenseService {
         expense.setDescription(request.description());
         expense.setCategory(request.category());
         expense.setType(request.type());
-        expense.setDate(LocalDateTime.now());
+        expense.setDate(request.date());
         expense.setUser(user);
 
         Expense saved = expenseRepository.save(expense);
@@ -111,6 +119,9 @@ public class ExpenseService {
         if (request.type() != null) {
             expense.setType(request.type());
         }
+        if (request.date() != null) {
+            expense.setDate(request.date());
+        }
 
         Expense saved = expenseRepository.save(expense);
 
@@ -121,5 +132,69 @@ public class ExpenseService {
                 saved.getCategory(),
                 saved.getType(),
                 saved.getDate());
+    }
+
+    @Transactional(readOnly = true)
+    public ExpenseStatisticsResponse getExpenseStatistics(
+            String email, String period, Integer year, Integer month, Integer day) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new AuthException(ErrorCode.USER_NOT_FOUND, "User not found"));
+
+        List<Expense> expenses = getExpensesByPeriod(user, period, year, month, day);
+
+        BigDecimal totalAmount = expenses.stream()
+                .map(Expense::getAmount)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        Map<ExpenseCategory, List<Expense>> expensesByCategory = expenses.stream()
+                .collect(Collectors.groupingBy(Expense::getCategory));
+
+        List<ExpenseCategoryStatistics> categoryStats = expensesByCategory.entrySet()
+                .stream()
+                .map(entry -> {
+                    ExpenseCategory category = entry.getKey();
+                    List<Expense> categoryExpenses = entry.getValue();
+                    BigDecimal categoryTotal = categoryExpenses.stream()
+                            .map(Expense::getAmount)
+                            .reduce(BigDecimal.ZERO, BigDecimal::add);
+                    Long count = (long) categoryExpenses.size();
+                    Double percentage = totalAmount.compareTo(BigDecimal.ZERO) > 0
+                            ? categoryTotal.divide(totalAmount, 4, RoundingMode.HALF_UP)
+                                    .multiply(new BigDecimal("100"))
+                                    .doubleValue()
+                            : 0.0;
+                    return new ExpenseCategoryStatistics(category, categoryTotal, count, percentage);
+                })
+                .sorted((a, b) -> b.totalAmount().compareTo(a.totalAmount()))
+                .toList();
+
+        return new ExpenseStatisticsResponse(totalAmount, categoryStats);
+    }
+
+    private List<Expense> getExpensesByPeriod(
+            User user, String period, Integer year, Integer month, Integer day) {
+        LocalDate referenceDate = buildReferenceDate(year, month, day);
+        return switch (period.toLowerCase()) {
+        case "daily" -> {
+            LocalDate startOfDay = referenceDate;
+            LocalDate endOfDay = startOfDay.plusDays(1);
+            yield expenseRepository.findAllByUserAndDateBetween(user, startOfDay, endOfDay);
+        }
+        case "monthly" -> {
+            LocalDate startOfMonth = referenceDate.withDayOfMonth(1);
+            LocalDate endOfMonth = startOfMonth.plusMonths(1);
+            yield expenseRepository.findAllByUserAndDateBetween(user, startOfMonth, endOfMonth);
+        }
+        case "all" -> expenseRepository.findAllByUser(user);
+        default -> throw new IllegalArgumentException("Invalid period: " + period);
+        };
+    }
+
+    private LocalDate buildReferenceDate(Integer year, Integer month, Integer day) {
+        LocalDate now = LocalDate.now();
+        int effectiveYear = year != null ? year : now.getYear();
+        int effectiveMonth = month != null ? month : now.getMonthValue();
+        int effectiveDay = day != null ? day : now.getDayOfMonth();
+        return LocalDate.of(effectiveYear, effectiveMonth, effectiveDay);
     }
 }

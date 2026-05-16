@@ -1,6 +1,6 @@
 package org.fiuba.guitapp.repository;
 
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 
@@ -12,6 +12,8 @@ public interface ExpenseRepository extends JpaRepository<Expense, UUID> {
 
     List<Expense> findAllByUserOrderByDateDesc(User user);
 
-    List<Expense> findByUserAndDateBetween(User user, LocalDateTime startDate, LocalDateTime endDate);
+    List<Expense> findAllByUserAndDateBetween(User user, LocalDate startDate, LocalDate endDate);
+
+    List<Expense> findAllByUser(User user);
 
 }
