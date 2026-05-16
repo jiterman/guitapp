@@ -7,6 +7,7 @@ import type { IncomeResponse } from '../services/incomeService';
 import { incomeService } from '../services/incomeService';
 import { getCategoryLabel, getCategoryIcon } from '../constants/categories';
 import { detailScreenStyles as styles } from '../styles/detailScreenStyles';
+import { formatDate } from '../utils/dateFormatter';
 
 const formatMoney = (amount: number) => new Intl.NumberFormat('es-AR').format(Number(amount));
 
@@ -163,7 +164,7 @@ const IncomeDetailScreen: React.FC = () => {
             </View>
             <View style={styles.detailContent}>
               <Text style={styles.detailLabel}>Fecha</Text>
-              <Text style={styles.detailValue}>{new Date(income.date).toLocaleString()}</Text>
+              <Text style={styles.detailValue}>{formatDate(new Date(income.date))}</Text>
             </View>
           </View>
         </View>

@@ -7,6 +7,7 @@ import type { ExpenseResponse } from '../services/expenseService';
 import { expenseService } from '../services/expenseService';
 import { getCategoryLabel, getCategoryIcon } from '../constants/categories';
 import { detailScreenStyles as styles } from '../styles/detailScreenStyles';
+import { formatDate } from '../utils/dateFormatter';
 
 const formatMoney = (amount: number) => new Intl.NumberFormat('es-AR').format(Number(amount));
 
@@ -194,7 +195,7 @@ const ExpenseDetailScreen: React.FC = () => {
             </View>
             <View style={styles.detailContent}>
               <Text style={styles.detailLabel}>Fecha</Text>
-              <Text style={styles.detailValue}>{new Date(expense.date).toLocaleString()}</Text>
+              <Text style={styles.detailValue}>{formatDate(new Date(expense.date))}</Text>
             </View>
           </View>
         </View>

@@ -20,6 +20,7 @@ import {
   ICON_SIZES,
   ICON_COLORS,
 } from '../styles/transactionFormStyles';
+import { formatDate } from '../utils/dateFormatter';
 
 const EditExpenseScreen = () => {
   const { expenseId } = useLocalSearchParams<{ expenseId?: string }>();
@@ -90,27 +91,6 @@ const EditExpenseScreen = () => {
     if (event.type === 'set' && date) {
       setSelectedDate(date);
     }
-  };
-
-  const formatDate = (date: Date) => {
-    const day = date.getDate();
-    const monthNames = [
-      'enero',
-      'febrero',
-      'marzo',
-      'abril',
-      'mayo',
-      'junio',
-      'julio',
-      'agosto',
-      'septiembre',
-      'octubre',
-      'noviembre',
-      'diciembre',
-    ];
-    const month = monthNames[date.getMonth()];
-    const year = date.getFullYear();
-    return `${day} ${month} ${year}`;
   };
 
   const onSubmit = async () => {

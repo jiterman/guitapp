@@ -6,7 +6,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
@@ -51,7 +51,7 @@ class ExpenseControllerTests {
     void addExpense_ShouldReturnExpenseResponse_WhenRequestIsValid() throws Exception {
         UUID expenseId = UUID.randomUUID();
         AddExpenseRequest request = new AddExpenseRequest(
-                new BigDecimal("1500.00"), "Lunch", ExpenseCategory.RESTAURANT, ExpenseType.VARIABLE);
+                new BigDecimal("1500.00"), "Lunch", ExpenseCategory.RESTAURANT, ExpenseType.VARIABLE, LocalDate.now());
 
         ExpenseResponse response = new ExpenseResponse(
                 expenseId,
@@ -59,7 +59,7 @@ class ExpenseControllerTests {
                 "Lunch",
                 ExpenseCategory.RESTAURANT,
                 ExpenseType.VARIABLE,
-                LocalDateTime.now());
+                LocalDate.now());
 
         when(expenseService.addExpense(eq("test@example.com"), any(AddExpenseRequest.class)))
                 .thenReturn(response);
@@ -81,7 +81,7 @@ class ExpenseControllerTests {
     void addExpense_ShouldReturnOk_WhenDescriptionIsNull() throws Exception {
         UUID expenseId = UUID.randomUUID();
         AddExpenseRequest request = new AddExpenseRequest(
-                new BigDecimal("500.00"), null, ExpenseCategory.SUPERMARKET, ExpenseType.FIXED);
+                new BigDecimal("500.00"), null, ExpenseCategory.SUPERMARKET, ExpenseType.FIXED, LocalDate.now());
 
         ExpenseResponse response = new ExpenseResponse(
                 expenseId,
@@ -89,7 +89,7 @@ class ExpenseControllerTests {
                 null,
                 ExpenseCategory.SUPERMARKET,
                 ExpenseType.FIXED,
-                LocalDateTime.now());
+                LocalDate.now());
 
         when(expenseService.addExpense(eq("test@example.com"), any(AddExpenseRequest.class)))
                 .thenReturn(response);
@@ -120,7 +120,7 @@ class ExpenseControllerTests {
     @WithMockUser(username = "test@example.com")
     void addExpense_ShouldReturnBadRequest_WhenAmountIsNegative() throws Exception {
         AddExpenseRequest request = new AddExpenseRequest(
-                new BigDecimal("-100.00"), null, ExpenseCategory.OTHER, ExpenseType.VARIABLE);
+                new BigDecimal("-100.00"), null, ExpenseCategory.OTHER, ExpenseType.VARIABLE, LocalDate.now());
 
         mockMvc.perform(post("/api/expenses")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -166,7 +166,7 @@ class ExpenseControllerTests {
                 "Taxi",
                 ExpenseCategory.TAXI,
                 ExpenseType.VARIABLE,
-                LocalDateTime.now());
+                LocalDate.now());
 
         when(expenseService.getExpenseById("test@example.com", expenseId)).thenReturn(response);
 
@@ -222,7 +222,8 @@ class ExpenseControllerTests {
                 new BigDecimal("88.50"),
                 "Groceries",
                 ExpenseCategory.SUPERMARKET,
-                ExpenseType.VARIABLE);
+                ExpenseType.VARIABLE,
+                LocalDate.now());
 
         ExpenseResponse response = new ExpenseResponse(
                 expenseId,
@@ -230,7 +231,7 @@ class ExpenseControllerTests {
                 "Groceries",
                 ExpenseCategory.SUPERMARKET,
                 ExpenseType.VARIABLE,
-                LocalDateTime.now());
+                LocalDate.now());
 
         when(expenseService.updateExpense(eq("test@example.com"), eq(expenseId), any(UpdateExpenseRequest.class)))
                 .thenReturn(response);
@@ -256,7 +257,8 @@ class ExpenseControllerTests {
                 new BigDecimal("-1.00"),
                 "Bad",
                 ExpenseCategory.OTHER,
-                ExpenseType.VARIABLE);
+                ExpenseType.VARIABLE,
+                LocalDate.now());
 
         mockMvc.perform(patch("/api/expenses/{expenseId}", expenseId)
                 .contentType(MediaType.APPLICATION_JSON)
