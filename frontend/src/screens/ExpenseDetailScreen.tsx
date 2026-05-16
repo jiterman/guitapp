@@ -195,7 +195,7 @@ const ExpenseDetailScreen: React.FC = () => {
             </View>
             <View style={styles.detailContent}>
               <Text style={styles.detailLabel}>Fecha</Text>
-              <Text style={styles.detailValue}>{formatDate(new Date(expense.date))}</Text>
+              <Text style={styles.detailValue}>{formatDate(expense.date)}</Text>
             </View>
           </View>
         </View>

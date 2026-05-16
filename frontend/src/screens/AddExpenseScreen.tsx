@@ -20,7 +20,7 @@ import {
   ICON_SIZES,
   ICON_COLORS,
 } from '../styles/transactionFormStyles';
-import { formatDate } from '../utils/dateFormatter';
+import { formatDate, toLocalDateString } from '../utils/dateFormatter';
 
 const AddExpenseScreen = () => {
   const { displayValue, amount, handleAmountChange } = useCurrencyInput();
@@ -83,7 +83,7 @@ const AddExpenseScreen = () => {
 
     setSubmitting(true);
     try {
-      const dateString = selectedDate.toISOString().split('T')[0];
+      const dateString = toLocalDateString(selectedDate);
       await expenseService.addExpense({
         amount: parseFloat(amount),
         description: description.trim() || undefined,

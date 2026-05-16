@@ -21,7 +21,7 @@ import {
   ICON_SIZES,
   ICON_COLORS,
 } from '../styles/transactionFormStyles';
-import { formatDate } from '../utils/dateFormatter';
+import { formatDate, toLocalDateString, parseLocalDate } from '../utils/dateFormatter';
 
 const EditIncomeScreen = () => {
   const { incomeId } = useLocalSearchParams<{ incomeId?: string }>();
@@ -51,7 +51,7 @@ const EditIncomeScreen = () => {
           setDescription(income.description ?? '');
           const selected = INCOME_CATEGORIES.find(c => c.value === income.category) ?? null;
           setSelectedCategory(selected);
-          setSelectedDate(new Date(income.date));
+          setSelectedDate(parseLocalDate(income.date));
         }
       } catch {
         if (mounted) {
@@ -105,7 +105,7 @@ const EditIncomeScreen = () => {
 
     setSubmitting(true);
     try {
-      const dateString = selectedDate.toISOString().split('T')[0];
+      const dateString = toLocalDateString(selectedDate);
       await incomeService.updateIncome(incomeId, {
         amount: parseFloat(amount),
         description: description.trim() || undefined,

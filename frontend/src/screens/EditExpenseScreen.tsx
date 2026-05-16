@@ -20,7 +20,7 @@ import {
   ICON_SIZES,
   ICON_COLORS,
 } from '../styles/transactionFormStyles';
-import { formatDate } from '../utils/dateFormatter';
+import { formatDate, toLocalDateString, parseLocalDate } from '../utils/dateFormatter';
 
 const EditExpenseScreen = () => {
   const { expenseId } = useLocalSearchParams<{ expenseId?: string }>();
@@ -53,7 +53,7 @@ const EditExpenseScreen = () => {
           const selected = CATEGORIES.find(c => c.value === expense.category) ?? null;
           setSelectedCategory(selected);
           setSelectedType(expense.type);
-          setSelectedDate(new Date(expense.date));
+          setSelectedDate(parseLocalDate(expense.date));
         }
       } catch {
         if (mounted) {
@@ -119,7 +119,7 @@ const EditExpenseScreen = () => {
 
     setSubmitting(true);
     try {
-      const dateString = selectedDate.toISOString().split('T')[0];
+      const dateString = toLocalDateString(selectedDate);
       await expenseService.updateExpense(expenseId, {
         amount: parseFloat(amount),
         description: description.trim() || undefined,

@@ -164,7 +164,7 @@ const IncomeDetailScreen: React.FC = () => {
             </View>
             <View style={styles.detailContent}>
               <Text style={styles.detailLabel}>Fecha</Text>
-              <Text style={styles.detailValue}>{formatDate(new Date(income.date))}</Text>
+              <Text style={styles.detailValue}>{formatDate(income.date)}</Text>
             </View>
           </View>
         </View>

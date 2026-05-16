@@ -35,7 +35,7 @@ const TransactionCard: React.FC<Props> = ({ movement, onPress }) => {
         <View>
           <Text category="s1">{displayText}</Text>
           <Text appearance="hint" category="c1">
-            {formatDate(new Date(movement.date))}
+            {formatDate(movement.date)}
           </Text>
         </View>
       </View>
