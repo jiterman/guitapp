@@ -250,9 +250,7 @@ describe('expenseStatisticsService', () => {
 
       const params: ExpenseStatisticsParams = { period: 'all' };
 
-      await expect(
-        expenseStatisticsService.getFixedAndVariableStatistics(params)
-      ).rejects.toEqual({
+      await expect(expenseStatisticsService.getFixedAndVariableStatistics(params)).rejects.toEqual({
         code: 'ERROR_CODE',
         message: 'Error message',
       });

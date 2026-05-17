@@ -279,7 +279,9 @@ const FixedAndVariableChart: React.FC<FixedAndVariableChartProps> = ({
                       <View key={item.key} style={styles.targetItem}>
                         <View style={styles.targetHeader}>
                           <View style={styles.targetLeft}>
-                            <View style={[styles.iconCircle, { backgroundColor: `${item.color}20` }]}>
+                            <View
+                              style={[styles.iconCircle, { backgroundColor: `${item.color}20` }]}
+                            >
                               <SvgXml xml={item.icon} width={18} height={18} color={item.color} />
                             </View>
                             <Text style={styles.targetLabel}>{item.label}</Text>
@@ -288,7 +290,9 @@ const FixedAndVariableChart: React.FC<FixedAndVariableChartProps> = ({
                         <View style={styles.objectiveRow}>
                           <View style={styles.objectiveCard}>
                             <Text style={styles.objectiveLabel}>Objetivo fijo</Text>
-                            <Text style={styles.objectiveValue}>${formatCurrency(desiredAmount)}</Text>
+                            <Text style={styles.objectiveValue}>
+                              ${formatCurrency(desiredAmount)}
+                            </Text>
                           </View>
                           <View style={styles.objectiveCard}>
                             <Text style={styles.objectiveLabel}>Objetivo %</Text>
