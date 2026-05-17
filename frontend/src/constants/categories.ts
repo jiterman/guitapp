@@ -68,6 +68,10 @@ export const getCategoryOption = (
   return CATEGORIES.find(c => c.value === category) ?? null;
 };
 
+export const getExpenseCategory = (category: string): ExpenseCategoryOption => {
+  return getCategoryOption(category, 'EXPENSE') as ExpenseCategoryOption;
+};
+
 export const getCategoryIcon = (category: string): string => {
   const iconMap: Record<string, string> = {
     // Expense categories

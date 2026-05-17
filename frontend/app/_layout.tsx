@@ -1,17 +1,19 @@
-import React, { useEffect } from 'react';
-import { View } from 'react-native';
-import { Stack, useSegments, useRouter } from 'expo-router';
+import React, { useEffect, useRef } from 'react';
+import { AppState, View } from 'react-native';
+import { router, Stack, useSegments } from 'expo-router'; // <--- Importamos useRootNavigationState
 import * as eva from '@eva-design/eva';
 import { ApplicationProvider, IconRegistry } from '@ui-kitten/components';
 import { EvaIconsPack } from '@ui-kitten/eva-icons';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
-import BottomNavBar from '../src/components/BottomNavBar';
 import * as SplashScreen from 'expo-splash-screen';
-import { UserProvider, useUser } from '../src/context/UserContext';
+import { UserProvider } from '../src/context/user';
 import { ShareIntentProvider, useShareIntent } from 'expo-share-intent';
+import { useUser } from '../src/context/user';
 
-SplashScreen.preventAutoHideAsync();
+SplashScreen.preventAutoHideAsync().catch(err => {
+  console.warn('Error previniendo auth hide:', err);
+});
 
 const customTheme = {
   ...eva.light,
@@ -24,56 +26,79 @@ const customTheme = {
   'color-basic-600': '#7f8c8d',
 };
 
-function ShareIntentHandler() {
-  const { hasShareIntent, shareIntent, resetShareIntent, error } = useShareIntent();
-  const { user, isLoading } = useUser();
-  const router = useRouter();
-
-  useEffect(() => {
-    if (error) {
-      console.error('Share Intent Error:', error);
-    }
-  }, [error]);
-
-  useEffect(() => {
-    if (hasShareIntent && shareIntent.type === 'image' && !isLoading && user) {
-      const imageUri = shareIntent.files?.[0]?.path;
-      if (imageUri) {
-        router.push({
-          pathname: '/(app)/add-expense',
-          params: { imageUri },
-        });
-        resetShareIntent();
-      }
-    }
-  }, [hasShareIntent, shareIntent, user, isLoading, router, resetShareIntent]);
-
-  return null;
-}
-
 export default function RootLayout() {
-  useEffect(() => {
-    SplashScreen.hideAsync();
-  }, []);
-
-  const segments = useSegments();
-
   return (
     <SafeAreaProvider>
       <IconRegistry icons={EvaIconsPack} />
       <ApplicationProvider {...eva} theme={customTheme}>
         <ShareIntentProvider>
           <UserProvider>
-            <View style={{ flex: 1 }}>
-              <ShareIntentHandler />
-              <Stack screenOptions={{ headerShown: false }} />
-              {segments[0] !== '(auth)' && <BottomNavBar />}
-            </View>
+            <RootLayoutNav />
           </UserProvider>
         </ShareIntentProvider>
-
         <StatusBar style="auto" />
       </ApplicationProvider>
     </SafeAreaProvider>
+  );
+}
+
+function RootLayoutNav() {
+  const { isLoading, user } = useUser();
+  const { isReady, hasShareIntent, shareIntent } = useShareIntent();
+  const isColdStart = useRef(true);
+
+  useEffect(() => {
+    if (!isLoading && isReady) {
+      SplashScreen.hideAsync().catch(err => {
+        console.warn('Error ocultando Splash:', err);
+      });
+    }
+  }, [isLoading, isReady]);
+
+  useEffect(() => {
+    const subscription = AppState.addEventListener('change', nextAppState => {
+      if (nextAppState === 'background') {
+        isColdStart.current = false;
+      }
+    });
+    return () => subscription.remove();
+  }, []);
+
+  useEffect(() => {
+    if (isLoading || !isReady || !user) return;
+
+    if (hasShareIntent && shareIntent.type === 'media' && shareIntent.files?.[0]) {
+      const filePath = shareIntent.files[0].path;
+      console.log(
+        `[Layout] Intent detectado. Path: ${filePath}. ColdStart: ${isColdStart.current}`
+      );
+
+      if (isColdStart.current) {
+        // Seteamos la base Home
+        router.replace('/(app)/home');
+
+        // Enviamos el parámetro 'sharedFilePath' explícitamente a la pantalla
+        router.push({
+          pathname: '/(app)/share-intent',
+          params: { sharedFilePath: filePath },
+        });
+        isColdStart.current = false;
+      } else {
+        router.push({
+          pathname: '/(app)/share-intent',
+          params: { sharedFilePath: filePath },
+        });
+      }
+    }
+  }, [hasShareIntent, shareIntent, isLoading, isReady, user]);
+
+  if (isLoading || !isReady) {
+    return null;
+  }
+
+  return (
+    <View style={{ flex: 1 }}>
+      <Stack screenOptions={{ headerShown: false }} />
+    </View>
   );
 }

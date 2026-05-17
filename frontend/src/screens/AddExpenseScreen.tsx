@@ -8,24 +8,26 @@ import {
   Modal,
   FlatList,
   TextInput,
-  Image,
   ScrollView,
 } from 'react-native';
-import { Layout, Text, Button, Input, Icon } from '@ui-kitten/components';
+import { Layout, Text, Button, Input } from '@ui-kitten/components';
 import { router, useLocalSearchParams } from 'expo-router';
 import { expenseService, type ExpenseType } from '../services/expenseService';
-import { CATEGORIES, ExpenseCategoryOption } from '../constants/categories';
+import { CATEGORIES, ExpenseCategoryOption, getExpenseCategory } from '../constants/categories';
 import { useCurrencyInput } from '../hooks/useCurrencyInput';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 const vh = screenHeight / 100;
 
 const AddExpenseScreen = () => {
-  const params = useLocalSearchParams<{ imageUri?: string }>();
-  const [imageUri, setImageUri] = useState<string | null>(params.imageUri || null);
-  const { displayValue, amount, handleAmountChange } = useCurrencyInput();
-  const [description, setDescription] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState<ExpenseCategoryOption | null>(null);
+  const params = useLocalSearchParams();
+  const { displayValue, amount, handleAmountChange } = useCurrencyInput(
+    (params.amount as string) || ''
+  );
+  const [description, setDescription] = useState((params.description as string) || '');
+  const [selectedCategory, setSelectedCategory] = useState<ExpenseCategoryOption | null>(
+    getExpenseCategory(params.category as string) || null
+  );
   const [selectedType, setSelectedType] = useState<ExpenseType | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
@@ -101,16 +103,6 @@ const AddExpenseScreen = () => {
               <Text style={styles.closeButton}>✕</Text>
             </TouchableOpacity>
           </View>
-
-          {imageUri && (
-            <View style={styles.imageContainer}>
-              <Image source={{ uri: imageUri }} style={styles.sharedImage} resizeMode="contain" />
-              <TouchableOpacity style={styles.removeImageButton} onPress={() => setImageUri(null)}>
-                <Icon name="close" fill="#fff" style={styles.removeImageIcon} />
-              </TouchableOpacity>
-              <Text style={styles.imageInfo}>Imagen adjunta del gasto</Text>
-            </View>
-          )}
 
           <Text style={styles.label}>Monto *</Text>
           <Input
@@ -494,6 +486,37 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
     textAlign: 'center',
     fontSize: 12,
+  },
+  overlayContainer: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)', // Fondo oscuro semitransparente (oscurece la pantalla de atrás)
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loaderCard: {
+    width: 250,
+    padding: 25,
+    backgroundColor: '#fff', // Tarjeta blanca flotante
+    borderRadius: 12,
+    alignItems: 'center',
+    // Sombras para darle efecto de elevación (diseño nativo)
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 5, // Sombra para Android
+  },
+  loaderText: {
+    marginTop: 15,
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#333',
+    textAlign: 'center',
+  },
+  subLoaderText: {
+    marginTop: 5,
+    fontSize: 12,
+    color: '#666',
   },
 });
 

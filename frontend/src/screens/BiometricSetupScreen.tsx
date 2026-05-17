@@ -5,7 +5,7 @@ import { Layout, Text, Button } from '@ui-kitten/components';
 import { router, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { authService } from '../services/authService';
-import { useUser } from '../context/UserContext';
+import { useUser } from '../context/user';
 import { userService } from '../services/userService';
 import { loginStyles as styles } from '../styles/loginStyles';
 

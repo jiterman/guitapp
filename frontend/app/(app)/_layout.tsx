@@ -1,23 +1,15 @@
 import { View, StyleSheet, TouchableOpacity, Dimensions, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Text, Icon } from '@ui-kitten/components';
-import { Stack, Redirect, useSegments } from 'expo-router';
-import { useUser } from '../../src/context/UserContext';
+import { Stack } from 'expo-router';
+import { useUser } from '../../src/context/user';
+import BottomNavBar from '../../src/components/BottomNavBar';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 const vh = screenHeight / 100;
 
 export default function AppLayout() {
-  const { user, isLoading } = useUser();
-  const segments = useSegments();
-
-  if (!isLoading && !user) {
-    return <Redirect href="/login" />;
-  }
-
-  if (user && !user.onboardingCompleted && !segments.includes('onboarding')) {
-    return <Redirect href="/onboarding" />;
-  }
+  const { user } = useUser();
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
@@ -54,6 +46,7 @@ export default function AppLayout() {
       </View>
 
       <Stack screenOptions={{ headerShown: false }} />
+      <BottomNavBar />
     </SafeAreaView>
   );
 }

@@ -16,7 +16,7 @@ import { userService } from '../services/userService';
 import { validateEmail, validatePassword } from '../utils/validation';
 import { loginStyles as styles } from '../styles/loginStyles';
 import { AuthError } from '../types/errors';
-import { useUser } from '../context/UserContext';
+import { useUser } from '../context/user';
 
 const LoginScreen = () => {
   const { setUser } = useUser();

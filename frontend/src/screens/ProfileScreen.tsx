@@ -15,7 +15,7 @@ import PersonalInfoEditor from './PersonalInfoEditor';
 import { userService } from '../services/userService';
 import { authService } from '../services/authService';
 import AvatarPicker from './AvatarPicker';
-import { useUser } from '../context/UserContext';
+import { useUser } from '../context/user';
 import { router } from 'expo-router';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');

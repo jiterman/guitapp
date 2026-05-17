@@ -5,7 +5,7 @@ import { Button, Layout, Text, Input, Spinner } from '@ui-kitten/components';
 import { router, useLocalSearchParams } from 'expo-router';
 import { userService } from '../services/userService';
 import { authService } from '../services/authService';
-import { useUser } from '../context/UserContext';
+import { useUser } from '../context/user/context';
 import { loginStyles as styles } from '../styles/loginStyles';
 
 const VerifyEmailChangeOtpScreen = () => {
