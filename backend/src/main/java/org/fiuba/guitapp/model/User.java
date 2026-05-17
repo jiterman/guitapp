@@ -51,7 +51,7 @@ public class User implements UserDetails {
     @Column
     private String firstName;
 
-    @Column(nullable = true)
+    @Column
     private String lastName;
 
     @Column(nullable = false, columnDefinition = "boolean default false")
@@ -81,7 +81,7 @@ public class User implements UserDetails {
     @Column
     private java.time.LocalDateTime otpCreatedAt;
 
-    @Column(nullable = false, updatable = false)
+    @Column(nullable = false, updatable = false, columnDefinition = "timestamp default current_timestamp")
     @CreationTimestamp
     private LocalDateTime createdAt;
 
