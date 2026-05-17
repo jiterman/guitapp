@@ -43,54 +43,17 @@ export default function RootLayout() {
 }
 
 function RootLayoutNav() {
-  const { isLoading, user } = useUser();
-  const { isReady, hasShareIntent, shareIntent } = useShareIntent();
-  const isColdStart = useRef(true);
+  const { isLoading } = useUser();
+  const { isReady } = useShareIntent();
 
   useEffect(() => {
     if (!isLoading && isReady) {
+      console.log('Ocultando splash');
       SplashScreen.hideAsync().catch(err => {
         console.warn('Error ocultando Splash:', err);
       });
     }
   }, [isLoading, isReady]);
-
-  useEffect(() => {
-    const subscription = AppState.addEventListener('change', nextAppState => {
-      if (nextAppState === 'background') {
-        isColdStart.current = false;
-      }
-    });
-    return () => subscription.remove();
-  }, []);
-
-  useEffect(() => {
-    if (isLoading || !isReady || !user) return;
-
-    if (hasShareIntent && shareIntent.type === 'media' && shareIntent.files?.[0]) {
-      const filePath = shareIntent.files[0].path;
-      console.log(
-        `[Layout] Intent detectado. Path: ${filePath}. ColdStart: ${isColdStart.current}`
-      );
-
-      if (isColdStart.current) {
-        // Seteamos la base Home
-        router.replace('/(app)/home');
-
-        // Enviamos el parámetro 'sharedFilePath' explícitamente a la pantalla
-        router.push({
-          pathname: '/(app)/share-intent',
-          params: { sharedFilePath: filePath },
-        });
-        isColdStart.current = false;
-      } else {
-        router.push({
-          pathname: '/(app)/share-intent',
-          params: { sharedFilePath: filePath },
-        });
-      }
-    }
-  }, [hasShareIntent, shareIntent, isLoading, isReady, user]);
 
   if (isLoading || !isReady) {
     return null;

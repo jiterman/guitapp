@@ -4,6 +4,7 @@ import { Text, Icon } from '@ui-kitten/components';
 import { Stack } from 'expo-router';
 import { useUser } from '../../src/context/user';
 import BottomNavBar from '../../src/components/BottomNavBar';
+import ShareIntent from '../../src/components/ShareIntent/ShareIntent';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 const vh = screenHeight / 100;
@@ -46,6 +47,7 @@ export default function AppLayout() {
       </View>
 
       <Stack screenOptions={{ headerShown: false }} />
+      <ShareIntent />
       <BottomNavBar />
     </SafeAreaView>
   );

@@ -3,6 +3,10 @@ import { API_URL, authService } from './authService';
 export const userService = {
   getProfile: async () => {
     const token = await authService.getToken();
+    if (!token) {
+      return null;
+    }
+
     const response = await fetch(`${API_URL}/api/users/me`, {
       method: 'GET',
       headers: {
