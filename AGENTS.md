@@ -81,3 +81,4 @@ Based on `codecov.yml` configuration:
 ### Ignored Files (No coverage required):
 - `**/GuitappApplication.java`
 - `**/*Application.java`
+
