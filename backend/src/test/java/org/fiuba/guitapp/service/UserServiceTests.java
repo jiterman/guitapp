@@ -9,13 +9,13 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
+import org.fiuba.guitapp.dto.ConfirmPasswordChangeRequest;
 import org.fiuba.guitapp.dto.InitiateEmailChangeRequest;
+import org.fiuba.guitapp.dto.InitiatePasswordChangeRequest;
 import org.fiuba.guitapp.dto.OnboardingRequest;
 import org.fiuba.guitapp.dto.UpdateUserProfileRequest;
 import org.fiuba.guitapp.dto.UserProfileResponse;
 import org.fiuba.guitapp.dto.VerifyEmailChangeRequest;
-import org.fiuba.guitapp.dto.InitiatePasswordChangeRequest;
-import org.fiuba.guitapp.dto.ConfirmPasswordChangeRequest;
 import org.fiuba.guitapp.exception.AuthException;
 import org.fiuba.guitapp.exception.ErrorCode;
 import org.fiuba.guitapp.model.User;
@@ -469,8 +469,7 @@ class UserServiceTests {
 
     @Test
     void initiatePasswordChange_ShouldThrowException_WhenUserNotFound() {
-        InitiatePasswordChangeRequest request =
-                new InitiatePasswordChangeRequest("currentPassword", "newPassword123");
+        InitiatePasswordChangeRequest request = new InitiatePasswordChangeRequest("currentPassword", "newPassword123");
 
         when(userRepository.findByEmail(testEmail)).thenReturn(Optional.empty());
 
@@ -486,8 +485,7 @@ class UserServiceTests {
 
     @Test
     void initiatePasswordChange_ShouldThrowException_WhenCurrentPasswordIsIncorrect() {
-        InitiatePasswordChangeRequest request =
-                new InitiatePasswordChangeRequest("wrongPassword", "newPassword123");
+        InitiatePasswordChangeRequest request = new InitiatePasswordChangeRequest("wrongPassword", "newPassword123");
 
         when(userRepository.findByEmail(testEmail)).thenReturn(Optional.of(testUser));
         when(passwordEncoder.matches("wrongPassword", testUser.getPassword()))
@@ -504,8 +502,7 @@ class UserServiceTests {
 
     @Test
     void initiatePasswordChange_ShouldThrowException_WhenNewPasswordIsSameAsCurrent() {
-        InitiatePasswordChangeRequest request =
-                new InitiatePasswordChangeRequest("currentPassword", "currentPassword");
+        InitiatePasswordChangeRequest request = new InitiatePasswordChangeRequest("currentPassword", "currentPassword");
 
         when(userRepository.findByEmail(testEmail)).thenReturn(Optional.of(testUser));
         when(passwordEncoder.matches("currentPassword", testUser.getPassword()))
@@ -513,13 +510,11 @@ class UserServiceTests {
 
         IllegalArgumentException exception = assertThrows(
                 IllegalArgumentException.class,
-                () -> userService.initiatePasswordChange(testEmail, request)
-        );
+                () -> userService.initiatePasswordChange(testEmail, request));
 
         assertEquals(
                 "La nueva contraseña debe ser diferente a la actual",
-                exception.getMessage()
-        );
+                exception.getMessage());
 
         verify(userRepository, never()).save(any(User.class));
     }
@@ -530,8 +525,7 @@ class UserServiceTests {
         String newPassword = "newPassword123";
         String encodedNewPassword = "encodedNewPassword";
 
-        InitiatePasswordChangeRequest request =
-                new InitiatePasswordChangeRequest(currentPassword, newPassword);
+        InitiatePasswordChangeRequest request = new InitiatePasswordChangeRequest(currentPassword, newPassword);
 
         when(userRepository.findByEmail(testEmail)).thenReturn(Optional.of(testUser));
         when(passwordEncoder.matches(currentPassword, testUser.getPassword()))
@@ -550,8 +544,7 @@ class UserServiceTests {
 
     @Test
     void confirmPasswordChange_ShouldThrowException_WhenUserNotFound() {
-        ConfirmPasswordChangeRequest request =
-                new ConfirmPasswordChangeRequest(true);
+        ConfirmPasswordChangeRequest request = new ConfirmPasswordChangeRequest(true);
 
         when(userRepository.findByEmail(testEmail)).thenReturn(Optional.empty());
 
@@ -567,21 +560,18 @@ class UserServiceTests {
     @Test
     void confirmPasswordChange_ShouldThrowException_WhenNoPendingPassword() {
         testUser.setPendingPassword(null);
-        ConfirmPasswordChangeRequest request =
-                new ConfirmPasswordChangeRequest(true);
+        ConfirmPasswordChangeRequest request = new ConfirmPasswordChangeRequest(true);
 
         when(userRepository.findByEmail(testEmail))
                 .thenReturn(Optional.of(testUser));
 
         IllegalArgumentException exception = assertThrows(
                 IllegalArgumentException.class,
-                () -> userService.confirmPasswordChange(testEmail, request)
-        );
+                () -> userService.confirmPasswordChange(testEmail, request));
 
         assertEquals(
                 "No hay un cambio de contraseña pendiente",
-                exception.getMessage()
-        );
+                exception.getMessage());
         verify(userRepository, never()).save(any(User.class));
     }
 
@@ -593,8 +583,7 @@ class UserServiceTests {
         testUser.setPassword(currentPassword);
         testUser.setPendingPassword(pendingPassword);
 
-        ConfirmPasswordChangeRequest request =
-                new ConfirmPasswordChangeRequest(true);
+        ConfirmPasswordChangeRequest request = new ConfirmPasswordChangeRequest(true);
 
         when(userRepository.findByEmail(testEmail))
                 .thenReturn(Optional.of(testUser));
@@ -614,8 +603,7 @@ class UserServiceTests {
         testUser.setPassword(currentPassword);
         testUser.setPendingPassword(pendingPassword);
 
-        ConfirmPasswordChangeRequest request =
-                new ConfirmPasswordChangeRequest(false);
+        ConfirmPasswordChangeRequest request = new ConfirmPasswordChangeRequest(false);
 
         when(userRepository.findByEmail(testEmail))
                 .thenReturn(Optional.of(testUser));
