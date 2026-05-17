@@ -12,11 +12,13 @@ import org.fiuba.guitapp.dto.AddExpenseRequest;
 import org.fiuba.guitapp.dto.ExpenseCategoryStatistics;
 import org.fiuba.guitapp.dto.ExpenseResponse;
 import org.fiuba.guitapp.dto.ExpenseStatisticsResponse;
+import org.fiuba.guitapp.dto.FixedAndVariableStatisticsResponse;
 import org.fiuba.guitapp.dto.UpdateExpenseRequest;
 import org.fiuba.guitapp.exception.AuthException;
 import org.fiuba.guitapp.exception.ErrorCode;
 import org.fiuba.guitapp.model.Expense;
 import org.fiuba.guitapp.model.ExpenseCategory;
+import org.fiuba.guitapp.model.ExpenseType;
 import org.fiuba.guitapp.model.User;
 import org.fiuba.guitapp.repository.ExpenseRepository;
 import org.fiuba.guitapp.repository.UserRepository;
@@ -158,6 +160,48 @@ public class ExpenseService {
                 .toList();
 
         return new ExpenseStatisticsResponse(totalAmount, categoryStats);
+    }
+
+    @Transactional(readOnly = true)
+    public FixedAndVariableStatisticsResponse getFixedAndVariableStatistics(
+            String email, String period, Integer year, Integer month, Integer day) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new AuthException(ErrorCode.USER_NOT_FOUND, "User not found"));
+
+        List<Expense> expenses = getExpensesByPeriod(user, period, year, month, day);
+
+        BigDecimal totalAmount = expenses.stream()
+                .map(Expense::getAmount)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        BigDecimal fixedAmount = expenses.stream()
+                .filter(expense -> expense.getType() == ExpenseType.FIXED)
+                .map(Expense::getAmount)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        BigDecimal variableAmount = expenses.stream()
+                .filter(expense -> expense.getType() == ExpenseType.VARIABLE)
+                .map(Expense::getAmount)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        Double fixedPercentage = totalAmount.compareTo(BigDecimal.ZERO) > 0
+                ? fixedAmount.divide(totalAmount, 4, RoundingMode.HALF_UP)
+                        .multiply(new BigDecimal("100"))
+                        .doubleValue()
+                : 0.0;
+
+        Double variablePercentage = totalAmount.compareTo(BigDecimal.ZERO) > 0
+                ? variableAmount.divide(totalAmount, 4, RoundingMode.HALF_UP)
+                        .multiply(new BigDecimal("100"))
+                        .doubleValue()
+                : 0.0;
+
+        return new FixedAndVariableStatisticsResponse(
+                totalAmount,
+                fixedAmount,
+                variableAmount,
+                fixedPercentage,
+                variablePercentage);
     }
 
     private List<Expense> getExpensesByPeriod(

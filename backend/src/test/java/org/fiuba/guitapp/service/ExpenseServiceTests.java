@@ -14,6 +14,7 @@ import java.util.UUID;
 import org.fiuba.guitapp.dto.AddExpenseRequest;
 import org.fiuba.guitapp.dto.ExpenseResponse;
 import org.fiuba.guitapp.dto.ExpenseStatisticsResponse;
+import org.fiuba.guitapp.dto.FixedAndVariableStatisticsResponse;
 import org.fiuba.guitapp.dto.UpdateExpenseRequest;
 import org.fiuba.guitapp.exception.AuthException;
 import org.fiuba.guitapp.exception.ErrorCode;
@@ -585,6 +586,60 @@ class ExpenseServiceTests {
         assertNotNull(response);
         assertEquals(BigDecimal.ZERO, response.totalAmount());
         assertEquals(0, response.categories().size());
+    }
+
+    @Test
+    void getFixedAndVariableStatistics_ShouldReturnStatistics_WithMonthlyPeriod() {
+        LocalDate monthStart = LocalDate.of(2024, 2, 1);
+        LocalDate monthEnd = LocalDate.of(2024, 3, 1);
+
+        Expense fixedExpense = new Expense();
+        fixedExpense.setId(UUID.randomUUID());
+        fixedExpense.setAmount(new BigDecimal("200.00"));
+        fixedExpense.setCategory(ExpenseCategory.RENT);
+        fixedExpense.setType(ExpenseType.FIXED);
+        fixedExpense.setDate(LocalDate.of(2024, 2, 10));
+        fixedExpense.setUser(testUser);
+
+        Expense variableExpense = new Expense();
+        variableExpense.setId(UUID.randomUUID());
+        variableExpense.setAmount(new BigDecimal("100.00"));
+        variableExpense.setCategory(ExpenseCategory.SUPERMARKET);
+        variableExpense.setType(ExpenseType.VARIABLE);
+        variableExpense.setDate(LocalDate.of(2024, 2, 12));
+        variableExpense.setUser(testUser);
+
+        List<Expense> expenses = Arrays.asList(fixedExpense, variableExpense);
+
+        when(userRepository.findByEmail(testEmail)).thenReturn(Optional.of(testUser));
+        when(expenseRepository.findAllByUserAndDateBetween(testUser, monthStart, monthEnd))
+                .thenReturn(expenses);
+
+        FixedAndVariableStatisticsResponse response = expenseService.getFixedAndVariableStatistics(
+                testEmail, "monthly", 2024, 2, null);
+
+        assertNotNull(response);
+        assertEquals(new BigDecimal("300.00"), response.totalAmount());
+        assertEquals(new BigDecimal("200.00"), response.fixedAmount());
+        assertEquals(new BigDecimal("100.00"), response.variableAmount());
+        assertEquals(66.6667, response.fixedPercentage(), 0.01);
+        assertEquals(33.3333, response.variablePercentage(), 0.01);
+    }
+
+    @Test
+    void getFixedAndVariableStatistics_ShouldReturnZeroes_WhenNoExpenses() {
+        when(userRepository.findByEmail(testEmail)).thenReturn(Optional.of(testUser));
+        when(expenseRepository.findAllByUser(testUser)).thenReturn(Arrays.asList());
+
+        FixedAndVariableStatisticsResponse response = expenseService.getFixedAndVariableStatistics(
+                testEmail, "all", null, null, null);
+
+        assertNotNull(response);
+        assertEquals(BigDecimal.ZERO, response.totalAmount());
+        assertEquals(BigDecimal.ZERO, response.fixedAmount());
+        assertEquals(BigDecimal.ZERO, response.variableAmount());
+        assertEquals(0.0, response.fixedPercentage());
+        assertEquals(0.0, response.variablePercentage());
     }
 
     @Test
