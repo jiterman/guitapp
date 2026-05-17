@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Alert,
@@ -11,9 +11,9 @@ import {
 import { Layout, Text } from '@ui-kitten/components';
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
-import { router } from 'expo-router';
-import { incomeService } from '../services/incomeService';
+import { router, useLocalSearchParams } from 'expo-router';
 import type { IncomeCategory } from '../services/incomeService';
+import { incomeService } from '../services/incomeService';
 import { INCOME_CATEGORIES, IncomeCategoryOption } from '../constants/categories';
 import { useCurrencyInput } from '../hooks/useCurrencyInput';
 import {
@@ -21,19 +21,52 @@ import {
   ICON_SIZES,
   ICON_COLORS,
 } from '../styles/transactionFormStyles';
-import { formatDate, toLocalDateString } from '../utils/dateFormatter';
+import { formatDate, toLocalDateString, parseLocalDate } from '../utils/dateFormatter';
 
-const AddIncomeScreen = () => {
-  const { displayValue, amount, handleAmountChange } = useCurrencyInput();
+const EditIncomeScreen = () => {
+  const { incomeId } = useLocalSearchParams<{ incomeId?: string }>();
+  const { displayValue, amount, handleAmountChange, setAmount } = useCurrencyInput();
   const [description, setDescription] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<IncomeCategoryOption | null>(null);
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [modalVisible, setModalVisible] = useState(false);
   const [search, setSearch] = useState('');
   const [amountError, setAmountError] = useState<string | null>(null);
   const [categoryError, setCategoryError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      try {
+        if (!incomeId) {
+          if (mounted) router.back();
+          return;
+        }
+        const income = await incomeService.getIncomeById(incomeId);
+        if (mounted) {
+          setAmount(String(income.amount));
+          setDescription(income.description ?? '');
+          const selected = INCOME_CATEGORIES.find(c => c.value === income.category) ?? null;
+          setSelectedCategory(selected);
+          setSelectedDate(parseLocalDate(income.date));
+        }
+      } catch {
+        if (mounted) {
+          Alert.alert('Error', 'No se pudo cargar el ingreso.');
+          router.back();
+        }
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    })();
+    return () => {
+      mounted = false;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [incomeId]);
 
   const filteredCategories = INCOME_CATEGORIES.filter(cat =>
     cat.label.toLowerCase().includes(search.toLowerCase())
@@ -54,6 +87,8 @@ const AddIncomeScreen = () => {
   };
 
   const onSubmit = async () => {
+    if (!incomeId) return;
+
     setAmountError(null);
     setCategoryError(null);
     let hasError = false;
@@ -71,7 +106,7 @@ const AddIncomeScreen = () => {
     setSubmitting(true);
     try {
       const dateString = toLocalDateString(selectedDate);
-      await incomeService.addIncome({
+      await incomeService.updateIncome(incomeId, {
         amount: parseFloat(amount),
         description: description.trim() || undefined,
         category: selectedCategory!.value as unknown as IncomeCategory,
@@ -79,18 +114,26 @@ const AddIncomeScreen = () => {
       });
       router.back();
     } catch {
-      Alert.alert('Error', 'No se pudo registrar el ingreso. Intentá de nuevo.');
+      Alert.alert('Error', 'No se pudo actualizar el ingreso. Intentá de nuevo.');
     } finally {
       setSubmitting(false);
     }
   };
+
+  if (loading) {
+    return (
+      <Layout style={styles.container}>
+        <Text appearance="hint">Cargando...</Text>
+      </Layout>
+    );
+  }
 
   return (
     <>
       <Layout style={styles.container}>
         <View style={styles.subHeader}>
           <Text category="h4" style={styles.title}>
-            Agregar ingreso
+            Editar ingreso
           </Text>
           <TouchableOpacity onPress={() => router.back()}>
             <Text style={styles.closeButton}>✕</Text>
@@ -268,4 +311,4 @@ const AddIncomeScreen = () => {
   );
 };
 
-export default AddIncomeScreen;
+export default EditIncomeScreen;

@@ -3,7 +3,6 @@ package org.fiuba.guitapp.service;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -62,7 +61,7 @@ public class ExpenseService {
         expense.setDescription(request.description());
         expense.setCategory(request.category());
         expense.setType(request.type());
-        expense.setDate(LocalDateTime.now());
+        expense.setDate(request.date());
         expense.setUser(user);
 
         Expense saved = expenseRepository.save(expense);
@@ -111,6 +110,9 @@ public class ExpenseService {
         }
         if (request.type() != null) {
             expense.setType(request.type());
+        }
+        if (request.date() != null) {
+            expense.setDate(request.date());
         }
 
         Expense saved = expenseRepository.save(expense);
@@ -204,16 +206,16 @@ public class ExpenseService {
 
     private List<Expense> getExpensesByPeriod(
             User user, String period, Integer year, Integer month, Integer day) {
-        LocalDateTime referenceDate = buildReferenceDate(year, month, day);
+        LocalDate referenceDate = buildReferenceDate(year, month, day);
         return switch (period.toLowerCase()) {
         case "daily" -> {
-            LocalDateTime startOfDay = referenceDate.toLocalDate().atStartOfDay();
-            LocalDateTime endOfDay = startOfDay.plusDays(1);
+            LocalDate startOfDay = referenceDate;
+            LocalDate endOfDay = startOfDay.plusDays(1);
             yield expenseRepository.findAllByUserAndDateBetween(user, startOfDay, endOfDay);
         }
         case "monthly" -> {
-            LocalDateTime startOfMonth = referenceDate.toLocalDate().withDayOfMonth(1).atStartOfDay();
-            LocalDateTime endOfMonth = startOfMonth.plusMonths(1);
+            LocalDate startOfMonth = referenceDate.withDayOfMonth(1);
+            LocalDate endOfMonth = startOfMonth.plusMonths(1);
             yield expenseRepository.findAllByUserAndDateBetween(user, startOfMonth, endOfMonth);
         }
         case "all" -> expenseRepository.findAllByUser(user);
@@ -221,11 +223,11 @@ public class ExpenseService {
         };
     }
 
-    private LocalDateTime buildReferenceDate(Integer year, Integer month, Integer day) {
+    private LocalDate buildReferenceDate(Integer year, Integer month, Integer day) {
         LocalDate now = LocalDate.now();
         int effectiveYear = year != null ? year : now.getYear();
         int effectiveMonth = month != null ? month : now.getMonthValue();
         int effectiveDay = day != null ? day : now.getDayOfMonth();
-        return LocalDate.of(effectiveYear, effectiveMonth, effectiveDay).atStartOfDay();
+        return LocalDate.of(effectiveYear, effectiveMonth, effectiveDay);
     }
 }

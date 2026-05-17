@@ -54,7 +54,7 @@ public class IncomeService {
         income.setAmount(request.amount());
         income.setDescription(request.description());
         income.setCategory(request.category());
-        income.setDate(LocalDateTime.now());
+        income.setDate(request.date());
         income.setUser(user);
 
         Income saved = incomeRepository.save(income);
@@ -98,6 +98,9 @@ public class IncomeService {
         }
         if (request.category() != null) {
             income.setCategory(request.category());
+        }
+        if (request.date() != null) {
+            income.setDate(request.date());
         }
 
         Income saved = incomeRepository.save(income);

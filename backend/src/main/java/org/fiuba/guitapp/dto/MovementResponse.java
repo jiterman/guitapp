@@ -1,7 +1,7 @@
 package org.fiuba.guitapp.dto;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 import java.util.UUID;
 
 public record MovementResponse(
@@ -11,5 +11,5 @@ public record MovementResponse(
         String description,
         String category,
         String expenseType,
-        LocalDateTime date) {
+        LocalDate date) {
 }
