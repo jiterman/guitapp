@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, Dimensions, Text } from 'react-native';
+import { View, StyleSheet, Dimensions, Text, TouchableOpacity } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { PieChart } from 'react-native-gifted-charts';
 import { SvgXml } from 'react-native-svg';
 import { FixedAndVariableStatisticsResponse } from '../../services/expenseStatisticsService';
@@ -42,16 +43,28 @@ type LegendItem = {
   kind: DistributionKind;
 };
 
-const buildDeltaLabel = (value: number) => `${value > 0 ? '+' : ''}${value.toFixed(1)}%`;
+type AdjustmentInfo = {
+  label: string;
+  amount: string;
+};
 
-const buildAdjustmentText = (kind: DistributionKind, deltaAmount: number) => {
-  const amountLabel = `$${formatCurrency(Math.abs(deltaAmount))}`;
+const buildAdjustmentInfo = (kind: DistributionKind, deltaAmount: number): AdjustmentInfo => {
+  const absoluteAmount = Math.abs(deltaAmount);
+  const amountLabel = `$${formatCurrency(absoluteAmount)}`;
 
-  if (kind === 'savings') {
-    return deltaAmount >= 0 ? `Puedes gastar: ${amountLabel}` : `Debes Ingresar: ${amountLabel}`;
+  if (absoluteAmount < 0.01) {
+    return { label: 'En objetivo', amount: '$0' };
   }
 
-  return deltaAmount > 0 ? `Gastos en exceso: ${amountLabel}` : `Puedes gastar: ${amountLabel}`;
+  if (kind === 'savings') {
+    return deltaAmount >= 0
+      ? { label: 'Podes gastar', amount: amountLabel }
+      : { label: 'Debes Ingresar', amount: amountLabel };
+  }
+
+  return deltaAmount > 0
+    ? { label: 'Gastos en exceso', amount: amountLabel }
+    : { label: 'Podes gastar', amount: amountLabel };
 };
 
 const getDeviationColor = (kind: DistributionKind, deltaAmount: number) => {
@@ -87,11 +100,8 @@ const FixedAndVariableChart: React.FC<FixedAndVariableChartProps> = ({
 
   const hasData = chartTotal > 0;
   const canShowTargets = Boolean(targets) && !isTargetsLoading && totalEarnings > 0;
-  const targetStatusLabel = isTargetsLoading
-    ? 'Cargando objetivos...'
-    : totalEarnings <= 0
-    ? 'Ingresos no disponibles'
-    : 'Objetivos no disponibles';
+  const shouldShowTargets = totalEarnings > 0;
+  const targetStatusLabel = isTargetsLoading ? 'Cargando objetivos...' : 'Objetivos no disponibles';
 
   const legendItems: LegendItem[] = [
     {
@@ -144,10 +154,10 @@ const FixedAndVariableChart: React.FC<FixedAndVariableChartProps> = ({
   });
 
   const selectedItem = selectedKey ? legendItems.find(item => item.key === selectedKey) : null;
-  const chartRadius = screenWidth * 0.32;
-  const innerRadius = screenWidth * 0.18;
-  const centerAmount = totalEarnings > 0 ? totalEarnings : totalExpenses;
-  const centerLabel = totalEarnings > 0 ? 'Ingresos' : 'Total';
+  const chartRadius = screenWidth * 0.35;
+  const innerRadius = screenWidth * 0.2;
+  const centerAmount = totalExpenses;
+  const centerLabel = 'Gastos';
   const displayLabel = selectedItem ? selectedItem.label : centerLabel;
   const displayAmount = selectedItem ? selectedItem.amount : centerAmount;
 
@@ -161,10 +171,10 @@ const FixedAndVariableChart: React.FC<FixedAndVariableChartProps> = ({
         {!hasData ? (
           <View style={styles.emptyContainer}>
             <View style={styles.emptyIconContainer}>
-              <SvgXml xml={SAVINGS_ICON} width={40} height={40} color={SAVINGS_COLOR} />
+              <Ionicons name="pie-chart-outline" size={48} color="#07a3e4" />
             </View>
-            <Text style={styles.emptyText}>No hay datos para mostrar</Text>
-            <Text style={styles.emptySubText}>Agrega ingresos y gastos para ver el grafico</Text>
+            <Text style={styles.emptyText}>No hay gastos para mostrar</Text>
+            <Text style={styles.emptySubText}>Agregá gastos para ver el gráfico</Text>
           </View>
         ) : (
           <View style={styles.chartContainer}>
@@ -221,7 +231,11 @@ const FixedAndVariableChart: React.FC<FixedAndVariableChartProps> = ({
           <View style={styles.legendWrapper}>
             <View style={styles.legendContainer}>
               {legendItems.map(item => (
-                <View key={item.key} style={styles.legendItem}>
+                <TouchableOpacity
+                  key={item.key}
+                  style={styles.legendItem}
+                  onPress={() => handleItemPress(item.key)}
+                >
                   <View style={styles.legendHeader}>
                     <View style={styles.legendLeft}>
                       <View style={[styles.iconCircle, { backgroundColor: `${item.color}20` }]}>
@@ -246,52 +260,68 @@ const FixedAndVariableChart: React.FC<FixedAndVariableChartProps> = ({
                       ]}
                     />
                   </View>
-                </View>
+                </TouchableOpacity>
               ))}
             </View>
           </View>
 
-          <View style={styles.targetsWrapper}>
-            <View style={styles.targetsContainer}>
-              {canShowTargets ? (
-                legendItems.map(item => {
-                  const desiredAmount = (totalEarnings * item.targetPercentage) / 100;
-                  const deltaPercent = item.percentage - item.targetPercentage;
-                  const deltaAmount = item.amount - desiredAmount;
-                  const deviationColor = getDeviationColor(item.kind, deltaAmount);
-                  const adjustmentText = buildAdjustmentText(item.kind, deltaAmount);
+          {shouldShowTargets && (
+            <View style={styles.targetsWrapper}>
+              <View style={styles.targetsContainer}>
+                {canShowTargets ? (
+                  legendItems.map(item => {
+                    const desiredAmount = (totalEarnings * item.targetPercentage) / 100;
+                    const deltaAmount = item.amount - desiredAmount;
+                    const deviationColor = getDeviationColor(item.kind, deltaAmount);
+                    const adjustment = buildAdjustmentInfo(item.kind, deltaAmount);
 
-                  return (
-                    <View key={item.key} style={styles.targetItem}>
-                      <View style={styles.targetHeader}>
-                        <View style={styles.targetLeft}>
-                          <View style={[styles.iconCircle, { backgroundColor: `${item.color}20` }]}>
-                            <SvgXml xml={item.icon} width={18} height={18} color={item.color} />
+                    return (
+                      <View key={item.key} style={styles.targetItem}>
+                        <View style={styles.targetHeader}>
+                          <View style={styles.targetLeft}>
+                            <View style={[styles.iconCircle, { backgroundColor: `${item.color}20` }]}>
+                              <SvgXml xml={item.icon} width={18} height={18} color={item.color} />
+                            </View>
+                            <Text style={styles.targetLabel}>{item.label}</Text>
                           </View>
-                          <Text style={styles.targetLabel}>{item.label}</Text>
                         </View>
-                        <View style={styles.targetRight}>
-                          <Text style={styles.targetObjectiveLabel}>Objetivo</Text>
-                          <Text style={styles.targetObjectiveValue}>
-                            {item.targetPercentage.toFixed(1)}% · ${formatCurrency(desiredAmount)}
+                        <View style={styles.objectiveRow}>
+                          <View style={styles.objectiveCard}>
+                            <Text style={styles.objectiveLabel}>Objetivo fijo</Text>
+                            <Text style={styles.objectiveValue}>${formatCurrency(desiredAmount)}</Text>
+                          </View>
+                          <View style={styles.objectiveCard}>
+                            <Text style={styles.objectiveLabel}>Objetivo %</Text>
+                            <Text style={styles.objectiveValue}>
+                              {item.targetPercentage.toFixed(1)}%
+                            </Text>
+                          </View>
+                        </View>
+                        <View
+                          style={[
+                            styles.adjustmentRow,
+                            {
+                              borderColor: deviationColor,
+                              backgroundColor: `${deviationColor}12`,
+                            },
+                          ]}
+                        >
+                          <Text style={[styles.adjustmentLabel, { color: deviationColor }]}>
+                            {adjustment.label}
+                          </Text>
+                          <Text style={[styles.adjustmentAmount, { color: deviationColor }]}>
+                            {adjustment.amount}
                           </Text>
                         </View>
                       </View>
-                      <Text style={[styles.targetDeviationText, { color: deviationColor }]}>
-                        Desvio {buildDeltaLabel(deltaPercent)}
-                      </Text>
-                      <Text style={[styles.targetHintText, { color: deviationColor }]}
-                      >
-                        {adjustmentText}
-                      </Text>
-                    </View>
-                  );
-                })
-              ) : (
-                <Text style={styles.targetPlaceholder}>{targetStatusLabel}</Text>
-              )}
+                    );
+                  })
+                ) : (
+                  <Text style={styles.targetPlaceholder}>{targetStatusLabel}</Text>
+                )}
+              </View>
             </View>
-          </View>
+          )}
         </>
       )}
     </>
@@ -356,7 +386,8 @@ const styles = StyleSheet.create({
   },
   legendWrapper: {
     paddingHorizontal: screenWidth * 0.05,
-    marginTop: vh,
+    marginTop: 0,
+    marginBottom: vh * 2,
   },
   legendContainer: {
     backgroundColor: '#fff',
@@ -423,7 +454,7 @@ const styles = StyleSheet.create({
   },
   targetsWrapper: {
     paddingHorizontal: screenWidth * 0.05,
-    marginTop: vh,
+    marginTop: 0,
   },
   targetsContainer: {
     backgroundColor: '#fff',
@@ -446,7 +477,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 6,
+    marginBottom: 8,
   },
   targetLeft: {
     flexDirection: 'row',
@@ -459,26 +490,46 @@ const styles = StyleSheet.create({
     color: '#003366',
     fontWeight: '600',
   },
-  targetRight: {
-    alignItems: 'flex-end',
+  objectiveRow: {
+    flexDirection: 'row',
+    gap: 10,
+    marginBottom: 10,
   },
-  targetObjectiveLabel: {
+  objectiveCard: {
+    flex: 1,
+    paddingVertical: vh * 0.9,
+    borderRadius: 10,
+    backgroundColor: '#F7FAFD',
+    borderWidth: 1,
+    borderColor: '#E3EDF6',
+    alignItems: 'center',
+  },
+  objectiveLabel: {
     fontSize: 11,
     color: '#6b8aa1',
+    marginBottom: 4,
   },
-  targetObjectiveValue: {
-    fontSize: 12,
+  objectiveValue: {
+    fontSize: 13,
     color: '#003366',
-    fontWeight: '600',
-  },
-  targetDeviationText: {
-    fontSize: 12,
     fontWeight: '700',
   },
-  targetHintText: {
+  adjustmentRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: vh * 0.8,
+    paddingHorizontal: 12,
+    borderRadius: 10,
+    borderWidth: 1,
+  },
+  adjustmentLabel: {
     fontSize: 12,
     fontWeight: '600',
-    marginTop: 2,
+  },
+  adjustmentAmount: {
+    fontSize: 13,
+    fontWeight: '700',
   },
   targetPlaceholder: {
     paddingVertical: vh,
