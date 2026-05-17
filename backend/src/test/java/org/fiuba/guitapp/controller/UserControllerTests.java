@@ -226,8 +226,7 @@ class UserControllerTests {
     @Test
     @WithMockUser(username = "test@example.com")
     void initiatePasswordChange_ShouldReturnSuccessMessage() throws Exception {
-        InitiatePasswordChangeRequest request = new InitiatePasswordChangeRequest();
-        request.setNewPassword("newPassword123");
+        InitiatePasswordChangeRequest request = new InitiatePasswordChangeRequest("currentPassword123", "newPassword123");
 
         doNothing().when(userService).initiatePasswordChange(eq("test@example.com"), any(InitiatePasswordChangeRequest.class));
 
@@ -243,8 +242,7 @@ class UserControllerTests {
     @Test
     @WithMockUser(username = "test@example.com")
     void confirmPasswordChange_ShouldReturnSuccessMessage() throws Exception {
-        ConfirmPasswordChangeRequest request = new ConfirmPasswordChangeRequest();
-        request.setNewPassword("newPassword123");
+        ConfirmPasswordChangeRequest request = new ConfirmPasswordChangeRequest(true);
 
         doNothing().when(userService).confirmPasswordChange(eq("test@example.com"), any(ConfirmPasswordChangeRequest.class));
 
