@@ -130,4 +130,50 @@ export const userService = {
 
     return response.json();
   },
+
+  initiatePasswordChange: async (currentPassword: string, newPassword: string) => {
+    const token = await authService.getToken();
+
+    const response = await fetch(`${API_URL}/api/users/me/password/initiate`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        currentPassword,
+        newPassword,
+      }),
+    });
+
+    const data = await response.json().catch(() => null);
+
+    if (!response.ok) {
+      throw new Error(data?.message || 'Error al iniciar cambio de contraseña');
+    }
+
+    return data;
+  },
+
+  confirmPasswordChange: async (confirmed: boolean) => {
+    const token = await authService.getToken();
+
+    const response = await fetch(`${API_URL}/api/users/me/password/confirm`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        confirmed,
+      }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || 'Error al confirmar cambio de contraseña');
+    }
+
+    return response.json();
+  },
 };

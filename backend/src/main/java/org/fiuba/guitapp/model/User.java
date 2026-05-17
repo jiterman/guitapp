@@ -74,6 +74,9 @@ public class User implements UserDetails {
     private String pendingEmail;
 
     @Column
+    private String pendingPassword;
+
+    @Column
     private java.time.LocalDateTime otpCreatedAt;
 
     public User() {

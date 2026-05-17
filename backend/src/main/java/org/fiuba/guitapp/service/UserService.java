@@ -3,7 +3,9 @@ package org.fiuba.guitapp.service;
 import java.time.LocalDateTime;
 import java.util.Map;
 
+import org.fiuba.guitapp.dto.ConfirmPasswordChangeRequest;
 import org.fiuba.guitapp.dto.InitiateEmailChangeRequest;
+import org.fiuba.guitapp.dto.InitiatePasswordChangeRequest;
 import org.fiuba.guitapp.dto.OnboardingRequest;
 import org.fiuba.guitapp.dto.UpdateUserProfileRequest;
 import org.fiuba.guitapp.dto.UserProfileResponse;
@@ -12,6 +14,7 @@ import org.fiuba.guitapp.exception.AuthException;
 import org.fiuba.guitapp.exception.ErrorCode;
 import org.fiuba.guitapp.model.User;
 import org.fiuba.guitapp.repository.UserRepository;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -28,6 +31,7 @@ public class UserService {
     private final Cloudinary cloudinary;
     private final OtpService otpService;
     private final EmailService emailService;
+    private final PasswordEncoder passwordEncoder;
     private static final long MAX_FILE_SIZE = 5 * 1024 * 1024;
 
     public UserProfileResponse getUserProfile(String email) {
@@ -187,6 +191,55 @@ public class UserService {
         user.setPendingEmail(null);
         user.setVerificationOtp(null);
         user.setOtpCreatedAt(null);
+
+        userRepository.save(user);
+    }
+
+    @Transactional
+    public void initiatePasswordChange(String email, InitiatePasswordChangeRequest request) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new AuthException(
+                        ErrorCode.USER_NOT_FOUND,
+                        "User not found"));
+
+        if (!passwordEncoder.matches(
+                request.currentPassword(),
+                user.getPassword())) {
+            throw new AuthException(
+                    ErrorCode.INVALID_CREDENTIALS,
+                    "La contraseña actual es incorrecta");
+        }
+
+        if (passwordEncoder.matches(
+                request.newPassword(),
+                user.getPassword())) {
+            throw new IllegalArgumentException(
+                    "La nueva contraseña debe ser diferente a la actual");
+        }
+        user.setPendingPassword(passwordEncoder.encode(request.newPassword()));
+        userRepository.save(user);
+    }
+
+    @Transactional
+    public void confirmPasswordChange(
+            String email,
+            ConfirmPasswordChangeRequest request) {
+
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new AuthException(
+                        ErrorCode.USER_NOT_FOUND,
+                        "User not found"));
+
+        if (user.getPendingPassword() == null) {
+            throw new IllegalArgumentException(
+                    "No hay un cambio de contraseña pendiente");
+        }
+
+        if (request.confirmed()) {
+            user.setPassword(user.getPendingPassword());
+        }
+
+        user.setPendingPassword(null);
 
         userRepository.save(user);
     }
