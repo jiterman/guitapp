@@ -589,15 +589,15 @@ class ExpenseServiceTests {
 
     @Test
     void getFixedAndVariableStatistics_ShouldReturnStatistics_WithMonthlyPeriod() {
-        LocalDateTime monthStart = LocalDateTime.of(2024, 2, 1, 0, 0);
-        LocalDateTime monthEnd = LocalDateTime.of(2024, 3, 1, 0, 0);
+        java.time.LocalDateTime monthStart = java.time.LocalDateTime.of(2024, 2, 1, 0, 0);
+        java.time.LocalDateTime monthEnd = java.time.LocalDateTime.of(2024, 3, 1, 0, 0);
 
         Expense fixedExpense = new Expense();
         fixedExpense.setId(UUID.randomUUID());
         fixedExpense.setAmount(new BigDecimal("200.00"));
         fixedExpense.setCategory(ExpenseCategory.RENT);
         fixedExpense.setType(ExpenseType.FIXED);
-        fixedExpense.setDate(LocalDateTime.of(2024, 2, 10, 12, 0));
+        fixedExpense.setDate(java.time.LocalDateTime.of(2024, 2, 10, 12, 0));
         fixedExpense.setUser(testUser);
 
         Expense variableExpense = new Expense();
@@ -605,7 +605,7 @@ class ExpenseServiceTests {
         variableExpense.setAmount(new BigDecimal("100.00"));
         variableExpense.setCategory(ExpenseCategory.SUPERMARKET);
         variableExpense.setType(ExpenseType.VARIABLE);
-        variableExpense.setDate(LocalDateTime.of(2024, 2, 12, 18, 0));
+        variableExpense.setDate(java.time.LocalDateTime.of(2024, 2, 12, 18, 0));
         variableExpense.setUser(testUser);
 
         List<Expense> expenses = Arrays.asList(fixedExpense, variableExpense);

@@ -417,14 +417,12 @@ class IncomeServiceTests {
         income1.setId(UUID.randomUUID());
         income1.setAmount(new BigDecimal("200.00"));
         income1.setCategory(IncomeCategory.SALARY);
-        income1.setDate(LocalDateTime.of(2024, 2, 10, 9, 0));
         income1.setUser(testUser);
 
         Income income2 = new Income();
         income2.setId(UUID.randomUUID());
         income2.setAmount(new BigDecimal("150.00"));
         income2.setCategory(IncomeCategory.FREELANCE);
-        income2.setDate(LocalDateTime.of(2024, 2, 20, 12, 0));
         income2.setUser(testUser);
 
         List<Income> incomes = Arrays.asList(income1, income2);
