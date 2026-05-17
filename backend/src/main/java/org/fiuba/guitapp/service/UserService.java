@@ -47,7 +47,8 @@ public class UserService {
                 user.isOnboardingCompleted(),
                 user.getTargetFixedExpenses(),
                 user.getTargetVariableExpenses(),
-                user.getTargetSavings());
+                user.getTargetSavings(),
+                user.getCreatedAt());
     }
 
     @Transactional
@@ -97,7 +98,8 @@ public class UserService {
                 user.isOnboardingCompleted(),
                 user.getTargetFixedExpenses(),
                 user.getTargetVariableExpenses(),
-                user.getTargetSavings());
+                user.getTargetSavings(),
+                user.getCreatedAt());
     }
 
     private void validateAvatarFile(MultipartFile file) {
@@ -141,7 +143,8 @@ public class UserService {
                     user.isOnboardingCompleted(),
                     user.getTargetFixedExpenses(),
                     user.getTargetVariableExpenses(),
-                    user.getTargetSavings());
+                    user.getTargetSavings(),
+                    user.getCreatedAt());
 
         } catch (Exception e) {
             throw new RuntimeException("Error uploading avatar", e);
