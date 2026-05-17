@@ -29,7 +29,8 @@ class UserProfileResponseTests {
                 onboardingCompleted,
                 targetFixed,
                 targetVariable,
-                targetSavings);
+                targetSavings,
+                java.time.LocalDateTime.now());
 
         assertEquals(id, response.id());
         assertEquals(email, response.email());
@@ -54,7 +55,8 @@ class UserProfileResponseTests {
                 false,
                 null,
                 null,
-                null);
+                null,
+                java.time.LocalDateTime.now());
 
         assertEquals(id, response.id());
         assertEquals(email, response.email());
@@ -70,6 +72,7 @@ class UserProfileResponseTests {
     @Test
     void userProfileResponse_ShouldSupportEquality() {
         UUID id = UUID.randomUUID();
+        java.time.LocalDateTime createdAt = java.time.LocalDateTime.of(2024, 1, 1, 0, 0);
         UserProfileResponse response1 = new UserProfileResponse(
                 id,
                 "test@example.com",
@@ -79,8 +82,8 @@ class UserProfileResponseTests {
                 true,
                 30,
                 50,
-                20);
-
+                20,
+                createdAt);
         UserProfileResponse response2 = new UserProfileResponse(
                 id,
                 "test@example.com",
@@ -90,8 +93,8 @@ class UserProfileResponseTests {
                 true,
                 30,
                 50,
-                20);
-
+                20,
+                createdAt);
         assertEquals(response1, response2);
         assertEquals(response1.hashCode(), response2.hashCode());
     }
@@ -108,7 +111,8 @@ class UserProfileResponseTests {
                 true,
                 30,
                 50,
-                20);
+                20,
+                java.time.LocalDateTime.now());
 
         String toString = response.toString();
 
