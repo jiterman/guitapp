@@ -1,10 +1,11 @@
-import { ExpenseCategory } from '../services/expenseService';
+import { ExpenseCategory, ExpenseType } from '../services/expenseService';
 import { IncomeCategory } from '../services/incomeService';
 
 export interface ExpenseCategoryOption {
   label: string;
   value: ExpenseCategory;
   icon: string;
+  defaultType: ExpenseType;
 }
 
 export interface IncomeCategoryOption {
@@ -14,39 +15,58 @@ export interface IncomeCategoryOption {
 }
 
 export const CATEGORIES: ExpenseCategoryOption[] = [
-  { label: 'Supermercado', value: 'SUPERMARKET', icon: '🛒' },
-  { label: 'Restaurante', value: 'RESTAURANT', icon: '🍽️' },
-  { label: 'Café', value: 'CAFE', icon: '☕' },
-  { label: 'Delivery', value: 'DELIVERY', icon: '🛵' },
-  { label: 'Transporte público', value: 'PUBLIC_TRANSPORT', icon: '🚌' },
-  { label: 'Combustible', value: 'FUEL', icon: '⛽' },
-  { label: 'Taxi/Uber', value: 'TAXI', icon: '🚕' },
-  { label: 'Servicios', value: 'UTILITIES', icon: '💡' },
-  { label: 'Alquiler', value: 'RENT', icon: '🏠' },
-  { label: 'Mantenimiento del hogar', value: 'HOME', icon: '🔧' },
-  { label: 'Expensas', value: 'HOA_FEES', icon: '🏢' },
-  { label: 'Vehículo', value: 'VEHICLE', icon: '🚗' },
-  { label: 'Médico', value: 'DOCTOR', icon: '🏥' },
-  { label: 'Farmacia', value: 'PHARMACY', icon: '💊' },
-  { label: 'Suscripciones', value: 'SUBSCRIPTIONS', icon: '📱' },
-  { label: 'Salidas', value: 'OUTINGS', icon: '🎉' },
-  { label: 'Bar', value: 'BAR', icon: '🍺' },
-  { label: 'Gym', value: 'GYM', icon: '🏋️' },
-  { label: 'Viajes', value: 'TRAVEL', icon: '✈️' },
-  { label: 'Ropa', value: 'CLOTHING', icon: '👕' },
-  { label: 'Educación', value: 'EDUCATION', icon: '📚' },
-  { label: 'Tecnología', value: 'TECHNOLOGY', icon: '💻' },
-  { label: 'Belleza', value: 'BEAUTY', icon: '💅' },
-  { label: 'Mascotas', value: 'PETS', icon: '🐾' },
-  { label: 'Otros', value: 'OTHER', icon: '📦' },
+  { label: 'Supermercado', value: 'SUPERMARKET', icon: 'cart-outline', defaultType: 'VARIABLE' },
+  {
+    label: 'Restaurante',
+    value: 'RESTAURANT',
+    icon: 'restaurant-outline',
+    defaultType: 'VARIABLE',
+  },
+  { label: 'Café', value: 'CAFE', icon: 'cafe-outline', defaultType: 'VARIABLE' },
+  { label: 'Delivery', value: 'DELIVERY', icon: 'bicycle-outline', defaultType: 'VARIABLE' },
+  {
+    label: 'Transporte público',
+    value: 'PUBLIC_TRANSPORT',
+    icon: 'bus-outline',
+    defaultType: 'VARIABLE',
+  },
+  { label: 'Combustible', value: 'FUEL', icon: 'water-outline', defaultType: 'VARIABLE' },
+  { label: 'Taxi/Uber', value: 'TAXI', icon: 'car-outline', defaultType: 'VARIABLE' },
+  { label: 'Servicios', value: 'UTILITIES', icon: 'flash-outline', defaultType: 'FIXED' },
+  { label: 'Alquiler', value: 'RENT', icon: 'home-outline', defaultType: 'FIXED' },
+  {
+    label: 'Mantenimiento del hogar',
+    value: 'HOME',
+    icon: 'hammer-outline',
+    defaultType: 'VARIABLE',
+  },
+  { label: 'Expensas', value: 'HOA_FEES', icon: 'business-outline', defaultType: 'FIXED' },
+  { label: 'Vehículo', value: 'VEHICLE', icon: 'car-sport-outline', defaultType: 'VARIABLE' },
+  { label: 'Médico', value: 'DOCTOR', icon: 'medical-outline', defaultType: 'VARIABLE' },
+  { label: 'Farmacia', value: 'PHARMACY', icon: 'medical-outline', defaultType: 'VARIABLE' },
+  {
+    label: 'Suscripciones',
+    value: 'SUBSCRIPTIONS',
+    icon: 'phone-portrait-outline',
+    defaultType: 'FIXED',
+  },
+  { label: 'Salidas', value: 'OUTINGS', icon: 'happy-outline', defaultType: 'VARIABLE' },
+  { label: 'Gym', value: 'GYM', icon: 'barbell-outline', defaultType: 'FIXED' },
+  { label: 'Viajes', value: 'TRAVEL', icon: 'airplane-outline', defaultType: 'VARIABLE' },
+  { label: 'Ropa', value: 'CLOTHING', icon: 'shirt-outline', defaultType: 'VARIABLE' },
+  { label: 'Educación', value: 'EDUCATION', icon: 'school-outline', defaultType: 'FIXED' },
+  { label: 'Tecnología', value: 'TECHNOLOGY', icon: 'laptop-outline', defaultType: 'VARIABLE' },
+  { label: 'Belleza', value: 'BEAUTY', icon: 'cut-outline', defaultType: 'VARIABLE' },
+  { label: 'Mascotas', value: 'PETS', icon: 'paw-outline', defaultType: 'VARIABLE' },
+  { label: 'Otros', value: 'OTHER', icon: 'cube-outline', defaultType: 'VARIABLE' },
 ];
 
 export const INCOME_CATEGORIES: IncomeCategoryOption[] = [
-  { label: 'Sueldo', value: 'SALARY', icon: '💼' },
-  { label: 'Freelance', value: 'FREELANCE', icon: '🧑‍💻' },
-  { label: 'Regalo', value: 'GIFT', icon: '🎁' },
-  { label: 'Inversión', value: 'INVESTMENT', icon: '📈' },
-  { label: 'Otros', value: 'OTHER', icon: '📦' },
+  { label: 'Sueldo', value: 'SALARY', icon: 'briefcase-outline' },
+  { label: 'Freelance', value: 'FREELANCE', icon: 'code-slash-outline' },
+  { label: 'Regalo', value: 'GIFT', icon: 'gift-outline' },
+  { label: 'Inversión', value: 'INVESTMENT', icon: 'trending-up-outline' },
+  { label: 'Otros', value: 'OTHER', icon: 'cube-outline' },
 ];
 
 export const getCategoryLabel = (category: string, type: 'INCOME' | 'EXPENSE'): string => {
@@ -87,7 +107,6 @@ export const getCategoryIcon = (category: string): string => {
     PHARMACY: 'medical-outline',
     SUBSCRIPTIONS: 'phone-portrait-outline',
     OUTINGS: 'happy-outline',
-    BAR: 'beer-outline',
     GYM: 'barbell-outline',
     TRAVEL: 'airplane-outline',
     CLOTHING: 'shirt-outline',

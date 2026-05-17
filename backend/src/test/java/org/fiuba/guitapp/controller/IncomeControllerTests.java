@@ -6,7 +6,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 import java.util.UUID;
 
 import org.fiuba.guitapp.dto.AddIncomeRequest;
@@ -47,14 +47,14 @@ class IncomeControllerTests {
     void addIncome_ShouldReturnIncomeResponse_WhenRequestIsValid() throws Exception {
         UUID incomeId = UUID.randomUUID();
         AddIncomeRequest request = new AddIncomeRequest(
-                new BigDecimal("1500.00"), "Freelance", IncomeCategory.FREELANCE);
+                new BigDecimal("1500.00"), "Freelance", IncomeCategory.FREELANCE, LocalDate.now());
 
         IncomeResponse response = new IncomeResponse(
                 incomeId,
                 new BigDecimal("1500.00"),
                 "Freelance",
                 IncomeCategory.FREELANCE,
-                LocalDateTime.now());
+                LocalDate.now());
 
         when(incomeService.addIncome(eq("test@example.com"), any(AddIncomeRequest.class)))
                 .thenReturn(response);
@@ -76,14 +76,14 @@ class IncomeControllerTests {
     void addIncome_ShouldReturnOk_WhenDescriptionIsNull() throws Exception {
         UUID incomeId = UUID.randomUUID();
         AddIncomeRequest request = new AddIncomeRequest(
-                new BigDecimal("500.00"), null, IncomeCategory.SALARY);
+                new BigDecimal("500.00"), null, IncomeCategory.SALARY, LocalDate.now());
 
         IncomeResponse response = new IncomeResponse(
                 incomeId,
                 new BigDecimal("500.00"),
                 null,
                 IncomeCategory.SALARY,
-                LocalDateTime.now());
+                LocalDate.now());
 
         when(incomeService.addIncome(eq("test@example.com"), any(AddIncomeRequest.class)))
                 .thenReturn(response);
@@ -114,7 +114,7 @@ class IncomeControllerTests {
     @WithMockUser(username = "test@example.com")
     void addIncome_ShouldReturnBadRequest_WhenAmountIsNegative() throws Exception {
         AddIncomeRequest request = new AddIncomeRequest(
-                new BigDecimal("-100.00"), null, IncomeCategory.OTHER);
+                new BigDecimal("-100.00"), null, IncomeCategory.OTHER, LocalDate.now());
 
         mockMvc.perform(post("/api/incomes")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -182,7 +182,7 @@ class IncomeControllerTests {
                 new BigDecimal("1500.00"),
                 "Freelance",
                 IncomeCategory.FREELANCE,
-                LocalDateTime.now());
+                LocalDate.now());
 
         when(incomeService.getIncomeById("test@example.com", incomeId)).thenReturn(response);
 
@@ -213,14 +213,15 @@ class IncomeControllerTests {
         UpdateIncomeRequest request = new UpdateIncomeRequest(
                 new BigDecimal("2000.00"),
                 "Updated",
-                IncomeCategory.SALARY);
+                IncomeCategory.SALARY,
+                LocalDate.now());
 
         IncomeResponse response = new IncomeResponse(
                 incomeId,
                 new BigDecimal("2000.00"),
                 "Updated",
                 IncomeCategory.SALARY,
-                LocalDateTime.now());
+                LocalDate.now());
 
         when(incomeService.updateIncome(eq("test@example.com"), eq(incomeId), any(UpdateIncomeRequest.class)))
                 .thenReturn(response);
@@ -244,7 +245,8 @@ class IncomeControllerTests {
         UpdateIncomeRequest request = new UpdateIncomeRequest(
                 new BigDecimal("-1.00"),
                 "Updated",
-                IncomeCategory.SALARY);
+                IncomeCategory.SALARY,
+                LocalDate.now());
 
         mockMvc.perform(patch("/api/incomes/{incomeId}", incomeId)
                 .contentType(MediaType.APPLICATION_JSON)

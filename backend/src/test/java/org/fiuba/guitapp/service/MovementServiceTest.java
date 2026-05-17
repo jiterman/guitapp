@@ -7,7 +7,7 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -63,7 +63,7 @@ class MovementServiceTest {
         income1.setAmount(BigDecimal.valueOf(100));
         income1.setDescription("Salary");
         income1.setCategory(IncomeCategory.SALARY);
-        income1.setDate(LocalDateTime.now().minusDays(1));
+        income1.setDate(LocalDate.now().minusDays(1));
         income1.setUser(user);
 
         Income income2 = new Income();
@@ -71,7 +71,7 @@ class MovementServiceTest {
         income2.setAmount(BigDecimal.valueOf(50));
         income2.setDescription("Gift");
         income2.setCategory(IncomeCategory.OTHER);
-        income2.setDate(LocalDateTime.now().minusDays(3));
+        income2.setDate(LocalDate.now().minusDays(3));
         income2.setUser(user);
 
         Expense expense1 = new Expense();
@@ -80,7 +80,7 @@ class MovementServiceTest {
         expense1.setDescription("Coffee");
         expense1.setCategory(ExpenseCategory.CAFE);
         expense1.setType(ExpenseType.FIXED);
-        expense1.setDate(LocalDateTime.now());
+        expense1.setDate(LocalDate.now());
         expense1.setUser(user);
 
         when(incomeRepository.findAllByUserOrderByDateDesc(user)).thenReturn(List.of(income1, income2));
@@ -118,7 +118,7 @@ class MovementServiceTest {
 
         assertThrows(AuthException.class, () -> movementService.getAllMovements(user.getEmail()));
         assertThrows(AuthException.class,
-            () -> movementService.getMovementsByDay(user.getEmail(), LocalDateTime.now().toLocalDate()));
+            () -> movementService.getMovementsByDay(user.getEmail(), LocalDate.now()));
         assertThrows(AuthException.class,
             () -> movementService.getMovementsByMonth(user.getEmail(), 2026, 5));
         assertThrows(AuthException.class,
@@ -129,7 +129,7 @@ class MovementServiceTest {
     void getMovementsByDayMonthYear() {
         when(userRepository.findByEmail(anyString())).thenReturn(Optional.of(user));
 
-        LocalDateTime now = LocalDateTime.now();
+        LocalDate now = LocalDate.now();
 
         Income income = new Income();
         income.setId(UUID.randomUUID());
@@ -152,7 +152,7 @@ class MovementServiceTest {
         when(expenseRepository.findAllByUserOrderByDateDesc(user)).thenReturn(List.of(expense));
 
         // by day -> should include income only
-        List<MovementResponse> day = movementService.getMovementsByDay(user.getEmail(), now.toLocalDate());
+        List<MovementResponse> day = movementService.getMovementsByDay(user.getEmail(), now);
         assertEquals(1, day.size());
 
         // by month -> income in current month (month of 'now'), expense in previous month
@@ -168,14 +168,14 @@ class MovementServiceTest {
     void getMovementsByDayFiltersAndSorts() {
         when(userRepository.findByEmail(anyString())).thenReturn(Optional.of(user));
 
-        LocalDateTime base = LocalDateTime.of(2026, 5, 10, 10, 0);
+        LocalDate base = LocalDate.of(2026, 5, 10);
 
         Income incomeMatch = new Income();
         incomeMatch.setId(UUID.randomUUID());
         incomeMatch.setAmount(BigDecimal.valueOf(120));
         incomeMatch.setDescription("Bonus");
         incomeMatch.setCategory(IncomeCategory.OTHER);
-        incomeMatch.setDate(base.plusHours(1));
+        incomeMatch.setDate(base);
         incomeMatch.setUser(user);
 
         Income incomeOther = new Income();
@@ -192,7 +192,7 @@ class MovementServiceTest {
         expenseMatch.setDescription("Lunch");
         expenseMatch.setCategory(ExpenseCategory.CAFE);
         expenseMatch.setType(ExpenseType.VARIABLE);
-        expenseMatch.setDate(base.plusHours(2));
+        expenseMatch.setDate(base);
         expenseMatch.setUser(user);
 
         Expense expenseOther = new Expense();
@@ -208,20 +208,21 @@ class MovementServiceTest {
         when(expenseRepository.findAllByUserOrderByDateDesc(user))
                 .thenReturn(List.of(expenseMatch, expenseOther));
 
-        List<MovementResponse> day = movementService.getMovementsByDay(user.getEmail(), base.toLocalDate());
+        List<MovementResponse> day = movementService.getMovementsByDay(user.getEmail(), base);
 
         assertEquals(2, day.size());
-        assertEquals("EXPENSE", day.get(0).type());
-        assertEquals(expenseMatch.getAmount(), day.get(0).amount());
-        assertEquals("INCOME", day.get(1).type());
-        assertEquals(incomeMatch.getAmount(), day.get(1).amount());
+        // Both movements have the same date, so order may vary
+        boolean hasExpense = day.stream().anyMatch(m -> "EXPENSE".equals(m.type()) && m.amount().equals(expenseMatch.getAmount()));
+        boolean hasIncome = day.stream().anyMatch(m -> "INCOME".equals(m.type()) && m.amount().equals(incomeMatch.getAmount()));
+        assertTrue(hasExpense);
+        assertTrue(hasIncome);
     }
 
     @Test
     void getMovementsByMonthFiltersBothTypes() {
         when(userRepository.findByEmail(anyString())).thenReturn(Optional.of(user));
 
-        LocalDateTime base = LocalDateTime.of(2026, 5, 15, 9, 0);
+        LocalDate base = LocalDate.of(2026, 5, 15);
 
         Income incomeMatch = new Income();
         incomeMatch.setId(UUID.randomUUID());
@@ -274,7 +275,7 @@ class MovementServiceTest {
     void getMovementsByYearFiltersBothTypes() {
         when(userRepository.findByEmail(anyString())).thenReturn(Optional.of(user));
 
-        LocalDateTime base = LocalDateTime.of(2026, 3, 20, 14, 0);
+        LocalDate base = LocalDate.of(2026, 3, 20);
 
         Income incomeMatch = new Income();
         incomeMatch.setId(UUID.randomUUID());
