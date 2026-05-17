@@ -12,6 +12,8 @@ import org.fiuba.guitapp.dto.OnboardingRequest;
 import org.fiuba.guitapp.dto.UpdateUserProfileRequest;
 import org.fiuba.guitapp.dto.UserProfileResponse;
 import org.fiuba.guitapp.dto.VerifyEmailChangeRequest;
+import org.fiuba.guitapp.dto.InitiatePasswordChangeRequest;
+import org.fiuba.guitapp.dto.ConfirmPasswordChangeRequest;
 import org.fiuba.guitapp.service.UserService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -219,5 +221,56 @@ class UserControllerTests {
                 .andExpect(jsonPath("$.message").value("Email updated successfully"));
 
         verify(userService, times(1)).verifyEmailChange(eq("test@example.com"), any(VerifyEmailChangeRequest.class));
+    }
+
+    @Test
+    void initiatePasswordChange_ShouldReturnSuccessMessage() throws Exception {
+        @WithMockUser(username = "test@example.com")
+        InitiatePasswordChangeRequest request =
+                        "currentPassword123",
+                new InitiatePasswordChangeRequest(
+                        "newPassword123"
+                );
+        doNothing().when(userService).initiatePasswordChange(
+
+                eq("test@example.com"),
+                any(InitiatePasswordChangeRequest.class)
+        );
+
+        mockMvc.perform(post("/api/users/me/password/initiate")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.message")
+                        .value("Password change initiated successfully"));
+
+        verify(userService, times(1)).initiatePasswordChange(
+                eq("test@example.com"),
+                any(InitiatePasswordChangeRequest.class)
+        );
+    }
+
+    @Test
+    @WithMockUser(username = "test@example.com")
+        void confirmPasswordChange_ShouldReturnSuccessMessage() throws Exception {
+        ConfirmPasswordChangeRequest request =
+                new ConfirmPasswordChangeRequest(true);
+
+        doNothing().when(userService).confirmPasswordChange(
+                eq("test@example.com"),
+                any(ConfirmPasswordChangeRequest.class)
+        );
+
+        mockMvc.perform(post("/api/users/me/password/confirm")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.message")
+                        .value("Password change processed successfully"));
+
+        verify(userService, times(1)).confirmPasswordChange(
+                eq("test@example.com"),
+                any(ConfirmPasswordChangeRequest.class)
+        );
     }
 }
