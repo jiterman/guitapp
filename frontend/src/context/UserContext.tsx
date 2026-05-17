@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { userService } from '../services/userService';
+import { DateTime } from 'luxon';
 
 export interface UserProfile {
   firstName: string;
@@ -10,12 +11,15 @@ export interface UserProfile {
   targetVariableExpenses: number;
   targetSavings: number;
   onboardingCompleted: boolean;
+  createdAt: string;
 }
 
 interface UserContextType {
   user: UserProfile | null;
   setUser: (user: UserProfile | null) => void;
   isLoading: boolean;
+  getCreatedMonth: () => string;
+  getCreatedYear: () => string;
 }
 
 const UserContext = createContext<UserContextType | undefined>(undefined);
@@ -39,8 +43,29 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
     loadUser();
   }, []);
 
+  const getCreatedMonth = (): string => {
+    const date = user?.createdAt ? DateTime.fromISO(user.createdAt) : DateTime.now();
+    return date.setLocale('es').toFormat('MMMM').toLowerCase();
+  };
+
+  const getCreatedYear = (): string => {
+    const date = user?.createdAt ? DateTime.fromISO(user.createdAt) : DateTime.now();
+
+    return date.toFormat('yyyy'); // "2026"
+  };
+
   return (
-    <UserContext.Provider value={{ user, setUser, isLoading }}>{children}</UserContext.Provider>
+    <UserContext.Provider
+      value={{
+        user,
+        setUser,
+        isLoading,
+        getCreatedMonth,
+        getCreatedYear,
+      }}
+    >
+      {children}
+    </UserContext.Provider>
   );
 };
 

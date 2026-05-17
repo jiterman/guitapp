@@ -55,7 +55,8 @@ class UserControllerTests {
                 true,
                 30,
                 50,
-                20);
+                20,
+                java.time.LocalDateTime.now());
 
         when(userService.getUserProfile("test@example.com")).thenReturn(response);
 
@@ -135,7 +136,8 @@ class UserControllerTests {
                 true,
                 30,
                 50,
-                20);
+                20,
+                java.time.LocalDateTime.now());
 
         when(userService.updateUserProfile(
                 eq("test@example.com"),
@@ -169,7 +171,8 @@ class UserControllerTests {
                 true,
                 30,
                 50,
-                20);
+                20,
+                java.time.LocalDateTime.now());
 
         MockMultipartFile file = new MockMultipartFile(
                 "file",

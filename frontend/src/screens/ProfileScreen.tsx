@@ -24,7 +24,7 @@ const vh = screenHeight / 100;
 const SHEET_HEIGHT = vh * 55;
 
 const ProfileScreen: React.FC = () => {
-  const { user, setUser } = useUser();
+  const { user, setUser, getCreatedMonth, getCreatedYear } = useUser();
 
   const [sheetVisible, setSheetVisible] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -206,7 +206,9 @@ const ProfileScreen: React.FC = () => {
               </Text>
               <View style={styles.memberRow}>
                 <Ionicons name="calendar-outline" size={16} color="#6b8aa1" />
-                <Text style={styles.memberText}>Miembro desde abril 2025</Text>
+                <Text style={styles.memberText}>
+                  Miembro desde {getCreatedMonth()} {getCreatedYear()}
+                </Text>
               </View>
             </View>
           </View>
@@ -422,9 +424,8 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     marginBottom: vh * 2.5,
     padding: screenWidth * 0.05,
-    flexDirection: 'row',
+    flexDirection: 'column',
     alignItems: 'center',
-    gap: 16,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.08,
@@ -436,17 +437,22 @@ const styles = StyleSheet.create({
   },
   profileInfo: {
     flex: 1,
-    gap: 6,
+    alignItems: 'flex-start',
+    marginTop: 8,
   },
   profileName: {
     fontSize: 20,
     fontWeight: '700',
     color: '#003366',
+    alignSelf: 'center',
+    width: '100%',
+    textAlign: 'center',
   },
   memberRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
+    marginTop: 2,
   },
   memberText: {
     fontSize: 13,
