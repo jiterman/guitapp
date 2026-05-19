@@ -14,6 +14,7 @@
       "imageWidth": 220
     },
     "plugins": [
+      "expo-router",
       [
         "expo-splash-screen",
         {
@@ -27,12 +28,12 @@
         "expo-share-intent",
         {
           "iosActivationRules": {
+            "NSExtensionActivationSupportsText": true,
             "NSExtensionActivationSupportsWebURLWithMaxCount": 1,
             "NSExtensionActivationSupportsWebPageWithMaxCount": 1,
-            "NSExtensionActivationSupportsImageWithMaxCount": 1,
-            "NSExtensionActivationSupportsMovieWithMaxCount": 1
+            "NSExtensionActivationSupportsImageWithMaxCount": 2
           },
-          "androidIntentFilters": ["text/*", "image/*"]
+          "androidIntentFilters": ["*/*"]
         }
       ]
     ],

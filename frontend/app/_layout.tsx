@@ -1,6 +1,6 @@
-import React, { useEffect, useRef } from 'react';
-import { AppState, View } from 'react-native';
-import { router, Stack, useSegments } from 'expo-router'; // <--- Importamos useRootNavigationState
+import React, { useEffect } from 'react';
+import { View } from 'react-native';
+import { Stack, useRouter } from 'expo-router'; // <--- Importamos useRootNavigationState
 import * as eva from '@eva-design/eva';
 import { ApplicationProvider, IconRegistry } from '@ui-kitten/components';
 import { EvaIconsPack } from '@ui-kitten/eva-icons';
@@ -8,7 +8,7 @@ import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import * as SplashScreen from 'expo-splash-screen';
 import { UserProvider } from '../src/context/user';
-import { ShareIntentProvider, useShareIntent } from 'expo-share-intent';
+import { ShareIntentProvider, useShareIntentContext } from 'expo-share-intent';
 import { useUser } from '../src/context/user';
 
 SplashScreen.preventAutoHideAsync().catch(err => {
@@ -44,7 +44,8 @@ export default function RootLayout() {
 
 function RootLayoutNav() {
   const { isLoading } = useUser();
-  const { isReady } = useShareIntent();
+  const { isReady, hasShareIntent, shareIntent } = useShareIntentContext();
+  const router = useRouter();
 
   useEffect(() => {
     if (!isLoading && isReady) {
@@ -54,6 +55,17 @@ function RootLayoutNav() {
       });
     }
   }, [isLoading, isReady]);
+
+  useEffect(() => {
+    if (hasShareIntent && shareIntent.files && shareIntent.files.length > 0) {
+      console.log(shareIntent.files);
+      console.debug('[expo-router-index] redirect to ShareIntent screen');
+      router.replace({
+        pathname: '/share-intent',
+        params: { sharedFilePath: shareIntent.files[0].path },
+      });
+    }
+  }, [hasShareIntent, shareIntent]);
 
   if (isLoading || !isReady) {
     return null;

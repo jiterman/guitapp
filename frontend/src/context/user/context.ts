@@ -1,5 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import { userService } from '../../services/userService';
+import { createContext } from 'react';
 
 export interface UserProfile {
   firstName: string;

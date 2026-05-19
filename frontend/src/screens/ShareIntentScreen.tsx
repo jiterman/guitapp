@@ -1,17 +1,24 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { View, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { Layout, Text, Spinner } from '@ui-kitten/components';
 import { router, useLocalSearchParams } from 'expo-router';
-import { useShareIntent } from 'expo-share-intent'; // Ajustá la ruta según tu proyecto
+import { useShareIntent, useShareIntentContext } from 'expo-share-intent'; // Ajustá la ruta según tu proyecto
 
 const ShareIntentScreen = () => {
-  const { resetShareIntent } = useShareIntent();
+  const { resetShareIntent } = useShareIntentContext();
   const { sharedFilePath } = useLocalSearchParams<{ sharedFilePath: string }>(); // <-- Capturar el parámetro
   const [statusMessage, setStatusMessage] = useState('Analizando imagen del ticket...');
+  const hasProcessed = useRef(false);
 
   useEffect(() => {
+    if (hasProcessed.current) return;
+    hasProcessed.current = true;
+
     const processSharedImage = async () => {
       try {
+        // Limpiamos el intent nativo APENAS empezamos para evitar bucles desde el root
+        // resetShareIntent();
+
         // CORRECCIÓN: Ahora el path llega garantizado por los parámetros de navegación
         console.log('Archivo recibido desde los parámetros:', sharedFilePath);
 
@@ -33,9 +40,6 @@ const ShareIntentScreen = () => {
           date: new Date().toISOString().split('T')[0],
         };
 
-        // 3. Limpiamos el share intent nativo
-        resetShareIntent();
-
         // 4. Viajamos a la pantalla de agregar gasto
         router.replace({
           pathname: '/(app)/add-expense',
@@ -45,17 +49,19 @@ const ShareIntentScreen = () => {
             description: mockBackendResponse.description,
             category: mockBackendResponse.category,
             date: mockBackendResponse.date,
-            imagePath: sharedFilePath, // Podés pasarle también el path original al formulario si querés mostrar la foto del ticket
+            imagePath: sharedFilePath,
           },
         });
       } catch (error) {
         console.error('Error procesando la imagen:', error);
         setStatusMessage('Error al procesar el ticket.');
+      } finally {
+        resetShareIntent();
       }
     };
 
     processSharedImage();
-  }, [sharedFilePath]);
+  }, [sharedFilePath]); // Quitamos resetShareIntent para evitar re-ejecución al limpiar
 
   return (
     <Layout style={styles.container}>
