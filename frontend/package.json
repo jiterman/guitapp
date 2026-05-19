@@ -33,6 +33,7 @@
     "expo-secure-store": "~15.0.0",
     "expo-splash-screen": "~31.0.13",
     "expo-status-bar": "~3.0.9",
+    "luxon": "^3.7.2",
     "react": "19.1.0",
     "react-dom": "19.1.0",
     "react-native": "0.81.5",
@@ -41,7 +42,7 @@
     "react-native-linear-gradient": "^2.8.3",
     "react-native-safe-area-context": "~5.6.0",
     "react-native-screens": "~4.16.0",
-    "react-native-svg": "^15.12.1",
+    "react-native-svg": "15.12.1",
     "react-native-vector-icons": "^10.3.0",
     "react-native-web": "^0.21.0"
   },
@@ -49,6 +50,7 @@
     "@testing-library/jest-native": "^5.4.3",
     "@testing-library/react-native": "^12.1.2",
     "@types/jest": "^29.5.12",
+    "@types/luxon": "^3.7.1",
     "@types/react": "~19.1.10",
     "@typescript-eslint/eslint-plugin": "^8.19.1",
     "@typescript-eslint/parser": "^8.19.1",
@@ -66,6 +68,13 @@
   "overrides": {
     "react": "19.1.0",
     "react-dom": "19.1.0"
+  },
+  "expo": {
+    "install": {
+      "exclude": [
+        "@react-navigation/bottom-tabs"
+      ]
+    }
   },
   "private": true
 }

@@ -1,9 +1,14 @@
 package org.fiuba.guitapp.service;
 
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
 import org.fiuba.guitapp.dto.AddIncomeRequest;
 import org.fiuba.guitapp.dto.IncomeResponse;
+import org.fiuba.guitapp.dto.IncomeStatisticsResponse;
 import org.fiuba.guitapp.dto.UpdateIncomeRequest;
 import org.fiuba.guitapp.exception.AuthException;
 import org.fiuba.guitapp.exception.ErrorCode;
@@ -105,5 +110,47 @@ public class IncomeService {
                 saved.getDescription(),
                 saved.getCategory(),
                 saved.getDate());
+    }
+
+    @Transactional(readOnly = true)
+    public IncomeStatisticsResponse getIncomeStatistics(
+            String email, String period, Integer year, Integer month, Integer day) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new AuthException(ErrorCode.USER_NOT_FOUND, "User not found"));
+
+        List<Income> incomes = getIncomesByPeriod(user, period, year, month, day);
+
+        BigDecimal totalAmount = incomes.stream()
+                .map(Income::getAmount)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        return new IncomeStatisticsResponse(totalAmount);
+    }
+
+    private List<Income> getIncomesByPeriod(
+            User user, String period, Integer year, Integer month, Integer day) {
+        LocalDateTime referenceDate = buildReferenceDate(year, month, day);
+        return switch (period.toLowerCase()) {
+        case "daily" -> {
+            LocalDateTime startOfDay = referenceDate.toLocalDate().atStartOfDay();
+            LocalDateTime endOfDay = startOfDay.plusDays(1);
+            yield incomeRepository.findAllByUserAndDateBetween(user, startOfDay, endOfDay);
+        }
+        case "monthly" -> {
+            LocalDateTime startOfMonth = referenceDate.toLocalDate().withDayOfMonth(1).atStartOfDay();
+            LocalDateTime endOfMonth = startOfMonth.plusMonths(1);
+            yield incomeRepository.findAllByUserAndDateBetween(user, startOfMonth, endOfMonth);
+        }
+        case "all" -> incomeRepository.findAllByUser(user);
+        default -> throw new IllegalArgumentException("Invalid period: " + period);
+        };
+    }
+
+    private LocalDateTime buildReferenceDate(Integer year, Integer month, Integer day) {
+        LocalDate now = LocalDate.now();
+        int effectiveYear = year != null ? year : now.getYear();
+        int effectiveMonth = month != null ? month : now.getMonthValue();
+        int effectiveDay = day != null ? day : now.getDayOfMonth();
+        return LocalDate.of(effectiveYear, effectiveMonth, effectiveDay).atStartOfDay();
     }
 }

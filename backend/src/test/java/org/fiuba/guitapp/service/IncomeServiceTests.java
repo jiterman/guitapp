@@ -6,11 +6,15 @@ import static org.mockito.Mockito.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
 import org.fiuba.guitapp.dto.AddIncomeRequest;
 import org.fiuba.guitapp.dto.IncomeResponse;
+import org.fiuba.guitapp.dto.IncomeStatisticsResponse;
 import org.fiuba.guitapp.dto.UpdateIncomeRequest;
 import org.fiuba.guitapp.exception.AuthException;
 import org.fiuba.guitapp.exception.ErrorCode;
@@ -404,5 +408,45 @@ class IncomeServiceTests {
 
         assertEquals(ErrorCode.INCOME_ACCESS_DENIED, exception.getErrorCode());
         verify(incomeRepository, never()).save(any(Income.class));
+    }
+
+    @Test
+    void getIncomeStatistics_ShouldReturnStatistics_WithMonthlyPeriod() {
+        LocalDateTime monthStart = LocalDateTime.of(2024, 2, 1, 0, 0);
+        LocalDateTime monthEnd = LocalDateTime.of(2024, 3, 1, 0, 0);
+
+        Income income1 = new Income();
+        income1.setId(UUID.randomUUID());
+        income1.setAmount(new BigDecimal("200.00"));
+        income1.setCategory(IncomeCategory.SALARY);
+        income1.setUser(testUser);
+
+        Income income2 = new Income();
+        income2.setId(UUID.randomUUID());
+        income2.setAmount(new BigDecimal("150.00"));
+        income2.setCategory(IncomeCategory.FREELANCE);
+        income2.setUser(testUser);
+
+        List<Income> incomes = Arrays.asList(income1, income2);
+
+        when(userRepository.findByEmail(testEmail)).thenReturn(Optional.of(testUser));
+        when(incomeRepository.findAllByUserAndDateBetween(testUser, monthStart, monthEnd))
+                .thenReturn(incomes);
+
+        IncomeStatisticsResponse response = incomeService.getIncomeStatistics(testEmail, "monthly", 2024, 2, null);
+
+        assertNotNull(response);
+        assertEquals(new BigDecimal("350.00"), response.totalAmount());
+    }
+
+    @Test
+    void getIncomeStatistics_ShouldReturnZero_WhenNoIncomes() {
+        when(userRepository.findByEmail(testEmail)).thenReturn(Optional.of(testUser));
+        when(incomeRepository.findAllByUser(testUser)).thenReturn(Arrays.asList());
+
+        IncomeStatisticsResponse response = incomeService.getIncomeStatistics(testEmail, "all", null, null, null);
+
+        assertNotNull(response);
+        assertEquals(BigDecimal.ZERO, response.totalAmount());
     }
 }

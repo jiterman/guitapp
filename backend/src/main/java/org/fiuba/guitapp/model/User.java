@@ -1,9 +1,11 @@
 package org.fiuba.guitapp.model;
 
+import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
 
+import org.hibernate.annotations.CreationTimestamp;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -49,7 +51,7 @@ public class User implements UserDetails {
     @Column
     private String firstName;
 
-    @Column(nullable = true)
+    @Column
     private String lastName;
 
     @Column(nullable = false, columnDefinition = "boolean default false")
@@ -77,10 +79,17 @@ public class User implements UserDetails {
     private String pendingEmail;
 
     @Column
+    private String pendingPassword;
+
+    @Column
     private String fcmToken;
 
     @Column
     private java.time.LocalDateTime otpCreatedAt;
+
+    @Column(nullable = false, updatable = false, columnDefinition = "timestamp default current_timestamp")
+    @CreationTimestamp
+    private LocalDateTime createdAt;
 
     public User() {
     }

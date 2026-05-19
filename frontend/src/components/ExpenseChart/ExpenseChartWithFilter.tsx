@@ -1,12 +1,14 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { View, StyleSheet, Dimensions, TouchableOpacity, ScrollView, Text } from 'react-native';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import { View, StyleSheet, Dimensions, TouchableOpacity, Text } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { SvgXml } from 'react-native-svg';
 import FILTER_ICON from '../../../assets/icons/filterIcon';
 import ExpenseChart from './ExpenseChart';
+import FixedAndVariableChartWithFilter from '../FixedAndVariableChart/FixedAndVariableChartWithFilter';
 import MovementFilter, { FilterState, FilterKind } from '../MovementFilter/MovementFilter';
 import {
   expenseStatisticsService,
+  ExpenseStatisticsParams,
   PeriodType,
   ExpenseStatisticsResponse,
 } from '../../services/expenseStatisticsService';
@@ -78,7 +80,7 @@ const getFilterButtonLabel = (filterState: FilterState): string => {
   }
 };
 
-type ChartType = 'categories' | 'timeline';
+type ChartType = 'categories' | 'fixed-variable';
 
 const ExpenseChartWithFilter: React.FC = () => {
   const [selectedChart, setSelectedChart] = useState<ChartType>('categories');
@@ -94,29 +96,27 @@ const ExpenseChartWithFilter: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  const statisticsParams = useMemo<ExpenseStatisticsParams>(() => {
+    const period = mapFilterKindToPeriod(filterState.kind);
+    const params: ExpenseStatisticsParams = { period };
+
+    if (filterState.kind === 'day' && filterState.day) {
+      params.year = filterState.day.getFullYear();
+      params.month = filterState.day.getMonth() + 1;
+      params.day = filterState.day.getDate();
+    } else if (filterState.kind === 'month') {
+      params.year = filterState.year;
+      params.month = filterState.month;
+    }
+
+    return params;
+  }, [filterState.kind, filterState.day, filterState.month, filterState.year]);
+
   const loadData = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
-      const period = mapFilterKindToPeriod(filterState.kind);
-
-      const params: {
-        period: PeriodType;
-        year?: number;
-        month?: number;
-        day?: number;
-      } = { period };
-
-      if (filterState.kind === 'day' && filterState.day) {
-        params.year = filterState.day.getFullYear();
-        params.month = filterState.day.getMonth() + 1;
-        params.day = filterState.day.getDate();
-      } else if (filterState.kind === 'month') {
-        params.year = filterState.year;
-        params.month = filterState.month;
-      }
-
-      const statistics = await expenseStatisticsService.getExpenseStatistics(params);
+      const statistics = await expenseStatisticsService.getExpenseStatistics(statisticsParams);
       setData(statistics);
     } catch (err) {
       const error = err as { message?: string };
@@ -124,7 +124,7 @@ const ExpenseChartWithFilter: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [filterState.kind, filterState.day, filterState.month, filterState.year]);
+  }, [statisticsParams]);
 
   useEffect(() => {
     loadData();
@@ -152,7 +152,7 @@ const ExpenseChartWithFilter: React.FC = () => {
           onExternalModalClose={() => setIsFilterVisible(false)}
         />
 
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.chartTabs}>
+        <View style={styles.chartTabs}>
           <TouchableOpacity
             style={styles.chartTabWrapper}
             onPress={() => setSelectedChart('categories')}
@@ -172,30 +172,30 @@ const ExpenseChartWithFilter: React.FC = () => {
 
           <TouchableOpacity
             style={styles.chartTabWrapper}
-            onPress={() => setSelectedChart('timeline')}
+            onPress={() => setSelectedChart('fixed-variable')}
           >
-            {selectedChart === 'timeline' ? (
+            {selectedChart === 'fixed-variable' ? (
               <View style={[styles.chartTab, styles.chartTabActive]}>
                 <Ionicons name="swap-horizontal-outline" size={18} color="#FFBB00" />
-                <Text style={styles.chartTabTextActive}>Fijos vs variables</Text>
+                <Text style={styles.chartTabTextActive}>Fijos vs. variables</Text>
               </View>
             ) : (
               <View style={[styles.chartTab, styles.chartTabInactive]}>
                 <Ionicons name="swap-horizontal-outline" size={18} color="#6b8aa1" />
-                <Text style={styles.chartTabText}>Fijos vs variables</Text>
+                <Text style={styles.chartTabText}>Fijos vs. variables</Text>
               </View>
             )}
           </TouchableOpacity>
-        </ScrollView>
+        </View>
       </View>
 
-      {loading && (
+      {selectedChart === 'categories' && loading && (
         <View style={[styles.loadingContainer, styles.paddedContent]}>
           <Text style={styles.loadingText}>Cargando...</Text>
         </View>
       )}
 
-      {error && (
+      {selectedChart === 'categories' && error && (
         <View style={[styles.errorContainer, styles.paddedContent]}>
           <Text style={styles.errorText}>{error}</Text>
         </View>
@@ -205,10 +205,8 @@ const ExpenseChartWithFilter: React.FC = () => {
         <ExpenseChart data={data.categories} totalAmount={data.totalAmount} />
       )}
 
-      {!loading && !error && data && selectedChart === 'timeline' && (
-        <View style={[styles.paddedContent, styles.comingSoon]}>
-          <Text style={styles.comingSoonText}>Próximamente...</Text>
-        </View>
+      {selectedChart === 'fixed-variable' && (
+        <FixedAndVariableChartWithFilter params={statisticsParams} />
       )}
     </View>
   );
@@ -258,9 +256,11 @@ const styles = StyleSheet.create({
   chartTabs: {
     marginBottom: vh * 2,
     overflow: 'visible',
+    flexDirection: 'row',
+    gap: 12,
   },
   chartTabWrapper: {
-    marginRight: 12,
+    flex: 1,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 3 },
     shadowOpacity: 0.15,
@@ -269,8 +269,10 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   chartTab: {
+    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
     paddingVertical: 10,
     paddingHorizontal: 14,
     borderRadius: 8,
@@ -295,21 +297,6 @@ const styles = StyleSheet.create({
   chartTabTextActive: {
     fontSize: 13,
     color: '#E8AE1A',
-  },
-  comingSoon: {
-    backgroundColor: '#fff',
-    borderRadius: 14,
-    padding: vh * 4,
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 6,
-    elevation: 3,
-  },
-  comingSoonText: {
-    fontSize: 16,
-    color: '#6b8aa1',
   },
   loadingContainer: {
     backgroundColor: '#fff',

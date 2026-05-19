@@ -9,7 +9,9 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
+import org.fiuba.guitapp.dto.ConfirmPasswordChangeRequest;
 import org.fiuba.guitapp.dto.InitiateEmailChangeRequest;
+import org.fiuba.guitapp.dto.InitiatePasswordChangeRequest;
 import org.fiuba.guitapp.dto.OnboardingRequest;
 import org.fiuba.guitapp.dto.UpdateUserProfileRequest;
 import org.fiuba.guitapp.dto.UserProfileResponse;
@@ -26,6 +28,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import com.cloudinary.Cloudinary;
 import com.cloudinary.Uploader;
@@ -50,6 +53,9 @@ class UserServiceTests {
 
     @InjectMocks
     private UserService userService;
+
+    @Mock
+    private PasswordEncoder passwordEncoder;
 
     private User testUser;
     private String testEmail = "test@example.com";
@@ -462,6 +468,154 @@ class UserServiceTests {
 
         assertEquals(ErrorCode.OTP_EXPIRED, exception.getErrorCode());
         verify(userRepository, never()).save(any(User.class));
+    }
+
+    @Test
+    void initiatePasswordChange_ShouldThrowException_WhenUserNotFound() {
+        InitiatePasswordChangeRequest request = new InitiatePasswordChangeRequest("currentPassword", "newPassword123");
+
+        when(userRepository.findByEmail(testEmail)).thenReturn(Optional.empty());
+
+        AuthException exception = assertThrows(AuthException.class, () -> {
+            userService.initiatePasswordChange(testEmail, request);
+        });
+
+        assertEquals(ErrorCode.USER_NOT_FOUND, exception.getErrorCode());
+        assertEquals("User not found", exception.getMessage());
+        verify(passwordEncoder, never()).matches(anyString(), anyString());
+        verify(userRepository, never()).save(any(User.class));
+    }
+
+    @Test
+    void initiatePasswordChange_ShouldThrowException_WhenCurrentPasswordIsIncorrect() {
+        InitiatePasswordChangeRequest request = new InitiatePasswordChangeRequest("wrongPassword", "newPassword123");
+
+        when(userRepository.findByEmail(testEmail)).thenReturn(Optional.of(testUser));
+        when(passwordEncoder.matches("wrongPassword", testUser.getPassword()))
+                .thenReturn(false);
+
+        AuthException exception = assertThrows(AuthException.class, () -> {
+            userService.initiatePasswordChange(testEmail, request);
+        });
+
+        assertEquals(ErrorCode.INVALID_CREDENTIALS, exception.getErrorCode());
+        assertEquals("La contraseña actual es incorrecta", exception.getMessage());
+        verify(userRepository, never()).save(any(User.class));
+    }
+
+    @Test
+    void initiatePasswordChange_ShouldThrowException_WhenNewPasswordIsSameAsCurrent() {
+        InitiatePasswordChangeRequest request = new InitiatePasswordChangeRequest("currentPassword", "currentPassword");
+
+        when(userRepository.findByEmail(testEmail)).thenReturn(Optional.of(testUser));
+        when(passwordEncoder.matches("currentPassword", testUser.getPassword()))
+                .thenReturn(true);
+
+        IllegalArgumentException exception = assertThrows(
+                IllegalArgumentException.class,
+                () -> userService.initiatePasswordChange(testEmail, request));
+
+        assertEquals(
+                "La nueva contraseña debe ser diferente a la actual",
+                exception.getMessage());
+
+        verify(userRepository, never()).save(any(User.class));
+    }
+
+    @Test
+    void initiatePasswordChange_ShouldSavePendingPassword_WhenRequestIsValid() {
+        String currentPassword = "currentPassword";
+        String newPassword = "newPassword123";
+        String encodedNewPassword = "encodedNewPassword";
+
+        InitiatePasswordChangeRequest request = new InitiatePasswordChangeRequest(currentPassword, newPassword);
+
+        when(userRepository.findByEmail(testEmail)).thenReturn(Optional.of(testUser));
+        when(passwordEncoder.matches(currentPassword, testUser.getPassword()))
+                .thenReturn(true);
+        when(passwordEncoder.matches(newPassword, testUser.getPassword()))
+                .thenReturn(false);
+        when(passwordEncoder.encode(newPassword))
+                .thenReturn(encodedNewPassword);
+
+        userService.initiatePasswordChange(testEmail, request);
+
+        assertEquals(encodedNewPassword, testUser.getPendingPassword());
+        verify(userRepository).save(testUser);
+        verify(passwordEncoder).encode(newPassword);
+    }
+
+    @Test
+    void confirmPasswordChange_ShouldThrowException_WhenUserNotFound() {
+        ConfirmPasswordChangeRequest request = new ConfirmPasswordChangeRequest(true);
+
+        when(userRepository.findByEmail(testEmail)).thenReturn(Optional.empty());
+
+        AuthException exception = assertThrows(AuthException.class, () -> {
+            userService.confirmPasswordChange(testEmail, request);
+        });
+
+        assertEquals(ErrorCode.USER_NOT_FOUND, exception.getErrorCode());
+        assertEquals("User not found", exception.getMessage());
+        verify(userRepository, never()).save(any(User.class));
+    }
+
+    @Test
+    void confirmPasswordChange_ShouldThrowException_WhenNoPendingPassword() {
+        testUser.setPendingPassword(null);
+        ConfirmPasswordChangeRequest request = new ConfirmPasswordChangeRequest(true);
+
+        when(userRepository.findByEmail(testEmail))
+                .thenReturn(Optional.of(testUser));
+
+        IllegalArgumentException exception = assertThrows(
+                IllegalArgumentException.class,
+                () -> userService.confirmPasswordChange(testEmail, request));
+
+        assertEquals(
+                "No hay un cambio de contraseña pendiente",
+                exception.getMessage());
+        verify(userRepository, never()).save(any(User.class));
+    }
+
+    @Test
+    void confirmPasswordChange_ShouldUpdatePasswordAndClearPendingPassword_WhenConfirmed() {
+        String currentPassword = "encodedCurrentPassword";
+        String pendingPassword = "encodedNewPassword";
+
+        testUser.setPassword(currentPassword);
+        testUser.setPendingPassword(pendingPassword);
+
+        ConfirmPasswordChangeRequest request = new ConfirmPasswordChangeRequest(true);
+
+        when(userRepository.findByEmail(testEmail))
+                .thenReturn(Optional.of(testUser));
+
+        userService.confirmPasswordChange(testEmail, request);
+
+        assertEquals(pendingPassword, testUser.getPassword());
+        assertNull(testUser.getPendingPassword());
+        verify(userRepository).save(testUser);
+    }
+
+    @Test
+    void confirmPasswordChange_ShouldKeepCurrentPasswordAndClearPendingPassword_WhenRejected() {
+        String currentPassword = "encodedCurrentPassword";
+        String pendingPassword = "encodedNewPassword";
+
+        testUser.setPassword(currentPassword);
+        testUser.setPendingPassword(pendingPassword);
+
+        ConfirmPasswordChangeRequest request = new ConfirmPasswordChangeRequest(false);
+
+        when(userRepository.findByEmail(testEmail))
+                .thenReturn(Optional.of(testUser));
+
+        userService.confirmPasswordChange(testEmail, request);
+
+        assertEquals(currentPassword, testUser.getPassword());
+        assertNull(testUser.getPendingPassword());
+        verify(userRepository).save(testUser);
     }
 
     @Test

@@ -15,6 +15,7 @@ import org.fiuba.guitapp.dto.AddExpenseRequest;
 import org.fiuba.guitapp.dto.ExpenseCategoryStatistics;
 import org.fiuba.guitapp.dto.ExpenseResponse;
 import org.fiuba.guitapp.dto.ExpenseStatisticsResponse;
+import org.fiuba.guitapp.dto.FixedAndVariableStatisticsResponse;
 import org.fiuba.guitapp.dto.UpdateExpenseRequest;
 import org.fiuba.guitapp.model.ExpenseCategory;
 import org.fiuba.guitapp.model.ExpenseType;
@@ -402,5 +403,29 @@ class ExpenseControllerTests {
                 .andExpect(jsonPath("$.categories[0].category").value("CAFE"));
 
         verify(expenseService, times(1)).getExpenseStatistics("test@example.com", "daily", 2024, 5, 15);
+    }
+
+    @Test
+    @WithMockUser(username = "test@example.com")
+    void getFixedAndVariableStatistics_ShouldReturnStatistics_WithDefaultPeriod() throws Exception {
+        FixedAndVariableStatisticsResponse response = new FixedAndVariableStatisticsResponse(
+                new BigDecimal("300.00"),
+                new BigDecimal("200.00"),
+                new BigDecimal("100.00"),
+                66.6667,
+                33.3333);
+
+        when(expenseService.getFixedAndVariableStatistics("test@example.com", "monthly", null, null, null))
+                .thenReturn(response);
+
+        mockMvc.perform(get("/api/expenses/statistics/fixed-variable"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.totalAmount").value(300.00))
+                .andExpect(jsonPath("$.fixedAmount").value(200.00))
+                .andExpect(jsonPath("$.variableAmount").value(100.00))
+                .andExpect(jsonPath("$.fixedPercentage").value(66.6667))
+                .andExpect(jsonPath("$.variablePercentage").value(33.3333));
+
+        verify(expenseService, times(1)).getFixedAndVariableStatistics("test@example.com", "monthly", null, null, null);
     }
 }
