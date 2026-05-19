@@ -16,6 +16,7 @@ class UserProfileResponseTests {
         String lastName = "Doe";
         String avatarUrl = "https://avatar.png";
         boolean onboardingCompleted = true;
+        java.math.BigDecimal estimatedMonthlyIncome = java.math.BigDecimal.valueOf(5000);
         Integer targetFixed = 30;
         Integer targetVariable = 50;
         Integer targetSavings = 20;
@@ -27,6 +28,7 @@ class UserProfileResponseTests {
                 lastName,
                 avatarUrl,
                 onboardingCompleted,
+                estimatedMonthlyIncome,
                 targetFixed,
                 targetVariable,
                 targetSavings,
@@ -36,6 +38,7 @@ class UserProfileResponseTests {
         assertEquals(email, response.email());
         assertEquals(firstName, response.firstName());
         assertTrue(response.onboardingCompleted());
+        assertEquals(estimatedMonthlyIncome, response.estimatedMonthlyIncome());
         assertEquals(targetFixed, response.targetFixedExpenses());
         assertEquals(targetVariable, response.targetVariableExpenses());
         assertEquals(targetSavings, response.targetSavings());
@@ -56,6 +59,7 @@ class UserProfileResponseTests {
                 null,
                 null,
                 null,
+                null,
                 java.time.LocalDateTime.now());
 
         assertEquals(id, response.id());
@@ -64,6 +68,7 @@ class UserProfileResponseTests {
         assertNull(response.lastName());
         assertNull(response.avatarUrl());
         assertFalse(response.onboardingCompleted());
+        assertNull(response.estimatedMonthlyIncome());
         assertNull(response.targetFixedExpenses());
         assertNull(response.targetVariableExpenses());
         assertNull(response.targetSavings());
@@ -80,6 +85,7 @@ class UserProfileResponseTests {
                 "Doe",
                 "https://avatar.png",
                 true,
+                java.math.BigDecimal.valueOf(5000),
                 30,
                 50,
                 20,
@@ -91,6 +97,7 @@ class UserProfileResponseTests {
                 "Doe",
                 "https://avatar.png",
                 true,
+                java.math.BigDecimal.valueOf(5000),
                 30,
                 50,
                 20,
@@ -109,6 +116,7 @@ class UserProfileResponseTests {
                 "Doe",
                 "https://avatar.png",
                 true,
+                java.math.BigDecimal.valueOf(5000),
                 30,
                 50,
                 20,

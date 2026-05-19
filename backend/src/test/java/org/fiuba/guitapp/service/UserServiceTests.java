@@ -76,6 +76,7 @@ class UserServiceTests {
         testUser.setTargetFixedExpenses(30);
         testUser.setTargetVariableExpenses(50);
         testUser.setTargetSavings(20);
+        testUser.setEstimatedMonthlyIncome(java.math.BigDecimal.valueOf(5000));
         testUser.setOnboardingCompleted(true);
 
         when(userRepository.findByEmail(testEmail)).thenReturn(Optional.of(testUser));
@@ -87,6 +88,7 @@ class UserServiceTests {
         assertEquals(testUser.getEmail(), response.email());
         assertEquals(testUser.getFirstName(), response.firstName());
         assertTrue(response.onboardingCompleted());
+        assertEquals(java.math.BigDecimal.valueOf(5000), response.estimatedMonthlyIncome());
         assertEquals(30, response.targetFixedExpenses());
         assertEquals(50, response.targetVariableExpenses());
         assertEquals(20, response.targetSavings());
@@ -108,7 +110,7 @@ class UserServiceTests {
 
     @Test
     void completeOnboarding_ShouldCompleteOnboarding_WithValidData() {
-        OnboardingRequest request = new OnboardingRequest("Maria", 30, 50);
+        OnboardingRequest request = new OnboardingRequest("Maria", 30, 50, java.math.BigDecimal.valueOf(5000));
         when(userRepository.findByEmail(testEmail)).thenReturn(Optional.of(testUser));
         when(userRepository.save(any(User.class))).thenReturn(testUser);
 
@@ -120,12 +122,13 @@ class UserServiceTests {
         assertEquals(30, testUser.getTargetFixedExpenses());
         assertEquals(50, testUser.getTargetVariableExpenses());
         assertEquals(20, testUser.getTargetSavings());
+        assertEquals(java.math.BigDecimal.valueOf(5000), testUser.getEstimatedMonthlyIncome());
         assertTrue(testUser.isOnboardingCompleted());
     }
 
     @Test
     void completeOnboarding_ShouldCalculateSavingsCorrectly_WithDifferentExpenses() {
-        OnboardingRequest request = new OnboardingRequest("John", 40, 40);
+        OnboardingRequest request = new OnboardingRequest("John", 40, 40, java.math.BigDecimal.valueOf(5000));
         when(userRepository.findByEmail(testEmail)).thenReturn(Optional.of(testUser));
         when(userRepository.save(any(User.class))).thenReturn(testUser);
 
@@ -137,7 +140,7 @@ class UserServiceTests {
 
     @Test
     void completeOnboarding_ShouldThrowException_WhenUserNotFound() {
-        OnboardingRequest request = new OnboardingRequest("John", 30, 50);
+        OnboardingRequest request = new OnboardingRequest("John", 30, 50, java.math.BigDecimal.valueOf(5000));
         when(userRepository.findByEmail(testEmail)).thenReturn(Optional.empty());
 
         AuthException exception = assertThrows(AuthException.class, () -> {
@@ -152,7 +155,7 @@ class UserServiceTests {
     @Test
     void completeOnboarding_ShouldThrowException_WhenOnboardingAlreadyCompleted() {
         testUser.setOnboardingCompleted(true);
-        OnboardingRequest request = new OnboardingRequest("John", 30, 50);
+        OnboardingRequest request = new OnboardingRequest("John", 30, 50, java.math.BigDecimal.valueOf(5000));
         when(userRepository.findByEmail(testEmail)).thenReturn(Optional.of(testUser));
 
         IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
@@ -166,7 +169,7 @@ class UserServiceTests {
 
     @Test
     void completeOnboarding_ShouldAllowZeroSavings_WhenExpensesEqualTo100() {
-        OnboardingRequest request = new OnboardingRequest("John", 50, 50);
+        OnboardingRequest request = new OnboardingRequest("John", 50, 50, java.math.BigDecimal.valueOf(5000));
         when(userRepository.findByEmail(testEmail)).thenReturn(Optional.of(testUser));
         when(userRepository.save(any(User.class))).thenReturn(testUser);
 
@@ -179,7 +182,7 @@ class UserServiceTests {
 
     @Test
     void completeOnboarding_ShouldThrowException_WhenExpensesGreaterThan100() {
-        OnboardingRequest request = new OnboardingRequest("John", 60, 50);
+        OnboardingRequest request = new OnboardingRequest("John", 60, 50, java.math.BigDecimal.valueOf(5000));
         when(userRepository.findByEmail(testEmail)).thenReturn(Optional.of(testUser));
 
         IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
@@ -192,7 +195,7 @@ class UserServiceTests {
 
     @Test
     void completeOnboarding_ShouldAllowMinimumSavings_WithExpensesAt99() {
-        OnboardingRequest request = new OnboardingRequest("John", 49, 50);
+        OnboardingRequest request = new OnboardingRequest("John", 49, 50, java.math.BigDecimal.valueOf(5000));
         when(userRepository.findByEmail(testEmail)).thenReturn(Optional.of(testUser));
         when(userRepository.save(any(User.class))).thenReturn(testUser);
 
@@ -613,5 +616,16 @@ class UserServiceTests {
         assertEquals(currentPassword, testUser.getPassword());
         assertNull(testUser.getPendingPassword());
         verify(userRepository).save(testUser);
+    }
+
+    @Test
+    void updateFcmToken_ShouldUpdateToken_WhenUserExists() {
+        String fcmToken = "new-fcm-token";
+        when(userRepository.findByEmail(testEmail)).thenReturn(Optional.of(testUser));
+
+        userService.updateFcmToken(testEmail, fcmToken);
+
+        assertEquals(fcmToken, testUser.getFcmToken());
+        verify(userRepository, times(1)).save(testUser);
     }
 }

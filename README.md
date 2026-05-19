@@ -32,8 +32,9 @@ Aplicación de gestión de gastos para el Trabajo Práctico de la facultad.
 ### Backend
 1. Ir a la carpeta `backend`.
 2. Levantar la base de datos local: `make db-up`.
-3. Compilar: `./gradlew clean build -x test`.
-4. Ejecutar: `./gradlew bootRun`.
+3. Levantar redis: `make redis-up`.
+4. Compilar: `./gradlew clean build -x test`.
+5. Ejecutar: `./gradlew bootRun`.
 
 ### Frontend
 1. Ir a la carpeta `frontend`.

@@ -60,6 +60,9 @@ public class User implements UserDetails {
     @Column
     private String avatarUrl;
 
+    @Column(nullable = false, precision = 19, scale = 2, columnDefinition = "decimal(19,2) default 0.0")
+    private java.math.BigDecimal estimatedMonthlyIncome = java.math.BigDecimal.ZERO;
+
     @Column
     private Integer targetFixedExpenses;
 
@@ -77,6 +80,9 @@ public class User implements UserDetails {
 
     @Column
     private String pendingPassword;
+
+    @Column
+    private String fcmToken;
 
     @Column
     private java.time.LocalDateTime otpCreatedAt;
