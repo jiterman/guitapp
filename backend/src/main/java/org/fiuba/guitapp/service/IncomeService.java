@@ -2,7 +2,6 @@ package org.fiuba.guitapp.service;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
@@ -129,16 +128,16 @@ public class IncomeService {
 
     private List<Income> getIncomesByPeriod(
             User user, String period, Integer year, Integer month, Integer day) {
-        LocalDateTime referenceDate = buildReferenceDate(year, month, day);
+        LocalDate referenceDate = buildReferenceDate(year, month, day);
         return switch (period.toLowerCase()) {
         case "daily" -> {
-            LocalDateTime startOfDay = referenceDate.toLocalDate().atStartOfDay();
-            LocalDateTime endOfDay = startOfDay.plusDays(1);
+            LocalDate startOfDay = referenceDate;
+            LocalDate endOfDay = startOfDay.plusDays(1);
             yield incomeRepository.findAllByUserAndDateBetween(user, startOfDay, endOfDay);
         }
         case "monthly" -> {
-            LocalDateTime startOfMonth = referenceDate.toLocalDate().withDayOfMonth(1).atStartOfDay();
-            LocalDateTime endOfMonth = startOfMonth.plusMonths(1);
+            LocalDate startOfMonth = referenceDate.withDayOfMonth(1);
+            LocalDate endOfMonth = startOfMonth.plusMonths(1);
             yield incomeRepository.findAllByUserAndDateBetween(user, startOfMonth, endOfMonth);
         }
         case "all" -> incomeRepository.findAllByUser(user);
@@ -146,11 +145,11 @@ public class IncomeService {
         };
     }
 
-    private LocalDateTime buildReferenceDate(Integer year, Integer month, Integer day) {
+    private LocalDate buildReferenceDate(Integer year, Integer month, Integer day) {
         LocalDate now = LocalDate.now();
         int effectiveYear = year != null ? year : now.getYear();
         int effectiveMonth = month != null ? month : now.getMonthValue();
         int effectiveDay = day != null ? day : now.getDayOfMonth();
-        return LocalDate.of(effectiveYear, effectiveMonth, effectiveDay).atStartOfDay();
+        return LocalDate.of(effectiveYear, effectiveMonth, effectiveDay);
     }
 }
