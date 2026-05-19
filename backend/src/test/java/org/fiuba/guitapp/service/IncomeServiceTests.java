@@ -6,7 +6,6 @@ import static org.mockito.Mockito.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
@@ -412,8 +411,8 @@ class IncomeServiceTests {
 
     @Test
     void getIncomeStatistics_ShouldReturnStatistics_WithMonthlyPeriod() {
-        LocalDateTime monthStart = LocalDateTime.of(2024, 2, 1, 0, 0);
-        LocalDateTime monthEnd = LocalDateTime.of(2024, 3, 1, 0, 0);
+        LocalDate monthStart = LocalDate.of(2024, 2, 1);
+        LocalDate monthEnd = LocalDate.of(2024, 3, 1);
 
         Income income1 = new Income();
         income1.setId(UUID.randomUUID());

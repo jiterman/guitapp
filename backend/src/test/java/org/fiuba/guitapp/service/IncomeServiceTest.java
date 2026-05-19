@@ -6,7 +6,6 @@ import static org.mockito.Mockito.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -24,8 +23,6 @@ import org.fiuba.guitapp.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
-import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -41,12 +38,6 @@ class IncomeServiceTest {
 
     @InjectMocks
     private IncomeService incomeService;
-
-    @Captor
-    private ArgumentCaptor<LocalDateTime> startCaptor;
-
-    @Captor
-    private ArgumentCaptor<LocalDateTime> endCaptor;
 
     private User user;
 
@@ -144,7 +135,7 @@ class IncomeServiceTest {
         i2.setAmount(new BigDecimal("15.50"));
 
         // daily
-        when(incomeRepository.findAllByUserAndDateBetween(eq(user), any(LocalDateTime.class), any(LocalDateTime.class)))
+        when(incomeRepository.findAllByUserAndDateBetween(eq(user), any(LocalDate.class), any(LocalDate.class)))
                 .thenReturn(List.of(i1, i2));
 
         IncomeStatisticsResponse daily = incomeService.getIncomeStatistics("test@example.com", "daily", 2023, 5, 10);
