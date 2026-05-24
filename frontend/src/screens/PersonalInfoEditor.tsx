@@ -1,18 +1,18 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { View, TextInput, TouchableOpacity, StyleSheet, Alert } from 'react-native';
 import { Text } from '@ui-kitten/components';
 import { Ionicons } from '@expo/vector-icons';
 
-interface PersonalInfoEditorProps {
+type PersonalInfoEditorProps = {
   firstName: string;
-  setFirstName: (name: string) => void;
   lastName: string;
-  setLastName: (name: string) => void;
   email: string;
+
   onSaveName: (firstName: string, lastName: string) => Promise<void>;
-  onSaveEmail: (newEmail: string) => Promise<void>;
+  onSaveEmail: (email: string) => Promise<void>;
+
   saving?: boolean;
-}
+};
 
 const PersonalInfoEditor: React.FC<PersonalInfoEditorProps> = ({
   firstName,
@@ -27,18 +27,14 @@ const PersonalInfoEditor: React.FC<PersonalInfoEditorProps> = ({
   const [draftEmail, setDraftEmail] = useState(email);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    setDraftFirstName(firstName);
-    setDraftLastName(lastName);
-    setDraftEmail(email);
-  }, [firstName, lastName, email]);
+  useEffect(() => setDraftFirstName(firstName), [firstName]);
+  useEffect(() => setDraftLastName(lastName), [lastName]);
+  useEffect(() => setDraftEmail(email), [email]);
 
-  useEffect(() => {
-    if (error) {
-      setError(null);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [draftFirstName, draftLastName, draftEmail]);
+  const normalizedLastName = useMemo(() => {
+    const trimmed = draftLastName?.trim();
+    return trimmed ? trimmed : '';
+  }, [draftLastName]);
 
   const handleSaveName = async () => {
     if (!draftFirstName.trim()) {
@@ -49,7 +45,7 @@ const PersonalInfoEditor: React.FC<PersonalInfoEditorProps> = ({
     setError(null);
 
     try {
-      await onSaveName(draftFirstName, draftLastName);
+      await onSaveName(draftFirstName.trim(), normalizedLastName);
     } catch {
       setError('Error al guardar. Intentá nuevamente');
     }
@@ -75,7 +71,7 @@ const PersonalInfoEditor: React.FC<PersonalInfoEditorProps> = ({
           text: 'Continuar',
           onPress: async () => {
             try {
-              await onSaveEmail(draftEmail);
+              await onSaveEmail(draftEmail.trim());
             } catch (e: unknown) {
               const errorMessage = e instanceof Error ? e.message : 'Error al cambiar email';
               setError(errorMessage);
@@ -84,6 +80,21 @@ const PersonalInfoEditor: React.FC<PersonalInfoEditorProps> = ({
         },
       ]
     );
+  };
+
+  const handleChangeFirstName = (value: string) => {
+    if (error) setError(null);
+    setDraftFirstName(value);
+  };
+
+  const handleChangeLastName = (value: string) => {
+    if (error) setError(null);
+    setDraftLastName(value);
+  };
+
+  const handleChangeEmail = (value: string) => {
+    if (error) setError(null);
+    setDraftEmail(value);
   };
 
   return (
@@ -103,7 +114,7 @@ const PersonalInfoEditor: React.FC<PersonalInfoEditorProps> = ({
             <TextInput
               style={styles.input}
               value={draftFirstName}
-              onChangeText={setDraftFirstName}
+              onChangeText={handleChangeFirstName}
               placeholder="Nombre"
               placeholderTextColor="#a0b8c8"
             />
@@ -122,7 +133,7 @@ const PersonalInfoEditor: React.FC<PersonalInfoEditorProps> = ({
             <TextInput
               style={styles.input}
               value={draftLastName}
-              onChangeText={setDraftLastName}
+              onChangeText={handleChangeLastName}
               placeholder="Apellido"
               placeholderTextColor="#a0b8c8"
             />
@@ -154,7 +165,7 @@ const PersonalInfoEditor: React.FC<PersonalInfoEditorProps> = ({
             <TextInput
               style={styles.input}
               value={draftEmail}
-              onChangeText={setDraftEmail}
+              onChangeText={handleChangeEmail}
               placeholder="correo@ejemplo.com"
               placeholderTextColor="#a0b8c8"
               keyboardType="email-address"

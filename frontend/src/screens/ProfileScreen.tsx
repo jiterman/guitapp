@@ -11,7 +11,6 @@ import {
 } from 'react-native';
 import { Layout, Text } from '@ui-kitten/components';
 import { Ionicons } from '@expo/vector-icons';
-import PersonalInfoEditor from './PersonalInfoEditor';
 import PasswordEditor from './PasswordEditor';
 import { userService } from '../services/userService';
 import { authService } from '../services/authService';
@@ -19,6 +18,7 @@ import AvatarPicker from './AvatarPicker';
 import { useUser } from '../context/UserContext';
 import { router } from 'expo-router';
 import ProfileMenuItem from '../components/Profile/ProfileMenuItem';
+import PersonalInfoSheet from '../components/Profile/PersonalInfoSheet';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 const vh = screenHeight / 100;
@@ -270,50 +270,15 @@ const ProfileScreen: React.FC = () => {
         </ScrollView>
       </Layout>
 
-      {/* Bottom Sheet */}
-      <Modal visible={sheetVisible} transparent animationType="none">
-        <TouchableWithoutFeedback onPress={closeSheet}>
-          <View style={styles.overlay} />
-        </TouchableWithoutFeedback>
-        <Animated.View style={[styles.sheet, { transform: [{ translateY }] }]}>
-          {/* Handle */}
-          <View style={styles.sheetHandle} />
-          {/* Sheet Header */}
-          <View style={styles.sheetHeader}>
-            <Text style={styles.sheetTitle}>Información personal</Text>
-            <TouchableOpacity onPress={closeSheet}>
-              <Ionicons name="close" size={22} color="#003366" />
-            </TouchableOpacity>
-          </View>
-          <ScrollView showsVerticalScrollIndicator={false}>
-            <PersonalInfoEditor
-              firstName={user?.firstName || ''}
-              setFirstName={(first: string) => {
-                if (user) {
-                  setUser({
-                    ...user,
-                    firstName: first,
-                  });
-                }
-              }}
-              lastName={user?.lastName || ''}
-              setLastName={(last: string) => {
-                if (user) {
-                  setUser({
-                    ...user,
-                    lastName: last,
-                  });
-                }
-              }}
-              email={user?.email || ''}
-              onSaveName={handleSaveName}
-              onSaveEmail={handleSaveEmail}
-              saving={saving}
-            />
-            <View style={{ height: vh * 3 }} />
-          </ScrollView>
-        </Animated.View>
-      </Modal>
+      <PersonalInfoSheet
+        visible={sheetVisible}
+        translateY={translateY}
+        onClose={closeSheet}
+        user={user}
+        saving={saving}
+        onSaveName={handleSaveName}
+        onSaveEmail={handleSaveEmail}
+      />
 
       {/* Cambiar contraseña */}
       <Modal visible={passwordSheetVisible} transparent animationType="none">
