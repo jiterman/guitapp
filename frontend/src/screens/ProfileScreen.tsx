@@ -18,6 +18,7 @@ import { authService } from '../services/authService';
 import AvatarPicker from './AvatarPicker';
 import { useUser } from '../context/UserContext';
 import { router } from 'expo-router';
+import ProfileMenuItem from '../components/Profile/ProfileMenuItem';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 const vh = screenHeight / 100;
@@ -161,13 +162,13 @@ const ProfileScreen: React.FC = () => {
     setPasswordError(null);
     setSaving(false);
 
+    setPasswordSheetVisible(true);
+
     Animated.spring(passwordTranslateY, {
       toValue: 0,
       useNativeDriver: true,
       bounciness: 4,
     }).start();
-
-    setPasswordSheetVisible(true);
   };
 
   const closePasswordSheet = () => {
@@ -216,75 +217,55 @@ const ProfileScreen: React.FC = () => {
           {/* Cuenta */}
           <Text style={styles.sectionTitle}>Cuenta</Text>
           <View style={styles.menuCard}>
-            <TouchableOpacity style={styles.menuItem} onPress={openSheet}>
-              <View style={[styles.menuIconCircle, { backgroundColor: '#E6F2FC' }]}>
-                <Ionicons name="person-outline" size={22} color="#07a3e4" />
-              </View>
-              <View style={styles.menuText}>
-                <Text style={styles.menuLabel}>Información personal</Text>
-                <Text style={styles.menuSub}>Editá tu nombre y correo electrónico.</Text>
-              </View>
-              <Ionicons name="chevron-forward" size={20} color="#07a3e4" />
-            </TouchableOpacity>
+            <ProfileMenuItem
+              title="Información personal"
+              subtitle="Editá tu nombre y correo electrónico."
+              icon="person-outline"
+              iconColor="#07a3e4"
+              iconBackground="#E6F2FC"
+              onPress={openSheet}
+            />
           </View>
 
           {/* Finanzas */}
           <Text style={styles.sectionTitle}>Finanzas</Text>
           <View style={styles.menuCard}>
-            <View style={styles.divider} />
-
-            <TouchableOpacity style={styles.menuItem}>
-              <View style={[styles.menuIconCircle, { backgroundColor: 'rgba(255,187,0,0.12)' }]}>
-                <Ionicons name="pie-chart-outline" size={22} color="#FFBB00" />
-              </View>
-              <View style={styles.menuText}>
-                <Text style={styles.menuLabel}>Estructura de gastos</Text>
-                <Text style={styles.menuSub}>Editá tus gastos fijos y variables</Text>
-              </View>
-              <Ionicons name="chevron-forward" size={20} color="#FFBB00" />
-            </TouchableOpacity>
+            <ProfileMenuItem
+              title="Estructura de gastos"
+              subtitle="Editá tus gastos fijos y variables"
+              icon="pie-chart-outline"
+              iconColor="#FFBB00"
+              iconBackground="rgba(255,187,0,0.12)"
+            />
           </View>
 
           {/* Seguridad */}
           <Text style={styles.sectionTitle}>Seguridad</Text>
 
           <View style={styles.menuCard}>
-            <TouchableOpacity style={styles.menuItem} onPress={openPasswordSheet}>
-              <View style={[styles.menuIconCircle, { backgroundColor: 'rgba(255, 59, 48, 0.12)' }]}>
-                <Ionicons name="lock-closed-outline" size={22} color="#FF3B30" />
-              </View>
-
-              <View style={styles.menuText}>
-                <Text style={styles.menuLabel}>Contraseña</Text>
-                <Text style={styles.menuSub}>Cambiá tu contraseña para proteger tu cuenta</Text>
-              </View>
-
-              <Ionicons name="chevron-forward" size={20} color="#FF3B30" />
-            </TouchableOpacity>
+            <ProfileMenuItem
+              title="Contraseña"
+              subtitle="Cambiá tu contraseña para proteger tu cuenta"
+              icon="lock-closed-outline"
+              iconColor="#FF3B30"
+              iconBackground="rgba(255, 59, 48, 0.12)"
+              onPress={openPasswordSheet}
+            />
           </View>
 
           {/* Cerrar sesión */}
           <View style={styles.menuCard}>
-            <TouchableOpacity
-              style={styles.logoutItem}
+            <ProfileMenuItem
+              title="Cerrar sesión"
+              icon="log-out-outline"
+              iconColor="#6c757d"
+              iconBackground="rgba(108, 117, 125, 0.12)"
               onPress={async () => {
                 await authService.removeToken();
                 setUser(null);
                 router.replace('/login');
               }}
-            >
-              <View
-                style={[styles.logoutIconCircle, { backgroundColor: 'rgba(108, 117, 125, 0.12)' }]}
-              >
-                <Ionicons name="log-out-outline" size={20} color="#6c757d" />
-              </View>
-
-              <View style={styles.menuText}>
-                <Text style={styles.menuLabel}>Cerrar sesión</Text>
-              </View>
-
-              <Ionicons name="chevron-forward" size={18} color="#6c757d" />
-            </TouchableOpacity>
+            />
           </View>
         </ScrollView>
       </Layout>
@@ -474,52 +455,6 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.08,
     shadowRadius: 6,
     elevation: 3,
-  },
-  menuItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: screenWidth * 0.04,
-    paddingVertical: vh * 1.5,
-    gap: 12,
-  },
-  menuIconCircle: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  menuText: {
-    flex: 1,
-    gap: 2,
-  },
-  menuLabel: {
-    fontSize: 15,
-    fontWeight: '700',
-    color: '#003366',
-  },
-  menuSub: {
-    fontSize: 13,
-    color: '#6b8aa1',
-  },
-  divider: {
-    height: 1,
-    backgroundColor: '#EEF6FB',
-    marginHorizontal: screenWidth * 0.04,
-  },
-  logoutItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: screenWidth * 0.04,
-    paddingVertical: vh * 1,
-    gap: 12,
-  },
-  logoutIconCircle: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    justifyContent: 'center',
-    alignItems: 'center',
   },
 
   // Bottom Sheet
