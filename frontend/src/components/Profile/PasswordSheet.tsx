@@ -11,7 +11,7 @@ import {
 } from 'react-native';
 import { Text } from '@ui-kitten/components';
 import { Ionicons } from '@expo/vector-icons';
-import PasswordEditor from '../../screens/PasswordEditor';
+import PasswordEditor from './PasswordEditor';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 const vh = screenHeight / 100;

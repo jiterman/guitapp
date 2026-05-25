@@ -12,7 +12,7 @@ import {
 import { Text } from '@ui-kitten/components';
 import { Ionicons } from '@expo/vector-icons';
 
-import PersonalInfoEditor from '../../screens/PersonalInfoEditor';
+import PersonalInfoEditor from './PersonalInfoEditor';
 import type { UserProfile } from '../../context/UserContext';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
