@@ -20,6 +20,12 @@ const SHEET_HEIGHT = vh * 55;
 const ProfileScreen: React.FC = () => {
   const { user, setUser, getCreatedMonth, getCreatedYear } = useUser();
 
+  const handleLogout = async () => {
+    await authService.removeToken();
+    setUser(null);
+    router.replace('/login');
+  };
+
   const personalInfoSheet = useBottomSheet(SHEET_HEIGHT);
   const passwordSheet = useBottomSheet(SHEET_HEIGHT);
 
@@ -49,8 +55,6 @@ const ProfileScreen: React.FC = () => {
 
   const saving = personalInfoSaving || passwordSaving;
 
-  const memberSince = `${getCreatedMonth()} ${getCreatedYear()}`;
-
   return (
     <>
       <Layout style={styles.container}>
@@ -60,7 +64,8 @@ const ProfileScreen: React.FC = () => {
         >
           <ProfileHeaderCard
             user={user}
-            memberSince={memberSince}
+            getCreatedMonth={getCreatedMonth}
+            getCreatedYear={getCreatedYear}
             onAvatarUploaded={(url: string) => {
               if (user) {
                 setUser({
@@ -109,11 +114,7 @@ const ProfileScreen: React.FC = () => {
               icon="log-out-outline"
               iconColor="#6c757d"
               iconBackground="rgba(108, 117, 125, 0.12)"
-              onPress={async () => {
-                await authService.removeToken();
-                setUser(null);
-                router.replace('/login');
-              }}
+              onPress={handleLogout}
             />
           </ProfileSection>
         </ScrollView>

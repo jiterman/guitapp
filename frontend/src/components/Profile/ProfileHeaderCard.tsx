@@ -10,15 +10,19 @@ const vh = screenHeight / 100;
 
 interface ProfileHeaderCardProps {
   user: UserProfile | null;
-  memberSince: string;
+  getCreatedMonth: () => string;
+  getCreatedYear: () => string;
   onAvatarUploaded: (url: string) => void;
 }
 
 const ProfileHeaderCard: React.FC<ProfileHeaderCardProps> = ({
   user,
-  memberSince,
+  getCreatedMonth,
+  getCreatedYear,
   onAvatarUploaded,
 }) => {
+  const memberSince = `${getCreatedMonth()} ${getCreatedYear()}`;
+
   return (
     <View style={styles.profileCard}>
       <View style={styles.avatarContainer}>
