@@ -9,6 +9,7 @@ import {
   ScrollView,
 } from 'react-native';
 import { Layout, Text } from '@ui-kitten/components';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import { router, useLocalSearchParams } from 'expo-router';
@@ -242,7 +243,7 @@ const EditIncomeScreen = () => {
           setSearch('');
         }}
       >
-        <View style={styles.modalFullScreen}>
+        <SafeAreaView style={styles.modalFullScreen}>
           <View style={styles.modalContainer}>
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>Categoría</Text>
@@ -295,7 +296,7 @@ const EditIncomeScreen = () => {
               )}
             />
           </View>
-        </View>
+        </SafeAreaView>
       </Modal>
 
       {showDatePicker && (
