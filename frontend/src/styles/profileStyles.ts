@@ -96,3 +96,26 @@ export const profileSharedStyles = StyleSheet.create({
     opacity: 0.9,
   },
 });
+
+export const profileModalStyles = StyleSheet.create({
+  overlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+  },
+  centeredContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: screenWidth * 0.05,
+  },
+  card: {
+    width: '100%',
+    maxHeight: '85%',
+    backgroundColor: profileColors.white,
+    borderRadius: 20,
+    paddingHorizontal: screenWidth * 0.05,
+    paddingTop: vh * 2,
+    paddingBottom: vh * 3,
+    ...profileSheetShadow,
+  },
+});

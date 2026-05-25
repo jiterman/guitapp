@@ -1,7 +1,6 @@
 import React from 'react';
 import {
   View,
-  StyleSheet,
   Modal,
   Animated,
   TouchableWithoutFeedback,
@@ -13,14 +12,7 @@ import { Ionicons } from '@expo/vector-icons';
 
 import { Text } from '@ui-kitten/components';
 import ExpensesEditor from './ExpensesEditor';
-import {
-  profileColors,
-  profileLayout,
-  profileSharedStyles,
-  profileSheetShadow,
-} from '../../styles/profileStyles';
-
-const { screenWidth, vh } = profileLayout;
+import { profileModalStyles, profileSharedStyles } from '../../styles/profileStyles';
 
 type Props = {
   visible: boolean;
@@ -54,17 +46,17 @@ const ExpensesSheet: React.FC<Props> = ({
   return (
     <Modal visible={visible} transparent animationType="none">
       <TouchableWithoutFeedback onPress={onClose}>
-        <Animated.View style={[styles.overlay, { opacity }]} />
+        <Animated.View style={[profileModalStyles.overlay, { opacity }]} />
       </TouchableWithoutFeedback>
 
       <KeyboardAvoidingView
-        style={styles.centeredContainer}
+        style={profileModalStyles.centeredContainer}
         behavior="height"
         pointerEvents="box-none"
       >
-        <Animated.View style={[styles.card, { transform: [{ scale }], opacity }]}>
-          <View style={styles.sheetHeader}>
-            <Text style={styles.sheetTitle}>Estructura de gastos</Text>
+        <Animated.View style={[profileModalStyles.card, { transform: [{ scale }], opacity }]}>
+          <View style={profileSharedStyles.sheetHeader}>
+            <Text style={profileSharedStyles.sheetTitle}>Estructura de gastos</Text>
             <TouchableOpacity onPress={onClose} hitSlop={10}>
               <Ionicons name="close" size={22} color="#003366" />
             </TouchableOpacity>
@@ -84,30 +76,5 @@ const ExpensesSheet: React.FC<Props> = ({
     </Modal>
   );
 };
-
-const styles = StyleSheet.create({
-  overlay: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0,0,0,0.5)',
-  },
-  centeredContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: screenWidth * 0.05,
-  },
-  card: {
-    width: '100%',
-    maxHeight: '85%',
-    backgroundColor: profileColors.white,
-    borderRadius: 20,
-    paddingHorizontal: screenWidth * 0.05,
-    paddingTop: vh,
-    paddingBottom: vh * 2,
-    ...profileSheetShadow,
-  },
-  sheetHeader: profileSharedStyles.sheetHeader,
-  sheetTitle: profileSharedStyles.sheetTitle,
-});
 
 export default ExpensesSheet;

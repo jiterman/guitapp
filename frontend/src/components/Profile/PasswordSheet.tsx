@@ -12,14 +12,7 @@ import {
 import { Text } from '@ui-kitten/components';
 import { Ionicons } from '@expo/vector-icons';
 import PasswordEditor from './PasswordEditor';
-import {
-  profileColors,
-  profileLayout,
-  profileSheetShadow,
-  profileSharedStyles,
-} from '../../styles/profileStyles';
-
-const { screenWidth, vh } = profileLayout;
+import { profileColors, profileModalStyles, profileSharedStyles } from '../../styles/profileStyles';
 
 export interface PasswordSheetProps {
   visible: boolean;
@@ -54,17 +47,17 @@ const PasswordSheet: React.FC<PasswordSheetProps> = ({
     <>
       <Modal visible={visible} transparent animationType="none">
         <TouchableWithoutFeedback onPress={onClose}>
-          <Animated.View style={[styles.overlay, { opacity }]} />
+          <Animated.View style={[profileModalStyles.overlay, { opacity }]} />
         </TouchableWithoutFeedback>
 
         <KeyboardAvoidingView
-          style={styles.centeredContainer}
+          style={profileModalStyles.centeredContainer}
           behavior="height"
           pointerEvents="box-none"
         >
-          <Animated.View style={[styles.card, { transform: [{ scale }], opacity }]}>
-            <View style={styles.sheetHeader}>
-              <Text style={styles.sheetTitle}>Cambiar contraseña</Text>
+          <Animated.View style={[profileModalStyles.card, { transform: [{ scale }], opacity }]}>
+            <View style={profileSharedStyles.sheetHeader}>
+              <Text style={profileSharedStyles.sheetTitle}>Cambiar contraseña</Text>
               <TouchableOpacity onPress={onClose}>
                 <Ionicons name="close" size={22} color="#003366" />
               </TouchableOpacity>
@@ -83,14 +76,14 @@ const PasswordSheet: React.FC<PasswordSheetProps> = ({
       </Modal>
 
       <Modal visible={confirmVisible} transparent animationType="fade">
-        <View style={styles.overlay} />
-        <View style={styles.centeredContainer} pointerEvents="box-none">
+        <View style={profileModalStyles.overlay} />
+        <View style={profileModalStyles.centeredContainer} pointerEvents="box-none">
           <View style={styles.confirmBox}>
             <Text style={styles.confirmTitle}>Confirmar cambio de contraseña</Text>
             <Text style={styles.confirmSubtitle}>
               Por seguridad, se cerrará tu sesión al realizar este cambio.
             </Text>
-            {confirmError && <Text style={styles.errorText}>{confirmError}</Text>}
+            {confirmError && <Text style={profileSharedStyles.errorText}>{confirmError}</Text>}
             <View style={styles.confirmActions}>
               <TouchableOpacity
                 style={styles.cancelBtn}
@@ -117,29 +110,6 @@ const PasswordSheet: React.FC<PasswordSheetProps> = ({
 };
 
 const styles = StyleSheet.create({
-  overlay: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0,0,0,0.5)',
-  },
-  centeredContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: screenWidth * 0.05,
-  },
-  card: {
-    width: '100%',
-    maxHeight: '85%',
-    backgroundColor: profileColors.white,
-    borderRadius: 20,
-    paddingHorizontal: screenWidth * 0.05,
-    paddingTop: vh,
-    paddingBottom: vh * 0.25,
-    ...profileSheetShadow,
-  },
-  sheetHandle: profileSharedStyles.sheetHandle,
-  sheetHeader: profileSharedStyles.sheetHeader,
-  sheetTitle: profileSharedStyles.sheetTitle,
   confirmBox: {
     width: '100%',
     backgroundColor: profileColors.white,
@@ -177,7 +147,6 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     alignItems: 'center',
   },
-  errorText: profileSharedStyles.errorText,
 });
 
 export default PasswordSheet;
