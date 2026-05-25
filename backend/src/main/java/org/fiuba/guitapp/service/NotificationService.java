@@ -25,6 +25,11 @@ public class NotificationService {
                 "savings goal at risk");
     }
 
+    public void sendNegativeBalanceRiskNotification(User user, String body) {
+        sendNotification(user, "Se nos fue la mano \uD83D\uDCB8", body,
+                "negative balance risk");
+    }
+
     private void sendNotification(User user, String title, String body, String logContext) {
         if (user.getFcmToken() == null || user.getFcmToken().isEmpty()) {
             return;

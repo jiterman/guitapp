@@ -7,7 +7,9 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDate;
+import java.time.YearMonth;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Optional;
@@ -25,6 +27,7 @@ import org.fiuba.guitapp.repository.IncomeRepository;
 import org.fiuba.guitapp.repository.UserRepository;
 import org.fiuba.guitapp.service.NotificationService;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -55,7 +58,7 @@ class ExpenseEventListenerTest {
     private final UUID expenseId = UUID.randomUUID();
     private final String userEmail = "test@example.com";
     private final BigDecimal amount = new BigDecimal("50000");
-    private final LocalDate date = LocalDate.of(2026, 5, 15);
+    private LocalDate baseDate;
 
     @BeforeEach
     void setUp() {
@@ -69,12 +72,14 @@ class ExpenseEventListenerTest {
         testUser.setTargetFixedExpenses(50); // Limit: 50,000
         testUser.setTargetVariableExpenses(30); // Limit: 30,000
 
-        testExpenseCreatedEvent = new ExpenseCreatedEvent(expenseId, userEmail, amount, date, ExpenseType.VARIABLE);
+        baseDate = LocalDate.now().minusMonths(1).withDayOfMonth(10);
+        testExpenseCreatedEvent = new ExpenseCreatedEvent(expenseId, userEmail, amount, baseDate, ExpenseType.VARIABLE);
+
     }
 
     @Test
     void handleExpenseCreatedEvent_ShouldOnlySendVariableNotification_WhenVariableExpenseCreatedAndBothExceeded() {
-        testExpenseCreatedEvent = new ExpenseCreatedEvent(expenseId, userEmail, amount, date, ExpenseType.VARIABLE);
+        testExpenseCreatedEvent = new ExpenseCreatedEvent(expenseId, userEmail, amount, baseDate, ExpenseType.VARIABLE);
         when(userRepository.findByEmail(userEmail)).thenReturn(Optional.of(testUser));
 
         Expense fixedExpense = new Expense();
@@ -97,7 +102,7 @@ class ExpenseEventListenerTest {
 
     @Test
     void handleExpenseCreatedEvent_ShouldOnlySendFixedNotification_WhenFixedExpenseCreatedAndBothExceeded() {
-        testExpenseCreatedEvent = new ExpenseCreatedEvent(expenseId, userEmail, amount, date, ExpenseType.FIXED);
+        testExpenseCreatedEvent = new ExpenseCreatedEvent(expenseId, userEmail, amount, baseDate, ExpenseType.FIXED);
         when(userRepository.findByEmail(userEmail)).thenReturn(Optional.of(testUser));
 
         Expense fixedExpense = new Expense();
@@ -120,7 +125,7 @@ class ExpenseEventListenerTest {
 
     @Test
     void handleExpenseCreatedEvent_ShouldSendFixedNotification_WhenFixedExceeded() {
-        testExpenseCreatedEvent = new ExpenseCreatedEvent(expenseId, userEmail, amount, date, ExpenseType.FIXED);
+        testExpenseCreatedEvent = new ExpenseCreatedEvent(expenseId, userEmail, amount, baseDate, ExpenseType.FIXED);
         when(userRepository.findByEmail(userEmail)).thenReturn(Optional.of(testUser));
 
         Expense fixedExpense = new Expense();
@@ -138,7 +143,7 @@ class ExpenseEventListenerTest {
 
     @Test
     void handleExpenseCreatedEvent_ShouldSendVariableNotification_WhenVariableExceeded() {
-        testExpenseCreatedEvent = new ExpenseCreatedEvent(expenseId, userEmail, amount, date, ExpenseType.VARIABLE);
+        testExpenseCreatedEvent = new ExpenseCreatedEvent(expenseId, userEmail, amount, baseDate, ExpenseType.VARIABLE);
         when(userRepository.findByEmail(userEmail)).thenReturn(Optional.of(testUser));
 
         Expense variableExpense = new Expense();
@@ -194,7 +199,7 @@ class ExpenseEventListenerTest {
 
     @Test
     void handleExpenseCreatedEvent_ShouldNotSendNotification_WhenTargetFixedExpensesIsNull() {
-        testExpenseCreatedEvent = new ExpenseCreatedEvent(expenseId, userEmail, amount, date, ExpenseType.FIXED);
+        testExpenseCreatedEvent = new ExpenseCreatedEvent(expenseId, userEmail, amount, baseDate, ExpenseType.FIXED);
         testUser.setTargetFixedExpenses(null);
         when(userRepository.findByEmail(userEmail)).thenReturn(Optional.of(testUser));
 
@@ -205,7 +210,7 @@ class ExpenseEventListenerTest {
 
     @Test
     void handleExpenseCreatedEvent_ShouldNotSendNotification_WhenTargetVariableExpensesIsNull() {
-        testExpenseCreatedEvent = new ExpenseCreatedEvent(expenseId, userEmail, amount, date, ExpenseType.VARIABLE);
+        testExpenseCreatedEvent = new ExpenseCreatedEvent(expenseId, userEmail, amount, baseDate, ExpenseType.VARIABLE);
         testUser.setTargetVariableExpenses(null);
         when(userRepository.findByEmail(userEmail)).thenReturn(Optional.of(testUser));
 
@@ -213,4 +218,82 @@ class ExpenseEventListenerTest {
 
         verify(notificationService, never()).sendExpenseThresholdExceededNotification(any(), any());
     }
+
+    @Test
+    void handleExpenseCreatedEvent_ShouldSendNegativeBalanceRiskNotification_WhenProjectedExpensesExceedIncome() {
+        LocalDate today = LocalDate.now();
+        Assumptions.assumeTrue(today.getDayOfMonth() > 5);
+
+        testUser.setTargetFixedExpenses(null);
+        testUser.setTargetVariableExpenses(null);
+        testUser.setTargetSavings(20);
+
+        testExpenseCreatedEvent = new ExpenseCreatedEvent(
+                expenseId,
+                userEmail,
+                amount,
+                today,
+                ExpenseType.VARIABLE);
+        when(userRepository.findByEmail(userEmail)).thenReturn(Optional.of(testUser));
+
+        when(incomeRepository.findAllByUserAndDateBetween(eq(testUser), any(LocalDate.class), any(LocalDate.class)))
+            .thenReturn(Collections.emptyList());
+
+        BigDecimal expenseAmount = testUser.getEstimatedMonthlyIncome().add(BigDecimal.ONE);
+        Expense expense = new Expense();
+        expense.setAmount(expenseAmount);
+        expense.setType(ExpenseType.VARIABLE);
+
+        when(expenseRepository.findAllByUserAndDateBetween(eq(testUser), any(LocalDate.class), any(LocalDate.class)))
+                .thenReturn(Collections.singletonList(expense));
+
+        expenseEventListener.handleExpenseCreatedEvent(testExpenseCreatedEvent);
+
+        verify(notificationService, times(1)).sendNegativeBalanceRiskNotification(eq(testUser),
+                argThat(s -> s.contains("saldo") && s.contains("ingresos")));
+        verify(notificationService, never()).sendSavingsGoalAtRiskNotification(any(), any());
+        verify(notificationService, never()).sendExpenseThresholdExceededNotification(any(), any());
+    }
+
+        @Test
+        void handleExpenseCreatedEvent_ShouldSendSavingsGoalRiskNotification_WhenProjectedExpensesExceedSavingsTargetButNotIncome() {
+        LocalDate today = LocalDate.now();
+        Assumptions.assumeTrue(today.getDayOfMonth() > 5);
+
+        testUser.setTargetFixedExpenses(null);
+        testUser.setTargetVariableExpenses(null);
+        testUser.setTargetSavings(20);
+
+        testExpenseCreatedEvent = new ExpenseCreatedEvent(
+            expenseId,
+            userEmail,
+            amount,
+            today,
+            ExpenseType.VARIABLE);
+        when(userRepository.findByEmail(userEmail)).thenReturn(Optional.of(testUser));
+
+        when(incomeRepository.findAllByUserAndDateBetween(eq(testUser), any(LocalDate.class), any(LocalDate.class)))
+            .thenReturn(Collections.emptyList());
+
+        int daysElapsed = today.getDayOfMonth();
+        int daysInMonth = YearMonth.from(today).lengthOfMonth();
+        BigDecimal projectedTarget = new BigDecimal("90000");
+        BigDecimal totalExpenses = projectedTarget
+            .multiply(BigDecimal.valueOf(daysElapsed))
+            .divide(BigDecimal.valueOf(daysInMonth), 4, RoundingMode.HALF_UP);
+
+        Expense expense = new Expense();
+        expense.setAmount(totalExpenses);
+        expense.setType(ExpenseType.VARIABLE);
+
+        when(expenseRepository.findAllByUserAndDateBetween(eq(testUser), any(LocalDate.class), any(LocalDate.class)))
+            .thenReturn(Collections.singletonList(expense));
+
+        expenseEventListener.handleExpenseCreatedEvent(testExpenseCreatedEvent);
+
+        verify(notificationService, times(1)).sendSavingsGoalAtRiskNotification(eq(testUser),
+            argThat(s -> s.contains("meta de ahorro") || s.contains("meta")));
+        verify(notificationService, never()).sendNegativeBalanceRiskNotification(any(), any());
+        verify(notificationService, never()).sendExpenseThresholdExceededNotification(any(), any());
+        }
 }

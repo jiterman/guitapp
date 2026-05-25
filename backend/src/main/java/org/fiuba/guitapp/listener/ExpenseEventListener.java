@@ -52,13 +52,20 @@ public class ExpenseEventListener {
                 currentMonth.atDay(1),
                 currentMonth.atEndOfMonth());
 
+        ProjectionData projectionData = buildProjectionData(user, monthlyExpenses, currentMonth);
+        if (checkNegativeBalanceRisk(user, projectionData)) {
+            return;
+        }
+
+        if (checkSavingsGoalRisk(user, projectionData)) {
+            return;
+        }
+
         if (event.getType() == ExpenseType.FIXED) {
             checkFixedThreshold(user, monthlyExpenses);
         } else if (event.getType() == ExpenseType.VARIABLE) {
             checkVariableThreshold(user, monthlyExpenses);
         }
-
-        checkSavingsGoalRisk(user, monthlyExpenses, currentMonth);
     }
 
     private void checkFixedThreshold(User user, List<Expense> monthlyExpenses) {
@@ -121,23 +128,63 @@ public class ExpenseEventListener {
         }
     }
 
-    private void checkSavingsGoalRisk(
+    private boolean checkSavingsGoalRisk(User user, ProjectionData projectionData) {
+        if (user.getTargetSavings() == null || projectionData == null) {
+            return false;
+        }
+
+        BigDecimal savingsTargetAmount = projectionData.expectedIncome()
+                .multiply(BigDecimal.valueOf(user.getTargetSavings()))
+                .divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP);
+
+        BigDecimal allowedExpenses = projectionData.expectedIncome().subtract(savingsTargetAmount);
+
+        if (projectionData.projectedExpenses().compareTo(allowedExpenses) > 0) {
+            Locale localeArg = Locale.of("es", "AR");
+            NumberFormat formatter = NumberFormat.getCurrencyInstance(localeArg);
+            String message = String.format(localeArg,
+                    "Tu meta de ahorro est\u00e1 en riesgo. Si segu\u00eds con este ritmo, podr\u00edas gastar %s este mes y tu tope para cumplir el objetivo es %s",
+                    formatter.format(projectionData.projectedExpenses()),
+                    formatter.format(allowedExpenses));
+            notificationService.sendSavingsGoalAtRiskNotification(user, message);
+            return true;
+        }
+
+        return false;
+    }
+
+    private boolean checkNegativeBalanceRisk(User user, ProjectionData projectionData) {
+        if (projectionData == null) {
+            return false;
+        }
+
+        if (projectionData.projectedExpenses().compareTo(projectionData.expectedIncome()) > 0) {
+            Locale localeArg = Locale.of("es", "AR");
+            NumberFormat formatter = NumberFormat.getCurrencyInstance(localeArg);
+            String message = String.format(localeArg,
+                    "Tu saldo podr\u00eda quedar en negativo. Si segu\u00eds con este ritmo, podr\u00edas gastar %s este mes y tus ingresos esperados son %s",
+                    formatter.format(projectionData.projectedExpenses()),
+                    formatter.format(projectionData.expectedIncome()));
+            notificationService.sendNegativeBalanceRiskNotification(user, message);
+            return true;
+        }
+
+        return false;
+    }
+
+    private ProjectionData buildProjectionData(
             User user,
             List<Expense> monthlyExpenses,
             YearMonth expenseMonth) {
-        if (user.getTargetSavings() == null) {
-            return;
-        }
-
         LocalDate today = LocalDate.now();
         YearMonth currentMonth = YearMonth.from(today);
         if (!currentMonth.equals(expenseMonth)) {
-            return;
+            return null;
         }
 
         if (today.getDayOfMonth() <= 5) {
-            return;
-            // No se envia notificacion en los primeros 5 dias del mes porque no hay suficiente data para proyectar los gastos del mes
+            // No se envia notificacion en los primeros 5 dias del mes porque no hay suficiente data para proyectar los gastos del mes.
+            return null;
         }
 
         List<Income> monthlyIncomes = incomeRepository.findAllByUserAndDateBetween(
@@ -155,7 +202,7 @@ public class ExpenseEventListener {
                 : user.getEstimatedMonthlyIncome();
 
         if (expectedIncome == null || expectedIncome.compareTo(BigDecimal.ZERO) <= 0) {
-            return;
+            return null;
         }
 
         BigDecimal totalExpenses = monthlyExpenses.stream()
@@ -169,20 +216,9 @@ public class ExpenseEventListener {
                 BigDecimal.valueOf(daysElapsed), 4, RoundingMode.HALF_UP);
         BigDecimal projectedExpenses = averageDailyExpense.multiply(BigDecimal.valueOf(daysInMonth));
 
-        BigDecimal savingsTargetAmount = expectedIncome
-                .multiply(BigDecimal.valueOf(user.getTargetSavings()))
-                .divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP);
+        return new ProjectionData(expectedIncome, projectedExpenses);
+    }
 
-        BigDecimal allowedExpenses = expectedIncome.subtract(savingsTargetAmount);
-
-        if (projectedExpenses.compareTo(allowedExpenses) > 0) {
-            Locale localeArg = Locale.of("es", "AR");
-            NumberFormat formatter = NumberFormat.getCurrencyInstance(localeArg);
-            String message = String.format(localeArg,
-                    "Tu meta de ahorro est\u00e1 en riesgo. Si segu\u00eds con este ritmo, podr\u00edas gastar %s este mes y tu tope para cumplir el objetivo es %s",
-                    formatter.format(projectedExpenses),
-                    formatter.format(allowedExpenses));
-            notificationService.sendSavingsGoalAtRiskNotification(user, message);
-        }
+    private record ProjectionData(BigDecimal expectedIncome, BigDecimal projectedExpenses) {
     }
 }
