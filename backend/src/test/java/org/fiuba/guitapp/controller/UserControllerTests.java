@@ -12,6 +12,7 @@ import org.fiuba.guitapp.dto.ConfirmPasswordChangeRequest;
 import org.fiuba.guitapp.dto.InitiateEmailChangeRequest;
 import org.fiuba.guitapp.dto.InitiatePasswordChangeRequest;
 import org.fiuba.guitapp.dto.OnboardingRequest;
+import org.fiuba.guitapp.dto.UpdateExpensesStructureRequest;
 import org.fiuba.guitapp.dto.UpdateFcmTokenRequest;
 import org.fiuba.guitapp.dto.UpdateUserProfileRequest;
 import org.fiuba.guitapp.dto.UserProfileResponse;
@@ -278,5 +279,62 @@ class UserControllerTests {
                 .andExpect(jsonPath("$.message").value("FCM token updated successfully"));
 
         verify(userService, times(1)).updateFcmToken(eq("test@example.com"), eq("some-fcm-token"));
+    }
+
+    @Test
+    @WithMockUser(username = "test@example.com")
+    void updateExpensesStructure_ShouldReturnSuccessMessage() throws Exception {
+
+        UpdateExpensesStructureRequest request = new UpdateExpensesStructureRequest(50, 30);
+        UUID userId = UUID.randomUUID();
+        UserProfileResponse mockResponse = new UserProfileResponse(
+                userId,
+                "test@example.com",
+                "Test",
+                "User",
+                null,
+                true,
+                BigDecimal.valueOf(10000),
+                50,
+                30,
+                20,
+                java.time.LocalDateTime.now());
+
+        when(userService.updateExpensesStructure(
+                eq("test@example.com"),
+                eq(50),
+                eq(30))).thenReturn(mockResponse);
+
+        mockMvc.perform(patch("/api/users/me/expenses-structure")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.message")
+                        .value("Expenses structure updated successfully"))
+                .andExpect(jsonPath("$.data.email")
+                        .value("test@example.com"))
+                .andExpect(jsonPath("$.data.targetFixedExpenses")
+                        .value(50))
+                .andExpect(jsonPath("$.data.targetVariableExpenses")
+                        .value(30))
+                .andExpect(jsonPath("$.data.targetSavings")
+                        .value(20));
+
+        verify(userService, times(1)).updateExpensesStructure(
+                eq("test@example.com"),
+                eq(50),
+                eq(30));
+    }
+
+    @Test
+    @WithMockUser(username = "test@example.com")
+    void updateExpensesStructure_ShouldReturnBadRequest_WhenValuesAreNull() throws Exception {
+
+        UpdateExpensesStructureRequest request = new UpdateExpensesStructureRequest(null, null);
+
+        mockMvc.perform(patch("/api/users/me/expenses-structure")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isBadRequest());
     }
 }

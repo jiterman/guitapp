@@ -628,4 +628,78 @@ class UserServiceTests {
         assertEquals(fcmToken, testUser.getFcmToken());
         verify(userRepository, times(1)).save(testUser);
     }
+
+    @Test
+    void updateExpensesStructure_ShouldUpdateUserAndSavings_WhenValidValues() {
+        Integer fixed = 50;
+        Integer variable = 30;
+
+        testUser.setTargetFixedExpenses(0);
+        testUser.setTargetVariableExpenses(0);
+        testUser.setTargetSavings(0);
+
+        when(userRepository.findByEmail(testEmail))
+                .thenReturn(Optional.of(testUser));
+
+        UserProfileResponse response = userService.updateExpensesStructure(
+                testEmail,
+                fixed,
+                variable);
+
+        assertEquals(fixed, testUser.getTargetFixedExpenses());
+        assertEquals(variable, testUser.getTargetVariableExpenses());
+        assertEquals(20, testUser.getTargetSavings());
+
+        verify(userRepository).save(testUser);
+
+        assertNotNull(response);
+        assertEquals(fixed, response.targetFixedExpenses());
+        assertEquals(variable, response.targetVariableExpenses());
+        assertEquals(20, response.targetSavings());
+    }
+
+    @Test
+    void updateExpensesStructure_ShouldThrowException_WhenValuesAreNull() {
+        when(userRepository.findByEmail(testEmail))
+                .thenReturn(Optional.of(testUser));
+
+        IllegalArgumentException ex = assertThrows(
+                IllegalArgumentException.class,
+                () -> userService.updateExpensesStructure(testEmail, null, null)
+        );
+
+        assertEquals("Targets cannot be null", ex.getMessage());
+
+        verify(userRepository, times(0)).save(any());
+    }
+
+    @Test
+    void updateExpensesStructure_ShouldThrowException_WhenValuesAreNegative() {
+        when(userRepository.findByEmail(testEmail))
+                .thenReturn(Optional.of(testUser));
+
+        IllegalArgumentException ex = assertThrows(
+                IllegalArgumentException.class,
+                () -> userService.updateExpensesStructure(testEmail, -10, 20)
+        );
+
+        assertEquals("Targets cannot be negative", ex.getMessage());
+
+        verify(userRepository, times(0)).save(any());
+    }
+
+    @Test
+    void updateExpensesStructure_ShouldThrowException_WhenSumExceeds100() {
+        when(userRepository.findByEmail(testEmail))
+                .thenReturn(Optional.of(testUser));
+
+        IllegalArgumentException ex = assertThrows(
+                IllegalArgumentException.class,
+                () -> userService.updateExpensesStructure(testEmail, 80, 30)
+        );
+
+        assertEquals("Sum of expenses cannot exceed 100", ex.getMessage());
+
+        verify(userRepository, times(0)).save(any());
+    }
 }

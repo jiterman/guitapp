@@ -73,37 +73,31 @@ const PersonalInfoEditor: React.FC<PersonalInfoEditorProps> = ({
         { text: 'Cancelar', style: 'cancel' },
         {
           text: 'Continuar',
-          onPress: () => confirmEmailChange(),
+          onPress: async () => {
+            try {
+              await onSaveEmail(draftEmail.trim());
+            } catch (e: unknown) {
+              const errorMessage = e instanceof Error ? e.message : 'Error al cambiar email';
+              setError(errorMessage);
+            }
+          },
         },
       ]
     );
   };
 
-  const confirmEmailChange = async () => {
-    try {
-      setEmailError(null);
-
-      await onSaveEmail(draftEmail.trim());
-    } catch (e: unknown) {
-      console.error('Error cambiando email', e);
-
-      setEmailError(e instanceof Error ? e.message : 'Error de red. Intentá nuevamente');
-    }
-  };
-
-  // ---------------- INPUT HANDLERS ----------------
   const handleChangeFirstName = (value: string) => {
-    if (nameError) setNameError(null);
+    if (error) setError(null);
     setDraftFirstName(value);
   };
 
   const handleChangeLastName = (value: string) => {
-    if (nameError) setNameError(null);
+    if (error) setError(null);
     setDraftLastName(value);
   };
 
   const handleChangeEmail = (value: string) => {
-    if (emailError) setEmailError(null);
+    if (error) setError(null);
     setDraftEmail(value);
   };
 

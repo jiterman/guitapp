@@ -7,6 +7,7 @@ import org.fiuba.guitapp.dto.ConfirmPasswordChangeRequest;
 import org.fiuba.guitapp.dto.InitiateEmailChangeRequest;
 import org.fiuba.guitapp.dto.InitiatePasswordChangeRequest;
 import org.fiuba.guitapp.dto.OnboardingRequest;
+import org.fiuba.guitapp.dto.UpdateExpensesStructureRequest;
 import org.fiuba.guitapp.dto.UpdateFcmTokenRequest;
 import org.fiuba.guitapp.dto.UpdateUserProfileRequest;
 import org.fiuba.guitapp.dto.UserProfileResponse;
@@ -116,5 +117,21 @@ public class UserController {
 
         userService.updateFcmToken(principal.getName(), request.fcmToken());
         return ResponseEntity.ok(Map.of("message", "FCM token updated successfully"));
+    }
+
+    @PatchMapping("/me/expenses-structure")
+    public ResponseEntity<?> updateExpensesStructure(
+            Principal principal,
+            @Valid @RequestBody UpdateExpensesStructureRequest request) {
+
+        UserProfileResponse updated = userService.updateExpensesStructure(
+                principal.getName(),
+                request.targetFixedExpenses(),
+                request.targetVariableExpenses());
+
+        return ResponseEntity.ok(
+                Map.of(
+                        "message", "Expenses structure updated successfully",
+                        "data", updated));
     }
 }
