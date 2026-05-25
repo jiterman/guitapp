@@ -150,7 +150,6 @@ const styles = StyleSheet.create({
     padding: 16,
     borderWidth: 1,
     borderColor: '#e0edf6',
-    marginTop: 12,
   },
   header: {
     flexDirection: 'row',
@@ -202,14 +201,14 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
   button: {
-    backgroundColor: '#07a3e4',
+    backgroundColor: '#FFBB00',
     paddingVertical: 12,
     borderRadius: 10,
     alignItems: 'center',
     marginTop: 6,
   },
   buttonText: {
-    color: '#fff',
+    color: '#0c2b52',
     fontWeight: '700',
     fontSize: 14,
   },

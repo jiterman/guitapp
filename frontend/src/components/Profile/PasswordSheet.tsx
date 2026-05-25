@@ -7,6 +7,7 @@ import {
   Modal,
   TouchableOpacity,
   TouchableWithoutFeedback,
+  KeyboardAvoidingView,
 } from 'react-native';
 import { Text } from '@ui-kitten/components';
 import { Ionicons } from '@expo/vector-icons';
@@ -19,20 +20,17 @@ import {
 } from '../../styles/profileStyles';
 
 const { screenWidth, vh } = profileLayout;
-const SHEET_HEIGHT = vh * 55;
 
 export interface PasswordSheetProps {
   visible: boolean;
-  translateY: Animated.Value;
+  scale: Animated.Value;
+  opacity: Animated.Value;
   onClose: () => void;
-
   saving: boolean;
   passwordError: string | null;
-
   confirmVisible: boolean;
   confirmLoading: boolean;
   confirmError: string | null;
-
   onSavePassword: (currentPassword: string, newPassword: string) => Promise<void>;
   onConfirmPasswordChange: (confirmed: boolean) => Promise<void>;
   onPasswordInputChange: () => void;
@@ -40,7 +38,8 @@ export interface PasswordSheetProps {
 
 const PasswordSheet: React.FC<PasswordSheetProps> = ({
   visible,
-  translateY,
+  scale,
+  opacity,
   onClose,
   saving,
   passwordError,
@@ -55,63 +54,61 @@ const PasswordSheet: React.FC<PasswordSheetProps> = ({
     <>
       <Modal visible={visible} transparent animationType="none">
         <TouchableWithoutFeedback onPress={onClose}>
-          <View style={styles.overlay} />
+          <Animated.View style={[styles.overlay, { opacity }]} />
         </TouchableWithoutFeedback>
 
-        <Animated.View style={[styles.sheet, { transform: [{ translateY }] }]}>
-          <View style={styles.sheetHandle} />
+        <KeyboardAvoidingView
+          style={styles.centeredContainer}
+          behavior="height"
+          pointerEvents="box-none"
+        >
+          <Animated.View style={[styles.card, { transform: [{ scale }], opacity }]}>
+            <View style={styles.sheetHeader}>
+              <Text style={styles.sheetTitle}>Cambiar contraseña</Text>
+              <TouchableOpacity onPress={onClose}>
+                <Ionicons name="close" size={22} color="#003366" />
+              </TouchableOpacity>
+            </View>
 
-          <View style={styles.sheetHeader}>
-            <Text style={styles.sheetTitle}>Cambiar contraseña</Text>
-
-            <TouchableOpacity onPress={onClose}>
-              <Ionicons name="close" size={22} color="#003366" />
-            </TouchableOpacity>
-          </View>
-
-          <ScrollView showsVerticalScrollIndicator={false}>
-            <PasswordEditor
-              onSave={onSavePassword}
-              saving={saving}
-              externalError={passwordError}
-              onChangeInput={onPasswordInputChange}
-            />
-
-            <View style={{ height: vh * 3 }} />
-          </ScrollView>
-        </Animated.View>
+            <ScrollView showsVerticalScrollIndicator={false}>
+              <PasswordEditor
+                onSave={onSavePassword}
+                saving={saving}
+                externalError={passwordError}
+                onChangeInput={onPasswordInputChange}
+              />
+            </ScrollView>
+          </Animated.View>
+        </KeyboardAvoidingView>
       </Modal>
 
       <Modal visible={confirmVisible} transparent animationType="fade">
         <View style={styles.overlay} />
-
-        <View style={styles.confirmBox}>
-          <Text style={styles.confirmTitle}>Confirmar cambio de contraseña</Text>
-
-          <Text style={styles.confirmSubtitle}>
-            Por seguridad, se cerrará tu sesión al realizar este cambio.
-          </Text>
-
-          {confirmError && <Text style={styles.errorText}>{confirmError}</Text>}
-
-          <View style={styles.confirmActions}>
-            <TouchableOpacity
-              style={[styles.cancelBtn]}
-              disabled={confirmLoading}
-              onPress={() => onConfirmPasswordChange(false)}
-            >
-              <Text>No cambiar</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={[styles.confirmBtn]}
-              disabled={confirmLoading}
-              onPress={() => onConfirmPasswordChange(true)}
-            >
-              <Text style={{ color: '#fff' }}>
-                {confirmLoading ? 'Procesando...' : 'Sí, cambiar'}
-              </Text>
-            </TouchableOpacity>
+        <View style={styles.centeredContainer} pointerEvents="box-none">
+          <View style={styles.confirmBox}>
+            <Text style={styles.confirmTitle}>Confirmar cambio de contraseña</Text>
+            <Text style={styles.confirmSubtitle}>
+              Por seguridad, se cerrará tu sesión al realizar este cambio.
+            </Text>
+            {confirmError && <Text style={styles.errorText}>{confirmError}</Text>}
+            <View style={styles.confirmActions}>
+              <TouchableOpacity
+                style={styles.cancelBtn}
+                disabled={confirmLoading}
+                onPress={() => onConfirmPasswordChange(false)}
+              >
+                <Text>No cambiar</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.confirmBtn}
+                disabled={confirmLoading}
+                onPress={() => onConfirmPasswordChange(true)}
+              >
+                <Text style={{ color: '#fff' }}>
+                  {confirmLoading ? 'Procesando...' : 'Sí, cambiar'}
+                </Text>
+              </TouchableOpacity>
+            </View>
           </View>
         </View>
       </Modal>
@@ -120,28 +117,31 @@ const PasswordSheet: React.FC<PasswordSheetProps> = ({
 };
 
 const styles = StyleSheet.create({
-  overlay: profileSharedStyles.overlay,
-  sheet: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    height: SHEET_HEIGHT,
-    backgroundColor: profileColors.white,
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
+  overlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+  },
+  centeredContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
     paddingHorizontal: screenWidth * 0.05,
-    paddingBottom: vh * 2,
+  },
+  card: {
+    width: '100%',
+    maxHeight: '85%',
+    backgroundColor: profileColors.white,
+    borderRadius: 20,
+    paddingHorizontal: screenWidth * 0.05,
+    paddingTop: vh,
+    paddingBottom: vh * 0.25,
     ...profileSheetShadow,
   },
   sheetHandle: profileSharedStyles.sheetHandle,
   sheetHeader: profileSharedStyles.sheetHeader,
   sheetTitle: profileSharedStyles.sheetTitle,
   confirmBox: {
-    position: 'absolute',
-    top: '35%',
-    left: 20,
-    right: 20,
+    width: '100%',
     backgroundColor: profileColors.white,
     borderRadius: 16,
     padding: 20,

@@ -9,7 +9,7 @@ import PersonalInfoSheet from '../components/Profile/PersonalInfoSheet';
 import PasswordSheet from '../components/Profile/PasswordSheet';
 import ProfileHeaderCard from '../components/Profile/ProfileHeaderCard';
 import ProfileSection from '../components/Profile/ProfileSection';
-import { useBottomSheet } from '../hooks/Profile/useBottomSheet';
+import { useModal } from '../hooks/Profile/useModal';
 import { usePersonalInfo } from '../hooks/Profile/usePersonalInfo';
 import { usePasswordChange } from '../hooks/Profile/usePasswordChange';
 import ExpensesSheet from '../components/Profile/ExpensesSheet';
@@ -18,7 +18,6 @@ import { profileColors } from '../styles/profileStyles';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 const vh = screenHeight / 100;
-const SHEET_HEIGHT = vh * 55;
 
 const ProfileScreen: React.FC = () => {
   const { user, setUser, getCreatedMonth, getCreatedYear } = useUser();
@@ -29,9 +28,9 @@ const ProfileScreen: React.FC = () => {
     router.replace('/login');
   };
 
-  const personalInfoSheet = useBottomSheet(SHEET_HEIGHT);
-  const passwordSheet = useBottomSheet(SHEET_HEIGHT);
-  const expensesSheet = useBottomSheet(SHEET_HEIGHT);
+  const personalInfoSheet = useModal();
+  const passwordSheet = useModal();
+  const expensesSheet = useModal();
 
   const {
     saving: personalInfoSaving,
@@ -78,10 +77,7 @@ const ProfileScreen: React.FC = () => {
             getCreatedYear={getCreatedYear}
             onAvatarUploaded={(url: string) => {
               if (user) {
-                setUser({
-                  ...user,
-                  avatarUrl: url,
-                });
+                setUser({ ...user, avatarUrl: url });
               }
             }}
           />
@@ -133,7 +129,8 @@ const ProfileScreen: React.FC = () => {
 
       <PersonalInfoSheet
         visible={personalInfoSheet.visible}
-        translateY={personalInfoSheet.translateY}
+        scale={personalInfoSheet.scale}
+        opacity={personalInfoSheet.opacity}
         onClose={personalInfoSheet.close}
         user={user}
         saving={saving}
@@ -143,7 +140,8 @@ const ProfileScreen: React.FC = () => {
 
       <PasswordSheet
         visible={passwordSheet.visible}
-        translateY={passwordSheet.translateY}
+        scale={passwordSheet.scale}
+        opacity={passwordSheet.opacity}
         onClose={passwordSheet.close}
         saving={saving}
         passwordError={passwordError}
@@ -157,7 +155,8 @@ const ProfileScreen: React.FC = () => {
 
       <ExpensesSheet
         visible={expensesSheet.visible}
-        translateY={expensesSheet.translateY}
+        scale={expensesSheet.scale}
+        opacity={expensesSheet.opacity}
         onClose={() => {
           expensesSheet.close();
           expenses.clearError?.();
