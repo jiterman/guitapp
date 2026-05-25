@@ -8,9 +8,18 @@ type Props = {
   fixedDefault: number;
   variableDefault: number;
   onSave: (fixed: number, variable: number) => void;
+
+  externalError?: string | null;
+  onChangeInput?: () => void;
 };
 
-const ExpensesEditor: React.FC<Props> = ({ fixedDefault, variableDefault, onSave }) => {
+const ExpensesEditor: React.FC<Props> = ({
+  fixedDefault,
+  variableDefault,
+  onSave,
+  externalError,
+  onChangeInput,
+}) => {
   const [fixed, setFixed] = useState('');
   const [variable, setVariable] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -40,15 +49,31 @@ const ExpensesEditor: React.FC<Props> = ({ fixedDefault, variableDefault, onSave
     return null;
   };
 
+  const handleSave = () => {
+    const validationError = validate(fixedNum, variableNum);
+
+    if (validationError) {
+      setError(validationError);
+      return;
+    }
+
+    setError(null);
+    onSave(fixedNum, variableNum);
+  };
+
   const handleFixed = (text: string) => {
     setFixed(text);
-    setError(validate(parse(text), variableNum));
+    setError(null);
+    onChangeInput?.();
   };
 
   const handleVariable = (text: string) => {
     setVariable(text);
-    setError(validate(fixedNum, parse(text)));
+    setError(null);
+    onChangeInput?.();
   };
+
+  const displayError = externalError || error;
 
   return (
     <View style={styles.block}>
@@ -108,14 +133,10 @@ const ExpensesEditor: React.FC<Props> = ({ fixedDefault, variableDefault, onSave
       </View>
 
       {/* ERROR */}
-      {error && <Text style={styles.error}>{error}</Text>}
+      {displayError && <Text style={styles.error}>{displayError}</Text>}
 
       {/* BUTTON */}
-      <TouchableOpacity
-        style={[styles.button, error && { opacity: 0.6 }]}
-        onPress={() => onSave(fixedNum, variableNum)}
-        disabled={!!error}
-      >
+      <TouchableOpacity style={styles.button} onPress={handleSave}>
         <Text style={styles.buttonText}>Guardar cambios</Text>
       </TouchableOpacity>
     </View>
@@ -131,14 +152,12 @@ const styles = StyleSheet.create({
     borderColor: '#e0edf6',
     marginTop: 12,
   },
-
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 10,
     marginBottom: 14,
   },
-
   iconCircle: {
     width: 44,
     height: 44,
@@ -146,24 +165,20 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-
   title: {
     fontSize: 15,
     fontWeight: '700',
     color: '#003366',
   },
-
   inputGroup: {
     marginBottom: 12,
   },
-
   label: {
     fontSize: 12,
     fontWeight: '600',
     color: '#6b8aa1',
     marginBottom: 6,
   },
-
   inputWrapper: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -174,41 +189,25 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 10,
   },
-
   input: {
     flex: 1,
     fontSize: 15,
     color: '#003366',
     fontWeight: '500',
   },
-
-  savingsRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginTop: 6,
-    marginBottom: 10,
-  },
-
-  savingsValue: {
-    fontSize: 15,
-    fontWeight: '700',
-    color: '#003366',
-  },
-
   error: {
     color: '#FF3B30',
     fontSize: 12,
     marginBottom: 10,
     fontWeight: '500',
   },
-
   button: {
     backgroundColor: '#07a3e4',
     paddingVertical: 12,
     borderRadius: 10,
     alignItems: 'center',
+    marginTop: 6,
   },
-
   buttonText: {
     color: '#fff',
     fontWeight: '700',

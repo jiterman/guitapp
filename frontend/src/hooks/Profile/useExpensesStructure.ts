@@ -41,16 +41,25 @@ export const useExpensesStructure = ({ user, setUser, onSuccess }: Params) => {
       }
 
       setError(message);
-
-      throw e;
+      return;
     } finally {
       setSaving(false);
     }
+  };
+
+  const handleInputChange = () => {
+    if (error) setError(null);
+  };
+
+  const clearError = () => {
+    setError(null);
   };
 
   return {
     saving,
     error,
     handleSave,
+    handleInputChange,
+    clearError,
   };
 };
