@@ -1,5 +1,6 @@
 package org.fiuba.guitapp.service;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.Map;
 
@@ -258,6 +259,35 @@ public class UserService {
 
         user.setFcmToken(fcmToken);
         userRepository.save(user);
+    }
+
+    @Transactional
+    public UserProfileResponse updateEstimatedMonthlyIncome(String email, BigDecimal estimatedMonthlyIncome) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new AuthException(ErrorCode.USER_NOT_FOUND, "User not found"));
+
+        if (estimatedMonthlyIncome == null) {
+            throw new IllegalArgumentException("Estimated monthly income cannot be null");
+        }
+        if (estimatedMonthlyIncome.compareTo(BigDecimal.ZERO) < 0) {
+            throw new IllegalArgumentException("Estimated monthly income cannot be negative");
+        }
+
+        user.setEstimatedMonthlyIncome(estimatedMonthlyIncome);
+        userRepository.save(user);
+
+        return new UserProfileResponse(
+                user.getId(),
+                user.getEmail(),
+                user.getFirstName(),
+                user.getLastName(),
+                user.getAvatarUrl(),
+                user.isOnboardingCompleted(),
+                user.getEstimatedMonthlyIncome(),
+                user.getTargetFixedExpenses(),
+                user.getTargetVariableExpenses(),
+                user.getTargetSavings(),
+                user.getCreatedAt());
     }
 
     @Transactional

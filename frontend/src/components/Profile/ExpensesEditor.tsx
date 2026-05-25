@@ -3,12 +3,13 @@ import { View, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
 import { Text } from '@ui-kitten/components';
 import { Ionicons } from '@expo/vector-icons';
 import { profileSharedStyles } from '../../styles/profileStyles';
+import { useCurrencyInput } from '../../hooks/useCurrencyInput';
 
 type Props = {
   fixedDefault: number;
   variableDefault: number;
-  onSave: (fixed: number, variable: number) => void;
-
+  incomeDefault: number;
+  onSave: (fixed: number, variable: number, income: number) => void;
   externalError?: string | null;
   onChangeInput?: () => void;
 };
@@ -16,6 +17,7 @@ type Props = {
 const ExpensesEditor: React.FC<Props> = ({
   fixedDefault,
   variableDefault,
+  incomeDefault,
   onSave,
   externalError,
   onChangeInput,
@@ -23,20 +25,32 @@ const ExpensesEditor: React.FC<Props> = ({
   const [fixed, setFixed] = useState('');
   const [variable, setVariable] = useState('');
   const [error, setError] = useState<string | null>(null);
+  const {
+    displayValue: incomeDisplay,
+    amount: incomeAmount,
+    handleAmountChange: handleIncomeChange,
+    setAmount: setIncomeAmount,
+  } = useCurrencyInput();
 
   useEffect(() => {
     setFixed(String(fixedDefault ?? 0));
     setVariable(String(variableDefault ?? 0));
+    setIncomeAmount(String(incomeDefault ?? 0));
     setError(null);
-  }, [fixedDefault, variableDefault]);
+  }, [fixedDefault, variableDefault, incomeDefault]);
 
-  const parse = (v: string) => {
-    const n = parseInt(v, 10);
-    return isNaN(n) ? 0 : n;
+  const parseIntSafe = (v: string) => {
+    const n = Number.parseInt(v, 10);
+    return Number.isNaN(n) ? 0 : n;
   };
 
-  const fixedNum = parse(fixed);
-  const variableNum = parse(variable);
+  const parseFloatSafe = (v: string) => {
+    const n = Number.parseFloat(v);
+    return Number.isNaN(n) ? 0 : n;
+  };
+
+  const fixedNum = parseIntSafe(fixed);
+  const variableNum = parseIntSafe(variable);
 
   const savings = useMemo(() => {
     return Math.max(0, 100 - (fixedNum + variableNum));
@@ -58,7 +72,7 @@ const ExpensesEditor: React.FC<Props> = ({
     }
 
     setError(null);
-    onSave(fixedNum, variableNum);
+    onSave(fixedNum, variableNum, parseFloatSafe(incomeAmount));
   };
 
   const handleFixed = (text: string) => {
@@ -73,16 +87,48 @@ const ExpensesEditor: React.FC<Props> = ({
     onChangeInput?.();
   };
 
+  const handleIncome = (text: string) => {
+    handleIncomeChange(text);
+    setError(null);
+    onChangeInput?.();
+  };
+
   const displayError = externalError || error;
 
   return (
     <View style={styles.block}>
-      {/* HEADER */}
+      {/* INGRESOS */}
       <View style={styles.header}>
+        <View style={[styles.iconCircle, { backgroundColor: '#E6F2FC' }]}>
+          <Ionicons name="wallet-outline" size={18} color="#07a3e4" />
+        </View>
+        <Text style={styles.title}>Ingresos mensuales</Text>
+      </View>
+
+      <View style={styles.inputGroup}>
+        <Text style={styles.label}>Ingresos estimados</Text>
+        <View style={styles.inputWrapper}>
+          <Text style={styles.currencySymbol}>$</Text>
+          <TextInput
+            value={incomeDisplay}
+            onChangeText={handleIncome}
+            keyboardType="numeric"
+            placeholder="Ej. 500.000"
+            placeholderTextColor="#a0b8c8"
+            style={styles.input}
+          />
+          <Ionicons name="pencil-outline" size={16} color="#07a3e4" />
+        </View>
+      </View>
+
+      <View style={styles.divider} />
+
+      {/* GASTOS */}
+      <View style={[styles.header, { marginTop: 14 }]}>
         <View style={[styles.iconCircle, { backgroundColor: '#E6F2FC' }]}>
           <Ionicons name="pie-chart-outline" size={18} color="#07a3e4" />
         </View>
-        <Text style={styles.title}>Gastos mensuales</Text>
+        <Text style={styles.title}>Distribución de gastos</Text>
       </View>
 
       {/* FIJOS */}
@@ -120,7 +166,6 @@ const ExpensesEditor: React.FC<Props> = ({
       {/* AHORRO */}
       <View style={styles.inputGroup}>
         <Text style={styles.label}>Ahorro (%)</Text>
-
         <View style={[styles.inputWrapper, profileSharedStyles.readonly]}>
           <TextInput
             value={String(savings)}
@@ -148,9 +193,9 @@ const styles = StyleSheet.create({
     backgroundColor: '#F4F9FD',
     borderRadius: 14,
     padding: 16,
+    marginBottom: 16,
     borderWidth: 1,
     borderColor: '#e0edf6',
-    marginTop: 12,
   },
   header: {
     flexDirection: 'row',
@@ -169,6 +214,11 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '700',
     color: '#003366',
+  },
+  divider: {
+    height: 1,
+    backgroundColor: '#e0edf6',
+    marginBottom: 14,
   },
   inputGroup: {
     marginBottom: 12,
@@ -195,6 +245,12 @@ const styles = StyleSheet.create({
     color: '#003366',
     fontWeight: '500',
   },
+  currencySymbol: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#6b8aa1',
+    marginRight: 6,
+  },
   error: {
     color: '#FF3B30',
     fontSize: 12,
@@ -202,14 +258,14 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
   button: {
-    backgroundColor: '#07a3e4',
+    backgroundColor: '#FFBB00',
     paddingVertical: 12,
     borderRadius: 10,
     alignItems: 'center',
     marginTop: 6,
   },
   buttonText: {
-    color: '#fff',
+    color: '#0c2b52',
     fontWeight: '700',
     fontSize: 14,
   },
