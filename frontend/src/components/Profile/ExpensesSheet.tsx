@@ -25,7 +25,7 @@ type Props = {
   translateY: any;
   onClose: () => void;
   user: any;
-  onSave: (f: number, v: number) => void;
+  onSave: (f: number, v: number) => Promise<any> | any;
   error: string | null;
   onInputChange?: () => void;
 };
@@ -39,6 +39,15 @@ const ExpensesSheet: React.FC<Props> = ({
   error,
   onInputChange,
 }) => {
+  const handleSave = async (f: number, v: number) => {
+    const result = await onSave(f, v);
+
+    if (result) {
+      onClose();
+      alert('Estructura de gastos actualizada correctamente');
+    }
+  };
+
   return (
     <Modal visible={visible} transparent animationType="none">
       <TouchableWithoutFeedback onPress={onClose}>
@@ -56,7 +65,7 @@ const ExpensesSheet: React.FC<Props> = ({
           <ExpensesEditor
             fixedDefault={user?.targetFixedExpenses ?? 0}
             variableDefault={user?.targetVariableExpenses ?? 0}
-            onSave={onSave}
+            onSave={handleSave}
             externalError={error}
             onChangeInput={onInputChange}
           />

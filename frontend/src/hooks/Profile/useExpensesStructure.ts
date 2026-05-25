@@ -41,7 +41,7 @@ export const useExpensesStructure = ({ user, setUser, onSuccess }: Params) => {
       }
 
       setError(message);
-      return;
+      return null;
     } finally {
       setSaving(false);
     }
