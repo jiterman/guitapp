@@ -200,28 +200,4 @@ export const userService = {
 
     return response.json();
   },
-
-  updateExpensesStructure: async (targetFixedExpenses: number, targetVariableExpenses: number) => {
-    const token = await authService.getToken();
-
-    const response = await fetch(`${API_URL}/api/users/me/expenses-structure`, {
-      method: 'PATCH',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify({
-        targetFixedExpenses,
-        targetVariableExpenses,
-      }),
-    });
-
-    const data = await response.json().catch(() => ({}));
-
-    if (!response.ok) {
-      throw new Error(data.message || 'Error al actualizar la estructura de gastos');
-    }
-
-    return data.data;
-  },
 };
