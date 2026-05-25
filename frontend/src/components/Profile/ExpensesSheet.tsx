@@ -27,9 +27,18 @@ type Props = {
   user: any;
   onSave: (f: number, v: number) => void;
   error: string | null;
+  onInputChange?: () => void;
 };
 
-const ExpensesSheet: React.FC<Props> = ({ visible, translateY, onClose, user, onSave, error }) => {
+const ExpensesSheet: React.FC<Props> = ({
+  visible,
+  translateY,
+  onClose,
+  user,
+  onSave,
+  error,
+  onInputChange,
+}) => {
   return (
     <Modal visible={visible} transparent animationType="none">
       <TouchableWithoutFeedback onPress={onClose}>
@@ -48,9 +57,11 @@ const ExpensesSheet: React.FC<Props> = ({ visible, translateY, onClose, user, on
             fixedDefault={user?.targetFixedExpenses ?? 0}
             variableDefault={user?.targetVariableExpenses ?? 0}
             onSave={onSave}
+            externalError={error}
+            onChangeInput={onInputChange}
           />
 
-          {error && <Text style={styles.errorText}>{error}</Text>}
+          <View style={{ height: vh * 3 }} />
         </ScrollView>
       </Animated.View>
     </Modal>
@@ -75,7 +86,6 @@ const styles = StyleSheet.create({
   sheetHandle: profileSharedStyles.sheetHandle,
   sheetHeader: profileSharedStyles.sheetHeader,
   sheetTitle: profileSharedStyles.sheetTitle,
-  errorText: profileSharedStyles.errorText,
 });
 
 export default ExpensesSheet;

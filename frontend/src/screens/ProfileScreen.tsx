@@ -158,10 +158,14 @@ const ProfileScreen: React.FC = () => {
       <ExpensesSheet
         visible={expensesSheet.visible}
         translateY={expensesSheet.translateY}
-        onClose={expensesSheet.close}
+        onClose={() => {
+          expensesSheet.close();
+          expenses.clearError?.();
+        }}
         user={user}
         onSave={expenses.handleSave}
         error={expenses.error}
+        onInputChange={expenses.handleInputChange}
       />
     </>
   );
