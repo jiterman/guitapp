@@ -12,25 +12,29 @@ export const useExpensesStructure = ({ user, setUser, onSuccess }: Params) => {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const handleSave = async (fixed: number, variable: number) => {
+  const handleSave = async (fixed: number, variable: number, income: number) => {
     if (!user || saving) return;
 
     setSaving(true);
     setError(null);
 
     try {
-      const updated = await userService.updateExpensesStructure(fixed, variable);
+      const [updatedStructure, updatedIncome] = await Promise.all([
+        userService.updateExpensesStructure(fixed, variable),
+        userService.updateEstimatedMonthlyIncome(income),
+      ]);
 
       setUser({
         ...user,
-        targetFixedExpenses: updated.targetFixedExpenses,
-        targetVariableExpenses: updated.targetVariableExpenses,
-        targetSavings: updated.targetSavings,
+        targetFixedExpenses: updatedStructure.targetFixedExpenses,
+        targetVariableExpenses: updatedStructure.targetVariableExpenses,
+        targetSavings: updatedStructure.targetSavings,
+        estimatedMonthlyIncome: updatedIncome.estimatedMonthlyIncome,
       });
 
       onSuccess();
 
-      return updated;
+      return updatedStructure;
     } catch (e) {
       const raw = e instanceof Error ? e.message : String(e);
 

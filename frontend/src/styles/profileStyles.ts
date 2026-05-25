@@ -41,7 +41,7 @@ export const profileSharedStyles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '700',
     color: profileColors.navy,
-    marginBottom: vh * 1,
+    marginBottom: vh,
   },
 
   menuCard: {
@@ -114,8 +114,8 @@ export const profileModalStyles = StyleSheet.create({
     backgroundColor: profileColors.white,
     borderRadius: 20,
     paddingHorizontal: screenWidth * 0.05,
-    paddingTop: vh * 2,
-    paddingBottom: vh * 3,
+    paddingTop: vh * 0.75,
+    paddingBottom: vh * 0.5,
     ...profileSheetShadow,
   },
 });

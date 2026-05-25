@@ -85,7 +85,7 @@ const ProfileScreen: React.FC = () => {
           <ProfileSection title="Cuenta">
             <ProfileMenuItem
               title="Información personal"
-              subtitle="Editá tu nombre y correo electrónico."
+              subtitle="Editá tu nombre y correo electrónico"
               icon="person-outline"
               iconColor="#07a3e4"
               iconBackground="#E6F2FC"
@@ -96,7 +96,7 @@ const ProfileScreen: React.FC = () => {
           <ProfileSection title="Finanzas">
             <ProfileMenuItem
               title="Estructura de gastos"
-              subtitle="Editar gastos fijos y variables"
+              subtitle="Configurá tus ingresos estimados y los gastos fijos y variables"
               icon="pie-chart-outline"
               iconColor="#FFBB00"
               iconBackground="rgba(255,187,0,0.12)"
@@ -118,6 +118,7 @@ const ProfileScreen: React.FC = () => {
           <ProfileSection title="">
             <ProfileMenuItem
               title="Cerrar sesión"
+              subtitle="Salí de tu cuenta"
               icon="log-out-outline"
               iconColor="#6c757d"
               iconBackground="rgba(108, 117, 125, 0.12)"

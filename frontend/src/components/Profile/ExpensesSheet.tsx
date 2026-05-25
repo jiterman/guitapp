@@ -20,7 +20,7 @@ type Props = {
   opacity: Animated.Value;
   onClose: () => void;
   user: any;
-  onSave: (f: number, v: number) => Promise<any> | any;
+  onSave: (f: number, v: number, income: number) => Promise<any> | any;
   error: string | null;
   onInputChange?: () => void;
 };
@@ -35,8 +35,8 @@ const ExpensesSheet: React.FC<Props> = ({
   error,
   onInputChange,
 }) => {
-  const handleSave = async (f: number, v: number) => {
-    const result = await onSave(f, v);
+  const handleSave = async (f: number, v: number, income: number) => {
+    const result = await onSave(f, v, income);
     if (result) {
       onClose();
       alert('Estructura de gastos actualizada correctamente');
@@ -66,6 +66,7 @@ const ExpensesSheet: React.FC<Props> = ({
             <ExpensesEditor
               fixedDefault={user?.targetFixedExpenses ?? 0}
               variableDefault={user?.targetVariableExpenses ?? 0}
+              incomeDefault={user?.estimatedMonthlyIncome ?? 0}
               onSave={handleSave}
               externalError={error}
               onChangeInput={onInputChange}

@@ -7,6 +7,7 @@ import org.fiuba.guitapp.dto.ConfirmPasswordChangeRequest;
 import org.fiuba.guitapp.dto.InitiateEmailChangeRequest;
 import org.fiuba.guitapp.dto.InitiatePasswordChangeRequest;
 import org.fiuba.guitapp.dto.OnboardingRequest;
+import org.fiuba.guitapp.dto.UpdateEstimatedMonthlyIncomeRequest;
 import org.fiuba.guitapp.dto.UpdateExpensesStructureRequest;
 import org.fiuba.guitapp.dto.UpdateFcmTokenRequest;
 import org.fiuba.guitapp.dto.UpdateUserProfileRequest;
@@ -117,6 +118,21 @@ public class UserController {
 
         userService.updateFcmToken(principal.getName(), request.fcmToken());
         return ResponseEntity.ok(Map.of("message", "FCM token updated successfully"));
+    }
+
+    @PatchMapping("/me/estimated-monthly-income")
+    public ResponseEntity<?> updateEstimatedMonthlyIncome(
+            Principal principal,
+            @Valid @RequestBody UpdateEstimatedMonthlyIncomeRequest request) {
+
+        UserProfileResponse updated = userService.updateEstimatedMonthlyIncome(
+                principal.getName(),
+                request.estimatedMonthlyIncome());
+
+        return ResponseEntity.ok(
+                Map.of(
+                        "message", "Estimated monthly income updated successfully",
+                        "data", updated));
     }
 
     @PatchMapping("/me/expenses-structure")

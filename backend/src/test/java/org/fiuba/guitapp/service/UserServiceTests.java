@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.Optional;
@@ -627,6 +628,69 @@ class UserServiceTests {
 
         assertEquals(fcmToken, testUser.getFcmToken());
         verify(userRepository, times(1)).save(testUser);
+    }
+
+    @Test
+    void updateEstimatedMonthlyIncome_ShouldUpdateIncome_WhenValidValue() {
+        BigDecimal income = BigDecimal.valueOf(75000);
+        testUser.setEstimatedMonthlyIncome(BigDecimal.ZERO);
+
+        when(userRepository.findByEmail(testEmail)).thenReturn(Optional.of(testUser));
+
+        UserProfileResponse response = userService.updateEstimatedMonthlyIncome(testEmail, income);
+
+        assertEquals(income, testUser.getEstimatedMonthlyIncome());
+        verify(userRepository).save(testUser);
+        assertNotNull(response);
+        assertEquals(income, response.estimatedMonthlyIncome());
+    }
+
+    @Test
+    void updateEstimatedMonthlyIncome_ShouldAllowZero() {
+        BigDecimal income = BigDecimal.ZERO;
+
+        when(userRepository.findByEmail(testEmail)).thenReturn(Optional.of(testUser));
+
+        userService.updateEstimatedMonthlyIncome(testEmail, income);
+
+        assertEquals(BigDecimal.ZERO, testUser.getEstimatedMonthlyIncome());
+        verify(userRepository).save(testUser);
+    }
+
+    @Test
+    void updateEstimatedMonthlyIncome_ShouldThrowException_WhenValueIsNull() {
+        when(userRepository.findByEmail(testEmail)).thenReturn(Optional.of(testUser));
+
+        IllegalArgumentException ex = assertThrows(
+                IllegalArgumentException.class,
+                () -> userService.updateEstimatedMonthlyIncome(testEmail, null));
+
+        assertEquals("Estimated monthly income cannot be null", ex.getMessage());
+        verify(userRepository, never()).save(any());
+    }
+
+    @Test
+    void updateEstimatedMonthlyIncome_ShouldThrowException_WhenValueIsNegative() {
+        when(userRepository.findByEmail(testEmail)).thenReturn(Optional.of(testUser));
+
+        IllegalArgumentException ex = assertThrows(
+                IllegalArgumentException.class,
+                () -> userService.updateEstimatedMonthlyIncome(testEmail, BigDecimal.valueOf(-100)));
+
+        assertEquals("Estimated monthly income cannot be negative", ex.getMessage());
+        verify(userRepository, never()).save(any());
+    }
+
+    @Test
+    void updateEstimatedMonthlyIncome_ShouldThrowException_WhenUserNotFound() {
+        when(userRepository.findByEmail(testEmail)).thenReturn(Optional.empty());
+
+        AuthException ex = assertThrows(
+                AuthException.class,
+                () -> userService.updateEstimatedMonthlyIncome(testEmail, BigDecimal.valueOf(5000)));
+
+        assertEquals(ErrorCode.USER_NOT_FOUND, ex.getErrorCode());
+        verify(userRepository, never()).save(any());
     }
 
     @Test
