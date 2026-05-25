@@ -1,18 +1,18 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { View, TextInput, TouchableOpacity, StyleSheet, Alert } from 'react-native';
 import { Text } from '@ui-kitten/components';
 import { Ionicons } from '@expo/vector-icons';
 
-interface PersonalInfoEditorProps {
+type PersonalInfoEditorProps = {
   firstName: string;
-  setFirstName: (name: string) => void;
   lastName: string;
-  setLastName: (name: string) => void;
   email: string;
+
   onSaveName: (firstName: string, lastName: string) => Promise<void>;
-  onSaveEmail: (newEmail: string) => Promise<void>;
+  onSaveEmail: (email: string) => Promise<void>;
+
   saving?: boolean;
-}
+};
 
 const PersonalInfoEditor: React.FC<PersonalInfoEditorProps> = ({
   firstName,
@@ -25,65 +25,86 @@ const PersonalInfoEditor: React.FC<PersonalInfoEditorProps> = ({
   const [draftFirstName, setDraftFirstName] = useState(firstName);
   const [draftLastName, setDraftLastName] = useState(lastName);
   const [draftEmail, setDraftEmail] = useState(email);
-  const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    setDraftFirstName(firstName);
-    setDraftLastName(lastName);
-    setDraftEmail(email);
-  }, [firstName, lastName, email]);
+  const [nameError, setNameError] = useState<string | null>(null);
+  const [emailError, setEmailError] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (error) {
-      setError(null);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [draftFirstName, draftLastName, draftEmail]);
+  useEffect(() => setDraftFirstName(firstName), [firstName]);
+  useEffect(() => setDraftLastName(lastName), [lastName]);
+  useEffect(() => setDraftEmail(email), [email]);
 
+  const normalizedLastName = useMemo(() => {
+    const trimmed = draftLastName?.trim();
+    return trimmed ? trimmed : '';
+  }, [draftLastName]);
+
+  // ---------------- NAME ----------------
   const handleSaveName = async () => {
     if (!draftFirstName.trim()) {
-      setError('El nombre no puede estar vacío');
+      setNameError('El nombre no puede estar vacío');
       return;
     }
 
-    setError(null);
+    setNameError(null);
 
     try {
-      await onSaveName(draftFirstName, draftLastName);
+      await onSaveName(draftFirstName.trim(), normalizedLastName);
     } catch {
-      setError('Error al guardar. Intentá nuevamente');
+      setNameError('Error al guardar. Intentá nuevamente');
     }
   };
 
+  // ---------------- EMAIL ----------------
   const handleSaveEmail = async () => {
     if (!draftEmail.trim() || !draftEmail.includes('@')) {
-      setError('Email inválido');
+      setEmailError('Email inválido');
       return;
     }
 
     if (draftEmail === email) {
-      setError('El email es el mismo que el actual');
+      setEmailError('El email es el mismo que el actual');
       return;
     }
 
     Alert.alert(
       'Cambiar correo electrónico',
-      'Si cambias tu correo, deberás verificar el nuevo mail y volver a iniciar sesión. También se desactivará el acceso biométrico.',
+      'Si cambias tu correo, deberás verificar el nuevo mail...',
       [
         { text: 'Cancelar', style: 'cancel' },
         {
           text: 'Continuar',
-          onPress: async () => {
-            try {
-              await onSaveEmail(draftEmail);
-            } catch (e: unknown) {
-              const errorMessage = e instanceof Error ? e.message : 'Error al cambiar email';
-              setError(errorMessage);
-            }
-          },
+          onPress: () => confirmEmailChange(),
         },
       ]
     );
+  };
+
+  const confirmEmailChange = async () => {
+    try {
+      setEmailError(null);
+
+      await onSaveEmail(draftEmail.trim());
+    } catch (e: unknown) {
+      console.error('Error cambiando email', e);
+
+      setEmailError(e instanceof Error ? e.message : 'Error de red. Intentá nuevamente');
+    }
+  };
+
+  // ---------------- INPUT HANDLERS ----------------
+  const handleChangeFirstName = (value: string) => {
+    if (nameError) setNameError(null);
+    setDraftFirstName(value);
+  };
+
+  const handleChangeLastName = (value: string) => {
+    if (nameError) setNameError(null);
+    setDraftLastName(value);
+  };
+
+  const handleChangeEmail = (value: string) => {
+    if (emailError) setEmailError(null);
+    setDraftEmail(value);
   };
 
   return (
@@ -103,14 +124,14 @@ const PersonalInfoEditor: React.FC<PersonalInfoEditorProps> = ({
             <TextInput
               style={styles.input}
               value={draftFirstName}
-              onChangeText={setDraftFirstName}
+              onChangeText={handleChangeFirstName}
               placeholder="Nombre"
               placeholderTextColor="#a0b8c8"
             />
-            <Ionicons name="pencil-outline" size={16} color="#07a3e4" />
           </View>
         </View>
-        {error && <Text style={{ color: 'red', fontSize: 12, marginTop: 4 }}>{error}</Text>}
+
+        {nameError && <Text style={{ color: 'red', fontSize: 12, marginTop: 4 }}>{nameError}</Text>}
 
         <View style={styles.inputDivider} />
 
@@ -122,11 +143,10 @@ const PersonalInfoEditor: React.FC<PersonalInfoEditorProps> = ({
             <TextInput
               style={styles.input}
               value={draftLastName}
-              onChangeText={setDraftLastName}
+              onChangeText={handleChangeLastName}
               placeholder="Apellido"
               placeholderTextColor="#a0b8c8"
             />
-            <Ionicons name="pencil-outline" size={16} color="#07a3e4" />
           </View>
         </View>
 
@@ -154,15 +174,18 @@ const PersonalInfoEditor: React.FC<PersonalInfoEditorProps> = ({
             <TextInput
               style={styles.input}
               value={draftEmail}
-              onChangeText={setDraftEmail}
+              onChangeText={handleChangeEmail}
               placeholder="correo@ejemplo.com"
               placeholderTextColor="#a0b8c8"
               keyboardType="email-address"
               autoCapitalize="none"
             />
-            <Ionicons name="pencil-outline" size={16} color="#07a3e4" />
           </View>
         </View>
+
+        {emailError && (
+          <Text style={{ color: 'red', fontSize: 12, marginTop: 4 }}>{emailError}</Text>
+        )}
 
         <TouchableOpacity
           style={[styles.saveButton, saving && { opacity: 0.6 }]}

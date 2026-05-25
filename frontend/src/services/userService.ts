@@ -92,45 +92,65 @@ export const userService = {
   initiateEmailChange: async (newEmail: string) => {
     const token = await authService.getToken();
 
-    const response = await fetch(`${API_URL}/api/users/me/email/initiate`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify({
-        newEmail,
-      }),
-    });
+    try {
+      const response = await fetch(`${API_URL}/api/users/me/email/initiate`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ newEmail }),
+      });
 
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.message || 'Error al iniciar cambio de email');
+      const data = await response.json().catch(() => null);
+
+      if (!response.ok) {
+        throw new Error(data?.message || 'Error al iniciar cambio de email');
+      }
+
+      return data;
+    } catch (error) {
+      const message =
+        error instanceof Error && error.message === 'Network request failed'
+          ? 'No se pudo conectar al servidor. Intentá nuevamente'
+          : error instanceof Error
+            ? error.message
+            : 'Error de conexión. Intentá nuevamente';
+
+      throw new Error(message);
     }
-
-    return response.json();
   },
 
   verifyEmailChange: async (otp: string) => {
     const token = await authService.getToken();
 
-    const response = await fetch(`${API_URL}/api/users/me/email/verify`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify({
-        otp,
-      }),
-    });
+    try {
+      const response = await fetch(`${API_URL}/api/users/me/email/verify`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ otp }),
+      });
 
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.message || 'Error al verificar OTP');
+      const data = await response.json().catch(() => null);
+
+      if (!response.ok) {
+        throw new Error(data?.message || 'Error al verificar OTP');
+      }
+
+      return data;
+    } catch (error) {
+      const message =
+        error instanceof Error && error.message === 'Network request failed'
+          ? 'No se pudo conectar al servidor. Intentá nuevamente'
+          : error instanceof Error
+            ? error.message
+            : 'Error de conexión. Intentá nuevamente';
+
+      throw new Error(message);
     }
-
-    return response.json();
   },
 
   initiatePasswordChange: async (currentPassword: string, newPassword: string) => {

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { View, Image, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
-import { userService } from '../services/userService';
+import { userService } from '../../services/userService';
 import { Ionicons } from '@expo/vector-icons';
 
 interface Props {
