@@ -12,8 +12,6 @@ import ProfileSection from '../components/Profile/ProfileSection';
 import { useBottomSheet } from '../hooks/Profile/useBottomSheet';
 import { usePersonalInfo } from '../hooks/Profile/usePersonalInfo';
 import { usePasswordChange } from '../hooks/Profile/usePasswordChange';
-import ExpensesSheet from '../components/Profile/ExpensesSheet';
-import { useExpensesStructure } from '../hooks/Profile/useExpensesStructure';
 import { profileColors } from '../styles/profileStyles';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
@@ -31,7 +29,6 @@ const ProfileScreen: React.FC = () => {
 
   const personalInfoSheet = useBottomSheet(SHEET_HEIGHT);
   const passwordSheet = useBottomSheet(SHEET_HEIGHT);
-  const expensesSheet = useBottomSheet(SHEET_HEIGHT);
 
   const {
     saving: personalInfoSaving,
@@ -57,13 +54,7 @@ const ProfileScreen: React.FC = () => {
     setUser,
   });
 
-  const expenses = useExpensesStructure({
-    user,
-    setUser,
-    onSuccess: () => {},
-  });
-
-  const saving = personalInfoSaving || passwordSaving || expenses.saving;
+  const saving = personalInfoSaving || passwordSaving;
 
   return (
     <>
@@ -100,11 +91,10 @@ const ProfileScreen: React.FC = () => {
           <ProfileSection title="Finanzas">
             <ProfileMenuItem
               title="Estructura de gastos"
-              subtitle="Editar gastos fijos y variables"
+              subtitle="Editá tus gastos fijos y variables"
               icon="pie-chart-outline"
               iconColor="#FFBB00"
               iconBackground="rgba(255,187,0,0.12)"
-              onPress={expensesSheet.open}
             />
           </ProfileSection>
 
@@ -153,19 +143,6 @@ const ProfileScreen: React.FC = () => {
         onSavePassword={handleSavePassword}
         onConfirmPasswordChange={handleConfirmPasswordChange}
         onPasswordInputChange={handlePasswordInputChange}
-      />
-
-      <ExpensesSheet
-        visible={expensesSheet.visible}
-        translateY={expensesSheet.translateY}
-        onClose={() => {
-          expensesSheet.close();
-          expenses.clearError?.();
-        }}
-        user={user}
-        onSave={expenses.handleSave}
-        error={expenses.error}
-        onInputChange={expenses.handleInputChange}
       />
     </>
   );

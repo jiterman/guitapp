@@ -90,9 +90,4 @@ export const profileSharedStyles = StyleSheet.create({
     textAlign: 'center',
     fontWeight: '500',
   },
-
-  readonly: {
-    backgroundColor: '#F4F9FD',
-    opacity: 0.9,
-  },
 });

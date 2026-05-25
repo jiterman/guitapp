@@ -3,6 +3,7 @@ import { router } from 'expo-router';
 import { userService } from '../../services/userService';
 import { authService } from '../../services/authService';
 import type { UserProfile } from '../../context/UserContext';
+import { Alert } from 'react-native';
 
 interface UsePersonalInfoParams {
   user: UserProfile | null;
@@ -15,18 +16,25 @@ export const usePersonalInfo = ({ user, setUser, onSuccess }: UsePersonalInfoPar
 
   const handleSaveName = async (newFirst: string, newLast: string) => {
     if (saving || !user) return;
+
     setSaving(true);
+
     try {
       const updatedProfile = await userService.updateProfile(newFirst, newLast);
+
       if (user.email) {
         await authService.updateBiometricUserName(user.email, updatedProfile.firstName);
       }
+
       setUser({
         ...user,
         firstName: updatedProfile.firstName,
         lastName: updatedProfile.lastName,
         onboardingCompleted: true,
       });
+
+      Alert.alert('Perfil actualizado', 'Tu nombre fue actualizado correctamente');
+
       onSuccess();
     } catch (e) {
       console.error('Error actualizando perfil', e);
