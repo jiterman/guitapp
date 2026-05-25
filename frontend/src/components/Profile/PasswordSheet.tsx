@@ -12,9 +12,14 @@ import {
 import { Text } from '@ui-kitten/components';
 import { Ionicons } from '@expo/vector-icons';
 import PasswordEditor from './PasswordEditor';
+import {
+  profileColors,
+  profileLayout,
+  profileSheetShadow,
+  profileSharedStyles,
+} from '../../styles/profileStyles';
 
-const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
-const vh = screenHeight / 100;
+const { screenWidth, vh } = profileLayout;
 const SHEET_HEIGHT = vh * 55;
 
 export interface PasswordSheetProps {
@@ -116,56 +121,29 @@ const PasswordSheet: React.FC<PasswordSheetProps> = ({
 };
 
 const styles = StyleSheet.create({
-  overlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.35)',
-  },
+  overlay: profileSharedStyles.overlay,
   sheet: {
     position: 'absolute',
     bottom: 0,
     left: 0,
     right: 0,
     height: SHEET_HEIGHT,
-    backgroundColor: '#fff',
+    backgroundColor: profileColors.white,
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     paddingHorizontal: screenWidth * 0.05,
     paddingBottom: vh * 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: -4 },
-    shadowOpacity: 0.12,
-    shadowRadius: 12,
-    elevation: 10,
+    ...profileSheetShadow,
   },
-  sheetHandle: {
-    width: 40,
-    height: 4,
-    backgroundColor: '#c8dff0',
-    borderRadius: 2,
-    alignSelf: 'center',
-    marginTop: 12,
-    marginBottom: 4,
-  },
-  sheetHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: vh * 1.5,
-    borderBottomWidth: 1,
-    borderBottomColor: '#EEF6FB',
-    marginBottom: vh * 1.5,
-  },
-  sheetTitle: {
-    fontSize: 17,
-    fontWeight: '700',
-    color: '#003366',
-  },
+  sheetHandle: profileSharedStyles.sheetHandle,
+  sheetHeader: profileSharedStyles.sheetHeader,
+  sheetTitle: profileSharedStyles.sheetTitle,
   confirmBox: {
     position: 'absolute',
     top: '35%',
     left: 20,
     right: 20,
-    backgroundColor: '#fff',
+    backgroundColor: profileColors.white,
     borderRadius: 16,
     padding: 20,
     elevation: 10,
@@ -173,12 +151,12 @@ const styles = StyleSheet.create({
   confirmTitle: {
     fontSize: 16,
     fontWeight: '700',
-    color: '#003366',
+    color: profileColors.navy,
     marginBottom: 8,
   },
   confirmSubtitle: {
     fontSize: 13,
-    color: '#6b8aa1',
+    color: profileColors.muted,
     marginBottom: 16,
   },
   confirmActions: {
@@ -189,24 +167,18 @@ const styles = StyleSheet.create({
   cancelBtn: {
     flex: 1,
     padding: 12,
-    backgroundColor: '#EEF6FB',
+    backgroundColor: profileColors.divider,
     borderRadius: 10,
     alignItems: 'center',
   },
   confirmBtn: {
     flex: 1,
     padding: 12,
-    backgroundColor: '#FF3B30',
+    backgroundColor: profileColors.danger,
     borderRadius: 10,
     alignItems: 'center',
   },
-  errorText: {
-    color: '#FF3B30',
-    fontSize: 13,
-    marginTop: 12,
-    textAlign: 'center',
-    fontWeight: '500',
-  },
+  errorText: profileSharedStyles.errorText,
 });
 
 export default PasswordSheet;

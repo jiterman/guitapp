@@ -14,9 +14,14 @@ import { Ionicons } from '@expo/vector-icons';
 
 import PersonalInfoEditor from './PersonalInfoEditor';
 import type { UserProfile } from '../../context/UserContext';
+import {
+  profileColors,
+  profileLayout,
+  profileSheetShadow,
+  profileSharedStyles,
+} from '../../styles/profileStyles';
 
-const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
-const vh = screenHeight / 100;
+const { screenWidth, vh } = profileLayout;
 const SHEET_HEIGHT = vh * 55;
 
 interface PersonalInfoSheetProps {
@@ -78,54 +83,23 @@ const PersonalInfoSheet: React.FC<PersonalInfoSheetProps> = ({
 };
 
 const styles = StyleSheet.create({
-  overlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.35)',
-  },
-
+  overlay: profileSharedStyles.overlay,
   sheet: {
     position: 'absolute',
     bottom: 0,
     left: 0,
     right: 0,
     height: SHEET_HEIGHT,
-    backgroundColor: '#fff',
+    backgroundColor: profileColors.white,
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     paddingHorizontal: screenWidth * 0.05,
     paddingBottom: vh * 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: -4 },
-    shadowOpacity: 0.12,
-    shadowRadius: 12,
-    elevation: 10,
+    ...profileSheetShadow,
   },
-
-  sheetHandle: {
-    width: 40,
-    height: 4,
-    backgroundColor: '#c8dff0',
-    borderRadius: 2,
-    alignSelf: 'center',
-    marginTop: 12,
-    marginBottom: 4,
-  },
-
-  sheetHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: vh * 1.5,
-    borderBottomWidth: 1,
-    borderBottomColor: '#EEF6FB',
-    marginBottom: vh * 1.5,
-  },
-
-  sheetTitle: {
-    fontSize: 17,
-    fontWeight: '700',
-    color: '#003366',
-  },
+  sheetHandle: profileSharedStyles.sheetHandle,
+  sheetHeader: profileSharedStyles.sheetHeader,
+  sheetTitle: profileSharedStyles.sheetTitle,
 });
 
 export default PersonalInfoSheet;

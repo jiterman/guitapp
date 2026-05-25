@@ -4,9 +4,9 @@ import { Text } from '@ui-kitten/components';
 import { Ionicons } from '@expo/vector-icons';
 import AvatarPicker from './AvatarPicker';
 import type { UserProfile } from '../../context/UserContext';
+import { profileColors, profileShadow, profileLayout } from '../../styles/profileStyles';
 
-const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
-const vh = screenHeight / 100;
+const { screenWidth, vh } = profileLayout;
 
 interface ProfileHeaderCardProps {
   user: UserProfile | null;
@@ -45,17 +45,13 @@ const ProfileHeaderCard: React.FC<ProfileHeaderCardProps> = ({
 
 const styles = StyleSheet.create({
   profileCard: {
-    backgroundColor: '#fff',
+    backgroundColor: profileColors.white,
     borderRadius: 16,
     marginBottom: vh * 2.5,
     padding: screenWidth * 0.05,
     flexDirection: 'column',
     alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 6,
-    elevation: 3,
+    ...profileShadow,
   },
   avatarContainer: {
     position: 'relative',
@@ -68,7 +64,7 @@ const styles = StyleSheet.create({
   profileName: {
     fontSize: 20,
     fontWeight: '700',
-    color: '#003366',
+    color: profileColors.navy,
     alignSelf: 'center',
     width: '100%',
     textAlign: 'center',
@@ -81,7 +77,7 @@ const styles = StyleSheet.create({
   },
   memberText: {
     fontSize: 13,
-    color: '#6b8aa1',
+    color: profileColors.muted,
   },
 });
 

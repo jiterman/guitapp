@@ -12,6 +12,7 @@ import ProfileSection from '../components/Profile/ProfileSection';
 import { useBottomSheet } from '../hooks/Profile/useBottomSheet';
 import { usePersonalInfo } from '../hooks/Profile/usePersonalInfo';
 import { usePasswordChange } from '../hooks/Profile/usePasswordChange';
+import { profileColors } from '../styles/profileStyles';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 const vh = screenHeight / 100;
@@ -150,7 +151,7 @@ const ProfileScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#E6F2FC',
+    backgroundColor: profileColors.background,
   },
   scrollContent: {
     padding: screenWidth * 0.05,
