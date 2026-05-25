@@ -13,7 +13,7 @@ import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import { router } from 'expo-router';
 import { expenseService, type ExpenseType } from '../services/expenseService';
-import { CATEGORIES, ExpenseCategoryOption } from '../constants/categories';
+import { EXPENSE_CATEGORIES, ExpenseCategoryOption } from '../constants/categories';
 import { useCurrencyInput } from '../hooks/useCurrencyInput';
 import {
   transactionFormStyles as styles,
@@ -36,7 +36,7 @@ const AddExpenseScreen = () => {
   const [categoryError, setCategoryError] = useState<string | null>(null);
   const [typeError, setTypeError] = useState<string | null>(null);
 
-  const filteredCategories = CATEGORIES.filter(cat =>
+  const filteredCategories = EXPENSE_CATEGORIES.filter(cat =>
     cat.label.toLowerCase().includes(search.toLowerCase())
   );
 
