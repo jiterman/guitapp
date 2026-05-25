@@ -12,7 +12,7 @@ import { Layout, Text } from '@ui-kitten/components';
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import { router, useLocalSearchParams } from 'expo-router';
-import type { IncomeCategory } from '../services/incomeService';
+import type { IncomeCategory } from '../constants/categories';
 import { incomeService } from '../services/incomeService';
 import { INCOME_CATEGORIES, IncomeCategoryOption } from '../constants/categories';
 import { useCurrencyInput } from '../hooks/useCurrencyInput';

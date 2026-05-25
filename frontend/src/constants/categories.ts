@@ -1,20 +1,19 @@
-import { ExpenseCategory, ExpenseType } from '../services/expenseService';
-import { IncomeCategory } from '../services/incomeService';
+export type ExpenseType = 'FIXED' | 'VARIABLE';
 
 export interface ExpenseCategoryOption {
   label: string;
-  value: ExpenseCategory;
+  value: string;
   icon: string;
   defaultType: ExpenseType;
 }
 
 export interface IncomeCategoryOption {
   label: string;
-  value: IncomeCategory;
+  value: string;
   icon: string;
 }
 
-export const CATEGORIES: ExpenseCategoryOption[] = [
+export const EXPENSE_CATEGORIES: ExpenseCategoryOption[] = [
   { label: 'Supermercado', value: 'SUPERMARKET', icon: 'cart-outline', defaultType: 'VARIABLE' },
   {
     label: 'Restaurante',
@@ -23,7 +22,7 @@ export const CATEGORIES: ExpenseCategoryOption[] = [
     defaultType: 'VARIABLE',
   },
   { label: 'Café', value: 'CAFE', icon: 'cafe-outline', defaultType: 'VARIABLE' },
-  { label: 'Delivery', value: 'DELIVERY', icon: 'bicycle-outline', defaultType: 'VARIABLE' },
+  { label: 'Delivery', value: 'DELIVERY', icon: 'fast-food-outline', defaultType: 'VARIABLE' },
   {
     label: 'Transporte público',
     value: 'PUBLIC_TRANSPORT',
@@ -42,15 +41,15 @@ export const CATEGORIES: ExpenseCategoryOption[] = [
   },
   { label: 'Expensas', value: 'HOA_FEES', icon: 'business-outline', defaultType: 'FIXED' },
   { label: 'Vehículo', value: 'VEHICLE', icon: 'car-sport-outline', defaultType: 'VARIABLE' },
-  { label: 'Médico', value: 'DOCTOR', icon: 'medical-outline', defaultType: 'VARIABLE' },
-  { label: 'Farmacia', value: 'PHARMACY', icon: 'medical-outline', defaultType: 'VARIABLE' },
+  { label: 'Médico', value: 'DOCTOR', icon: 'medkit-outline', defaultType: 'VARIABLE' },
+  { label: 'Farmacia', value: 'PHARMACY', icon: 'bandage-outline', defaultType: 'VARIABLE' },
   {
     label: 'Suscripciones',
     value: 'SUBSCRIPTIONS',
-    icon: 'phone-portrait-outline',
+    icon: 'logo-youtube',
     defaultType: 'FIXED',
   },
-  { label: 'Salidas', value: 'OUTINGS', icon: 'happy-outline', defaultType: 'VARIABLE' },
+  { label: 'Salidas', value: 'OUTINGS', icon: 'wine-outline', defaultType: 'VARIABLE' },
   { label: 'Gym', value: 'GYM', icon: 'barbell-outline', defaultType: 'FIXED' },
   { label: 'Viajes', value: 'TRAVEL', icon: 'airplane-outline', defaultType: 'VARIABLE' },
   { label: 'Ropa', value: 'CLOTHING', icon: 'shirt-outline', defaultType: 'VARIABLE' },
@@ -58,7 +57,8 @@ export const CATEGORIES: ExpenseCategoryOption[] = [
   { label: 'Tecnología', value: 'TECHNOLOGY', icon: 'laptop-outline', defaultType: 'VARIABLE' },
   { label: 'Belleza', value: 'BEAUTY', icon: 'cut-outline', defaultType: 'VARIABLE' },
   { label: 'Mascotas', value: 'PETS', icon: 'paw-outline', defaultType: 'VARIABLE' },
-  { label: 'Otros', value: 'OTHER', icon: 'cube-outline', defaultType: 'VARIABLE' },
+  { label: 'Compras', value: 'SHOPPING', icon: 'bag-handle-outline', defaultType: 'VARIABLE' },
+  { label: 'Otros', value: 'OTHER', icon: 'infinite-outline', defaultType: 'VARIABLE' },
 ];
 
 export const INCOME_CATEGORIES: IncomeCategoryOption[] = [
@@ -69,12 +69,15 @@ export const INCOME_CATEGORIES: IncomeCategoryOption[] = [
   { label: 'Otros', value: 'OTHER', icon: 'cube-outline' },
 ];
 
+export type ExpenseCategory = (typeof EXPENSE_CATEGORIES)[number]['value'];
+export type IncomeCategory = (typeof INCOME_CATEGORIES)[number]['value'];
+
 export const getCategoryLabel = (category: string, type: 'INCOME' | 'EXPENSE'): string => {
   if (type === 'INCOME') {
     const found = INCOME_CATEGORIES.find(c => c.value === category);
     return found?.label ?? category;
   }
-  const found = CATEGORIES.find(c => c.value === category);
+  const found = EXPENSE_CATEGORIES.find(c => c.value === category);
   return found?.label ?? category;
 };
 
@@ -85,42 +88,13 @@ export const getCategoryOption = (
   if (type === 'INCOME') {
     return INCOME_CATEGORIES.find(c => c.value === category) ?? null;
   }
-  return CATEGORIES.find(c => c.value === category) ?? null;
+  return EXPENSE_CATEGORIES.find(c => c.value === category) ?? null;
 };
 
 export const getCategoryIcon = (category: string): string => {
-  const iconMap: Record<string, string> = {
-    // Expense categories
-    SUPERMARKET: 'cart-outline',
-    RESTAURANT: 'restaurant-outline',
-    CAFE: 'cafe-outline',
-    DELIVERY: 'bicycle-outline',
-    PUBLIC_TRANSPORT: 'bus-outline',
-    FUEL: 'water-outline',
-    TAXI: 'car-outline',
-    UTILITIES: 'flash-outline',
-    RENT: 'home-outline',
-    HOME: 'hammer-outline',
-    HOA_FEES: 'business-outline',
-    VEHICLE: 'car-sport-outline',
-    DOCTOR: 'medical-outline',
-    PHARMACY: 'medical-outline',
-    SUBSCRIPTIONS: 'phone-portrait-outline',
-    OUTINGS: 'happy-outline',
-    GYM: 'barbell-outline',
-    TRAVEL: 'airplane-outline',
-    CLOTHING: 'shirt-outline',
-    EDUCATION: 'school-outline',
-    TECHNOLOGY: 'laptop-outline',
-    BEAUTY: 'cut-outline',
-    PETS: 'paw-outline',
-    // Income categories
-    SALARY: 'briefcase-outline',
-    FREELANCE: 'code-slash-outline',
-    GIFT: 'gift-outline',
-    INVESTMENT: 'trending-up-outline',
-    // Default
-    OTHER: 'cube-outline',
-  };
-  return iconMap[category] ?? 'cube-outline';
+  const expenseOption = EXPENSE_CATEGORIES.find(c => c.value === category);
+  if (expenseOption) return expenseOption.icon;
+  const incomeOption = INCOME_CATEGORIES.find(c => c.value === category);
+  if (incomeOption) return incomeOption.icon;
+  return 'cube-outline';
 };

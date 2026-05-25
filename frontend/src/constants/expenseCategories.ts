@@ -1,4 +1,4 @@
-import { ExpenseCategory } from '../services/expenseService';
+import { ExpenseCategory } from '../constants/categories';
 
 export interface CategoryConfig {
   color: string;

@@ -12,8 +12,9 @@ import { Layout, Text } from '@ui-kitten/components';
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import { router, useLocalSearchParams } from 'expo-router';
-import { expenseService, type ExpenseType, type ExpenseCategory } from '../services/expenseService';
-import { CATEGORIES, ExpenseCategoryOption } from '../constants/categories';
+import { expenseService } from '../services/expenseService';
+import type { ExpenseType, ExpenseCategory } from '../constants/categories';
+import { EXPENSE_CATEGORIES, ExpenseCategoryOption } from '../constants/categories';
 import { useCurrencyInput } from '../hooks/useCurrencyInput';
 import {
   transactionFormStyles as styles,
@@ -50,7 +51,7 @@ const EditExpenseScreen = () => {
         if (mounted) {
           setAmount(String(expense.amount));
           setDescription(expense.description ?? '');
-          const selected = CATEGORIES.find(c => c.value === expense.category) ?? null;
+          const selected = EXPENSE_CATEGORIES.find(c => c.value === expense.category) ?? null;
           setSelectedCategory(selected);
           setSelectedType(expense.type);
           setSelectedDate(parseLocalDate(expense.date));
@@ -70,7 +71,7 @@ const EditExpenseScreen = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [expenseId]);
 
-  const filteredCategories = CATEGORIES.filter(cat =>
+  const filteredCategories = EXPENSE_CATEGORIES.filter(cat =>
     cat.label.toLowerCase().includes(search.toLowerCase())
   );
 

@@ -24,5 +24,6 @@ public enum ExpenseCategory {
     VEHICLE,
     BEAUTY,
     PETS,
+    SHOPPING,
     OTHER
 }
