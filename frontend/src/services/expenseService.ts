@@ -1,5 +1,5 @@
 import { authService, API_URL } from './authService';
-export type { ExpenseCategory, ExpenseType } from '../constants/categories';
+import type { ExpenseCategory, ExpenseType } from '../constants/categories';
 
 export interface AddExpenseRequest {
   amount: number;

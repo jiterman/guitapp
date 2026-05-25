@@ -1,5 +1,5 @@
 import { authService, API_URL } from './authService';
-export type { IncomeCategory } from '../constants/categories';
+import type { IncomeCategory } from '../constants/categories';
 
 export interface AddIncomeRequest {
   amount: number;

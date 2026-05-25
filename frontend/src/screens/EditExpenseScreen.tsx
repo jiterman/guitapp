@@ -12,7 +12,8 @@ import { Layout, Text } from '@ui-kitten/components';
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import { router, useLocalSearchParams } from 'expo-router';
-import { expenseService, type ExpenseType, type ExpenseCategory } from '../services/expenseService';
+import { expenseService } from '../services/expenseService';
+import type { ExpenseType, ExpenseCategory } from '../constants/categories';
 import { EXPENSE_CATEGORIES, ExpenseCategoryOption } from '../constants/categories';
 import { useCurrencyInput } from '../hooks/useCurrencyInput';
 import {
