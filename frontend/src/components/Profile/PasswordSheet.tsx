@@ -2,7 +2,6 @@ import React from 'react';
 import {
   View,
   StyleSheet,
-  Dimensions,
   ScrollView,
   Animated,
   Modal,
