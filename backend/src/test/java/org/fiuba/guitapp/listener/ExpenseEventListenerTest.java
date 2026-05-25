@@ -21,6 +21,7 @@ import org.fiuba.guitapp.model.ExpenseType;
 import org.fiuba.guitapp.model.User;
 import org.fiuba.guitapp.model.UserStatus;
 import org.fiuba.guitapp.repository.ExpenseRepository;
+import org.fiuba.guitapp.repository.IncomeRepository;
 import org.fiuba.guitapp.repository.UserRepository;
 import org.fiuba.guitapp.service.NotificationService;
 import org.junit.jupiter.api.BeforeEach;
@@ -41,6 +42,9 @@ class ExpenseEventListenerTest {
 
     @Mock
     private ExpenseRepository expenseRepository;
+
+    @Mock
+    private IncomeRepository incomeRepository;
 
     @InjectMocks
     private ExpenseEventListener expenseEventListener;
@@ -174,7 +178,6 @@ class ExpenseEventListenerTest {
         expenseEventListener.handleExpenseCreatedEvent(testExpenseCreatedEvent);
 
         verify(notificationService, never()).sendExpenseThresholdExceededNotification(any(), any());
-        verify(expenseRepository, never()).findAllByUserAndDateBetween(any(), any(), any());
     }
 
     @Test

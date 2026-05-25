@@ -75,4 +75,45 @@ class NotificationServiceTest {
             verify(firebaseMessaging, times(1)).send(any(Message.class));
         }
     }
+
+    @Test
+    void sendSavingsGoalAtRiskNotification_ShouldSendMessage_WhenTokenIsPresent() throws Exception {
+        try (MockedStatic<FirebaseMessaging> mockedFirebaseMessaging = mockStatic(FirebaseMessaging.class)) {
+            mockedFirebaseMessaging.when(FirebaseMessaging::getInstance).thenReturn(firebaseMessaging);
+            when(firebaseMessaging.send(any(Message.class))).thenReturn("response-id");
+
+            notificationService.sendSavingsGoalAtRiskNotification(testUser, "Test Message");
+
+            verify(firebaseMessaging, times(1)).send(any(Message.class));
+        }
+    }
+
+    @Test
+    void sendSavingsGoalAtRiskNotification_ShouldNotSendMessage_WhenTokenIsMissing() throws Exception {
+        testUser.setFcmToken(null);
+
+        notificationService.sendSavingsGoalAtRiskNotification(testUser, "Test Message");
+
+        // FirebaseMessaging.getInstance() should not even be called
+        try (MockedStatic<FirebaseMessaging> mockedFirebaseMessaging = mockStatic(FirebaseMessaging.class)) {
+            mockedFirebaseMessaging.when(FirebaseMessaging::getInstance).thenReturn(firebaseMessaging);
+
+            notificationService.sendSavingsGoalAtRiskNotification(testUser, "Test Message");
+
+            verify(firebaseMessaging, never()).send(any(Message.class));
+        }
+    }
+
+    @Test
+    void sendSavingsGoalAtRiskNotification_ShouldLogAndHandleException_WhenFirebaseFails() throws Exception {
+        try (MockedStatic<FirebaseMessaging> mockedFirebaseMessaging = mockStatic(FirebaseMessaging.class)) {
+            mockedFirebaseMessaging.when(FirebaseMessaging::getInstance).thenReturn(firebaseMessaging);
+            when(firebaseMessaging.send(any(Message.class))).thenThrow(new RuntimeException("Firebase error"));
+
+            // Should not throw exception
+            notificationService.sendSavingsGoalAtRiskNotification(testUser, "Test Message");
+
+            verify(firebaseMessaging, times(1)).send(any(Message.class));
+        }
+    }
 }
