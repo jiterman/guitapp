@@ -2,11 +2,13 @@ import React, { useEffect, useRef, useState } from 'react';
 import { View, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { Layout, Text, Spinner } from '@ui-kitten/components';
 import { router, useLocalSearchParams } from 'expo-router';
-import { useShareIntent, useShareIntentContext } from 'expo-share-intent'; // Ajustá la ruta según tu proyecto
+import { useShareIntentContext } from 'expo-share-intent';
+import * as ImageManipulator from 'expo-image-manipulator';
+import { expenseService } from '../services/expenseService';
 
 const ShareIntentScreen = () => {
   const { resetShareIntent } = useShareIntentContext();
-  const { sharedFilePath } = useLocalSearchParams<{ sharedFilePath: string }>(); // <-- Capturar el parámetro
+  const { sharedFilePath } = useLocalSearchParams<{ sharedFilePath: string }>();
   const [statusMessage, setStatusMessage] = useState('Analizando imagen del ticket...');
   const hasProcessed = useRef(false);
 
@@ -16,10 +18,6 @@ const ShareIntentScreen = () => {
 
     const processSharedImage = async () => {
       try {
-        // Limpiamos el intent nativo APENAS empezamos para evitar bucles desde el root
-        // resetShareIntent();
-
-        // CORRECCIÓN: Ahora el path llega garantizado por los parámetros de navegación
         console.log('Archivo recibido desde los parámetros:', sharedFilePath);
 
         if (!sharedFilePath) {
@@ -27,41 +25,42 @@ const ShareIntentScreen = () => {
           return;
         }
 
-        // 1. Simulamos la pegada al backend (3 segundos)
-        await new Promise(resolve => setTimeout(resolve, 3000));
+        // 1. Redimensionar y comprimir la imagen para optimizar el procesamiento
+        setStatusMessage('Optimizando imagen...');
+        const manipulatedImage = await ImageManipulator.manipulateAsync(
+          sharedFilePath,
+          [{ resize: { width: 800 } }], // Redimensionar a 800px de ancho manteniendo el aspect ratio
+          { compress: 0.7, format: ImageManipulator.SaveFormat.JPEG }
+        );
+
+        // 2. Enviar al backend para análisis con Gemini
+        setStatusMessage('Analizando imagen...');
+        const analysisResponse = await expenseService.analyzeReceipt(manipulatedImage.uri);
 
         setStatusMessage('¡Datos extraídos con éxito!');
 
-        // 2. Simulamos la respuesta de la IA / Backend
-        const mockBackendResponse = {
-          amount: '15000.00',
-          description: 'Oldays',
-          category: 'RESTAURANT',
-          date: new Date().toISOString().split('T')[0],
-        };
-
-        // 4. Viajamos a la pantalla de agregar gasto
+        // 3. Viajamos a la pantalla de agregar gasto con los datos extraídos
         router.replace({
           pathname: '/(app)/add-expense',
           params: {
             fromShareIntent: 'true',
-            amount: mockBackendResponse.amount,
-            description: mockBackendResponse.description,
-            category: mockBackendResponse.category,
-            date: mockBackendResponse.date,
-            imagePath: sharedFilePath,
+            amount: analysisResponse.amount?.toString() || '',
+            description: analysisResponse.description || '',
+            category: analysisResponse.category || 'OTHER',
+            date: analysisResponse.date || new Date().toISOString().split('T')[0],
+            imagePath: manipulatedImage.uri,
           },
         });
       } catch (error) {
         console.error('Error procesando la imagen:', error);
-        setStatusMessage('Error al procesar el ticket.');
+        setStatusMessage('Error al procesar la imagen.');
       } finally {
         resetShareIntent();
       }
     };
 
     processSharedImage();
-  }, [sharedFilePath]); // Quitamos resetShareIntent para evitar re-ejecución al limpiar
+  }, [sharedFilePath]);
 
   return (
     <Layout style={styles.container}>

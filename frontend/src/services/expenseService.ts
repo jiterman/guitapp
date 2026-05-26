@@ -125,9 +125,44 @@ const deleteExpense = async (expenseId: string): Promise<void> => {
   }
 };
 
+export interface ReceiptAnalysisResponse {
+  amount?: number;
+  description?: string;
+  category?: ExpenseCategory;
+  date?: string;
+}
+
+const analyzeReceipt = async (imageUri: string): Promise<ReceiptAnalysisResponse> => {
+  const token = await authService.getToken();
+
+  const formData = new FormData();
+  // @ts-expect-error - FormData append for files is not fully typed in React Native
+  formData.append('file', {
+    uri: imageUri,
+    name: 'receipt.jpg',
+    type: 'image/jpeg',
+  });
+
+  const response = await fetch(`${API_URL}/api/expenses/analyze-receipt`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+    body: formData,
+  });
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({}));
+    throw { code: error.code, message: error.message ?? 'Receipt analysis failed' };
+  }
+
+  return response.json();
+};
+
 export const expenseService = {
   getExpenseById,
   updateExpense,
   deleteExpense,
   addExpense,
+  analyzeReceipt,
 };

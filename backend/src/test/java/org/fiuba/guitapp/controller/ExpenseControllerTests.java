@@ -11,10 +11,12 @@ import java.util.UUID;
 
 import org.fiuba.guitapp.dto.AddExpenseRequest;
 import org.fiuba.guitapp.dto.ExpenseResponse;
+import org.fiuba.guitapp.dto.ReceiptAnalysisResponse;
 import org.fiuba.guitapp.dto.UpdateExpenseRequest;
 import org.fiuba.guitapp.model.ExpenseCategory;
 import org.fiuba.guitapp.model.ExpenseType;
 import org.fiuba.guitapp.service.ExpenseService;
+import org.fiuba.guitapp.service.GeminiService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -41,6 +43,9 @@ class ExpenseControllerTests {
 
     @MockBean
     private ExpenseService expenseService;
+
+    @MockBean
+    private GeminiService geminiService;
 
     @Test
     @WithMockUser(username = "test@example.com")
@@ -260,6 +265,27 @@ class ExpenseControllerTests {
                 .andExpect(status().isBadRequest());
 
         verify(expenseService, never()).updateExpense(anyString(), any(UUID.class), any(UpdateExpenseRequest.class));
+    }
+
+    @Test
+    @WithMockUser(username = "test@example.com")
+    void analyzeReceipt_ShouldReturnAnalysis_WhenFileIsProvided() throws Exception {
+        ReceiptAnalysisResponse response = new ReceiptAnalysisResponse(
+                new BigDecimal("123.45"),
+                "Test Analysis",
+                ExpenseCategory.OTHER);
+
+        when(geminiService.analyzeReceipt(any())).thenReturn(response);
+
+        mockMvc.perform(multipart("/api/expenses/analyze-receipt")
+                .file("file", "test.jpg".getBytes())
+                .contentType(MediaType.MULTIPART_FORM_DATA))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.amount").value(123.45))
+                .andExpect(jsonPath("$.description").value("Test Analysis"))
+                .andExpect(jsonPath("$.category").value("OTHER"));
+
+        verify(geminiService, times(1)).analyzeReceipt(any());
     }
 
     @Test

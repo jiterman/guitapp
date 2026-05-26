@@ -5,8 +5,10 @@ import java.util.UUID;
 
 import org.fiuba.guitapp.dto.AddExpenseRequest;
 import org.fiuba.guitapp.dto.ExpenseResponse;
+import org.fiuba.guitapp.dto.ReceiptAnalysisResponse;
 import org.fiuba.guitapp.dto.UpdateExpenseRequest;
 import org.fiuba.guitapp.service.ExpenseService;
+import org.fiuba.guitapp.service.GeminiService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -15,7 +17,9 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -26,6 +30,14 @@ import lombok.RequiredArgsConstructor;
 public class ExpenseController {
 
     private final ExpenseService expenseService;
+    private final GeminiService geminiService;
+
+    @PostMapping("/analyze-receipt")
+    public ResponseEntity<ReceiptAnalysisResponse> analyzeReceipt(
+            @RequestParam("file") MultipartFile file) {
+        ReceiptAnalysisResponse response = geminiService.analyzeReceipt(file);
+        return ResponseEntity.ok(response);
+    }
 
     @PostMapping
     public ResponseEntity<ExpenseResponse> addExpense(
