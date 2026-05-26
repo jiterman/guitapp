@@ -87,4 +87,34 @@ class NotificationServiceTest {
             verify(firebaseMessaging, times(1)).send(any(Message.class));
         }
     }
+
+    @Test
+    void sendExpenseThresholdExceededNotification_ShouldNotSendMessage_WhenTokenIsEmpty() throws Exception {
+        testUser.setFcmToken("");
+
+        notificationService.sendExpenseThresholdExceededNotification(testUser, "Test Message");
+
+        try (MockedStatic<FirebaseMessaging> mockedFirebaseMessaging = mockStatic(FirebaseMessaging.class)) {
+            mockedFirebaseMessaging.when(FirebaseMessaging::getInstance).thenReturn(firebaseMessaging);
+
+            notificationService.sendExpenseThresholdExceededNotification(testUser, "Test Message");
+
+            verify(firebaseMessaging, never()).send(any(Message.class));
+        }
+    }
+
+    @Test
+    void sendCategoryOverspendingNotification_ShouldNotSendMessage_WhenTokenIsEmpty() throws Exception {
+        testUser.setFcmToken("");
+
+        notificationService.sendCategoryOverspendingNotification(testUser, "Test body");
+
+        try (MockedStatic<FirebaseMessaging> mockedFirebaseMessaging = mockStatic(FirebaseMessaging.class)) {
+            mockedFirebaseMessaging.when(FirebaseMessaging::getInstance).thenReturn(firebaseMessaging);
+
+            notificationService.sendCategoryOverspendingNotification(testUser, "Test body");
+
+            verify(firebaseMessaging, never()).send(any(Message.class));
+        }
+    }
 }
