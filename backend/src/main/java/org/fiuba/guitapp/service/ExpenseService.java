@@ -127,6 +127,13 @@ public class ExpenseService {
 
         Expense saved = expenseRepository.save(expense);
 
+        applicationEventPublisher.publishEvent(new ExpenseCreatedEvent(
+                saved.getId(),
+                email,
+                saved.getAmount(),
+                saved.getDate(),
+                saved.getType()));
+
         return new ExpenseResponse(
                 saved.getId(),
                 saved.getAmount(),

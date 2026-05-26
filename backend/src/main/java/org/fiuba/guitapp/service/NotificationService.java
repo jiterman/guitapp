@@ -16,14 +16,26 @@ import lombok.extern.slf4j.Slf4j;
 public class NotificationService {
 
     public void sendExpenseThresholdExceededNotification(User user, String body) {
-        sendNotification(user, "Se nos fue la mano \uD83D\uDCB8", body);
+        sendNotification(user, "Se nos fue la mano \uD83D\uDCB8", body,
+                "limite de gastos excedido");
+    }
+
+    public void sendSavingsGoalAtRiskNotification(User user, String body) {
+        sendNotification(user, "Se nos fue la mano \uD83D\uDCB8", body,
+                "meta de ahorro en riesgo");
+    }
+
+    public void sendNegativeBalanceRiskNotification(User user, String body) {
+        sendNotification(user, "Se nos fue la mano \uD83D\uDCB8", body,
+                "saldo negativo proyectado");
     }
 
     public void sendCategoryOverspendingNotification(User user, String body) {
-        sendNotification(user, "Venimos gastando un poco más 📈", body);
+        sendNotification(user, "Venimos gastando un poco más 📈", body,
+                "gasto por categoria superior al mes anterior");
     }
 
-    private void sendNotification(User user, String title, String body) {
+    private void sendNotification(User user, String title, String body, String logContext) {
         if (user.getFcmToken() == null || user.getFcmToken().isEmpty()) {
             return;
         }
@@ -48,13 +60,10 @@ public class NotificationService {
                     .setAndroidConfig(androidConfig)
                     .build();
 
-            System.out.println("Enviando push a token: " + user.getFcmToken());
             String response = FirebaseMessaging.getInstance().send(message);
-            System.out.println("Push enviada OK");
-            log.info("Successfully sent notification: {}", response);
+            log.info("Notificacion enviada correctamente ({}): {}", logContext, response);
         } catch (Exception e) {
-            e.printStackTrace();
-            log.error("Error sending FCM notification to user {}", user.getEmail(), e);
+            log.error("Error al enviar notificacion FCM ({}) al usuario {}", logContext, user.getEmail(), e);
         }
     }
 }
