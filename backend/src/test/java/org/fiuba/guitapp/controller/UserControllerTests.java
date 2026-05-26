@@ -5,10 +5,16 @@ import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
+import java.math.BigDecimal;
 import java.util.UUID;
 
+import org.fiuba.guitapp.dto.ConfirmPasswordChangeRequest;
 import org.fiuba.guitapp.dto.InitiateEmailChangeRequest;
+import org.fiuba.guitapp.dto.InitiatePasswordChangeRequest;
 import org.fiuba.guitapp.dto.OnboardingRequest;
+import org.fiuba.guitapp.dto.UpdateEstimatedMonthlyIncomeRequest;
+import org.fiuba.guitapp.dto.UpdateExpensesStructureRequest;
+import org.fiuba.guitapp.dto.UpdateFcmTokenRequest;
 import org.fiuba.guitapp.dto.UpdateUserProfileRequest;
 import org.fiuba.guitapp.dto.UserProfileResponse;
 import org.fiuba.guitapp.dto.VerifyEmailChangeRequest;
@@ -51,9 +57,11 @@ class UserControllerTests {
                 "Doe",
                 "https://avatar.png",
                 true,
+                BigDecimal.valueOf(5000),
                 30,
                 50,
-                20);
+                20,
+                java.time.LocalDateTime.now());
 
         when(userService.getUserProfile("test@example.com")).thenReturn(response);
 
@@ -66,6 +74,7 @@ class UserControllerTests {
                 .andExpect(jsonPath("$.lastName").value("Doe"))
                 .andExpect(jsonPath("$.avatarUrl").value("https://avatar.png"))
                 .andExpect(jsonPath("$.onboardingCompleted").value(true))
+                .andExpect(jsonPath("$.estimatedMonthlyIncome").value(5000))
                 .andExpect(jsonPath("$.targetFixedExpenses").value(30))
                 .andExpect(jsonPath("$.targetVariableExpenses").value(50))
                 .andExpect(jsonPath("$.targetSavings").value(20));
@@ -76,7 +85,7 @@ class UserControllerTests {
     @Test
     @WithMockUser(username = "test@example.com")
     void completeOnboarding_ShouldReturnSuccessMessage() throws Exception {
-        OnboardingRequest request = new OnboardingRequest("Maria", 30, 50);
+        OnboardingRequest request = new OnboardingRequest("Maria", 30, 50, BigDecimal.valueOf(5000));
 
         doNothing().when(userService).completeOnboarding(eq("test@example.com"), any(OnboardingRequest.class));
 
@@ -92,7 +101,7 @@ class UserControllerTests {
     @Test
     @WithMockUser(username = "test@example.com")
     void completeOnboarding_ShouldReturnBadRequest_WithInvalidData() throws Exception {
-        OnboardingRequest request = new OnboardingRequest("", 30, 50);
+        OnboardingRequest request = new OnboardingRequest("", 30, 50, BigDecimal.valueOf(5000));
 
         mockMvc.perform(put("/api/users/me/onboarding")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -105,7 +114,7 @@ class UserControllerTests {
     @Test
     @WithMockUser(username = "test@example.com")
     void completeOnboarding_ShouldReturnBadRequest_WhenExpensesTooHigh() throws Exception {
-        OnboardingRequest request = new OnboardingRequest("John", 99, 50);
+        OnboardingRequest request = new OnboardingRequest("John", 99, 50, BigDecimal.valueOf(5000));
 
         mockMvc.perform(put("/api/users/me/onboarding")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -131,9 +140,11 @@ class UserControllerTests {
                 "Doe",
                 "https://avatar.png",
                 true,
+                BigDecimal.valueOf(5000),
                 30,
                 50,
-                20);
+                20,
+                java.time.LocalDateTime.now());
 
         when(userService.updateUserProfile(
                 eq("test@example.com"),
@@ -165,9 +176,11 @@ class UserControllerTests {
                 "Doe",
                 "https://avatar.png",
                 true,
+                BigDecimal.valueOf(5000),
                 30,
                 50,
-                20);
+                20,
+                java.time.LocalDateTime.now());
 
         MockMultipartFile file = new MockMultipartFile(
                 "file",
@@ -219,5 +232,157 @@ class UserControllerTests {
                 .andExpect(jsonPath("$.message").value("Email updated successfully"));
 
         verify(userService, times(1)).verifyEmailChange(eq("test@example.com"), any(VerifyEmailChangeRequest.class));
+    }
+
+    @Test
+    @WithMockUser(username = "test@example.com")
+    void initiatePasswordChange_ShouldReturnSuccessMessage() throws Exception {
+        InitiatePasswordChangeRequest request = new InitiatePasswordChangeRequest("currentPassword123", "newPassword123");
+
+        doNothing().when(userService).initiatePasswordChange(eq("test@example.com"), any(InitiatePasswordChangeRequest.class));
+
+        mockMvc.perform(post("/api/users/me/password/initiate")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.message").value("Password change initiated successfully"));
+
+        verify(userService, times(1)).initiatePasswordChange(eq("test@example.com"), any(InitiatePasswordChangeRequest.class));
+    }
+
+    @Test
+    @WithMockUser(username = "test@example.com")
+    void confirmPasswordChange_ShouldReturnSuccessMessage() throws Exception {
+        ConfirmPasswordChangeRequest request = new ConfirmPasswordChangeRequest(true);
+
+        doNothing().when(userService).confirmPasswordChange(eq("test@example.com"), any(ConfirmPasswordChangeRequest.class));
+
+        mockMvc.perform(post("/api/users/me/password/confirm")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.message").value("Password change processed successfully"));
+
+        verify(userService, times(1)).confirmPasswordChange(eq("test@example.com"), any(ConfirmPasswordChangeRequest.class));
+    }
+
+    @Test
+    @WithMockUser(username = "test@example.com")
+    void updateFcmToken_ShouldReturnSuccessMessage() throws Exception {
+        UpdateFcmTokenRequest request = new UpdateFcmTokenRequest("some-fcm-token");
+
+        doNothing().when(userService).updateFcmToken(eq("test@example.com"), anyString());
+
+        mockMvc.perform(patch("/api/users/me/fcm-token")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.message").value("FCM token updated successfully"));
+
+        verify(userService, times(1)).updateFcmToken(eq("test@example.com"), eq("some-fcm-token"));
+    }
+
+    @Test
+    @WithMockUser(username = "test@example.com")
+    void updateEstimatedMonthlyIncome_ShouldReturnSuccessMessage() throws Exception {
+        UpdateEstimatedMonthlyIncomeRequest request = new UpdateEstimatedMonthlyIncomeRequest(BigDecimal.valueOf(75000));
+        UUID userId = UUID.randomUUID();
+        UserProfileResponse mockResponse = new UserProfileResponse(
+                userId,
+                "test@example.com",
+                "Test",
+                "User",
+                null,
+                true,
+                BigDecimal.valueOf(75000),
+                30,
+                50,
+                20,
+                java.time.LocalDateTime.now());
+
+        when(userService.updateEstimatedMonthlyIncome(
+                eq("test@example.com"),
+                eq(BigDecimal.valueOf(75000)))).thenReturn(mockResponse);
+
+        mockMvc.perform(patch("/api/users/me/estimated-monthly-income")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.message").value("Estimated monthly income updated successfully"))
+                .andExpect(jsonPath("$.data.estimatedMonthlyIncome").value(75000));
+
+        verify(userService, times(1)).updateEstimatedMonthlyIncome(
+                eq("test@example.com"),
+                eq(BigDecimal.valueOf(75000)));
+    }
+
+    @Test
+    @WithMockUser(username = "test@example.com")
+    void updateEstimatedMonthlyIncome_ShouldReturnBadRequest_WhenValueIsNull() throws Exception {
+        UpdateEstimatedMonthlyIncomeRequest request = new UpdateEstimatedMonthlyIncomeRequest(null);
+
+        mockMvc.perform(patch("/api/users/me/estimated-monthly-income")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isBadRequest());
+
+        verify(userService, never()).updateEstimatedMonthlyIncome(anyString(), any());
+    }
+
+    @Test
+    @WithMockUser(username = "test@example.com")
+    void updateExpensesStructure_ShouldReturnSuccessMessage() throws Exception {
+
+        UpdateExpensesStructureRequest request = new UpdateExpensesStructureRequest(50, 30);
+        UUID userId = UUID.randomUUID();
+        UserProfileResponse mockResponse = new UserProfileResponse(
+                userId,
+                "test@example.com",
+                "Test",
+                "User",
+                null,
+                true,
+                BigDecimal.valueOf(10000),
+                50,
+                30,
+                20,
+                java.time.LocalDateTime.now());
+
+        when(userService.updateExpensesStructure(
+                eq("test@example.com"),
+                eq(50),
+                eq(30))).thenReturn(mockResponse);
+
+        mockMvc.perform(patch("/api/users/me/expenses-structure")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.message")
+                        .value("Expenses structure updated successfully"))
+                .andExpect(jsonPath("$.data.email")
+                        .value("test@example.com"))
+                .andExpect(jsonPath("$.data.targetFixedExpenses")
+                        .value(50))
+                .andExpect(jsonPath("$.data.targetVariableExpenses")
+                        .value(30))
+                .andExpect(jsonPath("$.data.targetSavings")
+                        .value(20));
+
+        verify(userService, times(1)).updateExpensesStructure(
+                eq("test@example.com"),
+                eq(50),
+                eq(30));
+    }
+
+    @Test
+    @WithMockUser(username = "test@example.com")
+    void updateExpensesStructure_ShouldReturnBadRequest_WhenValuesAreNull() throws Exception {
+
+        UpdateExpensesStructureRequest request = new UpdateExpensesStructureRequest(null, null);
+
+        mockMvc.perform(patch("/api/users/me/expenses-structure")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isBadRequest());
     }
 }

@@ -5,6 +5,7 @@ import java.util.UUID;
 
 import org.fiuba.guitapp.dto.AddIncomeRequest;
 import org.fiuba.guitapp.dto.IncomeResponse;
+import org.fiuba.guitapp.dto.IncomeStatisticsResponse;
 import org.fiuba.guitapp.dto.UpdateIncomeRequest;
 import org.fiuba.guitapp.service.IncomeService;
 import org.springframework.http.ResponseEntity;
@@ -15,6 +16,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import jakarta.validation.Valid;
@@ -53,6 +55,18 @@ public class IncomeController {
             @PathVariable UUID incomeId,
             @Valid @RequestBody UpdateIncomeRequest request) {
         IncomeResponse response = incomeService.updateIncome(principal.getName(), incomeId, request);
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/statistics")
+    public ResponseEntity<IncomeStatisticsResponse> getIncomeStatistics(
+            Principal principal,
+            @RequestParam(defaultValue = "monthly") String period,
+            @RequestParam(required = false) Integer year,
+            @RequestParam(required = false) Integer month,
+            @RequestParam(required = false) Integer day) {
+        IncomeStatisticsResponse response = incomeService.getIncomeStatistics(
+                principal.getName(), period, year, month, day);
         return ResponseEntity.ok(response);
     }
 }

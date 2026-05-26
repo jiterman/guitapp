@@ -3,7 +3,8 @@ import { View, StyleSheet, TouchableOpacity } from 'react-native';
 import { Text } from '@ui-kitten/components';
 import { Ionicons } from '@expo/vector-icons';
 import { MovementResponse } from '../../services/movementService';
-import { getCategoryLabel } from '../../constants/categories';
+import { getCategoryLabel, getCategoryOption } from '../../constants/categories';
+import { formatDate } from '../../utils/dateFormatter';
 
 interface Props {
   movement: MovementResponse;
@@ -16,6 +17,14 @@ const TransactionCard: React.FC<Props> = ({ movement, onPress }) => {
     movement.description?.trim() ||
     (movement.category ? getCategoryLabel(movement.category, movement.type) : 'Sin categoría');
 
+  const categoryOption = movement.category
+    ? getCategoryOption(movement.category, movement.type)
+    : null;
+  const iconName = (categoryOption?.icon ??
+    (movement.type === 'INCOME'
+      ? 'trending-up'
+      : 'trending-down')) as keyof typeof Ionicons.glyphMap;
+
   return (
     <Container style={styles.row} onPress={onPress ? () => onPress(movement) : undefined}>
       <View style={styles.left}>
@@ -26,15 +35,15 @@ const TransactionCard: React.FC<Props> = ({ movement, onPress }) => {
           ]}
         >
           <Ionicons
-            name={movement.type === 'INCOME' ? 'trending-up' : 'trending-down'}
-            size={18}
+            name={iconName}
+            size={22}
             color={movement.type === 'INCOME' ? '#1a9e5c' : '#c0392b'}
           />
         </View>
         <View>
           <Text category="s1">{displayText}</Text>
           <Text appearance="hint" category="c1">
-            {new Date(movement.date).toLocaleString()}
+            {formatDate(movement.date)}
           </Text>
         </View>
       </View>

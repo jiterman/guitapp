@@ -1,28 +1,35 @@
 import React, { useState } from 'react';
 import {
   View,
-  StyleSheet,
   Alert,
   TouchableOpacity,
-  Dimensions,
   Modal,
   FlatList,
   TextInput,
+  ScrollView,
 } from 'react-native';
-import { Layout, Text, Button, Input } from '@ui-kitten/components';
+import { Layout, Text } from '@ui-kitten/components';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { Ionicons, MaterialIcons } from '@expo/vector-icons';
+import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import { router } from 'expo-router';
 import { incomeService } from '../services/incomeService';
-import type { IncomeCategory } from '../services/incomeService';
+import type { IncomeCategory } from '../constants/categories';
 import { INCOME_CATEGORIES, IncomeCategoryOption } from '../constants/categories';
 import { useCurrencyInput } from '../hooks/useCurrencyInput';
-
-const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
-const vh = screenHeight / 100;
+import {
+  transactionFormStyles as styles,
+  ICON_SIZES,
+  ICON_COLORS,
+} from '../styles/transactionFormStyles';
+import { formatDate, toLocalDateString } from '../utils/dateFormatter';
 
 const AddIncomeScreen = () => {
   const { displayValue, amount, handleAmountChange } = useCurrencyInput();
   const [description, setDescription] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<IncomeCategoryOption | null>(null);
+  const [selectedDate, setSelectedDate] = useState(new Date());
+  const [showDatePicker, setShowDatePicker] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
   const [search, setSearch] = useState('');
@@ -38,6 +45,13 @@ const AddIncomeScreen = () => {
     setCategoryError(null);
     setModalVisible(false);
     setSearch('');
+  };
+
+  const onDateChange = (event: DateTimePickerEvent, date?: Date) => {
+    setShowDatePicker(false);
+    if (event.type === 'set' && date) {
+      setSelectedDate(date);
+    }
   };
 
   const onSubmit = async () => {
@@ -57,10 +71,12 @@ const AddIncomeScreen = () => {
 
     setSubmitting(true);
     try {
+      const dateString = toLocalDateString(selectedDate);
       await incomeService.addIncome({
         amount: parseFloat(amount),
         description: description.trim() || undefined,
         category: selectedCategory!.value as unknown as IncomeCategory,
+        date: dateString,
       });
       router.back();
     } catch {
@@ -82,48 +98,97 @@ const AddIncomeScreen = () => {
           </TouchableOpacity>
         </View>
 
-        <Text style={styles.label}>Monto *</Text>
-        <Input
-          value={displayValue}
-          onChangeText={text => {
-            handleAmountChange(text);
-            if (amountError) setAmountError(null);
-          }}
-          placeholder="0,00"
-          keyboardType="decimal-pad"
-          style={styles.input}
-          status={amountError ? 'danger' : 'basic'}
-          accessoryLeft={() => <Text style={styles.currencySymbol}>$</Text>}
-        />
-        {amountError && <Text style={styles.errorText}>{amountError}</Text>}
+        <ScrollView showsVerticalScrollIndicator={false}>
+          <Text style={styles.label}>Monto *</Text>
+          <View style={[styles.amountInputContainer, amountError ? styles.amountInputError : null]}>
+            <View style={styles.amountIconContainer}>
+              <Text style={styles.amountCurrencySymbol}>$</Text>
+            </View>
+            <TextInput
+              value={displayValue}
+              onChangeText={text => {
+                handleAmountChange(text);
+                if (amountError) setAmountError(null);
+              }}
+              placeholder="0,00"
+              keyboardType="decimal-pad"
+              style={styles.amountInput}
+              placeholderTextColor="#FFC947"
+            />
+          </View>
+          {amountError && <Text style={styles.errorText}>{amountError}</Text>}
 
-        <Text style={styles.label}>Descripción</Text>
-        <Input
-          value={description}
-          onChangeText={setDescription}
-          placeholder="Ej. Pago por proyecto"
-          style={styles.input}
-        />
+          <Text style={styles.label}>Descripción</Text>
+          <View style={styles.inputWithIcon}>
+            <View style={styles.inputIconContainer}>
+              <Ionicons
+                name="document-text-outline"
+                size={ICON_SIZES.small}
+                color={ICON_COLORS.gray}
+              />
+            </View>
+            <TextInput
+              value={description}
+              onChangeText={setDescription}
+              placeholder="Ej. Pago por proyecto (opcional)"
+              style={styles.textInput}
+              placeholderTextColor="#B0BEC5"
+            />
+          </View>
 
-        <Text style={styles.label}>Categoría *</Text>
-        <TouchableOpacity
-          style={[styles.dropdownButton, categoryError ? styles.dropdownButtonError : null]}
-          onPress={() => setModalVisible(true)}
-        >
-          <Text style={selectedCategory ? styles.dropdownButtonText : styles.dropdownPlaceholder}>
-            {selectedCategory
-              ? `${selectedCategory.icon}  ${selectedCategory.label}`
-              : 'Seleccioná una categoría'}
-          </Text>
-          <Text style={styles.dropdownArrow}>▼</Text>
-        </TouchableOpacity>
-        {categoryError && <Text style={styles.categoryErrorText}>{categoryError}</Text>}
+          <Text style={styles.label}>Categoría *</Text>
+          <TouchableOpacity
+            style={[styles.dropdownButton, categoryError ? styles.dropdownButtonError : null]}
+            onPress={() => setModalVisible(true)}
+          >
+            <View style={styles.dropdownContent}>
+              <View style={styles.dropdownIconContainer}>
+                <Ionicons
+                  name={
+                    (selectedCategory?.icon || 'cash-outline') as keyof typeof Ionicons.glyphMap
+                  }
+                  size={ICON_SIZES.small}
+                  color={ICON_COLORS.primary}
+                />
+              </View>
+              <Text
+                style={selectedCategory ? styles.dropdownButtonText : styles.dropdownPlaceholder}
+              >
+                {selectedCategory ? selectedCategory.label : 'Seleccioná una categoría'}
+              </Text>
+            </View>
+            <Ionicons name="chevron-down" size={ICON_SIZES.medium} color={ICON_COLORS.secondary} />
+          </TouchableOpacity>
+          {categoryError && <Text style={styles.categoryErrorText}>{categoryError}</Text>}
 
-        <Button style={styles.button} onPress={onSubmit} disabled={submitting}>
-          {() => (
-            <Text style={styles.buttonText}>{submitting ? 'Guardando...' : 'Guardar ingreso'}</Text>
-          )}
-        </Button>
+          <Text style={styles.label}>Fecha *</Text>
+          <TouchableOpacity style={styles.dateButton} onPress={() => setShowDatePicker(true)}>
+            <View style={styles.dropdownIconContainer}>
+              <Ionicons
+                name="calendar-outline"
+                size={ICON_SIZES.small}
+                color={ICON_COLORS.primary}
+              />
+            </View>
+            <Text style={styles.dropdownButtonText}>{formatDate(selectedDate)}</Text>
+            <Ionicons
+              name="chevron-forward"
+              size={ICON_SIZES.medium}
+              color={ICON_COLORS.secondary}
+            />
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.saveButton, submitting && styles.saveButtonDisabled]}
+            onPress={onSubmit}
+            disabled={submitting}
+          >
+            <MaterialIcons name="save" size={20} color="#000" style={styles.saveIcon} />
+            <Text style={styles.saveButtonText}>
+              {submitting ? 'Guardando...' : 'Guardar cambios'}
+            </Text>
+          </TouchableOpacity>
+        </ScrollView>
       </Layout>
 
       <Modal
@@ -135,7 +200,7 @@ const AddIncomeScreen = () => {
           setSearch('');
         }}
       >
-        <View style={styles.modalFullScreen}>
+        <SafeAreaView style={styles.modalFullScreen}>
           <View style={styles.modalContainer}>
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>Categoría</Text>
@@ -170,7 +235,12 @@ const AddIncomeScreen = () => {
                   ]}
                   onPress={() => onSelectCategory(item)}
                 >
-                  <Text style={styles.categoryIcon}>{item.icon}</Text>
+                  <Ionicons
+                    name={item.icon as keyof typeof Ionicons.glyphMap}
+                    size={ICON_SIZES.large}
+                    color={ICON_COLORS.secondary}
+                    style={styles.categoryIconContainer}
+                  />
                   <Text
                     style={[
                       styles.categoryLabel,
@@ -183,158 +253,20 @@ const AddIncomeScreen = () => {
               )}
             />
           </View>
-        </View>
+        </SafeAreaView>
       </Modal>
+
+      {showDatePicker && (
+        <DateTimePicker
+          mode="date"
+          value={selectedDate}
+          display="default"
+          onChange={onDateChange}
+          maximumDate={new Date()}
+        />
+      )}
     </>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#E6F2FC',
-    paddingHorizontal: screenWidth * 0.05,
-    paddingTop: vh * 2,
-  },
-  subHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: vh * 3,
-  },
-  closeButton: {
-    fontSize: 20,
-    color: '#006699',
-    paddingHorizontal: 4,
-  },
-  title: {
-    color: '#003366',
-    fontWeight: 'bold',
-    textAlign: 'center',
-  },
-  label: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#003366',
-    marginBottom: vh * 0.5,
-  },
-  input: {
-    marginBottom: vh * 2,
-    borderRadius: 10,
-    backgroundColor: '#fff',
-  },
-  currencySymbol: {
-    fontSize: 16,
-    color: '#003366',
-    marginLeft: 8,
-  },
-  errorText: {
-    color: '#FF3333',
-    fontSize: 13,
-    marginTop: -vh * 1.5,
-    marginBottom: vh * 1.5,
-  },
-  categoryErrorText: {
-    color: '#FF3333',
-    fontSize: 13,
-    marginTop: vh * 0.6,
-    marginBottom: vh * 1,
-  },
-  dropdownButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: '#fff',
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: '#ddd',
-    paddingHorizontal: 14,
-    paddingVertical: vh * 1.5,
-    marginBottom: 0,
-  },
-  dropdownButtonError: {
-    borderColor: '#FF3333',
-  },
-  dropdownButtonText: {
-    fontSize: 15,
-    color: '#003366',
-  },
-  dropdownPlaceholder: {
-    fontSize: 15,
-    color: '#aaa',
-  },
-  dropdownArrow: {
-    fontSize: 11,
-    color: '#006699',
-  },
-  button: {
-    borderRadius: 12,
-    backgroundColor: '#FFBB00',
-    borderColor: '#FFBB00',
-    paddingVertical: vh * 1.2,
-    marginTop: vh * 3,
-  },
-  buttonText: {
-    color: '#000000',
-    fontWeight: 'bold',
-    fontSize: 16,
-  },
-  modalFullScreen: {
-    flex: 1,
-    backgroundColor: '#fff',
-  },
-  modalContainer: {
-    flex: 1,
-    backgroundColor: '#fff',
-  },
-  modalHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingVertical: vh * 2,
-    borderBottomWidth: 1,
-    borderBottomColor: '#eee',
-  },
-  modalTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#003366',
-  },
-  modalClose: {
-    fontSize: 18,
-    color: '#006699',
-  },
-  searchInput: {
-    margin: 16,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-    backgroundColor: '#f5f5f5',
-    borderRadius: 10,
-    fontSize: 15,
-    color: '#003366',
-  },
-  categoryItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingVertical: 14,
-  },
-  categoryItemSelected: {
-    backgroundColor: '#E6F2FC',
-  },
-  categoryIcon: {
-    fontSize: 22,
-    marginRight: 14,
-  },
-  categoryLabel: {
-    fontSize: 15,
-    color: '#003366',
-  },
-  categoryLabelSelected: {
-    color: '#006699',
-    fontWeight: '600',
-  },
-});
 
 export default AddIncomeScreen;

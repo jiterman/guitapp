@@ -8,13 +8,17 @@ export interface UserProfile {
   targetFixedExpenses: number;
   targetVariableExpenses: number;
   targetSavings: number;
+  estimatedMonthlyIncome: number;
   onboardingCompleted: boolean;
+  createdAt: string;
 }
 
-export interface UserContextType {
+interface UserContextType {
   user: UserProfile | null;
   setUser: (user: UserProfile | null) => void;
   isLoading: boolean;
+  getCreatedMonth: () => string;
+  getCreatedYear: () => string;
 }
 
 export const UserContext = createContext<UserContextType | undefined>(undefined);

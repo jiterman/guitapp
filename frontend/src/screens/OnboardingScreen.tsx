@@ -23,6 +23,7 @@ const OnboardingScreen = () => {
   // Step 2
   const [fixedExpenses, setFixedExpenses] = useState('50');
   const [variableExpenses, setVariableExpenses] = useState('30');
+  const [estimatedIncome, setEstimatedIncome] = useState('0');
   const [expensesError, setExpensesError] = useState<string | null>(null);
 
   const calculateSavings = () => {
@@ -44,19 +45,24 @@ const OnboardingScreen = () => {
     setExpensesError(null);
     const fixed = parseInt(fixedExpenses, 10);
     const variable = parseInt(variableExpenses, 10);
+    const income = parseFloat(estimatedIncome);
 
-    if (isNaN(fixed) || isNaN(variable)) {
-      setExpensesError('Debes ingresar números válidos para los gastos.');
+    if (isNaN(fixed) || isNaN(variable) || isNaN(income)) {
+      setExpensesError('Debes ingresar números válidos.');
       return;
     }
     if (fixed <= 0 || variable <= 0) {
       setExpensesError('Los porcentajes deben ser mayores a 0.');
       return;
     }
+    if (income <= 0) {
+      setExpensesError('El ingreso estimado debe ser mayor a 0.');
+      return;
+    }
 
     setLoading(true);
     try {
-      await userService.completeOnboarding(firstName, fixed, variable);
+      await userService.completeOnboarding(firstName, fixed, variable, income);
       const profile = await userService.getProfile();
       if (user?.email) {
         await authService.updateBiometricUserName(user.email, firstName);
@@ -113,6 +119,20 @@ const OnboardingScreen = () => {
 
           {step === 2 && (
             <>
+              <Text style={styles.label}>Ingresos Mensuales Estimados</Text>
+              <Input
+                value={estimatedIncome}
+                placeholder="Ej. 5000"
+                keyboardType="numeric"
+                onChangeText={text => {
+                  setEstimatedIncome(text);
+                  setExpensesError(null);
+                }}
+                style={styles.input}
+                status={expensesError ? 'danger' : 'basic'}
+                disabled={loading}
+              />
+
               <Text style={styles.label}>Gastos Fijos (%)</Text>
               <Input
                 value={fixedExpenses}

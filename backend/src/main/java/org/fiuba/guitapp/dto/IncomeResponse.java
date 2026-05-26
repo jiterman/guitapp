@@ -1,7 +1,7 @@
 package org.fiuba.guitapp.dto;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 import java.util.UUID;
 
 import org.fiuba.guitapp.model.IncomeCategory;
@@ -11,5 +11,5 @@ public record IncomeResponse(
         BigDecimal amount,
         String description,
         IncomeCategory category,
-        LocalDateTime date) {
+        LocalDate date) {
 }

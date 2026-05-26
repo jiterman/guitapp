@@ -1,6 +1,7 @@
 package org.fiuba.guitapp.dto;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 
 import org.fiuba.guitapp.model.IncomeCategory;
 
@@ -11,5 +12,6 @@ import jakarta.validation.constraints.Size;
 public record AddIncomeRequest(
         @NotNull @Positive BigDecimal amount,
         @Size(max = 255) String description,
-        @NotNull IncomeCategory category) {
+        @NotNull IncomeCategory category,
+        @NotNull LocalDate date) {
 }

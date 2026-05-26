@@ -15,7 +15,6 @@ public enum ExpenseCategory {
     PHARMACY,
     SUBSCRIPTIONS,
     OUTINGS,
-    BAR,
     GYM,
     TRAVEL,
     CLOTHING,
@@ -25,5 +24,6 @@ public enum ExpenseCategory {
     VEHICLE,
     BEAUTY,
     PETS,
+    SHOPPING,
     OTHER
 }

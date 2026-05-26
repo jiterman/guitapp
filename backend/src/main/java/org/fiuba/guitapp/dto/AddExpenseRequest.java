@@ -1,6 +1,7 @@
 package org.fiuba.guitapp.dto;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 
 import org.fiuba.guitapp.model.ExpenseCategory;
 import org.fiuba.guitapp.model.ExpenseType;
@@ -13,5 +14,6 @@ public record AddExpenseRequest(
         @NotNull @Positive BigDecimal amount,
         @Size(max = 255) String description,
         @NotNull ExpenseCategory category,
-        @NotNull ExpenseType type) {
+        @NotNull ExpenseType type,
+        @NotNull LocalDate date) {
 }

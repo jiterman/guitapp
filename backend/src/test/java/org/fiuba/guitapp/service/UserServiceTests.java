@@ -4,12 +4,15 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
+import org.fiuba.guitapp.dto.ConfirmPasswordChangeRequest;
 import org.fiuba.guitapp.dto.InitiateEmailChangeRequest;
+import org.fiuba.guitapp.dto.InitiatePasswordChangeRequest;
 import org.fiuba.guitapp.dto.OnboardingRequest;
 import org.fiuba.guitapp.dto.UpdateUserProfileRequest;
 import org.fiuba.guitapp.dto.UserProfileResponse;
@@ -26,6 +29,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import com.cloudinary.Cloudinary;
 import com.cloudinary.Uploader;
@@ -51,6 +55,9 @@ class UserServiceTests {
     @InjectMocks
     private UserService userService;
 
+    @Mock
+    private PasswordEncoder passwordEncoder;
+
     private User testUser;
     private String testEmail = "test@example.com";
 
@@ -70,6 +77,7 @@ class UserServiceTests {
         testUser.setTargetFixedExpenses(30);
         testUser.setTargetVariableExpenses(50);
         testUser.setTargetSavings(20);
+        testUser.setEstimatedMonthlyIncome(java.math.BigDecimal.valueOf(5000));
         testUser.setOnboardingCompleted(true);
 
         when(userRepository.findByEmail(testEmail)).thenReturn(Optional.of(testUser));
@@ -81,6 +89,7 @@ class UserServiceTests {
         assertEquals(testUser.getEmail(), response.email());
         assertEquals(testUser.getFirstName(), response.firstName());
         assertTrue(response.onboardingCompleted());
+        assertEquals(java.math.BigDecimal.valueOf(5000), response.estimatedMonthlyIncome());
         assertEquals(30, response.targetFixedExpenses());
         assertEquals(50, response.targetVariableExpenses());
         assertEquals(20, response.targetSavings());
@@ -102,7 +111,7 @@ class UserServiceTests {
 
     @Test
     void completeOnboarding_ShouldCompleteOnboarding_WithValidData() {
-        OnboardingRequest request = new OnboardingRequest("Maria", 30, 50);
+        OnboardingRequest request = new OnboardingRequest("Maria", 30, 50, java.math.BigDecimal.valueOf(5000));
         when(userRepository.findByEmail(testEmail)).thenReturn(Optional.of(testUser));
         when(userRepository.save(any(User.class))).thenReturn(testUser);
 
@@ -114,12 +123,13 @@ class UserServiceTests {
         assertEquals(30, testUser.getTargetFixedExpenses());
         assertEquals(50, testUser.getTargetVariableExpenses());
         assertEquals(20, testUser.getTargetSavings());
+        assertEquals(java.math.BigDecimal.valueOf(5000), testUser.getEstimatedMonthlyIncome());
         assertTrue(testUser.isOnboardingCompleted());
     }
 
     @Test
     void completeOnboarding_ShouldCalculateSavingsCorrectly_WithDifferentExpenses() {
-        OnboardingRequest request = new OnboardingRequest("John", 40, 40);
+        OnboardingRequest request = new OnboardingRequest("John", 40, 40, java.math.BigDecimal.valueOf(5000));
         when(userRepository.findByEmail(testEmail)).thenReturn(Optional.of(testUser));
         when(userRepository.save(any(User.class))).thenReturn(testUser);
 
@@ -131,7 +141,7 @@ class UserServiceTests {
 
     @Test
     void completeOnboarding_ShouldThrowException_WhenUserNotFound() {
-        OnboardingRequest request = new OnboardingRequest("John", 30, 50);
+        OnboardingRequest request = new OnboardingRequest("John", 30, 50, java.math.BigDecimal.valueOf(5000));
         when(userRepository.findByEmail(testEmail)).thenReturn(Optional.empty());
 
         AuthException exception = assertThrows(AuthException.class, () -> {
@@ -146,7 +156,7 @@ class UserServiceTests {
     @Test
     void completeOnboarding_ShouldThrowException_WhenOnboardingAlreadyCompleted() {
         testUser.setOnboardingCompleted(true);
-        OnboardingRequest request = new OnboardingRequest("John", 30, 50);
+        OnboardingRequest request = new OnboardingRequest("John", 30, 50, java.math.BigDecimal.valueOf(5000));
         when(userRepository.findByEmail(testEmail)).thenReturn(Optional.of(testUser));
 
         IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
@@ -160,7 +170,7 @@ class UserServiceTests {
 
     @Test
     void completeOnboarding_ShouldAllowZeroSavings_WhenExpensesEqualTo100() {
-        OnboardingRequest request = new OnboardingRequest("John", 50, 50);
+        OnboardingRequest request = new OnboardingRequest("John", 50, 50, java.math.BigDecimal.valueOf(5000));
         when(userRepository.findByEmail(testEmail)).thenReturn(Optional.of(testUser));
         when(userRepository.save(any(User.class))).thenReturn(testUser);
 
@@ -173,7 +183,7 @@ class UserServiceTests {
 
     @Test
     void completeOnboarding_ShouldThrowException_WhenExpensesGreaterThan100() {
-        OnboardingRequest request = new OnboardingRequest("John", 60, 50);
+        OnboardingRequest request = new OnboardingRequest("John", 60, 50, java.math.BigDecimal.valueOf(5000));
         when(userRepository.findByEmail(testEmail)).thenReturn(Optional.of(testUser));
 
         IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
@@ -186,7 +196,7 @@ class UserServiceTests {
 
     @Test
     void completeOnboarding_ShouldAllowMinimumSavings_WithExpensesAt99() {
-        OnboardingRequest request = new OnboardingRequest("John", 49, 50);
+        OnboardingRequest request = new OnboardingRequest("John", 49, 50, java.math.BigDecimal.valueOf(5000));
         when(userRepository.findByEmail(testEmail)).thenReturn(Optional.of(testUser));
         when(userRepository.save(any(User.class))).thenReturn(testUser);
 
@@ -459,5 +469,301 @@ class UserServiceTests {
 
         assertEquals(ErrorCode.OTP_EXPIRED, exception.getErrorCode());
         verify(userRepository, never()).save(any(User.class));
+    }
+
+    @Test
+    void initiatePasswordChange_ShouldThrowException_WhenUserNotFound() {
+        InitiatePasswordChangeRequest request = new InitiatePasswordChangeRequest("currentPassword", "newPassword123");
+
+        when(userRepository.findByEmail(testEmail)).thenReturn(Optional.empty());
+
+        AuthException exception = assertThrows(AuthException.class, () -> {
+            userService.initiatePasswordChange(testEmail, request);
+        });
+
+        assertEquals(ErrorCode.USER_NOT_FOUND, exception.getErrorCode());
+        assertEquals("User not found", exception.getMessage());
+        verify(passwordEncoder, never()).matches(anyString(), anyString());
+        verify(userRepository, never()).save(any(User.class));
+    }
+
+    @Test
+    void initiatePasswordChange_ShouldThrowException_WhenCurrentPasswordIsIncorrect() {
+        InitiatePasswordChangeRequest request = new InitiatePasswordChangeRequest("wrongPassword", "newPassword123");
+
+        when(userRepository.findByEmail(testEmail)).thenReturn(Optional.of(testUser));
+        when(passwordEncoder.matches("wrongPassword", testUser.getPassword()))
+                .thenReturn(false);
+
+        AuthException exception = assertThrows(AuthException.class, () -> {
+            userService.initiatePasswordChange(testEmail, request);
+        });
+
+        assertEquals(ErrorCode.INVALID_CREDENTIALS, exception.getErrorCode());
+        assertEquals("La contraseña actual es incorrecta", exception.getMessage());
+        verify(userRepository, never()).save(any(User.class));
+    }
+
+    @Test
+    void initiatePasswordChange_ShouldThrowException_WhenNewPasswordIsSameAsCurrent() {
+        InitiatePasswordChangeRequest request = new InitiatePasswordChangeRequest("currentPassword", "currentPassword");
+
+        when(userRepository.findByEmail(testEmail)).thenReturn(Optional.of(testUser));
+        when(passwordEncoder.matches("currentPassword", testUser.getPassword()))
+                .thenReturn(true);
+
+        IllegalArgumentException exception = assertThrows(
+                IllegalArgumentException.class,
+                () -> userService.initiatePasswordChange(testEmail, request));
+
+        assertEquals(
+                "La nueva contraseña debe ser diferente a la actual",
+                exception.getMessage());
+
+        verify(userRepository, never()).save(any(User.class));
+    }
+
+    @Test
+    void initiatePasswordChange_ShouldSavePendingPassword_WhenRequestIsValid() {
+        String currentPassword = "currentPassword";
+        String newPassword = "newPassword123";
+        String encodedNewPassword = "encodedNewPassword";
+
+        InitiatePasswordChangeRequest request = new InitiatePasswordChangeRequest(currentPassword, newPassword);
+
+        when(userRepository.findByEmail(testEmail)).thenReturn(Optional.of(testUser));
+        when(passwordEncoder.matches(currentPassword, testUser.getPassword()))
+                .thenReturn(true);
+        when(passwordEncoder.matches(newPassword, testUser.getPassword()))
+                .thenReturn(false);
+        when(passwordEncoder.encode(newPassword))
+                .thenReturn(encodedNewPassword);
+
+        userService.initiatePasswordChange(testEmail, request);
+
+        assertEquals(encodedNewPassword, testUser.getPendingPassword());
+        verify(userRepository).save(testUser);
+        verify(passwordEncoder).encode(newPassword);
+    }
+
+    @Test
+    void confirmPasswordChange_ShouldThrowException_WhenUserNotFound() {
+        ConfirmPasswordChangeRequest request = new ConfirmPasswordChangeRequest(true);
+
+        when(userRepository.findByEmail(testEmail)).thenReturn(Optional.empty());
+
+        AuthException exception = assertThrows(AuthException.class, () -> {
+            userService.confirmPasswordChange(testEmail, request);
+        });
+
+        assertEquals(ErrorCode.USER_NOT_FOUND, exception.getErrorCode());
+        assertEquals("User not found", exception.getMessage());
+        verify(userRepository, never()).save(any(User.class));
+    }
+
+    @Test
+    void confirmPasswordChange_ShouldThrowException_WhenNoPendingPassword() {
+        testUser.setPendingPassword(null);
+        ConfirmPasswordChangeRequest request = new ConfirmPasswordChangeRequest(true);
+
+        when(userRepository.findByEmail(testEmail))
+                .thenReturn(Optional.of(testUser));
+
+        IllegalArgumentException exception = assertThrows(
+                IllegalArgumentException.class,
+                () -> userService.confirmPasswordChange(testEmail, request));
+
+        assertEquals(
+                "No hay un cambio de contraseña pendiente",
+                exception.getMessage());
+        verify(userRepository, never()).save(any(User.class));
+    }
+
+    @Test
+    void confirmPasswordChange_ShouldUpdatePasswordAndClearPendingPassword_WhenConfirmed() {
+        String currentPassword = "encodedCurrentPassword";
+        String pendingPassword = "encodedNewPassword";
+
+        testUser.setPassword(currentPassword);
+        testUser.setPendingPassword(pendingPassword);
+
+        ConfirmPasswordChangeRequest request = new ConfirmPasswordChangeRequest(true);
+
+        when(userRepository.findByEmail(testEmail))
+                .thenReturn(Optional.of(testUser));
+
+        userService.confirmPasswordChange(testEmail, request);
+
+        assertEquals(pendingPassword, testUser.getPassword());
+        assertNull(testUser.getPendingPassword());
+        verify(userRepository).save(testUser);
+    }
+
+    @Test
+    void confirmPasswordChange_ShouldKeepCurrentPasswordAndClearPendingPassword_WhenRejected() {
+        String currentPassword = "encodedCurrentPassword";
+        String pendingPassword = "encodedNewPassword";
+
+        testUser.setPassword(currentPassword);
+        testUser.setPendingPassword(pendingPassword);
+
+        ConfirmPasswordChangeRequest request = new ConfirmPasswordChangeRequest(false);
+
+        when(userRepository.findByEmail(testEmail))
+                .thenReturn(Optional.of(testUser));
+
+        userService.confirmPasswordChange(testEmail, request);
+
+        assertEquals(currentPassword, testUser.getPassword());
+        assertNull(testUser.getPendingPassword());
+        verify(userRepository).save(testUser);
+    }
+
+    @Test
+    void updateFcmToken_ShouldUpdateToken_WhenUserExists() {
+        String fcmToken = "new-fcm-token";
+        when(userRepository.findByEmail(testEmail)).thenReturn(Optional.of(testUser));
+
+        userService.updateFcmToken(testEmail, fcmToken);
+
+        assertEquals(fcmToken, testUser.getFcmToken());
+        verify(userRepository, times(1)).save(testUser);
+    }
+
+    @Test
+    void updateEstimatedMonthlyIncome_ShouldUpdateIncome_WhenValidValue() {
+        BigDecimal income = BigDecimal.valueOf(75000);
+        testUser.setEstimatedMonthlyIncome(BigDecimal.ZERO);
+
+        when(userRepository.findByEmail(testEmail)).thenReturn(Optional.of(testUser));
+
+        UserProfileResponse response = userService.updateEstimatedMonthlyIncome(testEmail, income);
+
+        assertEquals(income, testUser.getEstimatedMonthlyIncome());
+        verify(userRepository).save(testUser);
+        assertNotNull(response);
+        assertEquals(income, response.estimatedMonthlyIncome());
+    }
+
+    @Test
+    void updateEstimatedMonthlyIncome_ShouldAllowZero() {
+        BigDecimal income = BigDecimal.ZERO;
+
+        when(userRepository.findByEmail(testEmail)).thenReturn(Optional.of(testUser));
+
+        userService.updateEstimatedMonthlyIncome(testEmail, income);
+
+        assertEquals(BigDecimal.ZERO, testUser.getEstimatedMonthlyIncome());
+        verify(userRepository).save(testUser);
+    }
+
+    @Test
+    void updateEstimatedMonthlyIncome_ShouldThrowException_WhenValueIsNull() {
+        when(userRepository.findByEmail(testEmail)).thenReturn(Optional.of(testUser));
+
+        IllegalArgumentException ex = assertThrows(
+                IllegalArgumentException.class,
+                () -> userService.updateEstimatedMonthlyIncome(testEmail, null));
+
+        assertEquals("Estimated monthly income cannot be null", ex.getMessage());
+        verify(userRepository, never()).save(any());
+    }
+
+    @Test
+    void updateEstimatedMonthlyIncome_ShouldThrowException_WhenValueIsNegative() {
+        when(userRepository.findByEmail(testEmail)).thenReturn(Optional.of(testUser));
+
+        IllegalArgumentException ex = assertThrows(
+                IllegalArgumentException.class,
+                () -> userService.updateEstimatedMonthlyIncome(testEmail, BigDecimal.valueOf(-100)));
+
+        assertEquals("Estimated monthly income cannot be negative", ex.getMessage());
+        verify(userRepository, never()).save(any());
+    }
+
+    @Test
+    void updateEstimatedMonthlyIncome_ShouldThrowException_WhenUserNotFound() {
+        when(userRepository.findByEmail(testEmail)).thenReturn(Optional.empty());
+
+        AuthException ex = assertThrows(
+                AuthException.class,
+                () -> userService.updateEstimatedMonthlyIncome(testEmail, BigDecimal.valueOf(5000)));
+
+        assertEquals(ErrorCode.USER_NOT_FOUND, ex.getErrorCode());
+        verify(userRepository, never()).save(any());
+    }
+
+    @Test
+    void updateExpensesStructure_ShouldUpdateUserAndSavings_WhenValidValues() {
+        Integer fixed = 50;
+        Integer variable = 30;
+
+        testUser.setTargetFixedExpenses(0);
+        testUser.setTargetVariableExpenses(0);
+        testUser.setTargetSavings(0);
+
+        when(userRepository.findByEmail(testEmail))
+                .thenReturn(Optional.of(testUser));
+
+        UserProfileResponse response = userService.updateExpensesStructure(
+                testEmail,
+                fixed,
+                variable);
+
+        assertEquals(fixed, testUser.getTargetFixedExpenses());
+        assertEquals(variable, testUser.getTargetVariableExpenses());
+        assertEquals(20, testUser.getTargetSavings());
+
+        verify(userRepository).save(testUser);
+
+        assertNotNull(response);
+        assertEquals(fixed, response.targetFixedExpenses());
+        assertEquals(variable, response.targetVariableExpenses());
+        assertEquals(20, response.targetSavings());
+    }
+
+    @Test
+    void updateExpensesStructure_ShouldThrowException_WhenValuesAreNull() {
+        when(userRepository.findByEmail(testEmail))
+                .thenReturn(Optional.of(testUser));
+
+        IllegalArgumentException ex = assertThrows(
+                IllegalArgumentException.class,
+                () -> userService.updateExpensesStructure(testEmail, null, null)
+        );
+
+        assertEquals("Targets cannot be null", ex.getMessage());
+
+        verify(userRepository, times(0)).save(any());
+    }
+
+    @Test
+    void updateExpensesStructure_ShouldThrowException_WhenValuesAreNegative() {
+        when(userRepository.findByEmail(testEmail))
+                .thenReturn(Optional.of(testUser));
+
+        IllegalArgumentException ex = assertThrows(
+                IllegalArgumentException.class,
+                () -> userService.updateExpensesStructure(testEmail, -10, 20)
+        );
+
+        assertEquals("Targets cannot be negative", ex.getMessage());
+
+        verify(userRepository, times(0)).save(any());
+    }
+
+    @Test
+    void updateExpensesStructure_ShouldThrowException_WhenSumExceeds100() {
+        when(userRepository.findByEmail(testEmail))
+                .thenReturn(Optional.of(testUser));
+
+        IllegalArgumentException ex = assertThrows(
+                IllegalArgumentException.class,
+                () -> userService.updateExpensesStructure(testEmail, 80, 30)
+        );
+
+        assertEquals("Sum of expenses cannot exceed 100", ex.getMessage());
+
+        verify(userRepository, times(0)).save(any());
     }
 }
