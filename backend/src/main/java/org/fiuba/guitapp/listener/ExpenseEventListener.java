@@ -94,15 +94,40 @@ public class ExpenseEventListener {
             log.info("Enviando notificacion al usuario por gasto de categoria superior al mes anterior");
             Locale localeArg = Locale.of("es", "AR");
             String message = String.format(localeArg,
-                    "Tu gasto en %s supera al mes anterior. Revisá tus gastos.",
+                    "Tu gasto en la categoría %s supera al mes anterior. Revisá tus gastos.",
                     formatCategory(category));
             notificationService.sendCategoryOverspendingNotification(user, message);
         }
     }
 
     private String formatCategory(ExpenseCategory category) {
-        String raw = category.name().toLowerCase().replace('_', ' ');
-        return Character.toUpperCase(raw.charAt(0)) + raw.substring(1);
+        return switch (category) {
+        case SUPERMARKET -> "Supermercado";
+        case RESTAURANT -> "Restaurante";
+        case CAFE -> "Café";
+        case DELIVERY -> "Delivery";
+        case PUBLIC_TRANSPORT -> "Transporte público";
+        case FUEL -> "Combustible";
+        case TAXI -> "Taxi";
+        case UTILITIES -> "Servicios";
+        case RENT -> "Alquiler";
+        case HOME -> "Hogar";
+        case DOCTOR -> "Doctor";
+        case PHARMACY -> "Farmacia";
+        case SUBSCRIPTIONS -> "Suscripciones";
+        case OUTINGS -> "Salidas";
+        case GYM -> "Gimnasio";
+        case TRAVEL -> "Viajes";
+        case CLOTHING -> "Ropa";
+        case EDUCATION -> "Educación";
+        case TECHNOLOGY -> "Tecnología";
+        case HOA_FEES -> "Cuota de consorcio";
+        case VEHICLE -> "Vehículo";
+        case BEAUTY -> "Belleza";
+        case PETS -> "Mascotas";
+        case SHOPPING -> "Compras";
+        case OTHER -> "Otro";
+        };
     }
 
     private void checkFixedThreshold(User user, List<Expense> monthlyExpenses) {

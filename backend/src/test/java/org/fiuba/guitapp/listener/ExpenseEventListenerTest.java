@@ -187,7 +187,7 @@ class ExpenseEventListenerTest {
     void handleExpenseCreatedEvent_ShouldNotSendNotification_WhenIncomeIsZero() {
         testUser.setEstimatedMonthlyIncome(BigDecimal.ZERO);
         when(userRepository.findByEmail(userEmail)).thenReturn(Optional.of(testUser));
-        when(expenseRepository.findAllByUserAndDateBetween(eq(testUser), any(LocalDate.class), any(LocalDate.class)))
+        lenient().when(expenseRepository.findAllByUserAndDateBetween(eq(testUser), any(LocalDate.class), any(LocalDate.class)))
                 .thenReturn(Collections.emptyList());
 
         expenseEventListener.handleExpenseCreatedEvent(testExpenseCreatedEvent);
@@ -226,7 +226,7 @@ class ExpenseEventListenerTest {
         expenseEventListener.handleExpenseCreatedEvent(testExpenseCreatedEvent);
 
         verify(notificationService, times(1)).sendCategoryOverspendingNotification(eq(testUser),
-                argThat(s -> s.contains("supera al mes anterior") && s.contains("Revisá ese rubro")));
+                argThat(s -> s.contains("supera al mes anterior") && s.contains("Supermercado")));
         verify(notificationService, never()).sendExpenseThresholdExceededNotification(any(), any());
     }
 
