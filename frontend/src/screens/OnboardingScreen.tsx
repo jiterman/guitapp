@@ -4,7 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Layout, Text, Input, Button } from '@ui-kitten/components';
 import { router } from 'expo-router';
 import { userService } from '../services/userService';
-import { useUser } from '../context/user/context';
+import { useUser } from '../context/user';
 import { validateFirstName } from '../utils/validation';
 import { loginStyles as styles } from '../styles/loginStyles';
 import { OnboardingError } from '../types/errors';

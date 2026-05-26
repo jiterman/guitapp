@@ -278,9 +278,10 @@ class ExpenseControllerTests {
     @WithMockUser(username = "test@example.com")
     void analyzeReceipt_ShouldReturnAnalysis_WhenFileIsProvided() throws Exception {
         ReceiptAnalysisResponse response = new ReceiptAnalysisResponse(
+                "2023-10-27",
                 new BigDecimal("123.45"),
-                "Test Analysis",
-                ExpenseCategory.OTHER);
+                ExpenseCategory.OTHER,
+                "Test Analysis");
 
         when(geminiService.analyzeReceipt(any())).thenReturn(response);
 
