@@ -97,23 +97,26 @@ const ShareIntentScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: '#E6F2FC',
   },
   scrollContent: {
     flexGrow: 1,
-    padding: 20,
+    paddingHorizontal: 20,
+    paddingTop: 20,
   },
   subHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginTop: 20,
     marginBottom: 40,
   },
   title: {
     fontWeight: 'bold',
+    color: '#003366',
+    fontSize: 24,
   },
   closeButton: {
-    fontSize: 20,
+    fontSize: 24,
     color: '#7f8c8d',
     padding: 5,
   },
@@ -121,18 +124,21 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    marginTop: 100,
+    paddingTop: 100,
   },
   statusText: {
     marginTop: 20,
     textAlign: 'center',
-    fontWeight: '600',
+    fontWeight: 'bold',
+    color: '#003366',
+    fontSize: 18,
   },
   subText: {
     marginTop: 8,
     textAlign: 'center',
-    color: '#7f8c8d',
+    color: '#006699',
     paddingHorizontal: 20,
+    fontSize: 16,
   },
 });
 

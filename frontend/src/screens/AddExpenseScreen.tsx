@@ -34,11 +34,16 @@ const AddExpenseScreen = () => {
     (params.amount as string) || ''
   );
   const [description, setDescription] = useState((params.description as string) || '');
+  const initialCategory = getExpenseCategory(params.category as string) || null;
+  const initialDate = params.date ? new Date(params.date as string) : new Date();
+
   const [selectedCategory, setSelectedCategory] = useState<ExpenseCategoryOption | null>(
-    getExpenseCategory(params.category as string) || null
+    initialCategory
   );
-  const [selectedType, setSelectedType] = useState<ExpenseType | null>(null);
-  const [selectedDate, setSelectedDate] = useState(new Date());
+  const [selectedType, setSelectedType] = useState<ExpenseType | null>(
+    initialCategory?.defaultType || null
+  );
+  const [selectedDate, setSelectedDate] = useState(initialDate);
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
@@ -102,7 +107,11 @@ const AddExpenseScreen = () => {
         type: selectedType!,
         date: dateString,
       });
-      router.back();
+      if (params.fromShareIntent === 'true') {
+        router.replace('/(app)/home');
+      } else {
+        router.back();
+      }
     } catch {
       Alert.alert('Error', 'No se pudo registrar el gasto. Intentá de nuevo.');
     } finally {
@@ -117,7 +126,15 @@ const AddExpenseScreen = () => {
           <Text category="h4" style={styles.title}>
             Agregar gasto
           </Text>
-          <TouchableOpacity onPress={() => router.back()}>
+          <TouchableOpacity
+            onPress={() => {
+              if (params.fromShareIntent === 'true') {
+                router.replace('/(app)/home');
+              } else {
+                router.back();
+              }
+            }}
+          >
             <Text style={styles.closeButton}>✕</Text>
           </TouchableOpacity>
         </View>
