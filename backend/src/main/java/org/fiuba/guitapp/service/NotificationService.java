@@ -17,22 +17,22 @@ public class NotificationService {
 
     public void sendExpenseThresholdExceededNotification(User user, String body) {
         sendNotification(user, "Se nos fue la mano \uD83D\uDCB8", body,
-            "limite de gastos excedido");
+                "limite de gastos excedido");
     }
 
     public void sendSavingsGoalAtRiskNotification(User user, String body) {
         sendNotification(user, "Se nos fue la mano \uD83D\uDCB8", body,
-            "meta de ahorro en riesgo");
+                "meta de ahorro en riesgo");
     }
 
     public void sendNegativeBalanceRiskNotification(User user, String body) {
         sendNotification(user, "Se nos fue la mano \uD83D\uDCB8", body,
-            "saldo negativo proyectado");
+                "saldo negativo proyectado");
     }
 
     public void sendCategoryOverspendingNotification(User user, String body) {
         sendNotification(user, "Venimos gastando un poco más 📈", body,
-            "gasto por categoria superior al mes anterior");
+                "gasto por categoria superior al mes anterior");
     }
 
     private void sendNotification(User user, String title, String body, String logContext) {

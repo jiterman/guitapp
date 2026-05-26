@@ -276,6 +276,93 @@ class ExpenseEventListenerTest {
     }
 
     @Test
+    void handleExpenseCreatedEvent_ShouldNotSendCategoryOverspendingNotification_WhenPreviousMonthIsZero() {
+        testUser.setTargetFixedExpenses(null);
+        testUser.setTargetVariableExpenses(null);
+
+        LocalDate eventDate = baseDate;
+        YearMonth eventMonth = YearMonth.from(eventDate);
+        YearMonth previousMonth = eventMonth.minusMonths(1);
+
+        testExpenseCreatedEvent = new ExpenseCreatedEvent(expenseId, userEmail, amount, eventDate, ExpenseType.VARIABLE);
+        when(userRepository.findByEmail(userEmail)).thenReturn(Optional.of(testUser));
+
+        Expense createdExpense = new Expense();
+        createdExpense.setCategory(ExpenseCategory.SUPERMARKET);
+        createdExpense.setType(ExpenseType.VARIABLE);
+        createdExpense.setAmount(amount);
+        when(expenseRepository.findById(expenseId)).thenReturn(Optional.of(createdExpense));
+
+        Expense currentMonthExpense = new Expense();
+        currentMonthExpense.setAmount(new BigDecimal("20000"));
+        currentMonthExpense.setType(ExpenseType.VARIABLE);
+        currentMonthExpense.setCategory(ExpenseCategory.SUPERMARKET);
+
+        when(expenseRepository.findAllByUserAndDateBetween(eq(testUser), any(LocalDate.class), any(LocalDate.class)))
+                .thenAnswer(invocation -> {
+                    LocalDate start = invocation.getArgument(1);
+                    YearMonth startMonth = YearMonth.from(start);
+                    if (startMonth.equals(eventMonth)) {
+                        return Collections.singletonList(currentMonthExpense);
+                    }
+                    if (startMonth.equals(previousMonth)) {
+                        return Collections.emptyList();
+                    }
+                    return Collections.emptyList();
+                });
+
+        expenseEventListener.handleExpenseCreatedEvent(testExpenseCreatedEvent);
+
+        verify(notificationService, never()).sendCategoryOverspendingNotification(any(), any());
+    }
+
+    @Test
+    void handleExpenseCreatedEvent_ShouldNotSendCategoryOverspendingNotification_WhenCurrentNotExceedPrevious() {
+        testUser.setTargetFixedExpenses(null);
+        testUser.setTargetVariableExpenses(null);
+
+        LocalDate eventDate = baseDate;
+        YearMonth eventMonth = YearMonth.from(eventDate);
+        YearMonth previousMonth = eventMonth.minusMonths(1);
+
+        testExpenseCreatedEvent = new ExpenseCreatedEvent(expenseId, userEmail, amount, eventDate, ExpenseType.VARIABLE);
+        when(userRepository.findByEmail(userEmail)).thenReturn(Optional.of(testUser));
+
+        Expense createdExpense = new Expense();
+        createdExpense.setCategory(ExpenseCategory.SUPERMARKET);
+        createdExpense.setType(ExpenseType.VARIABLE);
+        createdExpense.setAmount(amount);
+        when(expenseRepository.findById(expenseId)).thenReturn(Optional.of(createdExpense));
+
+        Expense currentMonthExpense = new Expense();
+        currentMonthExpense.setAmount(new BigDecimal("9000"));
+        currentMonthExpense.setType(ExpenseType.VARIABLE);
+        currentMonthExpense.setCategory(ExpenseCategory.SUPERMARKET);
+
+        Expense previousMonthExpense = new Expense();
+        previousMonthExpense.setAmount(new BigDecimal("10000"));
+        previousMonthExpense.setType(ExpenseType.VARIABLE);
+        previousMonthExpense.setCategory(ExpenseCategory.SUPERMARKET);
+
+        when(expenseRepository.findAllByUserAndDateBetween(eq(testUser), any(LocalDate.class), any(LocalDate.class)))
+                .thenAnswer(invocation -> {
+                    LocalDate start = invocation.getArgument(1);
+                    YearMonth startMonth = YearMonth.from(start);
+                    if (startMonth.equals(eventMonth)) {
+                        return Collections.singletonList(currentMonthExpense);
+                    }
+                    if (startMonth.equals(previousMonth)) {
+                        return Collections.singletonList(previousMonthExpense);
+                    }
+                    return Collections.emptyList();
+                });
+
+        expenseEventListener.handleExpenseCreatedEvent(testExpenseCreatedEvent);
+
+        verify(notificationService, never()).sendCategoryOverspendingNotification(any(), any());
+    }
+
+    @Test
     void handleExpenseCreatedEvent_ShouldThrowAuthException_WhenUserNotFound() {
         when(userRepository.findByEmail(userEmail)).thenReturn(Optional.empty());
 
@@ -307,6 +394,41 @@ class ExpenseEventListenerTest {
         expenseEventListener.handleExpenseCreatedEvent(testExpenseCreatedEvent);
 
         verify(notificationService, never()).sendExpenseThresholdExceededNotification(any(), any());
+    }
+
+    @Test
+    void handleExpenseCreatedEvent_ShouldNotSendProjectionNotifications_WhenMonthDoesNotMatch() {
+        testUser.setTargetFixedExpenses(null);
+        testUser.setTargetVariableExpenses(null);
+        testUser.setTargetSavings(20);
+
+        LocalDate eventDate = LocalDate.now().minusMonths(2).withDayOfMonth(10);
+        testExpenseCreatedEvent = new ExpenseCreatedEvent(expenseId, userEmail, amount, eventDate, ExpenseType.VARIABLE);
+        when(userRepository.findByEmail(userEmail)).thenReturn(Optional.of(testUser));
+
+        expenseEventListener.handleExpenseCreatedEvent(testExpenseCreatedEvent);
+
+        verify(notificationService, never()).sendNegativeBalanceRiskNotification(any(), any());
+        verify(notificationService, never()).sendSavingsGoalAtRiskNotification(any(), any());
+    }
+
+    @Test
+    void handleExpenseCreatedEvent_ShouldNotSendProjectionNotifications_WhenEstimatedMonthlyIncomeIsNull() {
+        LocalDate today = LocalDate.now();
+        Assumptions.assumeTrue(today.getDayOfMonth() > 5);
+
+        testUser.setTargetFixedExpenses(null);
+        testUser.setTargetVariableExpenses(null);
+        testUser.setTargetSavings(20);
+        testUser.setEstimatedMonthlyIncome(null);
+
+        testExpenseCreatedEvent = new ExpenseCreatedEvent(expenseId, userEmail, amount, today, ExpenseType.VARIABLE);
+        when(userRepository.findByEmail(userEmail)).thenReturn(Optional.of(testUser));
+
+        expenseEventListener.handleExpenseCreatedEvent(testExpenseCreatedEvent);
+
+        verify(notificationService, never()).sendNegativeBalanceRiskNotification(any(), any());
+        verify(notificationService, never()).sendSavingsGoalAtRiskNotification(any(), any());
     }
 
     @Test
