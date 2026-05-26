@@ -10,6 +10,7 @@ export interface UserProfile {
   targetFixedExpenses: number;
   targetVariableExpenses: number;
   targetSavings: number;
+  estimatedMonthlyIncome: number;
   onboardingCompleted: boolean;
   createdAt: string;
 }

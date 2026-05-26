@@ -30,6 +30,11 @@ public class NotificationService {
                 "negative balance risk");
     }
 
+    public void sendCategoryOverspendingNotification(User user, String body) {
+        sendNotification(user, "Venimos gastando un poco más 📈", body,
+                "category overspending");
+    }
+
     private void sendNotification(User user, String title, String body, String logContext) {
         if (user.getFcmToken() == null || user.getFcmToken().isEmpty()) {
             return;

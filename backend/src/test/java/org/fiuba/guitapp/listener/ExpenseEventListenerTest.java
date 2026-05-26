@@ -6,6 +6,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
+import java.lang.reflect.Method;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
@@ -19,6 +20,7 @@ import org.fiuba.guitapp.event.ExpenseCreatedEvent;
 import org.fiuba.guitapp.exception.AuthException;
 import org.fiuba.guitapp.exception.ErrorCode;
 import org.fiuba.guitapp.model.Expense;
+import org.fiuba.guitapp.model.ExpenseCategory;
 import org.fiuba.guitapp.model.ExpenseType;
 import org.fiuba.guitapp.model.User;
 import org.fiuba.guitapp.model.UserStatus;
@@ -26,8 +28,8 @@ import org.fiuba.guitapp.repository.ExpenseRepository;
 import org.fiuba.guitapp.repository.IncomeRepository;
 import org.fiuba.guitapp.repository.UserRepository;
 import org.fiuba.guitapp.service.NotificationService;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Assumptions;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -75,6 +77,9 @@ class ExpenseEventListenerTest {
         baseDate = LocalDate.now().minusMonths(1).withDayOfMonth(10);
         testExpenseCreatedEvent = new ExpenseCreatedEvent(expenseId, userEmail, amount, baseDate, ExpenseType.VARIABLE);
 
+        lenient().when(expenseRepository.findById(expenseId)).thenReturn(Optional.empty());
+        lenient().when(expenseRepository.findAllByUserAndDateBetween(eq(testUser), any(LocalDate.class), any(LocalDate.class)))
+                .thenReturn(Collections.emptyList());
     }
 
     @Test
@@ -85,10 +90,12 @@ class ExpenseEventListenerTest {
         Expense fixedExpense = new Expense();
         fixedExpense.setAmount(new BigDecimal("60000"));
         fixedExpense.setType(ExpenseType.FIXED);
+        fixedExpense.setCategory(ExpenseCategory.SUPERMARKET);
 
         Expense variableExpense = new Expense();
         variableExpense.setAmount(new BigDecimal("40000"));
         variableExpense.setType(ExpenseType.VARIABLE);
+        variableExpense.setCategory(ExpenseCategory.SUPERMARKET);
 
         when(expenseRepository.findAllByUserAndDateBetween(eq(testUser), any(LocalDate.class), any(LocalDate.class)))
                 .thenReturn(Arrays.asList(fixedExpense, variableExpense));
@@ -108,10 +115,12 @@ class ExpenseEventListenerTest {
         Expense fixedExpense = new Expense();
         fixedExpense.setAmount(new BigDecimal("60000"));
         fixedExpense.setType(ExpenseType.FIXED);
+        fixedExpense.setCategory(ExpenseCategory.SUPERMARKET);
 
         Expense variableExpense = new Expense();
         variableExpense.setAmount(new BigDecimal("40000"));
         variableExpense.setType(ExpenseType.VARIABLE);
+        variableExpense.setCategory(ExpenseCategory.SUPERMARKET);
 
         when(expenseRepository.findAllByUserAndDateBetween(eq(testUser), any(LocalDate.class), any(LocalDate.class)))
                 .thenReturn(Arrays.asList(fixedExpense, variableExpense));
@@ -131,6 +140,7 @@ class ExpenseEventListenerTest {
         Expense fixedExpense = new Expense();
         fixedExpense.setAmount(new BigDecimal("60000"));
         fixedExpense.setType(ExpenseType.FIXED);
+        fixedExpense.setCategory(ExpenseCategory.SUPERMARKET);
 
         when(expenseRepository.findAllByUserAndDateBetween(eq(testUser), any(LocalDate.class), any(LocalDate.class)))
                 .thenReturn(Collections.singletonList(fixedExpense));
@@ -149,6 +159,7 @@ class ExpenseEventListenerTest {
         Expense variableExpense = new Expense();
         variableExpense.setAmount(new BigDecimal("35000"));
         variableExpense.setType(ExpenseType.VARIABLE);
+        variableExpense.setCategory(ExpenseCategory.SUPERMARKET);
 
         when(expenseRepository.findAllByUserAndDateBetween(eq(testUser), any(LocalDate.class), any(LocalDate.class)))
                 .thenReturn(Collections.singletonList(variableExpense));
@@ -166,6 +177,7 @@ class ExpenseEventListenerTest {
         Expense fixedExpense = new Expense();
         fixedExpense.setAmount(new BigDecimal("10000"));
         fixedExpense.setType(ExpenseType.FIXED);
+        fixedExpense.setCategory(ExpenseCategory.SUPERMARKET);
 
         when(expenseRepository.findAllByUserAndDateBetween(eq(testUser), any(LocalDate.class), any(LocalDate.class)))
                 .thenReturn(Collections.singletonList(fixedExpense));
@@ -183,6 +195,88 @@ class ExpenseEventListenerTest {
         expenseEventListener.handleExpenseCreatedEvent(testExpenseCreatedEvent);
 
         verify(notificationService, never()).sendExpenseThresholdExceededNotification(any(), any());
+        verify(notificationService, never()).sendCategoryOverspendingNotification(any(), any());
+        verify(notificationService, never()).sendSavingsGoalAtRiskNotification(any(), any());
+        verify(notificationService, never()).sendNegativeBalanceRiskNotification(any(), any());
+    }
+
+    @Test
+    void handleExpenseCreatedEvent_ShouldSendCategoryOverspendingNotification_WhenCategoryExceedsPreviousMonth() {
+        testUser.setTargetFixedExpenses(null);
+        testUser.setTargetVariableExpenses(null);
+
+        LocalDate eventDate = baseDate;
+        YearMonth eventMonth = YearMonth.from(eventDate);
+        YearMonth previousMonth = eventMonth.minusMonths(1);
+
+        testExpenseCreatedEvent = new ExpenseCreatedEvent(expenseId, userEmail, amount, eventDate, ExpenseType.VARIABLE);
+        when(userRepository.findByEmail(userEmail)).thenReturn(Optional.of(testUser));
+
+        Expense createdExpense = new Expense();
+        createdExpense.setCategory(ExpenseCategory.SUPERMARKET);
+        createdExpense.setType(ExpenseType.VARIABLE);
+        createdExpense.setAmount(amount);
+        when(expenseRepository.findById(expenseId)).thenReturn(Optional.of(createdExpense));
+
+        Expense currentMonthExpense = new Expense();
+        currentMonthExpense.setAmount(new BigDecimal("20000"));
+        currentMonthExpense.setType(ExpenseType.VARIABLE);
+        currentMonthExpense.setCategory(ExpenseCategory.SUPERMARKET);
+
+        Expense previousMonthExpense = new Expense();
+        previousMonthExpense.setAmount(new BigDecimal("10000"));
+        previousMonthExpense.setType(ExpenseType.VARIABLE);
+        previousMonthExpense.setCategory(ExpenseCategory.SUPERMARKET);
+
+        when(expenseRepository.findAllByUserAndDateBetween(eq(testUser), any(LocalDate.class), any(LocalDate.class)))
+                .thenAnswer(invocation -> {
+                    LocalDate start = invocation.getArgument(1);
+                    YearMonth startMonth = YearMonth.from(start);
+                    if (startMonth.equals(eventMonth)) {
+                        return Collections.singletonList(currentMonthExpense);
+                    }
+                    if (startMonth.equals(previousMonth)) {
+                        return Collections.singletonList(previousMonthExpense);
+                    }
+                    return Collections.emptyList();
+                });
+
+        expenseEventListener.handleExpenseCreatedEvent(testExpenseCreatedEvent);
+
+        verify(notificationService, times(1)).sendCategoryOverspendingNotification(eq(testUser),
+                argThat(s -> s.contains("supera al mes anterior") && s.contains("Supermercado")));
+        verify(notificationService, never()).sendExpenseThresholdExceededNotification(any(), any());
+        verify(notificationService, never()).sendSavingsGoalAtRiskNotification(any(), any());
+        verify(notificationService, never()).sendNegativeBalanceRiskNotification(any(), any());
+    }
+
+    @Test
+    void handleExpenseCreatedEvent_ShouldNotSendCategoryOverspendingNotification_WhenCreatedExpenseNotFound() {
+        testUser.setTargetFixedExpenses(null);
+        testUser.setTargetVariableExpenses(null);
+        when(userRepository.findByEmail(userEmail)).thenReturn(Optional.of(testUser));
+        when(expenseRepository.findById(expenseId)).thenReturn(Optional.empty());
+
+        expenseEventListener.handleExpenseCreatedEvent(testExpenseCreatedEvent);
+
+        verify(notificationService, never()).sendCategoryOverspendingNotification(any(), any());
+    }
+
+    @Test
+    void handleExpenseCreatedEvent_ShouldNotSendCategoryOverspendingNotification_WhenCreatedExpenseHasNoCategory() {
+        testUser.setTargetFixedExpenses(null);
+        testUser.setTargetVariableExpenses(null);
+        when(userRepository.findByEmail(userEmail)).thenReturn(Optional.of(testUser));
+
+        Expense createdExpense = new Expense();
+        createdExpense.setCategory(null);
+        createdExpense.setType(ExpenseType.VARIABLE);
+        createdExpense.setAmount(amount);
+        when(expenseRepository.findById(expenseId)).thenReturn(Optional.of(createdExpense));
+
+        expenseEventListener.handleExpenseCreatedEvent(testExpenseCreatedEvent);
+
+        verify(notificationService, never()).sendCategoryOverspendingNotification(any(), any());
     }
 
     @Test
@@ -237,7 +331,7 @@ class ExpenseEventListenerTest {
         when(userRepository.findByEmail(userEmail)).thenReturn(Optional.of(testUser));
 
         when(incomeRepository.findAllByUserAndDateBetween(eq(testUser), any(LocalDate.class), any(LocalDate.class)))
-            .thenReturn(Collections.emptyList());
+                .thenReturn(Collections.emptyList());
 
         BigDecimal expenseAmount = testUser.getEstimatedMonthlyIncome().add(BigDecimal.ONE);
         Expense expense = new Expense();
@@ -255,8 +349,8 @@ class ExpenseEventListenerTest {
         verify(notificationService, never()).sendExpenseThresholdExceededNotification(any(), any());
     }
 
-        @Test
-        void handleExpenseCreatedEvent_ShouldSendSavingsGoalRiskNotification_WhenProjectedExpensesExceedSavingsTargetButNotIncome() {
+    @Test
+    void handleExpenseCreatedEvent_ShouldSendSavingsGoalRiskNotification_WhenProjectedExpensesExceedSavingsTargetButNotIncome() {
         LocalDate today = LocalDate.now();
         Assumptions.assumeTrue(today.getDayOfMonth() > 5);
 
@@ -265,35 +359,192 @@ class ExpenseEventListenerTest {
         testUser.setTargetSavings(20);
 
         testExpenseCreatedEvent = new ExpenseCreatedEvent(
-            expenseId,
-            userEmail,
-            amount,
-            today,
-            ExpenseType.VARIABLE);
+                expenseId,
+                userEmail,
+                amount,
+                today,
+                ExpenseType.VARIABLE);
         when(userRepository.findByEmail(userEmail)).thenReturn(Optional.of(testUser));
 
         when(incomeRepository.findAllByUserAndDateBetween(eq(testUser), any(LocalDate.class), any(LocalDate.class)))
-            .thenReturn(Collections.emptyList());
+                .thenReturn(Collections.emptyList());
 
         int daysElapsed = today.getDayOfMonth();
         int daysInMonth = YearMonth.from(today).lengthOfMonth();
         BigDecimal projectedTarget = new BigDecimal("90000");
         BigDecimal totalExpenses = projectedTarget
-            .multiply(BigDecimal.valueOf(daysElapsed))
-            .divide(BigDecimal.valueOf(daysInMonth), 4, RoundingMode.HALF_UP);
+                .multiply(BigDecimal.valueOf(daysElapsed))
+                .divide(BigDecimal.valueOf(daysInMonth), 4, RoundingMode.HALF_UP);
 
         Expense expense = new Expense();
         expense.setAmount(totalExpenses);
         expense.setType(ExpenseType.VARIABLE);
 
         when(expenseRepository.findAllByUserAndDateBetween(eq(testUser), any(LocalDate.class), any(LocalDate.class)))
-            .thenReturn(Collections.singletonList(expense));
+                .thenReturn(Collections.singletonList(expense));
 
         expenseEventListener.handleExpenseCreatedEvent(testExpenseCreatedEvent);
 
         verify(notificationService, times(1)).sendSavingsGoalAtRiskNotification(eq(testUser),
-            argThat(s -> s.contains("meta de ahorro") || s.contains("meta")));
+                argThat(s -> s.contains("meta de ahorro") || s.contains("meta")));
         verify(notificationService, never()).sendNegativeBalanceRiskNotification(any(), any());
         verify(notificationService, never()).sendExpenseThresholdExceededNotification(any(), any());
-        }
+    }
+
+    @Test
+    void formatCategory_ShouldReturnCorrectSpanishName_ForSupermarketCategory() throws Exception {
+        String result = invokeFormatCategory(ExpenseCategory.SUPERMARKET);
+        assertEquals("Supermercado", result);
+    }
+
+    @Test
+    void formatCategory_ShouldReturnCorrectSpanishName_ForRestaurantCategory() throws Exception {
+        String result = invokeFormatCategory(ExpenseCategory.RESTAURANT);
+        assertEquals("Restaurante", result);
+    }
+
+    @Test
+    void formatCategory_ShouldReturnCorrectSpanishName_ForCafeCategory() throws Exception {
+        String result = invokeFormatCategory(ExpenseCategory.CAFE);
+        assertEquals("Café", result);
+    }
+
+    @Test
+    void formatCategory_ShouldReturnCorrectSpanishName_ForDeliveryCategory() throws Exception {
+        String result = invokeFormatCategory(ExpenseCategory.DELIVERY);
+        assertEquals("Delivery", result);
+    }
+
+    @Test
+    void formatCategory_ShouldReturnCorrectSpanishName_ForPublicTransportCategory() throws Exception {
+        String result = invokeFormatCategory(ExpenseCategory.PUBLIC_TRANSPORT);
+        assertEquals("Transporte público", result);
+    }
+
+    @Test
+    void formatCategory_ShouldReturnCorrectSpanishName_ForFuelCategory() throws Exception {
+        String result = invokeFormatCategory(ExpenseCategory.FUEL);
+        assertEquals("Combustible", result);
+    }
+
+    @Test
+    void formatCategory_ShouldReturnCorrectSpanishName_ForTaxiCategory() throws Exception {
+        String result = invokeFormatCategory(ExpenseCategory.TAXI);
+        assertEquals("Taxi", result);
+    }
+
+    @Test
+    void formatCategory_ShouldReturnCorrectSpanishName_ForUtilitiesCategory() throws Exception {
+        String result = invokeFormatCategory(ExpenseCategory.UTILITIES);
+        assertEquals("Servicios", result);
+    }
+
+    @Test
+    void formatCategory_ShouldReturnCorrectSpanishName_ForRentCategory() throws Exception {
+        String result = invokeFormatCategory(ExpenseCategory.RENT);
+        assertEquals("Alquiler", result);
+    }
+
+    @Test
+    void formatCategory_ShouldReturnCorrectSpanishName_ForHomeCategory() throws Exception {
+        String result = invokeFormatCategory(ExpenseCategory.HOME);
+        assertEquals("Hogar", result);
+    }
+
+    @Test
+    void formatCategory_ShouldReturnCorrectSpanishName_ForDoctorCategory() throws Exception {
+        String result = invokeFormatCategory(ExpenseCategory.DOCTOR);
+        assertEquals("Doctor", result);
+    }
+
+    @Test
+    void formatCategory_ShouldReturnCorrectSpanishName_ForPharmacyCategory() throws Exception {
+        String result = invokeFormatCategory(ExpenseCategory.PHARMACY);
+        assertEquals("Farmacia", result);
+    }
+
+    @Test
+    void formatCategory_ShouldReturnCorrectSpanishName_ForSubscriptionsCategory() throws Exception {
+        String result = invokeFormatCategory(ExpenseCategory.SUBSCRIPTIONS);
+        assertEquals("Suscripciones", result);
+    }
+
+    @Test
+    void formatCategory_ShouldReturnCorrectSpanishName_ForOutingsCategory() throws Exception {
+        String result = invokeFormatCategory(ExpenseCategory.OUTINGS);
+        assertEquals("Salidas", result);
+    }
+
+    @Test
+    void formatCategory_ShouldReturnCorrectSpanishName_ForGymCategory() throws Exception {
+        String result = invokeFormatCategory(ExpenseCategory.GYM);
+        assertEquals("Gimnasio", result);
+    }
+
+    @Test
+    void formatCategory_ShouldReturnCorrectSpanishName_ForTravelCategory() throws Exception {
+        String result = invokeFormatCategory(ExpenseCategory.TRAVEL);
+        assertEquals("Viajes", result);
+    }
+
+    @Test
+    void formatCategory_ShouldReturnCorrectSpanishName_ForClothingCategory() throws Exception {
+        String result = invokeFormatCategory(ExpenseCategory.CLOTHING);
+        assertEquals("Ropa", result);
+    }
+
+    @Test
+    void formatCategory_ShouldReturnCorrectSpanishName_ForEducationCategory() throws Exception {
+        String result = invokeFormatCategory(ExpenseCategory.EDUCATION);
+        assertEquals("Educación", result);
+    }
+
+    @Test
+    void formatCategory_ShouldReturnCorrectSpanishName_ForTechnologyCategory() throws Exception {
+        String result = invokeFormatCategory(ExpenseCategory.TECHNOLOGY);
+        assertEquals("Tecnología", result);
+    }
+
+    @Test
+    void formatCategory_ShouldReturnCorrectSpanishName_ForHoaFeesCategory() throws Exception {
+        String result = invokeFormatCategory(ExpenseCategory.HOA_FEES);
+        assertEquals("Cuota de consorcio", result);
+    }
+
+    @Test
+    void formatCategory_ShouldReturnCorrectSpanishName_ForVehicleCategory() throws Exception {
+        String result = invokeFormatCategory(ExpenseCategory.VEHICLE);
+        assertEquals("Vehículo", result);
+    }
+
+    @Test
+    void formatCategory_ShouldReturnCorrectSpanishName_ForBeautyCategory() throws Exception {
+        String result = invokeFormatCategory(ExpenseCategory.BEAUTY);
+        assertEquals("Belleza", result);
+    }
+
+    @Test
+    void formatCategory_ShouldReturnCorrectSpanishName_ForPetsCategory() throws Exception {
+        String result = invokeFormatCategory(ExpenseCategory.PETS);
+        assertEquals("Mascotas", result);
+    }
+
+    @Test
+    void formatCategory_ShouldReturnCorrectSpanishName_ForShoppingCategory() throws Exception {
+        String result = invokeFormatCategory(ExpenseCategory.SHOPPING);
+        assertEquals("Compras", result);
+    }
+
+    @Test
+    void formatCategory_ShouldReturnCorrectSpanishName_ForOtherCategory() throws Exception {
+        String result = invokeFormatCategory(ExpenseCategory.OTHER);
+        assertEquals("Otro", result);
+    }
+
+    // Helper method to invoke private formatCategory method using reflection
+    private String invokeFormatCategory(ExpenseCategory category) throws Exception {
+        Method method = ExpenseEventListener.class.getDeclaredMethod("formatCategory", ExpenseCategory.class);
+        method.setAccessible(true);
+        return (String) method.invoke(expenseEventListener, category);
+    }
 }

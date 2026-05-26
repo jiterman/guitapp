@@ -12,6 +12,7 @@ import org.fiuba.guitapp.dto.ConfirmPasswordChangeRequest;
 import org.fiuba.guitapp.dto.InitiateEmailChangeRequest;
 import org.fiuba.guitapp.dto.InitiatePasswordChangeRequest;
 import org.fiuba.guitapp.dto.OnboardingRequest;
+import org.fiuba.guitapp.dto.UpdateEstimatedMonthlyIncomeRequest;
 import org.fiuba.guitapp.dto.UpdateExpensesStructureRequest;
 import org.fiuba.guitapp.dto.UpdateFcmTokenRequest;
 import org.fiuba.guitapp.dto.UpdateUserProfileRequest;
@@ -279,6 +280,53 @@ class UserControllerTests {
                 .andExpect(jsonPath("$.message").value("FCM token updated successfully"));
 
         verify(userService, times(1)).updateFcmToken(eq("test@example.com"), eq("some-fcm-token"));
+    }
+
+    @Test
+    @WithMockUser(username = "test@example.com")
+    void updateEstimatedMonthlyIncome_ShouldReturnSuccessMessage() throws Exception {
+        UpdateEstimatedMonthlyIncomeRequest request = new UpdateEstimatedMonthlyIncomeRequest(BigDecimal.valueOf(75000));
+        UUID userId = UUID.randomUUID();
+        UserProfileResponse mockResponse = new UserProfileResponse(
+                userId,
+                "test@example.com",
+                "Test",
+                "User",
+                null,
+                true,
+                BigDecimal.valueOf(75000),
+                30,
+                50,
+                20,
+                java.time.LocalDateTime.now());
+
+        when(userService.updateEstimatedMonthlyIncome(
+                eq("test@example.com"),
+                eq(BigDecimal.valueOf(75000)))).thenReturn(mockResponse);
+
+        mockMvc.perform(patch("/api/users/me/estimated-monthly-income")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.message").value("Estimated monthly income updated successfully"))
+                .andExpect(jsonPath("$.data.estimatedMonthlyIncome").value(75000));
+
+        verify(userService, times(1)).updateEstimatedMonthlyIncome(
+                eq("test@example.com"),
+                eq(BigDecimal.valueOf(75000)));
+    }
+
+    @Test
+    @WithMockUser(username = "test@example.com")
+    void updateEstimatedMonthlyIncome_ShouldReturnBadRequest_WhenValueIsNull() throws Exception {
+        UpdateEstimatedMonthlyIncomeRequest request = new UpdateEstimatedMonthlyIncomeRequest(null);
+
+        mockMvc.perform(patch("/api/users/me/estimated-monthly-income")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isBadRequest());
+
+        verify(userService, never()).updateEstimatedMonthlyIncome(anyString(), any());
     }
 
     @Test

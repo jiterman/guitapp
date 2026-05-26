@@ -41,7 +41,7 @@ export const profileSharedStyles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '700',
     color: profileColors.navy,
-    marginBottom: vh * 1,
+    marginBottom: vh,
   },
 
   menuCard: {
@@ -94,5 +94,28 @@ export const profileSharedStyles = StyleSheet.create({
   readonly: {
     backgroundColor: '#F4F9FD',
     opacity: 0.9,
+  },
+});
+
+export const profileModalStyles = StyleSheet.create({
+  overlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+  },
+  centeredContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: screenWidth * 0.05,
+  },
+  card: {
+    width: '100%',
+    maxHeight: '85%',
+    backgroundColor: profileColors.white,
+    borderRadius: 20,
+    paddingHorizontal: screenWidth * 0.05,
+    paddingTop: vh * 0.75,
+    paddingBottom: vh * 0.5,
+    ...profileSheetShadow,
   },
 });
