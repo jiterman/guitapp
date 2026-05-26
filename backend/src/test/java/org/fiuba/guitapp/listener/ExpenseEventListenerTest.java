@@ -17,6 +17,7 @@ import org.fiuba.guitapp.event.ExpenseCreatedEvent;
 import org.fiuba.guitapp.exception.AuthException;
 import org.fiuba.guitapp.exception.ErrorCode;
 import org.fiuba.guitapp.model.Expense;
+import org.fiuba.guitapp.model.ExpenseCategory;
 import org.fiuba.guitapp.model.ExpenseType;
 import org.fiuba.guitapp.model.User;
 import org.fiuba.guitapp.model.UserStatus;
@@ -66,6 +67,15 @@ class ExpenseEventListenerTest {
         testUser.setTargetVariableExpenses(30); // Limit: 30,000
 
         testExpenseCreatedEvent = new ExpenseCreatedEvent(expenseId, userEmail, amount, date, ExpenseType.VARIABLE);
+
+        Expense createdExpense = new Expense();
+        createdExpense.setCategory(ExpenseCategory.SUPERMARKET);
+        createdExpense.setType(ExpenseType.VARIABLE);
+        createdExpense.setAmount(amount);
+        lenient().when(expenseRepository.findById(expenseId)).thenReturn(Optional.of(createdExpense));
+
+        lenient().when(expenseRepository.findAllByUserAndDateBetween(eq(testUser), any(LocalDate.class), any(LocalDate.class)))
+                .thenReturn(Collections.emptyList());
     }
 
     @Test
@@ -76,10 +86,12 @@ class ExpenseEventListenerTest {
         Expense fixedExpense = new Expense();
         fixedExpense.setAmount(new BigDecimal("60000"));
         fixedExpense.setType(ExpenseType.FIXED);
+        fixedExpense.setCategory(ExpenseCategory.SUPERMARKET);
 
         Expense variableExpense = new Expense();
         variableExpense.setAmount(new BigDecimal("40000"));
         variableExpense.setType(ExpenseType.VARIABLE);
+        variableExpense.setCategory(ExpenseCategory.SUPERMARKET);
 
         when(expenseRepository.findAllByUserAndDateBetween(eq(testUser), any(LocalDate.class), any(LocalDate.class)))
                 .thenReturn(Arrays.asList(fixedExpense, variableExpense));
@@ -99,10 +111,12 @@ class ExpenseEventListenerTest {
         Expense fixedExpense = new Expense();
         fixedExpense.setAmount(new BigDecimal("60000"));
         fixedExpense.setType(ExpenseType.FIXED);
+        fixedExpense.setCategory(ExpenseCategory.SUPERMARKET);
 
         Expense variableExpense = new Expense();
         variableExpense.setAmount(new BigDecimal("40000"));
         variableExpense.setType(ExpenseType.VARIABLE);
+        variableExpense.setCategory(ExpenseCategory.SUPERMARKET);
 
         when(expenseRepository.findAllByUserAndDateBetween(eq(testUser), any(LocalDate.class), any(LocalDate.class)))
                 .thenReturn(Arrays.asList(fixedExpense, variableExpense));
@@ -122,6 +136,7 @@ class ExpenseEventListenerTest {
         Expense fixedExpense = new Expense();
         fixedExpense.setAmount(new BigDecimal("60000"));
         fixedExpense.setType(ExpenseType.FIXED);
+        fixedExpense.setCategory(ExpenseCategory.SUPERMARKET);
 
         when(expenseRepository.findAllByUserAndDateBetween(eq(testUser), any(LocalDate.class), any(LocalDate.class)))
                 .thenReturn(Collections.singletonList(fixedExpense));
@@ -140,6 +155,7 @@ class ExpenseEventListenerTest {
         Expense variableExpense = new Expense();
         variableExpense.setAmount(new BigDecimal("35000"));
         variableExpense.setType(ExpenseType.VARIABLE);
+        variableExpense.setCategory(ExpenseCategory.SUPERMARKET);
 
         when(expenseRepository.findAllByUserAndDateBetween(eq(testUser), any(LocalDate.class), any(LocalDate.class)))
                 .thenReturn(Collections.singletonList(variableExpense));
@@ -157,6 +173,7 @@ class ExpenseEventListenerTest {
         Expense fixedExpense = new Expense();
         fixedExpense.setAmount(new BigDecimal("10000"));
         fixedExpense.setType(ExpenseType.FIXED);
+        fixedExpense.setCategory(ExpenseCategory.SUPERMARKET);
 
         when(expenseRepository.findAllByUserAndDateBetween(eq(testUser), any(LocalDate.class), any(LocalDate.class)))
                 .thenReturn(Collections.singletonList(fixedExpense));
@@ -170,11 +187,47 @@ class ExpenseEventListenerTest {
     void handleExpenseCreatedEvent_ShouldNotSendNotification_WhenIncomeIsZero() {
         testUser.setEstimatedMonthlyIncome(BigDecimal.ZERO);
         when(userRepository.findByEmail(userEmail)).thenReturn(Optional.of(testUser));
+        lenient().when(expenseRepository.findAllByUserAndDateBetween(eq(testUser), any(LocalDate.class), any(LocalDate.class)))
+                .thenReturn(Collections.emptyList());
 
         expenseEventListener.handleExpenseCreatedEvent(testExpenseCreatedEvent);
 
         verify(notificationService, never()).sendExpenseThresholdExceededNotification(any(), any());
-        verify(expenseRepository, never()).findAllByUserAndDateBetween(any(), any(), any());
+        verify(notificationService, never()).sendCategoryOverspendingNotification(any(), any());
+    }
+
+    @Test
+    void handleExpenseCreatedEvent_ShouldSendCategoryOverspendingNotification_WhenCategoryExceedsPreviousMonth() {
+        testExpenseCreatedEvent = new ExpenseCreatedEvent(expenseId, userEmail, amount, date, ExpenseType.VARIABLE);
+        when(userRepository.findByEmail(userEmail)).thenReturn(Optional.of(testUser));
+
+        Expense currentMonthExpense = new Expense();
+        currentMonthExpense.setAmount(new BigDecimal("20000"));
+        currentMonthExpense.setType(ExpenseType.VARIABLE);
+        currentMonthExpense.setCategory(ExpenseCategory.SUPERMARKET);
+
+        Expense previousMonthExpense = new Expense();
+        previousMonthExpense.setAmount(new BigDecimal("10000"));
+        previousMonthExpense.setType(ExpenseType.VARIABLE);
+        previousMonthExpense.setCategory(ExpenseCategory.SUPERMARKET);
+
+        when(expenseRepository.findAllByUserAndDateBetween(eq(testUser), any(LocalDate.class), any(LocalDate.class)))
+                .thenAnswer(invocation -> {
+                    LocalDate start = invocation.getArgument(1);
+                    if (start.getMonthValue() == 5) {
+                        return Collections.singletonList(currentMonthExpense);
+                    }
+                    if (start.getMonthValue() == 4) {
+                        return Collections.singletonList(previousMonthExpense);
+                    }
+                    return Collections.emptyList();
+                });
+
+        expenseEventListener.handleExpenseCreatedEvent(testExpenseCreatedEvent);
+
+        verify(notificationService, times(1)).sendCategoryOverspendingNotification(eq(testUser),
+                argThat(s -> s.contains("supera al mes anterior") && s.contains("Supermercado")));
+        verify(notificationService, never()).sendExpenseThresholdExceededNotification(any(), any());
     }
 
     @Test

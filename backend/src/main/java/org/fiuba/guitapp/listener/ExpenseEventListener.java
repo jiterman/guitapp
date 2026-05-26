@@ -11,6 +11,7 @@ import org.fiuba.guitapp.event.ExpenseCreatedEvent;
 import org.fiuba.guitapp.exception.AuthException;
 import org.fiuba.guitapp.exception.ErrorCode;
 import org.fiuba.guitapp.model.Expense;
+import org.fiuba.guitapp.model.ExpenseCategory;
 import org.fiuba.guitapp.model.ExpenseType;
 import org.fiuba.guitapp.model.User;
 import org.fiuba.guitapp.repository.ExpenseRepository;
@@ -52,11 +53,81 @@ public class ExpenseEventListener {
                 currentMonth.atDay(1),
                 currentMonth.atEndOfMonth());
 
+        checkCategoryOverspending(user, event, monthlyExpenses);
+
         if (event.getType() == ExpenseType.FIXED) {
             checkFixedThreshold(user, monthlyExpenses);
         } else if (event.getType() == ExpenseType.VARIABLE) {
             checkVariableThreshold(user, monthlyExpenses);
         }
+    }
+
+    private void checkCategoryOverspending(User user, ExpenseCreatedEvent event, List<Expense> monthlyExpenses) {
+        Expense createdExpense = expenseRepository.findById(event.getExpenseId()).orElse(null);
+        if (createdExpense == null || createdExpense.getCategory() == null) {
+            return;
+        }
+
+        ExpenseCategory category = createdExpense.getCategory();
+
+        BigDecimal currentCategoryTotal = monthlyExpenses.stream()
+                .filter(e -> e.getCategory() == category)
+                .map(Expense::getAmount)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        YearMonth previousMonth = YearMonth.from(event.getDate()).minusMonths(1);
+        List<Expense> previousMonthExpenses = expenseRepository.findAllByUserAndDateBetween(
+                user,
+                previousMonth.atDay(1),
+                previousMonth.atEndOfMonth());
+
+        BigDecimal previousCategoryTotal = previousMonthExpenses.stream()
+                .filter(e -> e.getCategory() == category)
+                .map(Expense::getAmount)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        if (previousCategoryTotal.compareTo(BigDecimal.ZERO) <= 0) {
+            return;
+        }
+
+        if (currentCategoryTotal.compareTo(previousCategoryTotal) > 0) {
+            log.info("Enviando notificacion al usuario por gasto de categoria superior al mes anterior");
+            Locale localeArg = Locale.of("es", "AR");
+            String message = String.format(localeArg,
+                    "Tu gasto en la categoría %s supera al mes anterior. Revisá tus gastos.",
+                    formatCategory(category));
+            notificationService.sendCategoryOverspendingNotification(user, message);
+        }
+    }
+
+    private String formatCategory(ExpenseCategory category) {
+        return switch (category) {
+        case SUPERMARKET -> "Supermercado";
+        case RESTAURANT -> "Restaurante";
+        case CAFE -> "Café";
+        case DELIVERY -> "Delivery";
+        case PUBLIC_TRANSPORT -> "Transporte público";
+        case FUEL -> "Combustible";
+        case TAXI -> "Taxi";
+        case UTILITIES -> "Servicios";
+        case RENT -> "Alquiler";
+        case HOME -> "Hogar";
+        case DOCTOR -> "Doctor";
+        case PHARMACY -> "Farmacia";
+        case SUBSCRIPTIONS -> "Suscripciones";
+        case OUTINGS -> "Salidas";
+        case GYM -> "Gimnasio";
+        case TRAVEL -> "Viajes";
+        case CLOTHING -> "Ropa";
+        case EDUCATION -> "Educación";
+        case TECHNOLOGY -> "Tecnología";
+        case HOA_FEES -> "Cuota de consorcio";
+        case VEHICLE -> "Vehículo";
+        case BEAUTY -> "Belleza";
+        case PETS -> "Mascotas";
+        case SHOPPING -> "Compras";
+        case OTHER -> "Otro";
+        };
     }
 
     private void checkFixedThreshold(User user, List<Expense> monthlyExpenses) {

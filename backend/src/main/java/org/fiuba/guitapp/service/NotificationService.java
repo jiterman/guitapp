@@ -16,13 +16,21 @@ import lombok.extern.slf4j.Slf4j;
 public class NotificationService {
 
     public void sendExpenseThresholdExceededNotification(User user, String body) {
+        sendNotification(user, "Se nos fue la mano \uD83D\uDCB8", body);
+    }
+
+    public void sendCategoryOverspendingNotification(User user, String body) {
+        sendNotification(user, "Venimos gastando un poco más 📈", body);
+    }
+
+    private void sendNotification(User user, String title, String body) {
         if (user.getFcmToken() == null || user.getFcmToken().isEmpty()) {
             return;
         }
 
         try {
             Notification notification = Notification.builder()
-                    .setTitle("Se nos fue la mano \uD83D\uDCB8")
+                    .setTitle(title)
                     .setBody(body)
                     .build();
 
@@ -40,10 +48,13 @@ public class NotificationService {
                     .setAndroidConfig(androidConfig)
                     .build();
 
+            System.out.println("Enviando push a token: " + user.getFcmToken());
             String response = FirebaseMessaging.getInstance().send(message);
-            log.info("Successfully sent expense threshold exceeded notification: {}", response);
+            System.out.println("Push enviada OK");
+            log.info("Successfully sent notification: {}", response);
         } catch (Exception e) {
-            log.error("Error sending FCM expense threshold exceeded notification to user {}", user.getEmail(), e);
+            e.printStackTrace();
+            log.error("Error sending FCM notification to user {}", user.getEmail(), e);
         }
     }
 }

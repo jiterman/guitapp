@@ -75,4 +75,16 @@ class NotificationServiceTest {
             verify(firebaseMessaging, times(1)).send(any(Message.class));
         }
     }
+
+    @Test
+    void sendCategoryOverspendingNotification_ShouldSendMessage_WhenTokenIsPresent() throws Exception {
+        try (MockedStatic<FirebaseMessaging> mockedFirebaseMessaging = mockStatic(FirebaseMessaging.class)) {
+            mockedFirebaseMessaging.when(FirebaseMessaging::getInstance).thenReturn(firebaseMessaging);
+            when(firebaseMessaging.send(any(Message.class))).thenReturn("response-id");
+
+            notificationService.sendCategoryOverspendingNotification(testUser, "Test body");
+
+            verify(firebaseMessaging, times(1)).send(any(Message.class));
+        }
+    }
 }
