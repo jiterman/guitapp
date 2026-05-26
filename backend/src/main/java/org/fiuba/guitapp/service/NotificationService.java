@@ -17,22 +17,22 @@ public class NotificationService {
 
     public void sendExpenseThresholdExceededNotification(User user, String body) {
         sendNotification(user, "Se nos fue la mano \uD83D\uDCB8", body,
-                "expense threshold exceeded");
+            "limite de gastos excedido");
     }
 
     public void sendSavingsGoalAtRiskNotification(User user, String body) {
         sendNotification(user, "Se nos fue la mano \uD83D\uDCB8", body,
-                "savings goal at risk");
+            "meta de ahorro en riesgo");
     }
 
     public void sendNegativeBalanceRiskNotification(User user, String body) {
         sendNotification(user, "Se nos fue la mano \uD83D\uDCB8", body,
-                "negative balance risk");
+            "saldo negativo proyectado");
     }
 
     public void sendCategoryOverspendingNotification(User user, String body) {
         sendNotification(user, "Venimos gastando un poco más 📈", body,
-                "category overspending");
+            "gasto por categoria superior al mes anterior");
     }
 
     private void sendNotification(User user, String title, String body, String logContext) {
@@ -61,9 +61,9 @@ public class NotificationService {
                     .build();
 
             String response = FirebaseMessaging.getInstance().send(message);
-            log.info("Successfully sent {} notification: {}", logContext, response);
+            log.info("Notificacion enviada correctamente ({}): {}", logContext, response);
         } catch (Exception e) {
-            log.error("Error sending FCM {} notification to user {}", logContext, user.getEmail(), e);
+            log.error("Error al enviar notificacion FCM ({}) al usuario {}", logContext, user.getEmail(), e);
         }
     }
 }

@@ -14,11 +14,8 @@ import org.fiuba.guitapp.exception.ErrorCode;
 import org.fiuba.guitapp.model.Expense;
 import org.fiuba.guitapp.model.ExpenseCategory;
 import org.fiuba.guitapp.model.ExpenseType;
-import org.fiuba.guitapp.model.Income;
-import org.fiuba.guitapp.model.IncomeCategory;
 import org.fiuba.guitapp.model.User;
 import org.fiuba.guitapp.repository.ExpenseRepository;
-import org.fiuba.guitapp.repository.IncomeRepository;
 import org.fiuba.guitapp.repository.UserRepository;
 import org.fiuba.guitapp.service.NotificationService;
 import org.springframework.scheduling.annotation.Async;
@@ -37,12 +34,11 @@ public class ExpenseEventListener {
     private final NotificationService notificationService;
     private final UserRepository userRepository;
     private final ExpenseRepository expenseRepository;
-    private final IncomeRepository incomeRepository;
 
     @Async
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void handleExpenseCreatedEvent(ExpenseCreatedEvent event) {
-        log.info("Handling ExpenseCreatedEvent asynchronously after transaction commit: {}", event.getExpenseId());
+        log.info("Procesando ExpenseCreatedEvent de forma asincrona tras el commit: {}", event.getExpenseId());
 
         User user = userRepository.findByEmail(event.getUserEmail())
                 .orElseThrow(() -> new AuthException(ErrorCode.USER_NOT_FOUND, "User not found"));
@@ -272,19 +268,7 @@ public class ExpenseEventListener {
             return null;
         }
 
-        List<Income> monthlyIncomes = incomeRepository.findAllByUserAndDateBetween(
-                user,
-                currentMonth.atDay(1),
-                currentMonth.atEndOfMonth());
-
-        BigDecimal salaryIncome = monthlyIncomes.stream()
-                .filter(income -> income.getCategory() == IncomeCategory.SALARY)
-                .map(Income::getAmount)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
-
-        BigDecimal expectedIncome = salaryIncome.compareTo(BigDecimal.ZERO) > 0
-                ? salaryIncome
-                : user.getEstimatedMonthlyIncome();
+        BigDecimal expectedIncome = user.getEstimatedMonthlyIncome();
 
         if (expectedIncome == null || expectedIncome.compareTo(BigDecimal.ZERO) <= 0) {
             return null;

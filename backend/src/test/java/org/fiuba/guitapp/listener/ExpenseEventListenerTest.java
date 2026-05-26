@@ -25,7 +25,6 @@ import org.fiuba.guitapp.model.ExpenseType;
 import org.fiuba.guitapp.model.User;
 import org.fiuba.guitapp.model.UserStatus;
 import org.fiuba.guitapp.repository.ExpenseRepository;
-import org.fiuba.guitapp.repository.IncomeRepository;
 import org.fiuba.guitapp.repository.UserRepository;
 import org.fiuba.guitapp.service.NotificationService;
 import org.junit.jupiter.api.Assumptions;
@@ -47,9 +46,6 @@ class ExpenseEventListenerTest {
 
     @Mock
     private ExpenseRepository expenseRepository;
-
-    @Mock
-    private IncomeRepository incomeRepository;
 
     @InjectMocks
     private ExpenseEventListener expenseEventListener;
@@ -330,9 +326,6 @@ class ExpenseEventListenerTest {
                 ExpenseType.VARIABLE);
         when(userRepository.findByEmail(userEmail)).thenReturn(Optional.of(testUser));
 
-        when(incomeRepository.findAllByUserAndDateBetween(eq(testUser), any(LocalDate.class), any(LocalDate.class)))
-                .thenReturn(Collections.emptyList());
-
         BigDecimal expenseAmount = testUser.getEstimatedMonthlyIncome().add(BigDecimal.ONE);
         Expense expense = new Expense();
         expense.setAmount(expenseAmount);
@@ -365,9 +358,6 @@ class ExpenseEventListenerTest {
                 today,
                 ExpenseType.VARIABLE);
         when(userRepository.findByEmail(userEmail)).thenReturn(Optional.of(testUser));
-
-        when(incomeRepository.findAllByUserAndDateBetween(eq(testUser), any(LocalDate.class), any(LocalDate.class)))
-                .thenReturn(Collections.emptyList());
 
         int daysElapsed = today.getDayOfMonth();
         int daysInMonth = YearMonth.from(today).lengthOfMonth();
