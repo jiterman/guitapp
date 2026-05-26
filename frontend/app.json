@@ -31,7 +31,7 @@
           "color": "#dff3ff"
         }
       ],
-      "@react-native-community/datetimepicker"
+      "@react-native-community/datetimepicker",
       [
         "expo-share-intent",
         {
