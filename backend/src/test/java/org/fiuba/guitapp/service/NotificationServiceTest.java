@@ -77,6 +77,101 @@ class NotificationServiceTest {
     }
 
     @Test
+    void sendExpenseThresholdExceededNotification_ShouldNotSendMessage_WhenTokenIsEmpty() throws Exception {
+        testUser.setFcmToken("");
+
+        notificationService.sendExpenseThresholdExceededNotification(testUser, "Test Message");
+
+        try (MockedStatic<FirebaseMessaging> mockedFirebaseMessaging = mockStatic(FirebaseMessaging.class)) {
+            mockedFirebaseMessaging.when(FirebaseMessaging::getInstance).thenReturn(firebaseMessaging);
+
+            notificationService.sendExpenseThresholdExceededNotification(testUser, "Test Message");
+
+            verify(firebaseMessaging, never()).send(any(Message.class));
+        }
+    }
+
+    @Test
+    void sendSavingsGoalAtRiskNotification_ShouldSendMessage_WhenTokenIsPresent() throws Exception {
+        try (MockedStatic<FirebaseMessaging> mockedFirebaseMessaging = mockStatic(FirebaseMessaging.class)) {
+            mockedFirebaseMessaging.when(FirebaseMessaging::getInstance).thenReturn(firebaseMessaging);
+            when(firebaseMessaging.send(any(Message.class))).thenReturn("response-id");
+
+            notificationService.sendSavingsGoalAtRiskNotification(testUser, "Test Message");
+
+            verify(firebaseMessaging, times(1)).send(any(Message.class));
+        }
+    }
+
+    @Test
+    void sendSavingsGoalAtRiskNotification_ShouldNotSendMessage_WhenTokenIsMissing() throws Exception {
+        testUser.setFcmToken(null);
+
+        notificationService.sendSavingsGoalAtRiskNotification(testUser, "Test Message");
+
+        try (MockedStatic<FirebaseMessaging> mockedFirebaseMessaging = mockStatic(FirebaseMessaging.class)) {
+            mockedFirebaseMessaging.when(FirebaseMessaging::getInstance).thenReturn(firebaseMessaging);
+
+            notificationService.sendSavingsGoalAtRiskNotification(testUser, "Test Message");
+
+            verify(firebaseMessaging, never()).send(any(Message.class));
+        }
+    }
+
+    @Test
+    void sendSavingsGoalAtRiskNotification_ShouldLogAndHandleException_WhenFirebaseFails() throws Exception {
+        try (MockedStatic<FirebaseMessaging> mockedFirebaseMessaging = mockStatic(FirebaseMessaging.class)) {
+            mockedFirebaseMessaging.when(FirebaseMessaging::getInstance).thenReturn(firebaseMessaging);
+            when(firebaseMessaging.send(any(Message.class))).thenThrow(new RuntimeException("Firebase error"));
+
+            // Should not throw exception
+            notificationService.sendSavingsGoalAtRiskNotification(testUser, "Test Message");
+
+            verify(firebaseMessaging, times(1)).send(any(Message.class));
+        }
+    }
+
+    @Test
+    void sendNegativeBalanceRiskNotification_ShouldSendMessage_WhenTokenIsPresent() throws Exception {
+        try (MockedStatic<FirebaseMessaging> mockedFirebaseMessaging = mockStatic(FirebaseMessaging.class)) {
+            mockedFirebaseMessaging.when(FirebaseMessaging::getInstance).thenReturn(firebaseMessaging);
+            when(firebaseMessaging.send(any(Message.class))).thenReturn("response-id");
+
+            notificationService.sendNegativeBalanceRiskNotification(testUser, "Test Message");
+
+            verify(firebaseMessaging, times(1)).send(any(Message.class));
+        }
+    }
+
+    @Test
+    void sendNegativeBalanceRiskNotification_ShouldNotSendMessage_WhenTokenIsMissing() throws Exception {
+        testUser.setFcmToken(null);
+
+        notificationService.sendNegativeBalanceRiskNotification(testUser, "Test Message");
+
+        try (MockedStatic<FirebaseMessaging> mockedFirebaseMessaging = mockStatic(FirebaseMessaging.class)) {
+            mockedFirebaseMessaging.when(FirebaseMessaging::getInstance).thenReturn(firebaseMessaging);
+
+            notificationService.sendNegativeBalanceRiskNotification(testUser, "Test Message");
+
+            verify(firebaseMessaging, never()).send(any(Message.class));
+        }
+    }
+
+    @Test
+    void sendNegativeBalanceRiskNotification_ShouldLogAndHandleException_WhenFirebaseFails() throws Exception {
+        try (MockedStatic<FirebaseMessaging> mockedFirebaseMessaging = mockStatic(FirebaseMessaging.class)) {
+            mockedFirebaseMessaging.when(FirebaseMessaging::getInstance).thenReturn(firebaseMessaging);
+            when(firebaseMessaging.send(any(Message.class))).thenThrow(new RuntimeException("Firebase error"));
+
+            // Should not throw exception
+            notificationService.sendNegativeBalanceRiskNotification(testUser, "Test Message");
+
+            verify(firebaseMessaging, times(1)).send(any(Message.class));
+        }
+    }
+
+    @Test
     void sendCategoryOverspendingNotification_ShouldSendMessage_WhenTokenIsPresent() throws Exception {
         try (MockedStatic<FirebaseMessaging> mockedFirebaseMessaging = mockStatic(FirebaseMessaging.class)) {
             mockedFirebaseMessaging.when(FirebaseMessaging::getInstance).thenReturn(firebaseMessaging);
@@ -85,6 +180,21 @@ class NotificationServiceTest {
             notificationService.sendCategoryOverspendingNotification(testUser, "Test body");
 
             verify(firebaseMessaging, times(1)).send(any(Message.class));
+        }
+    }
+
+    @Test
+    void sendCategoryOverspendingNotification_ShouldNotSendMessage_WhenTokenIsEmpty() throws Exception {
+        testUser.setFcmToken("");
+
+        notificationService.sendCategoryOverspendingNotification(testUser, "Test body");
+
+        try (MockedStatic<FirebaseMessaging> mockedFirebaseMessaging = mockStatic(FirebaseMessaging.class)) {
+            mockedFirebaseMessaging.when(FirebaseMessaging::getInstance).thenReturn(firebaseMessaging);
+
+            notificationService.sendCategoryOverspendingNotification(testUser, "Test body");
+
+            verify(firebaseMessaging, never()).send(any(Message.class));
         }
     }
 }

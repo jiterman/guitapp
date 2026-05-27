@@ -10,17 +10,18 @@ import CHART_ICON from '../../../assets/icons/chartIcon';
 import PERSON_ICON from '../../../assets/icons/personIcon';
 import styles from '../../styles/bottomNavStyles';
 
+const ROUTE_ORDER = ['/home', '/statistics', '/transactions', '/profile'];
+
 const BottomNavBar: React.FC = () => {
   const router = useRouter();
   const pathname = usePathname();
   const insets = useSafeAreaInsets();
 
-  const order = ['/home', '/statistics', '/transactions', '/profile'];
   const currentIndex = useRef<number>(0);
   const [currentPath, setCurrentPath] = useState('/home');
 
   useEffect(() => {
-    const idx = order.indexOf(pathname || '');
+    const idx = ROUTE_ORDER.indexOf(pathname || '');
     if (idx !== -1) {
       currentIndex.current = idx;
       setCurrentPath(pathname || '/home');
@@ -35,14 +36,14 @@ const BottomNavBar: React.FC = () => {
         const { dx } = gestureState;
         if (Math.abs(dx) < 50) return;
         const idx = currentIndex.current;
-        if (dx < -50 && idx < order.length - 1) {
+        if (dx < -50 && idx < ROUTE_ORDER.length - 1) {
           const next = idx + 1;
           currentIndex.current = next;
-          router.push(order[next]);
+          router.push(ROUTE_ORDER[next]);
         } else if (dx > 50 && idx > 0) {
           const prev = idx - 1;
           currentIndex.current = prev;
-          router.push(order[prev]);
+          router.push(ROUTE_ORDER[prev]);
         }
       },
     })
