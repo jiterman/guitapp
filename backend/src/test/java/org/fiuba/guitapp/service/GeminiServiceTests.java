@@ -78,4 +78,151 @@ class GeminiServiceTests {
         assertEquals(ExpenseCategory.RESTAURANT, response.category());
         assertEquals("Pizza Lunch", response.description());
     }
+
+    @Test
+    void analyzeReceipt_ShouldHandleMarkdownResponse_WhenApiReturnsWrappedJson() throws Exception {
+        // Arrange
+        byte[] content = "test image content".getBytes();
+        when(multipartFile.getBytes()).thenReturn(content);
+        when(multipartFile.getContentType()).thenReturn("image/jpeg");
+
+        String geminiResponse = """
+                {
+                  "candidates": [
+                    {
+                      "content": {
+                        "parts": [
+                          {
+                            "text": "```json\\n{\\"amount\\": 1500.50, \\"category\\": \\"RESTAURANT\\", \\"description\\": \\"Pizza Lunch\\"}\\n```"
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+                """;
+
+        when(restTemplate.postForObject(anyString(), any(), eq(String.class))).thenReturn(geminiResponse);
+
+        // Act
+        ReceiptAnalysisResponse response = geminiService.analyzeReceipt(multipartFile);
+
+        // Assert
+        assertNotNull(response);
+        assertEquals(0, new BigDecimal("1500.5").compareTo(response.amount()));
+        assertEquals(ExpenseCategory.RESTAURANT, response.category());
+    }
+
+    @Test
+    void analyzeReceipt_ShouldHandleUppercaseMarkdownResponse_WhenApiReturnsWrappedJson() throws Exception {
+        // Arrange
+        byte[] content = "test image content".getBytes();
+        when(multipartFile.getBytes()).thenReturn(content);
+        when(multipartFile.getContentType()).thenReturn("image/jpeg");
+
+        String geminiResponse = """
+                {
+                  "candidates": [
+                    {
+                      "content": {
+                        "parts": [
+                          {
+                            "text": "```JSON\\n{\\"amount\\": 1500.50, \\"category\\": \\"RESTAURANT\\", \\"description\\": \\"Pizza Lunch\\"}\\n```"
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+                """;
+
+        when(restTemplate.postForObject(anyString(), any(), eq(String.class))).thenReturn(geminiResponse);
+
+        // Act
+        ReceiptAnalysisResponse response = geminiService.analyzeReceipt(multipartFile);
+
+        // Assert
+        assertNotNull(response);
+        assertEquals(0, new BigDecimal("1500.5").compareTo(response.amount()));
+        assertEquals(ExpenseCategory.RESTAURANT, response.category());
+    }
+
+    @Test
+    void analyzeReceipt_ShouldThrowAuthException_WhenApiCallFails() throws Exception {
+        // Arrange
+        byte[] content = "test image content".getBytes();
+        when(multipartFile.getBytes()).thenReturn(content);
+        when(multipartFile.getContentType()).thenReturn("image/jpeg");
+
+        when(restTemplate.postForObject(anyString(), any(), eq(String.class)))
+                .thenThrow(new RuntimeException("API error"));
+
+        // Act & Assert
+        org.junit.jupiter.api.Assertions.assertThrows(org.fiuba.guitapp.exception.AuthException.class, () -> {
+            geminiService.analyzeReceipt(multipartFile);
+        });
+    }
+
+    @Test
+    void analyzeReceipt_ShouldThrowAuthException_WhenFileReadFails() throws Exception {
+        // Arrange
+        when(multipartFile.getBytes()).thenThrow(new java.io.IOException("File read error"));
+
+        // Act & Assert
+        org.junit.jupiter.api.Assertions.assertThrows(org.fiuba.guitapp.exception.AuthException.class, () -> {
+            geminiService.analyzeReceipt(multipartFile);
+        });
+    }
+
+    @Test
+    void analyzeReceipt_ShouldThrowAuthException_WhenResponseIsInvalidJson() throws Exception {
+        // Arrange
+        byte[] content = "test image content".getBytes();
+        when(multipartFile.getBytes()).thenReturn(content);
+        when(multipartFile.getContentType()).thenReturn("image/jpeg");
+
+        String geminiResponse = """
+                {
+                  "candidates": [
+                    {
+                      "content": {
+                        "parts": [
+                          {
+                            "text": "invalid json"
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+                """;
+
+        when(restTemplate.postForObject(anyString(), any(), eq(String.class))).thenReturn(geminiResponse);
+
+        // Act & Assert
+        org.junit.jupiter.api.Assertions.assertThrows(org.fiuba.guitapp.exception.AuthException.class, () -> {
+            geminiService.analyzeReceipt(multipartFile);
+        });
+    }
+
+    @Test
+    void analyzeReceipt_ShouldThrowAuthException_WhenCandidatesAreEmpty() throws Exception {
+        // Arrange
+        byte[] content = "test image content".getBytes();
+        when(multipartFile.getBytes()).thenReturn(content);
+        when(multipartFile.getContentType()).thenReturn("image/jpeg");
+
+        String geminiResponse = """
+                {
+                  "candidates": []
+                }
+                """;
+
+        when(restTemplate.postForObject(anyString(), any(), eq(String.class))).thenReturn(geminiResponse);
+
+        // Act & Assert
+        org.junit.jupiter.api.Assertions.assertThrows(org.fiuba.guitapp.exception.AuthException.class, () -> {
+            geminiService.analyzeReceipt(multipartFile);
+        });
+    }
 }
