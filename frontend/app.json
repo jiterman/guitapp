@@ -14,6 +14,7 @@
       "imageWidth": 220
     },
     "plugins": [
+      "expo-router",
       [
         "expo-splash-screen",
         {
@@ -30,7 +31,19 @@
           "color": "#dff3ff"
         }
       ],
-      "@react-native-community/datetimepicker"
+      "@react-native-community/datetimepicker",
+      [
+        "expo-share-intent",
+        {
+          "iosActivationRules": {
+            "NSExtensionActivationSupportsText": true,
+            "NSExtensionActivationSupportsWebURLWithMaxCount": 1,
+            "NSExtensionActivationSupportsWebPageWithMaxCount": 1,
+            "NSExtensionActivationSupportsImageWithMaxCount": 2
+          },
+          "androidIntentFilters": ["*/*"]
+        }
+      ]
     ],
     "ios": {
       "supportsTablet": true,

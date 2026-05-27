@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { userService } from '../../services/userService';
-import type { UserProfile } from '../../context/UserContext';
+import type { UserProfile } from '../../context/user';
 
 interface Params {
   user: UserProfile | null;

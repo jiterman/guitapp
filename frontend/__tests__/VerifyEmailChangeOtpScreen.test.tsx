@@ -6,7 +6,7 @@ import * as eva from '@eva-design/eva';
 import VerifyEmailChangeOtpScreen from '../src/screens/VerifyEmailChangeOtpScreen';
 import { userService } from '../src/services/userService';
 import { authService } from '../src/services/authService';
-import { useUser } from '../src/context/UserContext';
+import { useUser } from '../src/context/user';
 import { router } from 'expo-router';
 
 jest.mock('expo-router', () => ({
@@ -29,7 +29,7 @@ jest.mock('../src/services/authService', () => ({
   },
 }));
 
-jest.mock('../src/context/UserContext', () => ({
+jest.mock('../src/context/user', () => ({
   useUser: jest.fn(),
 }));
 

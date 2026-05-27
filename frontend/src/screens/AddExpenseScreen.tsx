@@ -12,10 +12,14 @@ import { Layout, Text } from '@ui-kitten/components';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
-import { router } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import { expenseService } from '../services/expenseService';
 import type { ExpenseType } from '../constants/categories';
-import { EXPENSE_CATEGORIES, ExpenseCategoryOption } from '../constants/categories';
+import {
+  EXPENSE_CATEGORIES,
+  ExpenseCategoryOption,
+  getExpenseCategory,
+} from '../constants/categories';
 import { useCurrencyInput } from '../hooks/useCurrencyInput';
 import {
   transactionFormStyles as styles,
@@ -25,11 +29,21 @@ import {
 import { formatDate, toLocalDateString } from '../utils/dateFormatter';
 
 const AddExpenseScreen = () => {
-  const { displayValue, amount, handleAmountChange } = useCurrencyInput();
-  const [description, setDescription] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState<ExpenseCategoryOption | null>(null);
-  const [selectedType, setSelectedType] = useState<ExpenseType | null>(null);
-  const [selectedDate, setSelectedDate] = useState(new Date());
+  const params = useLocalSearchParams();
+  const { displayValue, amount, handleAmountChange } = useCurrencyInput(
+    (params.amount as string) || ''
+  );
+  const [description, setDescription] = useState((params.description as string) || '');
+  const initialCategory = getExpenseCategory(params.category as string) || null;
+  const initialDate = params.date ? new Date(params.date as string) : new Date();
+
+  const [selectedCategory, setSelectedCategory] = useState<ExpenseCategoryOption | null>(
+    initialCategory
+  );
+  const [selectedType, setSelectedType] = useState<ExpenseType | null>(
+    initialCategory?.defaultType || null
+  );
+  const [selectedDate, setSelectedDate] = useState(initialDate);
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
@@ -93,7 +107,11 @@ const AddExpenseScreen = () => {
         type: selectedType!,
         date: dateString,
       });
-      router.back();
+      if (params.fromShareIntent === 'true') {
+        router.replace('/(app)/home');
+      } else {
+        router.back();
+      }
     } catch {
       Alert.alert('Error', 'No se pudo registrar el gasto. Intentá de nuevo.');
     } finally {
@@ -108,7 +126,15 @@ const AddExpenseScreen = () => {
           <Text category="h4" style={styles.title}>
             Agregar gasto
           </Text>
-          <TouchableOpacity onPress={() => router.back()}>
+          <TouchableOpacity
+            onPress={() => {
+              if (params.fromShareIntent === 'true') {
+                router.replace('/(app)/home');
+              } else {
+                router.back();
+              }
+            }}
+          >
             <Text style={styles.closeButton}>✕</Text>
           </TouchableOpacity>
         </View>

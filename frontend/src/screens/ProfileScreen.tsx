@@ -2,7 +2,7 @@ import React from 'react';
 import { StyleSheet, Dimensions, ScrollView } from 'react-native';
 import { Layout } from '@ui-kitten/components';
 import { authService } from '../services/authService';
-import { useUser } from '../context/UserContext';
+import { useUser } from '../context/user';
 import { router } from 'expo-router';
 import ProfileMenuItem from '../components/Profile/ProfileMenuItem';
 import PersonalInfoSheet from '../components/Profile/PersonalInfoSheet';

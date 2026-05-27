@@ -12,7 +12,7 @@ import { Text } from '@ui-kitten/components';
 import { Ionicons } from '@expo/vector-icons';
 
 import PersonalInfoEditor from './PersonalInfoEditor';
-import type { UserProfile } from '../../context/UserContext';
+import type { UserProfile } from '../../context/user';
 import { profileModalStyles, profileSharedStyles } from '../../styles/profileStyles';
 
 interface PersonalInfoSheetProps {

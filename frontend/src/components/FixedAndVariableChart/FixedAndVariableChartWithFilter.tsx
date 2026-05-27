@@ -7,7 +7,7 @@ import {
 } from '../../services/expenseStatisticsService';
 import FixedAndVariableChart from './FixedAndVariableChart';
 import { incomeService } from '../../services/incomeService';
-import { useUser } from '../../context/UserContext';
+import { useUser } from '../../context/user';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 const vh = screenHeight / 100;

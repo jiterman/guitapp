@@ -1,16 +1,19 @@
 import React, { useEffect } from 'react';
 import { View } from 'react-native';
-import { Stack, useSegments } from 'expo-router';
+import { Stack, useRouter } from 'expo-router'; // <--- Importamos useRootNavigationState
 import * as eva from '@eva-design/eva';
 import { ApplicationProvider, IconRegistry } from '@ui-kitten/components';
 import { EvaIconsPack } from '@ui-kitten/eva-icons';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
-import BottomNavBar from '../src/components/BottomNavBar';
 import * as SplashScreen from 'expo-splash-screen';
-import { UserProvider } from '../src/context/UserContext';
+import { UserProvider } from '../src/context/user';
+import { ShareIntentProvider, useShareIntentContext } from 'expo-share-intent';
+import { useUser } from '../src/context/user';
 
-SplashScreen.preventAutoHideAsync();
+SplashScreen.preventAutoHideAsync().catch(err => {
+  console.warn('Error previniendo auth hide:', err);
+});
 
 const customTheme = {
   ...eva.light,
@@ -24,25 +27,53 @@ const customTheme = {
 };
 
 export default function RootLayout() {
-  useEffect(() => {
-    SplashScreen.hideAsync();
-  }, []);
-
-  const segments = useSegments();
-
   return (
     <SafeAreaProvider>
       <IconRegistry icons={EvaIconsPack} />
       <ApplicationProvider {...eva} theme={customTheme}>
-        <UserProvider>
-          <View style={{ flex: 1 }}>
-            <Stack screenOptions={{ headerShown: false }} />
-            {segments[0] !== '(auth)' && <BottomNavBar />}
-          </View>
-        </UserProvider>
-
+        <ShareIntentProvider>
+          <UserProvider>
+            <RootLayoutNav />
+          </UserProvider>
+        </ShareIntentProvider>
         <StatusBar style="auto" />
       </ApplicationProvider>
     </SafeAreaProvider>
+  );
+}
+
+function RootLayoutNav() {
+  const { isLoading } = useUser();
+  const { isReady, hasShareIntent, shareIntent } = useShareIntentContext();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!isLoading && isReady) {
+      console.log('Ocultando splash');
+      SplashScreen.hideAsync().catch(err => {
+        console.warn('Error ocultando Splash:', err);
+      });
+    }
+  }, [isLoading, isReady]);
+
+  useEffect(() => {
+    if (hasShareIntent && shareIntent.files && shareIntent.files.length > 0) {
+      console.log(shareIntent.files);
+      console.debug('[expo-router-index] redirect to ShareIntent screen');
+      router.replace({
+        pathname: '/share-intent',
+        params: { sharedFilePath: shareIntent.files[0].path },
+      });
+    }
+  }, [hasShareIntent, shareIntent]);
+
+  if (isLoading || !isReady) {
+    return null;
+  }
+
+  return (
+    <View style={{ flex: 1 }}>
+      <Stack screenOptions={{ headerShown: false }} />
+    </View>
   );
 }

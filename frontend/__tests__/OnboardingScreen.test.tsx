@@ -5,7 +5,7 @@ import * as eva from '@eva-design/eva';
 import OnboardingScreen from '../src/screens/OnboardingScreen';
 import { userService } from '../src/services/userService';
 import { router } from 'expo-router';
-import { UserProvider } from '../src/context/UserContext';
+import { UserProvider } from '../src/context/user';
 
 // Mock router
 jest.mock('expo-router', () => ({
