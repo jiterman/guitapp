@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { router } from 'expo-router';
 import { userService } from '../../services/userService';
 import { authService } from '../../services/authService';
-import type { UserProfile } from '../../context/UserContext';
+import type { UserProfile } from '../../context/user';
 import { Alert } from 'react-native';
 
 interface UsePersonalInfoParams {

@@ -3,7 +3,7 @@ import { View, StyleSheet } from 'react-native';
 import { Text } from '@ui-kitten/components';
 import { Ionicons } from '@expo/vector-icons';
 import AvatarPicker from './AvatarPicker';
-import type { UserProfile } from '../../context/UserContext';
+import type { UserProfile } from '../../context/user';
 import { profileColors, profileShadow, profileLayout } from '../../styles/profileStyles';
 
 const { screenWidth, vh } = profileLayout;
