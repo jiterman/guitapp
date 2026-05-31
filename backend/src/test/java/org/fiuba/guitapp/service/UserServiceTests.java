@@ -766,4 +766,31 @@ class UserServiceTests {
 
         verify(userRepository, times(0)).save(any());
     }
+
+    @Test
+    void updateNotificationChannel_ShouldUpdateUser_WhenValidChannel() {
+        when(userRepository.findByEmail(testEmail)).thenReturn(Optional.of(testUser));
+
+        UserProfileResponse response = userService.updateNotificationChannel(
+                testEmail,
+                org.fiuba.guitapp.model.NotificationChannel.EMAIL);
+
+        assertEquals(org.fiuba.guitapp.model.NotificationChannel.EMAIL, testUser.getNotificationChannel());
+        verify(userRepository).save(testUser);
+        assertEquals(org.fiuba.guitapp.model.NotificationChannel.EMAIL, response.notificationChannel());
+    }
+
+    @Test
+    void updateNotificationChannel_ShouldThrowException_WhenUserNotFound() {
+        when(userRepository.findByEmail(testEmail)).thenReturn(Optional.empty());
+
+        AuthException ex = assertThrows(
+                AuthException.class,
+                () -> userService.updateNotificationChannel(
+                        testEmail,
+                        org.fiuba.guitapp.model.NotificationChannel.PUSH));
+
+        assertEquals(ErrorCode.USER_NOT_FOUND, ex.getErrorCode());
+        verify(userRepository, never()).save(any());
+    }
 }

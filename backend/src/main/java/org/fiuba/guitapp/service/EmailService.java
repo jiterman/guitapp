@@ -70,4 +70,18 @@ public class EmailService {
         }
         log.info("Email change OTP for {}: {}", to, otp);
     }
+
+    public void sendAlertEmail(String to, String subject, String body) {
+        SimpleMailMessage message = new SimpleMailMessage();
+        message.setTo(to);
+        message.setSubject(subject);
+        message.setText(body);
+
+        try {
+            mailSender.send(message);
+        } catch (MailException ex) {
+            log.warn("Failed to send alert email to {}: {}. Continuing without failing.", to, ex.getMessage());
+        }
+        log.info("Alert email sent to {} with subject: {}", to, subject);
+    }
 }

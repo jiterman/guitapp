@@ -14,6 +14,8 @@ import { usePersonalInfo } from '../hooks/Profile/usePersonalInfo';
 import { usePasswordChange } from '../hooks/Profile/usePasswordChange';
 import ExpensesSheet from '../components/Profile/ExpensesSheet';
 import { useExpensesStructure } from '../hooks/Profile/useExpensesStructure';
+import NotificationChannelSheet from '../components/Profile/NotificationChannelSheet';
+import { useNotificationChannel } from '../hooks/Profile/useNotificationChannel';
 import { profileColors } from '../styles/profileStyles';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
@@ -31,6 +33,7 @@ const ProfileScreen: React.FC = () => {
   const personalInfoSheet = useModal();
   const passwordSheet = useModal();
   const expensesSheet = useModal();
+  const notificationsSheet = useModal();
 
   const {
     saving: personalInfoSaving,
@@ -62,7 +65,13 @@ const ProfileScreen: React.FC = () => {
     onSuccess: () => {},
   });
 
-  const saving = personalInfoSaving || passwordSaving || expenses.saving;
+  const notifications = useNotificationChannel({
+    user,
+    setUser,
+    onSuccess: () => {},
+  });
+
+  const saving = personalInfoSaving || passwordSaving || expenses.saving || notifications.saving;
 
   return (
     <>
@@ -101,6 +110,17 @@ const ProfileScreen: React.FC = () => {
               iconColor="#FFBB00"
               iconBackground="rgba(255,187,0,0.12)"
               onPress={expensesSheet.open}
+            />
+          </ProfileSection>
+
+          <ProfileSection title="Preferencias">
+            <ProfileMenuItem
+              title="Notificaciones"
+              subtitle="Elegí cómo querés recibir los avisos"
+              icon="notifications-outline"
+              iconColor="#07a3e4"
+              iconBackground="#E6F2FC"
+              onPress={notificationsSheet.open}
             />
           </ProfileSection>
 
@@ -166,6 +186,21 @@ const ProfileScreen: React.FC = () => {
         onSave={expenses.handleSave}
         error={expenses.error}
         onInputChange={expenses.handleInputChange}
+      />
+
+      <NotificationChannelSheet
+        visible={notificationsSheet.visible}
+        scale={notificationsSheet.scale}
+        opacity={notificationsSheet.opacity}
+        onClose={() => {
+          notificationsSheet.close();
+          notifications.clearError();
+        }}
+        user={user}
+        saving={notifications.saving}
+        error={notifications.error}
+        onSave={notifications.handleSave}
+        onChange={notifications.clearError}
       />
     </>
   );

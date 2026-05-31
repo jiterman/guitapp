@@ -1,5 +1,7 @@
 import { createContext } from 'react';
 
+export type NotificationChannel = 'EMAIL' | 'PUSH';
+
 export interface UserProfile {
   firstName: string;
   lastName?: string;
@@ -10,6 +12,7 @@ export interface UserProfile {
   targetSavings: number;
   estimatedMonthlyIncome: number;
   onboardingCompleted: boolean;
+  notificationChannel?: NotificationChannel;
   createdAt: string;
 }
 

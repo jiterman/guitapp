@@ -3,6 +3,7 @@ package org.fiuba.guitapp.service;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
+import java.time.YearMonth;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -245,7 +246,9 @@ public class ExpenseService {
         LocalDate now = LocalDate.now();
         int effectiveYear = year != null ? year : now.getYear();
         int effectiveMonth = month != null ? month : now.getMonthValue();
-        int effectiveDay = day != null ? day : now.getDayOfMonth();
+        int requestedDay = day != null ? day : now.getDayOfMonth();
+        int lastDayOfMonth = YearMonth.of(effectiveYear, effectiveMonth).lengthOfMonth();
+        int effectiveDay = Math.min(requestedDay, lastDayOfMonth);
         return LocalDate.of(effectiveYear, effectiveMonth, effectiveDay);
     }
 }

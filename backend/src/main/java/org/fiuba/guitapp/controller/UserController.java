@@ -10,6 +10,7 @@ import org.fiuba.guitapp.dto.OnboardingRequest;
 import org.fiuba.guitapp.dto.UpdateEstimatedMonthlyIncomeRequest;
 import org.fiuba.guitapp.dto.UpdateExpensesStructureRequest;
 import org.fiuba.guitapp.dto.UpdateFcmTokenRequest;
+import org.fiuba.guitapp.dto.UpdateNotificationChannelRequest;
 import org.fiuba.guitapp.dto.UpdateUserProfileRequest;
 import org.fiuba.guitapp.dto.UserProfileResponse;
 import org.fiuba.guitapp.dto.VerifyEmailChangeRequest;
@@ -118,6 +119,17 @@ public class UserController {
 
         userService.updateFcmToken(principal.getName(), request.fcmToken());
         return ResponseEntity.ok(Map.of("message", "FCM token updated successfully"));
+    }
+
+    @PatchMapping("/me/notification-channel")
+    public ResponseEntity<UserProfileResponse> updateNotificationChannel(
+            Principal principal,
+            @Valid @RequestBody UpdateNotificationChannelRequest request) {
+
+        UserProfileResponse response = userService.updateNotificationChannel(
+                principal.getName(),
+                request.notificationChannel());
+        return ResponseEntity.ok(response);
     }
 
     @PatchMapping("/me/estimated-monthly-income")

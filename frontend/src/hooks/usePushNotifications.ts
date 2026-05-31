@@ -12,11 +12,15 @@ Notifications.setNotificationHandler({
   }),
 });
 
-export const usePushNotifications = () => {
+export const usePushNotifications = (enabled: boolean = true) => {
   const [expoPushToken, setExpoPushToken] = useState<string | undefined>();
   const [hasPermission, setHasPermission] = useState<boolean>(false);
 
   useEffect(() => {
+    if (!enabled) {
+      return;
+    }
+
     registerForPushNotificationsAsync()
       .then(token => {
         setExpoPushToken(token);
@@ -28,7 +32,7 @@ export const usePushNotifications = () => {
         }
       })
       .catch(error => console.error('Error registrando notificaciones:', error));
-  }, []);
+  }, [enabled]);
 
   async function registerForPushNotificationsAsync() {
     let token;

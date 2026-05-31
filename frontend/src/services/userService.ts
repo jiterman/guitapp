@@ -225,6 +225,27 @@ export const userService = {
     return response.json();
   },
 
+  updateNotificationChannel: async (notificationChannel: 'EMAIL' | 'PUSH') => {
+    const token = await authService.getToken();
+
+    const response = await fetch(`${API_URL}/api/users/me/notification-channel`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ notificationChannel }),
+    });
+
+    const data = await response.json().catch(() => ({}));
+
+    if (!response.ok) {
+      throw new Error(data.message || 'Error al actualizar el canal de notificaciones');
+    }
+
+    return data;
+  },
+
   updateEstimatedMonthlyIncome: async (estimatedMonthlyIncome: number) => {
     const token = await authService.getToken();
 

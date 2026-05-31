@@ -19,6 +19,7 @@ import java.util.UUID;
 import org.fiuba.guitapp.event.ExpenseCreatedEvent;
 import org.fiuba.guitapp.exception.AuthException;
 import org.fiuba.guitapp.exception.ErrorCode;
+import org.fiuba.guitapp.model.AlertType;
 import org.fiuba.guitapp.model.Expense;
 import org.fiuba.guitapp.model.ExpenseCategory;
 import org.fiuba.guitapp.model.ExpenseType;
@@ -26,7 +27,7 @@ import org.fiuba.guitapp.model.User;
 import org.fiuba.guitapp.model.UserStatus;
 import org.fiuba.guitapp.repository.ExpenseRepository;
 import org.fiuba.guitapp.repository.UserRepository;
-import org.fiuba.guitapp.service.NotificationService;
+import org.fiuba.guitapp.service.AlertDeliveryService;
 import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -39,7 +40,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 class ExpenseEventListenerTest {
 
     @Mock
-    private NotificationService notificationService;
+    private AlertDeliveryService alertDeliveryService;
 
     @Mock
     private UserRepository userRepository;
@@ -99,7 +100,7 @@ class ExpenseEventListenerTest {
         expenseEventListener.handleExpenseCreatedEvent(testExpenseCreatedEvent);
 
         // Should only send variable notification because the event was for a VARIABLE expense
-        verify(notificationService, times(1)).sendExpenseThresholdExceededNotification(eq(testUser),
+        verify(alertDeliveryService, times(1)).deliverAlert(eq(testUser), eq(AlertType.EXPENSE_THRESHOLD_EXCEEDED),
                 argThat(s -> !s.contains("gastos fijos") && s.contains("gastos variables")));
     }
 
@@ -124,7 +125,7 @@ class ExpenseEventListenerTest {
         expenseEventListener.handleExpenseCreatedEvent(testExpenseCreatedEvent);
 
         // Should only send fixed notification because the event was for a FIXED expense
-        verify(notificationService, times(1)).sendExpenseThresholdExceededNotification(eq(testUser),
+        verify(alertDeliveryService, times(1)).deliverAlert(eq(testUser), eq(AlertType.EXPENSE_THRESHOLD_EXCEEDED),
                 argThat(s -> s.contains("gastos fijos") && !s.contains("gastos variables")));
     }
 
@@ -143,7 +144,7 @@ class ExpenseEventListenerTest {
 
         expenseEventListener.handleExpenseCreatedEvent(testExpenseCreatedEvent);
 
-        verify(notificationService, times(1)).sendExpenseThresholdExceededNotification(eq(testUser),
+        verify(alertDeliveryService, times(1)).deliverAlert(eq(testUser), eq(AlertType.EXPENSE_THRESHOLD_EXCEEDED),
                 argThat(s -> s.contains("gastos fijos") && !s.contains("gastos variables")));
     }
 
@@ -162,7 +163,7 @@ class ExpenseEventListenerTest {
 
         expenseEventListener.handleExpenseCreatedEvent(testExpenseCreatedEvent);
 
-        verify(notificationService, times(1)).sendExpenseThresholdExceededNotification(eq(testUser),
+        verify(alertDeliveryService, times(1)).deliverAlert(eq(testUser), eq(AlertType.EXPENSE_THRESHOLD_EXCEEDED),
                 argThat(s -> !s.contains("gastos fijos") && s.contains("gastos variables")));
     }
 
@@ -180,7 +181,7 @@ class ExpenseEventListenerTest {
 
         expenseEventListener.handleExpenseCreatedEvent(testExpenseCreatedEvent);
 
-        verify(notificationService, never()).sendExpenseThresholdExceededNotification(any(), any());
+        verify(alertDeliveryService, never()).deliverAlert(any(), any(), any());
     }
 
     @Test
@@ -190,10 +191,7 @@ class ExpenseEventListenerTest {
 
         expenseEventListener.handleExpenseCreatedEvent(testExpenseCreatedEvent);
 
-        verify(notificationService, never()).sendExpenseThresholdExceededNotification(any(), any());
-        verify(notificationService, never()).sendCategoryOverspendingNotification(any(), any());
-        verify(notificationService, never()).sendSavingsGoalAtRiskNotification(any(), any());
-        verify(notificationService, never()).sendNegativeBalanceRiskNotification(any(), any());
+        verify(alertDeliveryService, never()).deliverAlert(any(), any(), any());
     }
 
     @Test
@@ -239,11 +237,11 @@ class ExpenseEventListenerTest {
 
         expenseEventListener.handleExpenseCreatedEvent(testExpenseCreatedEvent);
 
-        verify(notificationService, times(1)).sendCategoryOverspendingNotification(eq(testUser),
+        verify(alertDeliveryService, times(1)).deliverAlert(eq(testUser), eq(AlertType.CATEGORY_OVERSPENDING),
                 argThat(s -> s.contains("supera al mes anterior") && s.contains("Supermercado")));
-        verify(notificationService, never()).sendExpenseThresholdExceededNotification(any(), any());
-        verify(notificationService, never()).sendSavingsGoalAtRiskNotification(any(), any());
-        verify(notificationService, never()).sendNegativeBalanceRiskNotification(any(), any());
+        verify(alertDeliveryService, never()).deliverAlert(eq(testUser), eq(AlertType.EXPENSE_THRESHOLD_EXCEEDED), any());
+        verify(alertDeliveryService, never()).deliverAlert(eq(testUser), eq(AlertType.SAVINGS_GOAL_AT_RISK), any());
+        verify(alertDeliveryService, never()).deliverAlert(eq(testUser), eq(AlertType.NEGATIVE_BALANCE_RISK), any());
     }
 
     @Test
@@ -255,7 +253,7 @@ class ExpenseEventListenerTest {
 
         expenseEventListener.handleExpenseCreatedEvent(testExpenseCreatedEvent);
 
-        verify(notificationService, never()).sendCategoryOverspendingNotification(any(), any());
+        verify(alertDeliveryService, never()).deliverAlert(any(), any(), any());
     }
 
     @Test
@@ -272,7 +270,7 @@ class ExpenseEventListenerTest {
 
         expenseEventListener.handleExpenseCreatedEvent(testExpenseCreatedEvent);
 
-        verify(notificationService, never()).sendCategoryOverspendingNotification(any(), any());
+        verify(alertDeliveryService, never()).deliverAlert(any(), any(), any());
     }
 
     @Test
@@ -313,7 +311,7 @@ class ExpenseEventListenerTest {
 
         expenseEventListener.handleExpenseCreatedEvent(testExpenseCreatedEvent);
 
-        verify(notificationService, never()).sendCategoryOverspendingNotification(any(), any());
+        verify(alertDeliveryService, never()).deliverAlert(any(), any(), any());
     }
 
     @Test
@@ -359,7 +357,7 @@ class ExpenseEventListenerTest {
 
         expenseEventListener.handleExpenseCreatedEvent(testExpenseCreatedEvent);
 
-        verify(notificationService, never()).sendCategoryOverspendingNotification(any(), any());
+        verify(alertDeliveryService, never()).deliverAlert(any(), any(), any());
     }
 
     @Test
@@ -371,7 +369,7 @@ class ExpenseEventListenerTest {
         });
 
         assertEquals(ErrorCode.USER_NOT_FOUND, thrown.getErrorCode());
-        verify(notificationService, never()).sendExpenseThresholdExceededNotification(any(), any());
+        verify(alertDeliveryService, never()).deliverAlert(any(), any(), any());
     }
 
     @Test
@@ -382,7 +380,7 @@ class ExpenseEventListenerTest {
 
         expenseEventListener.handleExpenseCreatedEvent(testExpenseCreatedEvent);
 
-        verify(notificationService, never()).sendExpenseThresholdExceededNotification(any(), any());
+        verify(alertDeliveryService, never()).deliverAlert(any(), any(), any());
     }
 
     @Test
@@ -393,7 +391,7 @@ class ExpenseEventListenerTest {
 
         expenseEventListener.handleExpenseCreatedEvent(testExpenseCreatedEvent);
 
-        verify(notificationService, never()).sendExpenseThresholdExceededNotification(any(), any());
+        verify(alertDeliveryService, never()).deliverAlert(any(), any(), any());
     }
 
     @Test
@@ -408,8 +406,7 @@ class ExpenseEventListenerTest {
 
         expenseEventListener.handleExpenseCreatedEvent(testExpenseCreatedEvent);
 
-        verify(notificationService, never()).sendNegativeBalanceRiskNotification(any(), any());
-        verify(notificationService, never()).sendSavingsGoalAtRiskNotification(any(), any());
+        verify(alertDeliveryService, never()).deliverAlert(any(), any(), any());
     }
 
     @Test
@@ -427,8 +424,7 @@ class ExpenseEventListenerTest {
 
         expenseEventListener.handleExpenseCreatedEvent(testExpenseCreatedEvent);
 
-        verify(notificationService, never()).sendNegativeBalanceRiskNotification(any(), any());
-        verify(notificationService, never()).sendSavingsGoalAtRiskNotification(any(), any());
+        verify(alertDeliveryService, never()).deliverAlert(any(), any(), any());
     }
 
     @Test
@@ -458,10 +454,11 @@ class ExpenseEventListenerTest {
 
         expenseEventListener.handleExpenseCreatedEvent(testExpenseCreatedEvent);
 
-        verify(notificationService, times(1)).sendNegativeBalanceRiskNotification(eq(testUser),
+        verify(alertDeliveryService, times(1)).deliverAlert(eq(testUser), eq(AlertType.NEGATIVE_BALANCE_RISK),
                 argThat(s -> s.contains("saldo") && s.contains("ingresos")));
-        verify(notificationService, never()).sendSavingsGoalAtRiskNotification(any(), any());
-        verify(notificationService, never()).sendExpenseThresholdExceededNotification(any(), any());
+        verify(alertDeliveryService, never()).deliverAlert(eq(testUser), eq(AlertType.SAVINGS_GOAL_AT_RISK), any());
+        verify(alertDeliveryService, never()).deliverAlert(eq(testUser), eq(AlertType.EXPENSE_THRESHOLD_EXCEEDED), any());
+        verify(alertDeliveryService, never()).deliverAlert(eq(testUser), eq(AlertType.CATEGORY_OVERSPENDING), any());
     }
 
     @Test
@@ -497,10 +494,11 @@ class ExpenseEventListenerTest {
 
         expenseEventListener.handleExpenseCreatedEvent(testExpenseCreatedEvent);
 
-        verify(notificationService, times(1)).sendSavingsGoalAtRiskNotification(eq(testUser),
+        verify(alertDeliveryService, times(1)).deliverAlert(eq(testUser), eq(AlertType.SAVINGS_GOAL_AT_RISK),
                 argThat(s -> s.contains("meta de ahorro") || s.contains("meta")));
-        verify(notificationService, never()).sendNegativeBalanceRiskNotification(any(), any());
-        verify(notificationService, never()).sendExpenseThresholdExceededNotification(any(), any());
+        verify(alertDeliveryService, never()).deliverAlert(eq(testUser), eq(AlertType.NEGATIVE_BALANCE_RISK), any());
+        verify(alertDeliveryService, never()).deliverAlert(eq(testUser), eq(AlertType.EXPENSE_THRESHOLD_EXCEEDED), any());
+        verify(alertDeliveryService, never()).deliverAlert(eq(testUser), eq(AlertType.CATEGORY_OVERSPENDING), any());
     }
 
     @Test

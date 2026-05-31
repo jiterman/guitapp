@@ -12,7 +12,8 @@ const vh = screenHeight / 100;
 
 export default function AppLayout() {
   const { user } = useUser();
-  usePushNotifications();
+  // Treat a missing channel (existing users) as PUSH; only EMAIL disables push.
+  usePushNotifications(!!user && user.notificationChannel !== 'EMAIL');
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>

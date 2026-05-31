@@ -32,6 +32,7 @@ class UserProfileResponseTests {
                 targetFixed,
                 targetVariable,
                 targetSavings,
+                null,
                 java.time.LocalDateTime.now());
 
         assertEquals(id, response.id());
@@ -56,6 +57,7 @@ class UserProfileResponseTests {
                 null,
                 null,
                 false,
+                null,
                 null,
                 null,
                 null,
@@ -89,6 +91,7 @@ class UserProfileResponseTests {
                 30,
                 50,
                 20,
+                null,
                 createdAt);
         UserProfileResponse response2 = new UserProfileResponse(
                 id,
@@ -101,6 +104,7 @@ class UserProfileResponseTests {
                 30,
                 50,
                 20,
+                null,
                 createdAt);
         assertEquals(response1, response2);
         assertEquals(response1.hashCode(), response2.hashCode());
@@ -120,6 +124,7 @@ class UserProfileResponseTests {
                 30,
                 50,
                 20,
+                null,
                 java.time.LocalDateTime.now());
 
         String toString = response.toString();
