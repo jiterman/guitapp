@@ -81,7 +81,8 @@ const NotificationChannelEditor: React.FC<Props> = ({
 
       {selected === 'PUSH' && (
         <Text style={styles.hint}>
-          Para recibir avisos en el celular, asegurate de habilitar las notificaciones de la aplicación.
+          Para recibir avisos en el celular, asegurate de habilitar las 
+          notificaciones de la aplicación.
         </Text>
       )}
 
