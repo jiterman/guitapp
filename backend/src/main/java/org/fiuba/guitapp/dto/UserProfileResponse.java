@@ -4,6 +4,8 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
+import org.fiuba.guitapp.model.NotificationChannel;
+
 public record UserProfileResponse(
         UUID id,
         String email,
@@ -15,5 +17,6 @@ public record UserProfileResponse(
         Integer targetFixedExpenses,
         Integer targetVariableExpenses,
         Integer targetSavings,
+        NotificationChannel notificationChannel,
         LocalDateTime createdAt) {
 }

@@ -5,6 +5,7 @@ import static org.mockito.Mockito.verify;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -85,6 +86,36 @@ class EmailServiceTests {
                 .send(any(SimpleMailMessage.class));
 
         emailService.sendEmailChangeOtp(to, otp);
+
+        verify(mailSender).send(any(SimpleMailMessage.class));
+    }
+
+    @Test
+    void shouldSendAlertEmailWithSameSubjectAndBody() {
+        String to = "user@example.com";
+        String subject = "Se nos fue la mano";
+        String body = "Te pasaste de tu presupuesto de gastos fijos.";
+
+        emailService.sendAlertEmail(to, subject, body);
+
+        ArgumentCaptor<SimpleMailMessage> captor = ArgumentCaptor.forClass(SimpleMailMessage.class);
+        verify(mailSender).send(captor.capture());
+        SimpleMailMessage message = captor.getValue();
+        org.junit.jupiter.api.Assertions.assertEquals(to, message.getTo()[0]);
+        org.junit.jupiter.api.Assertions.assertEquals(subject, message.getSubject());
+        org.junit.jupiter.api.Assertions.assertEquals(body, message.getText());
+    }
+
+    @Test
+    void shouldHandleMailExceptionInSendAlertEmail() {
+        String to = "user@example.com";
+        String subject = "Alert";
+        String body = "Body";
+        org.mockito.Mockito.doThrow(new org.springframework.mail.MailSendException("error"))
+                .when(mailSender)
+                .send(any(SimpleMailMessage.class));
+
+        emailService.sendAlertEmail(to, subject, body);
 
         verify(mailSender).send(any(SimpleMailMessage.class));
     }

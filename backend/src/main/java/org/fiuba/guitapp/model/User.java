@@ -84,6 +84,10 @@ public class User implements UserDetails {
     @Column
     private String fcmToken;
 
+    @Enumerated(EnumType.STRING)
+    @Column
+    private NotificationChannel notificationChannel;
+
     @Column
     private java.time.LocalDateTime otpCreatedAt;
 

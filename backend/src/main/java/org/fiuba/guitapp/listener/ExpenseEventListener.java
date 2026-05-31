@@ -11,13 +11,14 @@ import java.util.Locale;
 import org.fiuba.guitapp.event.ExpenseCreatedEvent;
 import org.fiuba.guitapp.exception.AuthException;
 import org.fiuba.guitapp.exception.ErrorCode;
+import org.fiuba.guitapp.model.AlertType;
 import org.fiuba.guitapp.model.Expense;
 import org.fiuba.guitapp.model.ExpenseCategory;
 import org.fiuba.guitapp.model.ExpenseType;
 import org.fiuba.guitapp.model.User;
 import org.fiuba.guitapp.repository.ExpenseRepository;
 import org.fiuba.guitapp.repository.UserRepository;
-import org.fiuba.guitapp.service.NotificationService;
+import org.fiuba.guitapp.service.AlertDeliveryService;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.event.TransactionPhase;
@@ -31,7 +32,7 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class ExpenseEventListener {
 
-    private final NotificationService notificationService;
+    private final AlertDeliveryService alertDeliveryService;
     private final UserRepository userRepository;
     private final ExpenseRepository expenseRepository;
 
@@ -106,7 +107,7 @@ public class ExpenseEventListener {
             String message = String.format(localeArg,
                     "Tu gasto en la categoría %s supera al mes anterior. Revisá tus gastos.",
                     formatCategory(category));
-            notificationService.sendCategoryOverspendingNotification(user, message);
+            alertDeliveryService.deliverAlert(user, AlertType.CATEGORY_OVERSPENDING, message);
             return true;
         }
 
@@ -169,7 +170,7 @@ public class ExpenseEventListener {
                     "Te pasaste de tu presupuesto de gastos fijos. Llevás gastado %s de los %s de tu objetivo de este mes",
                     formatter.format(totalFixed),
                     formatter.format(fixedLimit));
-            notificationService.sendExpenseThresholdExceededNotification(user, message);
+            alertDeliveryService.deliverAlert(user, AlertType.EXPENSE_THRESHOLD_EXCEEDED, message);
             return true;
         }
 
@@ -202,7 +203,7 @@ public class ExpenseEventListener {
                     "Te pasaste de tu presupuesto de gastos variables. Llevás gastado %s de los %s de tu objetivo de este mes",
                     formatter.format(totalVariable),
                     formatter.format(variableLimit));
-            notificationService.sendExpenseThresholdExceededNotification(user, message);
+            alertDeliveryService.deliverAlert(user, AlertType.EXPENSE_THRESHOLD_EXCEEDED, message);
             return true;
         }
 
@@ -227,7 +228,7 @@ public class ExpenseEventListener {
                     "Tu meta de ahorro est\u00e1 en riesgo. Si segu\u00eds con este ritmo, podr\u00edas gastar %s este mes y tu tope para cumplir el objetivo es %s",
                     formatter.format(projectionData.projectedExpenses()),
                     formatter.format(allowedExpenses));
-            notificationService.sendSavingsGoalAtRiskNotification(user, message);
+            alertDeliveryService.deliverAlert(user, AlertType.SAVINGS_GOAL_AT_RISK, message);
             return true;
         }
 
@@ -246,7 +247,7 @@ public class ExpenseEventListener {
                     "Tu saldo podr\u00eda quedar en negativo. Si segu\u00eds con este ritmo, podr\u00edas gastar %s este mes y tus ingresos esperados son %s",
                     formatter.format(projectionData.projectedExpenses()),
                     formatter.format(projectionData.expectedIncome()));
-            notificationService.sendNegativeBalanceRiskNotification(user, message);
+            alertDeliveryService.deliverAlert(user, AlertType.NEGATIVE_BALANCE_RISK, message);
             return true;
         }
 

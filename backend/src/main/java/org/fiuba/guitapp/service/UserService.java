@@ -13,6 +13,7 @@ import org.fiuba.guitapp.dto.UserProfileResponse;
 import org.fiuba.guitapp.dto.VerifyEmailChangeRequest;
 import org.fiuba.guitapp.exception.AuthException;
 import org.fiuba.guitapp.exception.ErrorCode;
+import org.fiuba.guitapp.model.NotificationChannel;
 import org.fiuba.guitapp.model.User;
 import org.fiuba.guitapp.repository.UserRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -39,6 +40,10 @@ public class UserService {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new AuthException(ErrorCode.USER_NOT_FOUND, "User not found"));
 
+        return toUserProfileResponse(user);
+    }
+
+    private UserProfileResponse toUserProfileResponse(User user) {
         return new UserProfileResponse(
                 user.getId(),
                 user.getEmail(),
@@ -50,7 +55,19 @@ public class UserService {
                 user.getTargetFixedExpenses(),
                 user.getTargetVariableExpenses(),
                 user.getTargetSavings(),
+                user.getNotificationChannel(),
                 user.getCreatedAt());
+    }
+
+    @Transactional
+    public UserProfileResponse updateNotificationChannel(String email, NotificationChannel notificationChannel) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new AuthException(ErrorCode.USER_NOT_FOUND, "User not found"));
+
+        user.setNotificationChannel(notificationChannel);
+        userRepository.save(user);
+
+        return toUserProfileResponse(user);
     }
 
     @Transactional
@@ -92,18 +109,7 @@ public class UserService {
         }
         userRepository.save(user);
 
-        return new UserProfileResponse(
-                user.getId(),
-                user.getEmail(),
-                user.getFirstName(),
-                user.getLastName(),
-                user.getAvatarUrl(),
-                user.isOnboardingCompleted(),
-                user.getEstimatedMonthlyIncome(),
-                user.getTargetFixedExpenses(),
-                user.getTargetVariableExpenses(),
-                user.getTargetSavings(),
-                user.getCreatedAt());
+        return toUserProfileResponse(user);
     }
 
     private void validateAvatarFile(MultipartFile file) {
@@ -138,18 +144,7 @@ public class UserService {
             String url = uploadResult.get("secure_url").toString();
             user.setAvatarUrl(url);
             userRepository.save(user);
-            return new UserProfileResponse(
-                    user.getId(),
-                    user.getEmail(),
-                    user.getFirstName(),
-                    user.getLastName(),
-                    user.getAvatarUrl(),
-                    user.isOnboardingCompleted(),
-                    user.getEstimatedMonthlyIncome(),
-                    user.getTargetFixedExpenses(),
-                    user.getTargetVariableExpenses(),
-                    user.getTargetSavings(),
-                    user.getCreatedAt());
+            return toUserProfileResponse(user);
 
         } catch (Exception e) {
             throw new RuntimeException("Error uploading avatar", e);
@@ -276,18 +271,7 @@ public class UserService {
         user.setEstimatedMonthlyIncome(estimatedMonthlyIncome);
         userRepository.save(user);
 
-        return new UserProfileResponse(
-                user.getId(),
-                user.getEmail(),
-                user.getFirstName(),
-                user.getLastName(),
-                user.getAvatarUrl(),
-                user.isOnboardingCompleted(),
-                user.getEstimatedMonthlyIncome(),
-                user.getTargetFixedExpenses(),
-                user.getTargetVariableExpenses(),
-                user.getTargetSavings(),
-                user.getCreatedAt());
+        return toUserProfileResponse(user);
     }
 
     @Transactional
@@ -324,17 +308,6 @@ public class UserService {
 
         userRepository.save(user);
 
-        return new UserProfileResponse(
-                user.getId(),
-                user.getEmail(),
-                user.getFirstName(),
-                user.getLastName(),
-                user.getAvatarUrl(),
-                user.isOnboardingCompleted(),
-                user.getEstimatedMonthlyIncome(),
-                user.getTargetFixedExpenses(),
-                user.getTargetVariableExpenses(),
-                user.getTargetSavings(),
-                user.getCreatedAt());
+        return toUserProfileResponse(user);
     }
 }

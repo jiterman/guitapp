@@ -15,9 +15,11 @@ import org.fiuba.guitapp.dto.OnboardingRequest;
 import org.fiuba.guitapp.dto.UpdateEstimatedMonthlyIncomeRequest;
 import org.fiuba.guitapp.dto.UpdateExpensesStructureRequest;
 import org.fiuba.guitapp.dto.UpdateFcmTokenRequest;
+import org.fiuba.guitapp.dto.UpdateNotificationChannelRequest;
 import org.fiuba.guitapp.dto.UpdateUserProfileRequest;
 import org.fiuba.guitapp.dto.UserProfileResponse;
 import org.fiuba.guitapp.dto.VerifyEmailChangeRequest;
+import org.fiuba.guitapp.model.NotificationChannel;
 import org.fiuba.guitapp.service.UserService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -61,6 +63,7 @@ class UserControllerTests {
                 30,
                 50,
                 20,
+                null,
                 java.time.LocalDateTime.now());
 
         when(userService.getUserProfile("test@example.com")).thenReturn(response);
@@ -144,6 +147,7 @@ class UserControllerTests {
                 30,
                 50,
                 20,
+                null,
                 java.time.LocalDateTime.now());
 
         when(userService.updateUserProfile(
@@ -180,6 +184,7 @@ class UserControllerTests {
                 30,
                 50,
                 20,
+                null,
                 java.time.LocalDateTime.now());
 
         MockMultipartFile file = new MockMultipartFile(
@@ -284,6 +289,48 @@ class UserControllerTests {
 
     @Test
     @WithMockUser(username = "test@example.com")
+    void updateNotificationChannel_ShouldReturnUpdatedProfile() throws Exception {
+        UpdateNotificationChannelRequest request = new UpdateNotificationChannelRequest(NotificationChannel.EMAIL);
+        UUID userId = UUID.randomUUID();
+        UserProfileResponse mockResponse = new UserProfileResponse(
+                userId,
+                "test@example.com",
+                "Test",
+                "User",
+                null,
+                true,
+                BigDecimal.valueOf(10000),
+                30,
+                50,
+                20,
+                NotificationChannel.EMAIL,
+                java.time.LocalDateTime.now());
+
+        when(userService.updateNotificationChannel(eq("test@example.com"), eq(NotificationChannel.EMAIL)))
+                .thenReturn(mockResponse);
+
+        mockMvc.perform(patch("/api/users/me/notification-channel")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.notificationChannel").value("EMAIL"));
+
+        verify(userService, times(1)).updateNotificationChannel(eq("test@example.com"), eq(NotificationChannel.EMAIL));
+    }
+
+    @Test
+    @WithMockUser(username = "test@example.com")
+    void updateNotificationChannel_ShouldReturnBadRequest_WhenChannelIsNull() throws Exception {
+        mockMvc.perform(patch("/api/users/me/notification-channel")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"notificationChannel\": null}"))
+                .andExpect(status().isBadRequest());
+
+        verify(userService, never()).updateNotificationChannel(anyString(), any());
+    }
+
+    @Test
+    @WithMockUser(username = "test@example.com")
     void updateEstimatedMonthlyIncome_ShouldReturnSuccessMessage() throws Exception {
         UpdateEstimatedMonthlyIncomeRequest request = new UpdateEstimatedMonthlyIncomeRequest(BigDecimal.valueOf(75000));
         UUID userId = UUID.randomUUID();
@@ -298,6 +345,7 @@ class UserControllerTests {
                 30,
                 50,
                 20,
+                null,
                 java.time.LocalDateTime.now());
 
         when(userService.updateEstimatedMonthlyIncome(
@@ -346,6 +394,7 @@ class UserControllerTests {
                 50,
                 30,
                 20,
+                null,
                 java.time.LocalDateTime.now());
 
         when(userService.updateExpensesStructure(
