@@ -63,21 +63,15 @@ const CategoryLegend: React.FC<CategoryLegendProps> = ({ data }) => {
                       {item.changeVsPreviousMonth === 0 ? (
                         <Text style={[styles.changeText, { color: '#6b8aa1' }]}>= 0%</Text>
                       ) : (
-                        <>
-                          <Ionicons
-                            name={item.changeVsPreviousMonth > 0 ? 'trending-up' : 'trending-down'}
-                            size={12}
-                            color={item.changeVsPreviousMonth > 0 ? '#c0392b' : '#1a9e5c'}
-                          />
-                          <Text
-                            style={[
-                              styles.changeText,
-                              { color: item.changeVsPreviousMonth > 0 ? '#c0392b' : '#1a9e5c' },
-                            ]}
-                          >
-                            {Math.abs(item.changeVsPreviousMonth).toFixed(0)}%
-                          </Text>
-                        </>
+                        <Text
+                          style={[
+                            styles.changeText,
+                            { color: item.changeVsPreviousMonth > 0 ? '#c0392b' : '#1a9e5c' },
+                          ]}
+                        >
+                          {item.changeVsPreviousMonth > 0 ? '+ ' : '- '}
+                          {Math.abs(item.changeVsPreviousMonth).toFixed(0)}%
+                        </Text>
                       )}
                     </View>
                   )}

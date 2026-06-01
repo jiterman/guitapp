@@ -3,7 +3,9 @@ package org.fiuba.guitapp.controller;
 import java.security.Principal;
 import java.time.YearMonth;
 
+import org.fiuba.guitapp.dto.HealthScoreResponse;
 import org.fiuba.guitapp.dto.MonthlySummaryResponse;
+import org.fiuba.guitapp.service.HealthScoreService;
 import org.fiuba.guitapp.service.MonthlySummaryService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -20,6 +22,7 @@ import lombok.RequiredArgsConstructor;
 public class MonthlySummaryController {
 
     private final MonthlySummaryService monthlySummaryService;
+    private final HealthScoreService healthScoreService;
 
     @GetMapping("/monthly")
     public ResponseEntity<MonthlySummaryResponse> getMonthlySummary(
@@ -28,6 +31,17 @@ public class MonthlySummaryController {
             @RequestParam(required = false) Integer month) {
         YearMonth target = resolveYearMonth(year, month);
         MonthlySummaryResponse response = monthlySummaryService.getSummary(
+                principal.getName(), target.getYear(), target.getMonthValue());
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/monthly/health-score")
+    public ResponseEntity<HealthScoreResponse> getHealthScore(
+            Principal principal,
+            @RequestParam(required = false) Integer year,
+            @RequestParam(required = false) Integer month) {
+        YearMonth target = resolveYearMonth(year, month);
+        HealthScoreResponse response = healthScoreService.getHealthScore(
                 principal.getName(), target.getYear(), target.getMonthValue());
         return ResponseEntity.ok(response);
     }
