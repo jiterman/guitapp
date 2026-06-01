@@ -1,25 +1,42 @@
 import React from 'react';
 import { Dimensions, StyleSheet, View } from 'react-native';
 import { Text } from '@ui-kitten/components';
+import { Ionicons } from '@expo/vector-icons';
 
 const { width: screenWidth } = Dimensions.get('window');
 
 interface StatsCardProps {
   income: number;
   expense: number;
+  variant?: 'default' | 'monthly';
 }
 
 const formatCurrency = (value: number) =>
   `$${new Intl.NumberFormat('es-AR').format(Math.round(value))}`;
 
-const StatsCard: React.FC<StatsCardProps> = ({ income, expense }) => {
+const StatsCard: React.FC<StatsCardProps> = ({ income, expense, variant = 'default' }) => {
   const balance = income - expense;
   const balancePositive = balance >= 0;
+  const isMonthly = variant === 'monthly';
 
   return (
     <View style={styles.statsCard}>
       <View style={styles.leftCol}>
-        <Text style={styles.balanceLabel}>Balance</Text>
+        {isMonthly && (
+          <View
+            style={[
+              styles.balanceIconCircle,
+              { backgroundColor: balancePositive ? '#E8F8EE' : '#FFEDED' },
+            ]}
+          >
+            <Ionicons
+              name="cash-outline"
+              size={22}
+              color={balancePositive ? '#1a9e5c' : '#c0392b'}
+            />
+          </View>
+        )}
+        <Text style={styles.balanceLabel}>{isMonthly ? 'Ahorro del mes' : 'Balance'}</Text>
         <Text style={[styles.balanceValue, { color: balancePositive ? '#1a9e5c' : '#c0392b' }]}>
           {balance < 0 ? '-' : ''}
           {formatCurrency(Math.abs(balance))}
@@ -60,6 +77,14 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     gap: 4,
+  },
+  balanceIconCircle: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 2,
   },
   balanceLabel: {
     fontSize: 15,

@@ -192,7 +192,65 @@ class MonthlySummaryServiceTests {
     }
 
     @Test
-    void getSummary_insightsIncludeSavings_whenIncomePositive() {
+    void getSummary_insightsExpensesVsPrevMonth_increase() {
+        when(userRepository.findByEmail(email)).thenReturn(Optional.of(activeUser));
+
+        when(expenseRepository.findAllByUserAndDateBetween(eq(activeUser), any(), any()))
+                .thenReturn(
+                        List.of(expense(new BigDecimal("147"), ExpenseCategory.DELIVERY, LocalDate.of(2025, 4, 5))),
+                        List.of(expense(new BigDecimal("100"), ExpenseCategory.DELIVERY, LocalDate.of(2025, 3, 5))));
+        when(incomeRepository.findAllByUserAndDateBetween(eq(activeUser), any(), any()))
+                .thenReturn(Collections.emptyList(), Collections.emptyList());
+
+        MonthlySummaryResponse summary = monthlySummaryService.getSummary(email, 2025, 4);
+
+        assertTrue(summary.insights().stream().anyMatch(i ->
+                i.type().equals("EXPENSES_VS_PREV_MONTH") &&
+                i.label().equals("Tus gastos aumentaron") &&
+                i.highlight().startsWith("+") &&
+                i.variant().equals("negative")));
+    }
+
+    @Test
+    void getSummary_insightsExpensesVsPrevMonth_decrease() {
+        when(userRepository.findByEmail(email)).thenReturn(Optional.of(activeUser));
+
+        when(expenseRepository.findAllByUserAndDateBetween(eq(activeUser), any(), any()))
+                .thenReturn(
+                        List.of(expense(new BigDecimal("50"), ExpenseCategory.DELIVERY, LocalDate.of(2025, 4, 5))),
+                        List.of(expense(new BigDecimal("100"), ExpenseCategory.DELIVERY, LocalDate.of(2025, 3, 5))));
+        when(incomeRepository.findAllByUserAndDateBetween(eq(activeUser), any(), any()))
+                .thenReturn(Collections.emptyList(), Collections.emptyList());
+
+        MonthlySummaryResponse summary = monthlySummaryService.getSummary(email, 2025, 4);
+
+        assertTrue(summary.insights().stream().anyMatch(i ->
+                i.type().equals("EXPENSES_VS_PREV_MONTH") &&
+                i.label().equals("Tus gastos bajaron") &&
+                i.highlight().startsWith("-") &&
+                i.variant().equals("positive")));
+    }
+
+    @Test
+    void getSummary_insightsExpensesVsPrevMonth_stable_treatedAsPositive() {
+        when(userRepository.findByEmail(email)).thenReturn(Optional.of(activeUser));
+
+        when(expenseRepository.findAllByUserAndDateBetween(eq(activeUser), any(), any()))
+                .thenReturn(
+                        List.of(expense(new BigDecimal("100"), ExpenseCategory.DELIVERY, LocalDate.of(2025, 4, 5))),
+                        List.of(expense(new BigDecimal("100"), ExpenseCategory.DELIVERY, LocalDate.of(2025, 3, 5))));
+        when(incomeRepository.findAllByUserAndDateBetween(eq(activeUser), any(), any()))
+                .thenReturn(Collections.emptyList(), Collections.emptyList());
+
+        MonthlySummaryResponse summary = monthlySummaryService.getSummary(email, 2025, 4);
+
+        assertTrue(summary.insights().stream().anyMatch(i ->
+                i.type().equals("EXPENSES_VS_PREV_MONTH") &&
+                i.variant().equals("positive")));
+    }
+
+    @Test
+    void getSummary_insightsSavings_positive() {
         when(userRepository.findByEmail(email)).thenReturn(Optional.of(activeUser));
 
         when(expenseRepository.findAllByUserAndDateBetween(eq(activeUser), any(), any()))
@@ -203,7 +261,50 @@ class MonthlySummaryServiceTests {
 
         MonthlySummaryResponse summary = monthlySummaryService.getSummary(email, 2025, 4);
 
-        assertTrue(summary.insights().stream().anyMatch(i -> i.type().equals("SAVINGS")));
+        assertTrue(summary.insights().stream().anyMatch(i ->
+                i.type().equals("SAVINGS") &&
+                i.label().equals("Ahorraste") &&
+                i.sub().equals("este mes") &&
+                i.variant().equals("positive")));
+    }
+
+    @Test
+    void getSummary_insightsSavings_negative() {
+        when(userRepository.findByEmail(email)).thenReturn(Optional.of(activeUser));
+
+        when(expenseRepository.findAllByUserAndDateBetween(eq(activeUser), any(), any()))
+                .thenReturn(List.of(expense(new BigDecimal("1500"), ExpenseCategory.RENT, LocalDate.of(2025, 4, 1))),
+                        Collections.emptyList());
+        when(incomeRepository.findAllByUserAndDateBetween(eq(activeUser), any(), any()))
+                .thenReturn(List.of(income(new BigDecimal("1000"), LocalDate.of(2025, 4, 1))),
+                        Collections.emptyList());
+
+        MonthlySummaryResponse summary = monthlySummaryService.getSummary(email, 2025, 4);
+
+        assertTrue(summary.insights().stream().anyMatch(i ->
+                i.type().equals("SAVINGS") &&
+                i.label().equals("Gastaste") &&
+                i.sub().equals("más que tus ingresos") &&
+                i.variant().equals("negative")));
+    }
+
+    @Test
+    void getSummary_insightsSavings_neutral_treatedAsPositive() {
+        when(userRepository.findByEmail(email)).thenReturn(Optional.of(activeUser));
+
+        when(expenseRepository.findAllByUserAndDateBetween(eq(activeUser), any(), any()))
+                .thenReturn(List.of(expense(new BigDecimal("1000"), ExpenseCategory.RENT, LocalDate.of(2025, 4, 1))),
+                        Collections.emptyList());
+        when(incomeRepository.findAllByUserAndDateBetween(eq(activeUser), any(), any()))
+                .thenReturn(List.of(income(new BigDecimal("1000"), LocalDate.of(2025, 4, 1))),
+                        Collections.emptyList());
+
+        MonthlySummaryResponse summary = monthlySummaryService.getSummary(email, 2025, 4);
+
+        assertTrue(summary.insights().stream().anyMatch(i ->
+                i.type().equals("SAVINGS") &&
+                i.label().equals("Ahorraste") &&
+                i.variant().equals("positive")));
     }
 
     @Test
@@ -218,7 +319,10 @@ class MonthlySummaryServiceTests {
 
         MonthlySummaryResponse summary = monthlySummaryService.getSummary(email, 2025, 4);
 
-        assertTrue(summary.insights().stream().anyMatch(i -> i.type().equals("TOP_CATEGORY")));
+        assertTrue(summary.insights().stream().anyMatch(i ->
+                i.type().equals("TOP_CATEGORY") &&
+                i.label().equals("Mayor gasto: Alquiler") &&
+                i.sub().equals("del total")));
     }
 
     @Test
@@ -270,6 +374,52 @@ class MonthlySummaryServiceTests {
 
         assertDoesNotThrow(() -> monthlySummaryService.sendSummaryNotifications(2025, 4));
         verify(alertDeliveryService, times(1)).deliverAlert(eq(activeUser), any(), anyString());
+    }
+
+    @Test
+    void getSummary_insightsIncludeCategoryIncrease_whenCategoryIncreasedVsPrevMonth() {
+        when(userRepository.findByEmail(email)).thenReturn(Optional.of(activeUser));
+
+        List<Expense> currentExpenses = List.of(
+                expense(new BigDecimal("200"), ExpenseCategory.DELIVERY, LocalDate.of(2025, 4, 5)));
+        List<Expense> prevExpenses = List.of(
+                expense(new BigDecimal("100"), ExpenseCategory.DELIVERY, LocalDate.of(2025, 3, 5)));
+
+        when(expenseRepository.findAllByUserAndDateBetween(eq(activeUser), any(), any()))
+                .thenReturn(currentExpenses, prevExpenses);
+        when(incomeRepository.findAllByUserAndDateBetween(eq(activeUser), any(), any()))
+                .thenReturn(Collections.emptyList(), Collections.emptyList());
+
+        MonthlySummaryResponse summary = monthlySummaryService.getSummary(email, 2025, 4);
+
+        assertTrue(summary.insights().stream().anyMatch(i ->
+                i.type().equals("CATEGORY_INCREASE") &&
+                i.label().equals("Mayor aumento: Delivery") &&
+                i.highlight().startsWith("+") &&
+                i.variant().equals("negative")));
+    }
+
+    @Test
+    void getSummary_insightsIncludeCategoryDecrease_whenCategoryDecreasedVsPrevMonth() {
+        when(userRepository.findByEmail(email)).thenReturn(Optional.of(activeUser));
+
+        List<Expense> currentExpenses = List.of(
+                expense(new BigDecimal("50"), ExpenseCategory.DELIVERY, LocalDate.of(2025, 4, 5)));
+        List<Expense> prevExpenses = List.of(
+                expense(new BigDecimal("100"), ExpenseCategory.DELIVERY, LocalDate.of(2025, 3, 5)));
+
+        when(expenseRepository.findAllByUserAndDateBetween(eq(activeUser), any(), any()))
+                .thenReturn(currentExpenses, prevExpenses);
+        when(incomeRepository.findAllByUserAndDateBetween(eq(activeUser), any(), any()))
+                .thenReturn(Collections.emptyList(), Collections.emptyList());
+
+        MonthlySummaryResponse summary = monthlySummaryService.getSummary(email, 2025, 4);
+
+        assertTrue(summary.insights().stream().anyMatch(i ->
+                i.type().equals("CATEGORY_DECREASE") &&
+                i.label().equals("Mayor reducción: Delivery") &&
+                i.highlight().startsWith("-") &&
+                i.variant().equals("positive")));
     }
 
     @Test

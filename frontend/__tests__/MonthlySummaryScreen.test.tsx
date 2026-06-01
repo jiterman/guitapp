@@ -41,30 +41,34 @@ const mockSummary: MonthlySummaryResponse = {
     {
       type: 'SAVINGS',
       label: 'Ahorraste',
-      highlight: '50%',
+      highlight: '36%',
       sub: 'de tus ingresos',
       variant: 'positive',
+      category: null,
     },
     {
       type: 'TOP_CATEGORY',
-      label: 'Tu mayor gasto fue Alquiler',
+      label: 'Mayor gasto: Alquiler',
       highlight: '67%',
       sub: 'del total',
       variant: 'neutral',
+      category: 'RENT',
     },
     {
       type: 'EXPENSES_VS_PREV_MONTH',
       label: 'Tus gastos bajaron',
-      highlight: '10%',
-      sub: 'vs el mes pasado',
+      highlight: '-10%',
+      sub: 'vs mes anterior',
       variant: 'positive',
+      category: null,
     },
     {
-      type: 'CATEGORY_CHANGE',
-      label: 'Gastaste más en',
-      highlight: '142%',
-      sub: 'Delivery',
+      type: 'CATEGORY_INCREASE',
+      label: 'Mayor aumento: Delivery',
+      highlight: '+142%',
+      sub: 'vs mes anterior',
       variant: 'negative',
+      category: 'DELIVERY',
     },
   ],
 };
@@ -91,7 +95,7 @@ describe('MonthlySummaryScreen', () => {
     const { getByText } = renderScreen();
 
     await waitFor(() => {
-      expect(getByText('Insights')).toBeTruthy();
+      expect(getByText('Ahorraste')).toBeTruthy();
       expect(getByText('de tus ingresos')).toBeTruthy();
       expect(getByText('del total')).toBeTruthy();
     });

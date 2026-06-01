@@ -161,47 +161,64 @@ public class MonthlySummaryService {
 
         List<MonthlyInsight> insights = new ArrayList<>();
 
+        if (totalIncome.compareTo(BigDecimal.ZERO) > 0) {
+            double savingsPct = balance.abs()
+                    .divide(totalIncome, 4, RoundingMode.HALF_UP)
+                    .multiply(BigDecimal.valueOf(100))
+                    .doubleValue();
+            if (balance.compareTo(BigDecimal.ZERO) >= 0) {
+                String highlight = String.format(LOCALE_AR, "%.0f%%", savingsPct);
+                insights.add(new MonthlyInsight("SAVINGS", "Ahorraste", highlight, "de tus ingresos", "positive", null));
+            } else {
+                String highlight = String.format(LOCALE_AR, "%.0f%%", savingsPct);
+                insights.add(new MonthlyInsight("SAVINGS", "Gastaste", highlight, "más que tus ingresos", "negative", null));
+            }
+        }
+
         if (prevTotalExpenses.compareTo(BigDecimal.ZERO) > 0) {
             double changeExpenses = totalExpenses.subtract(prevTotalExpenses)
                     .divide(prevTotalExpenses, 4, RoundingMode.HALF_UP)
                     .multiply(BigDecimal.valueOf(100))
                     .doubleValue();
-            String label = changeExpenses >= 0 ? "Tus gastos subieron" : "Tus gastos bajaron";
-            String highlight = String.format(LOCALE_AR, "%.0f%%", Math.abs(changeExpenses));
-            String variant = changeExpenses >= 0 ? "negative" : "positive";
-            insights.add(new MonthlyInsight("EXPENSES_VS_PREV_MONTH", label, highlight, "vs el mes pasado", variant));
-        }
-
-        if (totalIncome.compareTo(BigDecimal.ZERO) > 0) {
-            if (balance.compareTo(BigDecimal.ZERO) >= 0) {
-                double savingsPct = balance
-                        .divide(totalIncome, 4, RoundingMode.HALF_UP)
-                        .multiply(BigDecimal.valueOf(100))
-                        .doubleValue();
-                String highlight = String.format(LOCALE_AR, "%.0f%%", savingsPct);
-                insights.add(new MonthlyInsight("SAVINGS", "Ahorraste", highlight, "de tus ingresos", "positive"));
+            String label;
+            String highlight;
+            String variant;
+            if (changeExpenses > 0) {
+                label = "Tus gastos aumentaron";
+                highlight = String.format(LOCALE_AR, "+%.0f%%", changeExpenses);
+                variant = "negative";
             } else {
-                String highlight = String.format(LOCALE_AR, "$%.0f", balance.abs());
-                insights.add(new MonthlyInsight("SAVINGS", "Gastaste de más", highlight, "sobre tus ingresos", "negative"));
+                label = changeExpenses < 0 ? "Tus gastos bajaron" : "Tus gastos fueron estables";
+                highlight = changeExpenses < 0
+                        ? String.format(LOCALE_AR, "-%.0f%%", Math.abs(changeExpenses))
+                        : "0%";
+                variant = "positive";
             }
+            insights.add(new MonthlyInsight("EXPENSES_VS_PREV_MONTH", label, highlight, "vs mes anterior", variant, null));
         }
 
         categoryBreakdown.stream().findFirst().ifPresent(top -> {
             String highlight = String.format(LOCALE_AR, "%.0f%%", top.percentage());
             insights.add(new MonthlyInsight("TOP_CATEGORY",
-                    "Tu mayor gasto fue " + formatCategory(top.category()), highlight, "del total", "neutral"));
+                    "Mayor gasto: " + formatCategory(top.category()), highlight, "del total", "neutral", top.category().name()));
         });
 
         categoryBreakdown.stream()
-                .filter(c -> c.changeVsPreviousMonth() != null)
-                .max(Comparator.comparingDouble(c -> Math.abs(c.changeVsPreviousMonth())))
+                .filter(c -> c.changeVsPreviousMonth() != null && c.changeVsPreviousMonth() > 0)
+                .max(Comparator.comparingDouble(MonthlyCategoryBreakdown::changeVsPreviousMonth))
                 .ifPresent(biggest -> {
-                    double change = biggest.changeVsPreviousMonth();
-                    String label = change >= 0 ? "Gastaste más en" : "Gastaste menos en";
-                    String highlight = String.format(LOCALE_AR, "%.0f%%", Math.abs(change));
-                    String variant = change >= 0 ? "negative" : "positive";
-                    insights.add(new MonthlyInsight("CATEGORY_CHANGE", label, highlight,
-                            formatCategory(biggest.category()), variant));
+                    String highlight = String.format(LOCALE_AR, "+%.0f%%", biggest.changeVsPreviousMonth());
+                    insights.add(new MonthlyInsight("CATEGORY_INCREASE",
+                            "Mayor aumento: " + formatCategory(biggest.category()), highlight, "vs mes anterior", "negative", biggest.category().name()));
+                });
+
+        categoryBreakdown.stream()
+                .filter(c -> c.changeVsPreviousMonth() != null && c.changeVsPreviousMonth() < 0)
+                .min(Comparator.comparingDouble(MonthlyCategoryBreakdown::changeVsPreviousMonth))
+                .ifPresent(smallest -> {
+                    String highlight = String.format(LOCALE_AR, "-%.0f%%", Math.abs(smallest.changeVsPreviousMonth()));
+                    insights.add(new MonthlyInsight("CATEGORY_DECREASE",
+                            "Mayor reducción: " + formatCategory(smallest.category()), highlight, "vs mes anterior", "positive", smallest.category().name()));
                 });
 
         return insights;

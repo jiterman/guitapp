@@ -97,7 +97,7 @@ const SummaryScreen: React.FC = () => {
   }, [periodMovements]);
 
   return (
-    <Layout style={styles.container}>
+    <Layout style={[styles.container, activeTab === 'monthly' && styles.containerMonthly]}>
       <Text category="h6" style={styles.title}>
         Resumen
       </Text>
@@ -180,6 +180,9 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: screenWidth * 0.05,
     backgroundColor: '#E6F2FC',
+  },
+  containerMonthly: {
+    paddingBottom: 0,
   },
   title: {
     marginBottom: vh * 1.2,

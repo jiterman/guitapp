@@ -3,6 +3,7 @@ import { ActivityIndicator, Dimensions, ScrollView, StyleSheet, View } from 'rea
 import { Text } from '@ui-kitten/components';
 import { Ionicons } from '@expo/vector-icons';
 import StatsCard from '../components/StatsCard/StatsCard';
+import CategoryLegend from '../components/CategoryLegend/CategoryLegend';
 import { EXPENSE_CATEGORIES } from '../constants/categories';
 import { MonthlySummaryResponse, monthlySummaryService } from '../services/monthlySummaryService';
 
@@ -24,14 +25,6 @@ const MONTH_NAMES = [
   'Diciembre',
 ];
 
-const formatCurrency = (value: number) =>
-  `$${new Intl.NumberFormat('es-AR').format(Math.round(value))}`;
-
-const getCategoryLabel = (categoryValue: string): string => {
-  const found = EXPENSE_CATEGORIES.find(c => c.value === categoryValue);
-  return found?.label ?? categoryValue;
-};
-
 const getCategoryIcon = (categoryValue: string): string => {
   const found = EXPENSE_CATEGORIES.find(c => c.value === categoryValue);
   return found?.icon ?? 'cube-outline';
@@ -47,13 +40,14 @@ const INSIGHT_ICON: Record<string, string> = {
   EXPENSES_VS_PREV_MONTH: 'bar-chart-outline',
   SAVINGS: 'wallet-outline',
   TOP_CATEGORY: 'trophy-outline',
-  CATEGORY_CHANGE: 'trending-up-outline',
+  CATEGORY_INCREASE: 'trending-up-outline',
+  CATEGORY_DECREASE: 'trending-down-outline',
 };
 
-const VARIANT_STYLE: Record<string, { color: string; bg: string }> = {
-  positive: { color: '#1a9e5c', bg: 'rgba(26,158,92,0.12)' },
-  negative: { color: '#c0392b', bg: 'rgba(192,57,43,0.12)' },
-  neutral: { color: '#07a3e4', bg: 'rgba(7,163,228,0.12)' },
+const VARIANT_STYLE: Record<string, { color: string; iconBg: string; cardBg: string }> = {
+  positive: { color: '#22C55E', iconBg: '#E8F8EE', cardBg: '#F4FCF7' },
+  negative: { color: '#EF5350', iconBg: '#FFEDED', cardBg: '#FFF7F7' },
+  neutral: { color: '#2196F3', iconBg: '#EAF5FF', cardBg: '#F7FBFF' },
 };
 
 interface InsightCardProps {
@@ -62,19 +56,29 @@ interface InsightCardProps {
   highlight: string;
   sub: string;
   variant: string;
+  category: string | null;
 }
 
-const InsightCard: React.FC<InsightCardProps> = ({ type, label, highlight, sub, variant }) => {
-  const { color, bg } = VARIANT_STYLE[variant] ?? VARIANT_STYLE.neutral;
-  const iconName = INSIGHT_ICON[type] ?? 'information-circle-outline';
+const InsightCard: React.FC<InsightCardProps> = ({
+  type,
+  label,
+  highlight,
+  sub,
+  variant,
+  category,
+}) => {
+  const { color, iconBg, cardBg } = VARIANT_STYLE[variant] ?? VARIANT_STYLE.neutral;
+  const iconName = category
+    ? getCategoryIcon(category)
+    : (INSIGHT_ICON[type] ?? 'information-circle-outline');
   return (
-    <View style={styles.insightCard}>
-      <View style={[styles.insightIconCircle, { backgroundColor: bg }]}>
+    <View style={[styles.insightCard, { backgroundColor: cardBg, borderColor: color }]}>
+      <View style={[styles.insightIconCircle, { backgroundColor: iconBg }]}>
         <Ionicons name={iconName as never} size={22} color={color} />
       </View>
-      <Text style={styles.insightLabel}>{label}</Text>
+      <Text style={[styles.insightLabel, { color }]}>{label}</Text>
       <Text style={[styles.insightValue, { color }]}>{highlight}</Text>
-      <Text style={[styles.insightSub, { color }]}>{sub}</Text>
+      <Text style={styles.insightSub}>{sub}</Text>
     </View>
   );
 };
@@ -86,7 +90,6 @@ const MonthlySummaryScreen: React.FC = () => {
   const [summary, setSummary] = useState<MonthlySummaryResponse | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
   const fetchSummary = useCallback(async (y: number, m: number) => {
     setLoading(true);
     setError(null);
@@ -172,7 +175,11 @@ const MonthlySummaryScreen: React.FC = () => {
       {!loading && !error && summary && (
         <>
           <View style={styles.statsCardWrapper}>
-            <StatsCard income={summary.totalIncome} expense={summary.totalExpenses} />
+            <StatsCard
+              income={summary.totalIncome}
+              expense={summary.totalExpenses}
+              variant="monthly"
+            />
           </View>
 
           {summary.insights.length > 0 && (
@@ -191,6 +198,7 @@ const MonthlySummaryScreen: React.FC = () => {
                     highlight={insight.highlight}
                     sub={insight.sub}
                     variant={insight.variant}
+                    category={insight.category}
                   />
                 ))}
               </ScrollView>
@@ -199,66 +207,10 @@ const MonthlySummaryScreen: React.FC = () => {
 
           {summary.categoryBreakdown.length > 0 && (
             <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Gastos por categoría</Text>
-              <View style={styles.categoryList}>
-                {summary.categoryBreakdown.map(item => (
-                  <View key={item.category} style={styles.categoryRow}>
-                    <View style={styles.categoryLeft}>
-                      <View style={styles.categoryIconContainer}>
-                        <Ionicons
-                          name={getCategoryIcon(item.category) as never}
-                          size={20}
-                          color="#07a3e4"
-                        />
-                      </View>
-                      <View style={styles.categoryInfo}>
-                        <Text style={styles.categoryName}>{getCategoryLabel(item.category)}</Text>
-                        <View style={styles.progressBarContainer}>
-                          <View
-                            style={[
-                              styles.progressBar,
-                              { width: `${Math.min(item.percentage, 100)}%` },
-                            ]}
-                          />
-                        </View>
-                      </View>
-                    </View>
-                    <View style={styles.categoryRight}>
-                      <Text style={styles.categoryAmount}>{formatCurrency(item.totalAmount)}</Text>
-                      <Text style={styles.categoryPct}>{item.percentage.toFixed(1)}%</Text>
-                      {item.changeVsPreviousMonth !== null && (
-                        <View
-                          style={[
-                            styles.changeBadge,
-                            {
-                              backgroundColor:
-                                item.changeVsPreviousMonth >= 0
-                                  ? 'rgba(192,57,43,0.1)'
-                                  : 'rgba(26,158,92,0.1)',
-                            },
-                          ]}
-                        >
-                          <Ionicons
-                            name={item.changeVsPreviousMonth >= 0 ? 'trending-up' : 'trending-down'}
-                            size={12}
-                            color={item.changeVsPreviousMonth >= 0 ? '#c0392b' : '#1a9e5c'}
-                          />
-                          <Text
-                            style={[
-                              styles.changeText,
-                              {
-                                color: item.changeVsPreviousMonth >= 0 ? '#c0392b' : '#1a9e5c',
-                              },
-                            ]}
-                          >
-                            {Math.abs(item.changeVsPreviousMonth).toFixed(0)}%
-                          </Text>
-                        </View>
-                      )}
-                    </View>
-                  </View>
-                ))}
-              </View>
+              <Text style={styles.sectionTitle}>
+                Gastos por categoría <Text style={styles.sectionTitleSub}>(vs mes anterior)</Text>
+              </Text>
+              <CategoryLegend data={summary.categoryBreakdown} />
             </View>
           )}
 
@@ -299,7 +251,6 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.06,
     shadowRadius: 4,
     elevation: 2,
-    width: '100%',
   },
   chevron: {
     padding: 2,
@@ -340,6 +291,11 @@ const styles = StyleSheet.create({
     color: '#003366',
     marginBottom: vh * 1.2,
   },
+  sectionTitleSub: {
+    fontSize: 13,
+    fontWeight: '400',
+    color: '#003366',
+  },
   insightsScroll: {
     marginHorizontal: -(screenWidth * 0.05),
   },
@@ -349,120 +305,39 @@ const styles = StyleSheet.create({
     paddingHorizontal: screenWidth * 0.05,
   },
   insightCard: {
-    width: screenWidth * 0.38,
+    width: screenWidth * 0.35,
     borderRadius: 14,
+    borderWidth: 1,
     padding: screenWidth * 0.04,
     gap: 6,
-    backgroundColor: '#fff',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 6,
-    elevation: 3,
+    alignItems: 'center',
   },
   insightIconCircle: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 2,
   },
   insightLabel: {
     fontSize: 12,
-    color: '#6b8aa1',
+    color: '#7D8EA3',
     fontWeight: '500',
     lineHeight: 16,
+    textAlign: 'center',
   },
   insightValue: {
     fontSize: 22,
     fontWeight: '800',
     lineHeight: 26,
+    textAlign: 'center',
   },
   insightSub: {
     fontSize: 11,
     fontWeight: '500',
-  },
-  categoryList: {
-    backgroundColor: '#fff',
-    borderRadius: 14,
-    paddingVertical: vh * 0.5,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 6,
-    elevation: 3,
-  },
-  categoryRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: screenWidth * 0.04,
-    paddingVertical: vh * 1.2,
-    borderBottomWidth: 1,
-    borderBottomColor: '#EEF6FB',
-  },
-  categoryLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flex: 1,
-    gap: 10,
-  },
-  categoryIconContainer: {
-    width: 38,
-    height: 38,
-    borderRadius: 19,
-    backgroundColor: '#E6F2FC',
-    justifyContent: 'center',
-    alignItems: 'center',
-    flexShrink: 0,
-  },
-  categoryInfo: {
-    flex: 1,
-    gap: 4,
-  },
-  categoryName: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: '#003366',
-  },
-  progressBarContainer: {
-    height: 4,
-    backgroundColor: '#EEF6FB',
-    borderRadius: 2,
-    width: '100%',
-  },
-  progressBar: {
-    height: 4,
-    backgroundColor: '#07a3e4',
-    borderRadius: 2,
-  },
-  categoryRight: {
-    alignItems: 'flex-end',
-    gap: 2,
-    marginLeft: 8,
-  },
-  categoryAmount: {
-    fontSize: 13,
-    fontWeight: '700',
-    color: '#003366',
-  },
-  categoryPct: {
-    fontSize: 11,
-    color: '#6b8aa1',
-  },
-  changeBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    borderRadius: 6,
-    paddingHorizontal: 5,
-    paddingVertical: 2,
-    gap: 2,
-    marginTop: 2,
-  },
-  changeText: {
-    fontSize: 11,
-    fontWeight: '700',
+    color: '#7D8EA3',
+    textAlign: 'center',
   },
 });
 

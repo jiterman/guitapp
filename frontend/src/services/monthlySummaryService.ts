@@ -9,11 +9,17 @@ export interface MonthlyCategoryBreakdown {
 }
 
 export interface MonthlyInsight {
-  type: 'EXPENSES_VS_PREV_MONTH' | 'SAVINGS' | 'TOP_CATEGORY' | 'CATEGORY_CHANGE';
+  type:
+    | 'EXPENSES_VS_PREV_MONTH'
+    | 'SAVINGS'
+    | 'TOP_CATEGORY'
+    | 'CATEGORY_INCREASE'
+    | 'CATEGORY_DECREASE';
   label: string;
   highlight: string;
   sub: string;
   variant: 'positive' | 'negative' | 'neutral';
+  category: string | null;
 }
 
 export interface MonthlySummaryResponse {
