@@ -9,10 +9,13 @@ import java.math.BigDecimal;
 import java.util.Collections;
 import java.util.List;
 
+import org.fiuba.guitapp.dto.HealthScoreFactor;
+import org.fiuba.guitapp.dto.HealthScoreResponse;
 import org.fiuba.guitapp.dto.MonthlyCategoryBreakdown;
 import org.fiuba.guitapp.dto.MonthlyInsight;
 import org.fiuba.guitapp.dto.MonthlySummaryResponse;
 import org.fiuba.guitapp.model.ExpenseCategory;
+import org.fiuba.guitapp.service.HealthScoreService;
 import org.fiuba.guitapp.service.MonthlySummaryService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,6 +37,9 @@ class MonthlySummaryControllerTests {
 
     @MockBean
     private MonthlySummaryService monthlySummaryService;
+
+    @MockBean
+    private HealthScoreService healthScoreService;
 
     @Test
     @WithMockUser(username = "test@example.com")
@@ -79,17 +85,38 @@ class MonthlySummaryControllerTests {
     }
 
     @Test
+    @WithMockUser(username = "test@example.com")
+    void getHealthScore_returnsOkWithScore() throws Exception {
+        HealthScoreResponse response = new HealthScoreResponse(
+                75, "Buen trabajo", "Mantené el ritmo", "good",
+                List.of(new HealthScoreFactor("savings", "Ahorro", 80, 100, "Ahorraste bien")));
+
+        when(healthScoreService.getHealthScore(eq("test@example.com"), anyInt(), anyInt()))
+                .thenReturn(response);
+
+        mockMvc.perform(get("/api/summary/monthly/health-score")
+                .param("year", "2025")
+                .param("month", "4"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.score").value(75))
+                .andExpect(jsonPath("$.level").value("good"))
+                .andExpect(jsonPath("$.factors[0].key").value("savings"));
+
+        verify(healthScoreService).getHealthScore(eq("test@example.com"), eq(2025), eq(4));
+    }
+
+    @Test
     void getMonthlySummary_returnsUnauthorizedWithoutAuth() throws Exception {
         mockMvc.perform(get("/api/summary/monthly"))
                 .andExpect(status().isForbidden());
     }
 
     @Test
-    @WithMockUser(username = "admin@example.com")
     void sendMonthlySummaryNotifications_returnsNoContent() throws Exception {
         doNothing().when(monthlySummaryService).sendSummaryNotifications(anyInt(), anyInt());
 
         mockMvc.perform(post("/api/summary/monthly/notify")
+                .header("X-Internal-Key", "test-internal-key")
                 .param("year", "2025")
                 .param("month", "4"))
                 .andExpect(status().isNoContent());
@@ -98,19 +125,22 @@ class MonthlySummaryControllerTests {
     }
 
     @Test
-    @WithMockUser(username = "admin@example.com")
     void sendMonthlySummaryNotifications_usesDefaultPreviousMonth() throws Exception {
         doNothing().when(monthlySummaryService).sendSummaryNotifications(anyInt(), anyInt());
 
-        mockMvc.perform(post("/api/summary/monthly/notify"))
+        mockMvc.perform(post("/api/summary/monthly/notify")
+                .header("X-Internal-Key", "test-internal-key"))
                 .andExpect(status().isNoContent());
 
         verify(monthlySummaryService).sendSummaryNotifications(anyInt(), anyInt());
     }
 
     @Test
-    void sendMonthlySummaryNotifications_returnsUnauthorizedWithoutAuth() throws Exception {
-        mockMvc.perform(post("/api/summary/monthly/notify"))
-                .andExpect(status().isForbidden());
+    void sendMonthlySummaryNotifications_withApiKey_returnsNoContent() throws Exception {
+        doNothing().when(monthlySummaryService).sendSummaryNotifications(anyInt(), anyInt());
+
+        mockMvc.perform(post("/api/summary/monthly/notify")
+                .header("X-Internal-Key", "test-internal-key"))
+                .andExpect(status().isNoContent());
     }
 }

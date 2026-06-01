@@ -424,8 +424,44 @@ class MonthlySummaryServiceTests {
 
     @Test
     void formatCategory_returnsSpanishLabel() {
-        assertEquals("Delivery", monthlySummaryService.formatCategory(ExpenseCategory.DELIVERY));
-        assertEquals("Alquiler", monthlySummaryService.formatCategory(ExpenseCategory.RENT));
         assertEquals("Supermercado", monthlySummaryService.formatCategory(ExpenseCategory.SUPERMARKET));
+        assertEquals("Restaurante", monthlySummaryService.formatCategory(ExpenseCategory.RESTAURANT));
+        assertEquals("Café", monthlySummaryService.formatCategory(ExpenseCategory.CAFE));
+        assertEquals("Delivery", monthlySummaryService.formatCategory(ExpenseCategory.DELIVERY));
+        assertEquals("Transporte público", monthlySummaryService.formatCategory(ExpenseCategory.PUBLIC_TRANSPORT));
+        assertEquals("Combustible", monthlySummaryService.formatCategory(ExpenseCategory.FUEL));
+        assertEquals("Taxi", monthlySummaryService.formatCategory(ExpenseCategory.TAXI));
+        assertEquals("Servicios", monthlySummaryService.formatCategory(ExpenseCategory.UTILITIES));
+        assertEquals("Alquiler", monthlySummaryService.formatCategory(ExpenseCategory.RENT));
+        assertEquals("Hogar", monthlySummaryService.formatCategory(ExpenseCategory.HOME));
+        assertEquals("Doctor", monthlySummaryService.formatCategory(ExpenseCategory.DOCTOR));
+        assertEquals("Farmacia", monthlySummaryService.formatCategory(ExpenseCategory.PHARMACY));
+        assertEquals("Suscripciones", monthlySummaryService.formatCategory(ExpenseCategory.SUBSCRIPTIONS));
+        assertEquals("Salidas", monthlySummaryService.formatCategory(ExpenseCategory.OUTINGS));
+        assertEquals("Gimnasio", monthlySummaryService.formatCategory(ExpenseCategory.GYM));
+        assertEquals("Viajes", monthlySummaryService.formatCategory(ExpenseCategory.TRAVEL));
+        assertEquals("Ropa", monthlySummaryService.formatCategory(ExpenseCategory.CLOTHING));
+        assertEquals("Educación", monthlySummaryService.formatCategory(ExpenseCategory.EDUCATION));
+        assertEquals("Tecnología", monthlySummaryService.formatCategory(ExpenseCategory.TECHNOLOGY));
+        assertEquals("Cuota de consorcio", monthlySummaryService.formatCategory(ExpenseCategory.HOA_FEES));
+        assertEquals("Vehículo", monthlySummaryService.formatCategory(ExpenseCategory.VEHICLE));
+        assertEquals("Belleza", monthlySummaryService.formatCategory(ExpenseCategory.BEAUTY));
+        assertEquals("Mascotas", monthlySummaryService.formatCategory(ExpenseCategory.PETS));
+        assertEquals("Compras", monthlySummaryService.formatCategory(ExpenseCategory.SHOPPING));
+        assertEquals("Otro", monthlySummaryService.formatCategory(ExpenseCategory.OTHER));
+    }
+
+    @Test
+    void getSummary_categoryBreakdown_zeroTotalExpenses_percentageIsZero() {
+        when(userRepository.findByEmail(email)).thenReturn(Optional.of(activeUser));
+
+        // No expenses in current or previous month but service should handle empty gracefully
+        when(expenseRepository.findAllByUserAndDateBetween(eq(activeUser), any(), any()))
+                .thenReturn(Collections.emptyList(), Collections.emptyList());
+        when(incomeRepository.findAllByUserAndDateBetween(eq(activeUser), any(), any()))
+                .thenReturn(Collections.emptyList(), Collections.emptyList());
+
+        MonthlySummaryResponse summary = monthlySummaryService.getSummary(email, 2025, 4);
+        assertTrue(summary.categoryBreakdown().isEmpty());
     }
 }

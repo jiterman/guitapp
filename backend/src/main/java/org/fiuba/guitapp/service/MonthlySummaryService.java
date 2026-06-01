@@ -61,7 +61,7 @@ public class MonthlySummaryService {
         return buildSummary(user, year, month);
     }
 
-    @Transactional(readOnly = true)
+    @Transactional
     public void sendSummaryNotifications(int year, int month) {
         List<User> users = userRepository.findAll();
         for (User user : users) {
@@ -246,7 +246,7 @@ public class MonthlySummaryService {
 
     private String buildNotificationBody(MonthlySummaryResponse summary) {
         return String.format(LOCALE_AR,
-                "Ingresos: $%.0f | Gastos: $%.0f | Balance: $%.0f. Abrí la app para ver el detalle completo.",
+                "Descubrí cómo cerró tu mes, qué gastos tuvieron mayor impacto y cuál fue tu salud financiera.",
                 summary.totalIncome(), summary.totalExpenses(), summary.balance());
     }
 
