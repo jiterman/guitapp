@@ -10,6 +10,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { notificationService, Notification, AlertType } from '../services/notificationService';
+import { eventEmitter } from '../utils/eventEmitter';
 import styles from '../styles/notificationStyles';
 
 const formatRelativeTime = (date: Date) => {
@@ -78,6 +79,7 @@ const NotificationsScreen: React.FC = () => {
     try {
       await notificationService.markAsRead(id);
       setNotifications(prev => prev.map(n => (n.id === id ? { ...n, read: true } : n)));
+      eventEmitter.emit('notificationsRead');
     } catch (error) {
       console.error('Error marking as read:', error);
     }
@@ -87,6 +89,7 @@ const NotificationsScreen: React.FC = () => {
     try {
       await notificationService.markAllAsRead();
       setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+      eventEmitter.emit('notificationsRead');
     } catch (error) {
       console.error('Error marking all as read:', error);
     }

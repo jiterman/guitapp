@@ -6,7 +6,8 @@ import { useUser } from '../../src/context/user';
 import BottomNavBar from '../../src/components/BottomNavBar';
 import { usePushNotifications } from '../../src/hooks/usePushNotifications';
 import { notificationService } from '../../src/services/notificationService';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
+import { eventEmitter } from '../../src/utils/eventEmitter';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
@@ -20,26 +21,37 @@ export default function AppLayout() {
   // Treat a missing channel (existing users) as PUSH; only EMAIL disables push.
   usePushNotifications(!!user && user.notificationChannel !== 'EMAIL');
 
-  useEffect(() => {
-    let mounted = true;
-    const loadUnreadCount = async () => {
-      try {
-        const count = await notificationService.getUnreadCount();
-        if (mounted) setUnreadCount(count);
-      } catch {
-        // ignore
-      }
-    };
+  const loadUnreadCount = useCallback(async () => {
+    try {
+      const count = await notificationService.getUnreadCount();
+      setUnreadCount(count);
+    } catch {
+      // ignore
+    }
+  }, []);
 
+  useEffect(() => {
     if (user) {
       loadUnreadCount();
       const interval = setInterval(loadUnreadCount, 60000);
+
+      // Listen for real-time notifications
+      const unsubscribe = eventEmitter.on('notificationReceived', () => {
+        loadUnreadCount();
+      });
+
+      // Listen for when notifications are marked as read in other screens
+      const unsubscribeRead = eventEmitter.on('notificationsRead', () => {
+        loadUnreadCount();
+      });
+
       return () => {
-        mounted = false;
         clearInterval(interval);
+        unsubscribe();
+        unsubscribeRead();
       };
     }
-  }, [user]);
+  }, [user, loadUnreadCount]);
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
