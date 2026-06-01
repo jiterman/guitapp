@@ -13,7 +13,7 @@ const vh = screenHeight / 100;
 const buildInitialFilter = (): FilterState => {
   const now = new Date();
   return {
-    kind: 'month',
+    kind: 'all',
     day: now,
     month: now.getMonth() + 1,
     year: now.getFullYear(),
@@ -84,7 +84,7 @@ const TransactionsScreen: React.FC = () => {
         Lista de Transacciones
       </Text>
 
-      <MovementFilter onChange={setFilterState} />
+      <MovementFilter onChange={setFilterState} initialKind="all" />
 
       <FlatList
         data={movements}

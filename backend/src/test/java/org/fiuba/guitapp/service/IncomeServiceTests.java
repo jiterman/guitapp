@@ -412,7 +412,7 @@ class IncomeServiceTests {
     @Test
     void getIncomeStatistics_ShouldReturnStatistics_WithMonthlyPeriod() {
         LocalDate monthStart = LocalDate.of(2024, 2, 1);
-        LocalDate monthEnd = LocalDate.of(2024, 3, 1);
+        LocalDate monthEnd = LocalDate.of(2024, 2, 29);
 
         Income income1 = new Income();
         income1.setId(UUID.randomUUID());

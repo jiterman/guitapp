@@ -1,15 +1,26 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { View, FlatList, StyleSheet, Dimensions } from 'react-native';
+import {
+  View,
+  FlatList,
+  StyleSheet,
+  Dimensions,
+  TouchableOpacity,
+  Text as RNText,
+} from 'react-native';
 import { Layout, Text } from '@ui-kitten/components';
+import { Ionicons } from '@expo/vector-icons';
 import { movementService, MovementResponse } from '../services/movementService';
 import MovementFilter, { FilterState } from '../components/MovementFilter/MovementFilter';
 import TransactionCard from '../components/TransactionCard/TransactionCard';
-import BalanceCard from '../components/BalanceCard/BalanceCard';
+import StatsCard from '../components/StatsCard/StatsCard';
+import MonthlySummaryScreen from './MonthlySummaryScreen';
 import { router } from 'expo-router';
 import { useIsFocused } from '@react-navigation/native';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 const vh = screenHeight / 100;
+
+type Tab = 'movements' | 'monthly';
 
 const buildInitialFilter = (): FilterState => {
   const now = new Date();
@@ -32,37 +43,15 @@ const applyTypeFilter = (data: MovementResponse[], movementType: FilterState['mo
   return data;
 };
 
-const formatMonthLabel = (year: number, month: number) => {
-  const label = new Date(year, month - 1, 1).toLocaleString('es-ES', { month: 'long' });
-  return `${label.charAt(0).toUpperCase()}${label.slice(1)} ${year}`;
-};
-
-const formatDayLabel = (date: Date) => {
-  const day = date.getDate();
-  const monthLabel = date.toLocaleString('es-ES', { month: 'long' });
-  const month = `${monthLabel.charAt(0).toUpperCase()}${monthLabel.slice(1)}`;
-  return `${day} de ${month} del ${date.getFullYear()}`;
-};
-
-const buildBalanceTitle = (filterState: FilterState) => {
-  if (filterState.kind === 'all') return 'Balance total';
-  if (filterState.kind === 'day') {
-    return `Balance del ${formatDayLabel(filterState.day)}`;
-  }
-  if (filterState.kind === 'month') {
-    return `Balance de ${formatMonthLabel(filterState.year, filterState.month)}`;
-  }
-  return `Balance del año ${filterState.year}`;
-};
-
 const SummaryScreen: React.FC = () => {
+  const [activeTab, setActiveTab] = useState<Tab>('movements');
   const [movements, setMovements] = useState<MovementResponse[]>([]);
   const [periodMovements, setPeriodMovements] = useState<MovementResponse[]>([]);
   const [filterState, setFilterState] = useState<FilterState>(() => buildInitialFilter());
   const isFocused = useIsFocused();
 
   useEffect(() => {
-    if (!isFocused) return;
+    if (!isFocused || activeTab !== 'movements') return;
     let mounted = true;
     (async () => {
       try {
@@ -94,7 +83,7 @@ const SummaryScreen: React.FC = () => {
     return () => {
       mounted = false;
     };
-  }, [filterState, isFocused]);
+  }, [filterState, isFocused, activeTab]);
 
   const totals = useMemo(() => {
     return periodMovements.reduce(
@@ -107,45 +96,81 @@ const SummaryScreen: React.FC = () => {
     );
   }, [periodMovements]);
 
-  const balanceTitle = useMemo(() => buildBalanceTitle(filterState), [filterState]);
-
   return (
-    <Layout style={styles.container}>
+    <Layout style={[styles.container, activeTab === 'monthly' && styles.containerMonthly]}>
       <Text category="h6" style={styles.title}>
         Resumen
       </Text>
 
-      <MovementFilter onChange={setFilterState} initialKind="month" />
+      <View style={styles.chartTabs}>
+        <TouchableOpacity style={styles.chartTabWrapper} onPress={() => setActiveTab('movements')}>
+          {activeTab === 'movements' ? (
+            <View style={[styles.chartTab, styles.chartTabActive]}>
+              <Ionicons name="list-outline" size={18} color="#FFBB00" />
+              <RNText style={styles.chartTabTextActive}>Movimientos</RNText>
+            </View>
+          ) : (
+            <View style={[styles.chartTab, styles.chartTabInactive]}>
+              <Ionicons name="list-outline" size={18} color="#6b8aa1" />
+              <RNText style={styles.chartTabText}>Movimientos</RNText>
+            </View>
+          )}
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.chartTabWrapper} onPress={() => setActiveTab('monthly')}>
+          {activeTab === 'monthly' ? (
+            <View style={[styles.chartTab, styles.chartTabActive]}>
+              <Ionicons name="calendar-outline" size={18} color="#FFBB00" />
+              <RNText style={styles.chartTabTextActive}>Mensual</RNText>
+            </View>
+          ) : (
+            <View style={[styles.chartTab, styles.chartTabInactive]}>
+              <Ionicons name="calendar-outline" size={18} color="#6b8aa1" />
+              <RNText style={styles.chartTabText}>Mensual</RNText>
+            </View>
+          )}
+        </TouchableOpacity>
+      </View>
 
-      <BalanceCard title={balanceTitle} income={totals.income} expense={totals.expense} />
+      {activeTab === 'monthly' ? (
+        <MonthlySummaryScreen />
+      ) : (
+        <>
+          <MovementFilter onChange={setFilterState} initialKind="month" />
 
-      <Text style={styles.sectionTitle}>Movimientos</Text>
-      <FlatList
-        style={styles.movementsList}
-        data={movements}
-        keyExtractor={item => item.id}
-        renderItem={({ item }) => (
-          <TransactionCard
-            movement={item}
-            onPress={movement => {
-              if (movement.type === 'INCOME') {
-                router.push({ pathname: '/income/[incomeId]', params: { incomeId: movement.id } });
-              } else if (movement.type === 'EXPENSE') {
-                router.push({
-                  pathname: '/expense/[expenseId]',
-                  params: { expenseId: movement.id },
-                });
-              }
-            }}
+          <StatsCard income={totals.income} expense={totals.expense} />
+
+          <Text style={styles.sectionTitle}>Movimientos</Text>
+          <FlatList
+            style={styles.movementsList}
+            data={movements}
+            keyExtractor={item => item.id}
+            renderItem={({ item }) => (
+              <TransactionCard
+                movement={item}
+                onPress={movement => {
+                  if (movement.type === 'INCOME') {
+                    router.push({
+                      pathname: '/income/[incomeId]',
+                      params: { incomeId: movement.id },
+                    });
+                  } else if (movement.type === 'EXPENSE') {
+                    router.push({
+                      pathname: '/expense/[expenseId]',
+                      params: { expenseId: movement.id },
+                    });
+                  }
+                }}
+              />
+            )}
+            ItemSeparatorComponent={() => <View style={styles.separator} />}
+            ListEmptyComponent={
+              <View style={styles.emptyContainer}>
+                <Text appearance="hint">No hay transacciones para este filtro.</Text>
+              </View>
+            }
           />
-        )}
-        ItemSeparatorComponent={() => <View style={styles.separator} />}
-        ListEmptyComponent={
-          <View style={styles.emptyContainer}>
-            <Text appearance="hint">No hay transacciones para este filtro.</Text>
-          </View>
-        }
-      />
+        </>
+      )}
     </Layout>
   );
 };
@@ -156,15 +181,62 @@ const styles = StyleSheet.create({
     padding: screenWidth * 0.05,
     backgroundColor: '#E6F2FC',
   },
+  containerMonthly: {
+    paddingBottom: 0,
+  },
   title: {
     marginBottom: vh * 1.2,
     color: '#003366',
     fontWeight: '700',
   },
+  chartTabs: {
+    marginBottom: vh * 2,
+    flexDirection: 'row',
+    gap: 12,
+  },
+  chartTabWrapper: {
+    flex: 1,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
+    elevation: 3,
+    borderRadius: 8,
+  },
+  chartTab: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+    borderRadius: 8,
+    gap: 6,
+    borderWidth: 1,
+    borderColor: '#E8E8F0',
+  },
+  chartTabActive: {
+    backgroundColor: '#fdf6e7',
+    borderWidth: 1.5,
+    borderColor: '#FFBB00',
+  },
+  chartTabInactive: {
+    backgroundColor: '#fff',
+    borderWidth: 1,
+    borderColor: '#E8E8F0',
+  },
+  chartTabText: {
+    fontSize: 13,
+    color: '#6b8aa1',
+  },
+  chartTabTextActive: {
+    fontSize: 13,
+    color: '#E8AE1A',
+  },
   sectionTitle: {
     fontSize: 16,
     fontWeight: '700',
     color: '#003366',
+    marginTop: vh * 2,
     marginBottom: vh * 1,
   },
   separator: {
