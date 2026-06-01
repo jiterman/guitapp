@@ -15,23 +15,6 @@ import lombok.extern.slf4j.Slf4j;
 @Service
 public class NotificationService {
 
-    public void sendExpenseThresholdExceededNotification(User user, String body) {
-        sendPushNotification(user, "Se nos fue la mano \uD83D\uDCB8", body, "limite de gastos excedido");
-    }
-
-    public void sendSavingsGoalAtRiskNotification(User user, String body) {
-        sendPushNotification(user, "Se nos fue la mano \uD83D\uDCB8", body, "meta de ahorro en riesgo");
-    }
-
-    public void sendNegativeBalanceRiskNotification(User user, String body) {
-        sendPushNotification(user, "Se nos fue la mano \uD83D\uDCB8", body, "saldo negativo proyectado");
-    }
-
-    public void sendCategoryOverspendingNotification(User user, String body) {
-        sendPushNotification(user, "Venimos gastando un poco más 📈", body,
-                "gasto por categoria superior al mes anterior");
-    }
-
     public void sendPushNotification(User user, String title, String body, String logContext) {
         if (user.getFcmToken() == null || user.getFcmToken().isEmpty()) {
             return;

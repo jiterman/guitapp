@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import * as Device from 'expo-device';
 import * as Notifications from 'expo-notifications';
 import { userService } from '../services/userService';
+import { eventEmitter } from '../utils/eventEmitter';
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
@@ -32,6 +33,22 @@ export const usePushNotifications = (enabled: boolean = true) => {
         }
       })
       .catch(error => console.error('Error registrando notificaciones:', error));
+
+    // Escuchamos notificaciones mientras la app está abierta
+    const notificationListener = Notifications.addNotificationReceivedListener(notification => {
+      console.log('Notificación recibida en primer plano:', notification);
+      eventEmitter.emit('notificationReceived', notification);
+    });
+
+    // Escuchamos cuando el usuario interactúa con la notificación
+    const responseListener = Notifications.addNotificationResponseReceivedListener(response => {
+      console.log('Respuesta a notificación recibida:', response);
+    });
+
+    return () => {
+      notificationListener.remove();
+      responseListener.remove();
+    };
   }, [enabled]);
 
   async function registerForPushNotificationsAsync() {
