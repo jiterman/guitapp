@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, Dimensions, ScrollView, StyleSheet, View } from 'react-native';
 import { Text } from '@ui-kitten/components';
 import { Ionicons } from '@expo/vector-icons';
-import BalanceCard from '../components/BalanceCard/BalanceCard';
+import StatsCard from '../components/StatsCard/StatsCard';
 import { EXPENSE_CATEGORIES } from '../constants/categories';
 import { MonthlySummaryResponse, monthlySummaryService } from '../services/monthlySummaryService';
 
@@ -43,34 +43,38 @@ const getPreviousMonth = () => {
   return { year: prev.getFullYear(), month: prev.getMonth() + 1 };
 };
 
+const INSIGHT_ICON: Record<string, string> = {
+  EXPENSES_VS_PREV_MONTH: 'bar-chart-outline',
+  SAVINGS: 'wallet-outline',
+  TOP_CATEGORY: 'trophy-outline',
+  CATEGORY_CHANGE: 'trending-up-outline',
+};
+
+const VARIANT_STYLE: Record<string, { color: string; bg: string }> = {
+  positive: { color: '#1a9e5c', bg: 'rgba(26,158,92,0.12)' },
+  negative: { color: '#c0392b', bg: 'rgba(192,57,43,0.12)' },
+  neutral: { color: '#07a3e4', bg: 'rgba(7,163,228,0.12)' },
+};
+
 interface InsightCardProps {
-  message: string;
   type: string;
+  label: string;
+  highlight: string;
+  sub: string;
+  variant: string;
 }
 
-const InsightCard: React.FC<InsightCardProps> = ({ message, type }) => {
-  const iconMap: Record<string, { name: string; color: string; bg: string }> = {
-    SAVINGS: { name: 'wallet-outline', color: '#1a9e5c', bg: 'rgba(26,158,92,0.1)' },
-    EXPENSES_VS_PREV_MONTH: {
-      name: 'bar-chart-outline',
-      color: '#e67e22',
-      bg: 'rgba(230,126,34,0.1)',
-    },
-    TOP_CATEGORY: { name: 'trophy-outline', color: '#07a3e4', bg: 'rgba(7,163,228,0.1)' },
-    CATEGORY_CHANGE: { name: 'trending-up-outline', color: '#9b59b6', bg: 'rgba(155,89,182,0.1)' },
-  };
-  const icon = iconMap[type] ?? {
-    name: 'information-circle-outline',
-    color: '#07a3e4',
-    bg: 'rgba(7,163,228,0.1)',
-  };
-
+const InsightCard: React.FC<InsightCardProps> = ({ type, label, highlight, sub, variant }) => {
+  const { color, bg } = VARIANT_STYLE[variant] ?? VARIANT_STYLE.neutral;
+  const iconName = INSIGHT_ICON[type] ?? 'information-circle-outline';
   return (
-    <View style={[styles.insightCard, { backgroundColor: icon.bg }]}>
-      <View style={[styles.insightIconContainer, { backgroundColor: icon.bg }]}>
-        <Ionicons name={icon.name as never} size={22} color={icon.color} />
+    <View style={styles.insightCard}>
+      <View style={[styles.insightIconCircle, { backgroundColor: bg }]}>
+        <Ionicons name={iconName as never} size={22} color={color} />
       </View>
-      <Text style={[styles.insightText, { color: icon.color }]}>{message}</Text>
+      <Text style={styles.insightLabel}>{label}</Text>
+      <Text style={[styles.insightValue, { color }]}>{highlight}</Text>
+      <Text style={[styles.insightSub, { color }]}>{sub}</Text>
     </View>
   );
 };
@@ -134,7 +138,7 @@ const MonthlySummaryScreen: React.FC = () => {
         <View style={styles.monthSelectorInner}>
           <Ionicons
             name="chevron-back"
-            size={22}
+            size={18}
             color="#07a3e4"
             onPress={goToPrevMonth}
             style={styles.chevron}
@@ -144,7 +148,7 @@ const MonthlySummaryScreen: React.FC = () => {
           </Text>
           <Ionicons
             name="chevron-forward"
-            size={22}
+            size={18}
             color={isLastCompletedMonth() ? '#ccc' : '#07a3e4'}
             onPress={goToNextMonth}
             style={styles.chevron}
@@ -167,18 +171,29 @@ const MonthlySummaryScreen: React.FC = () => {
 
       {!loading && !error && summary && (
         <>
-          <BalanceCard
-            title={`Balance de ${MONTH_NAMES[month - 1]} ${year}`}
-            income={summary.totalIncome}
-            expense={summary.totalExpenses}
-          />
+          <View style={styles.statsCardWrapper}>
+            <StatsCard income={summary.totalIncome} expense={summary.totalExpenses} />
+          </View>
 
           {summary.insights.length > 0 && (
             <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Insights</Text>
-              {summary.insights.map((insight, idx) => (
-                <InsightCard key={idx} message={insight.message} type={insight.type} />
-              ))}
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                style={styles.insightsScroll}
+                contentContainerStyle={styles.insightsList}
+              >
+                {summary.insights.map((insight, idx) => (
+                  <InsightCard
+                    key={idx}
+                    type={insight.type}
+                    label={insight.label}
+                    highlight={insight.highlight}
+                    sub={insight.sub}
+                    variant={insight.variant}
+                  />
+                ))}
+              </ScrollView>
             </View>
           )}
 
@@ -263,37 +278,37 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#E6F2FC',
+    marginHorizontal: -(screenWidth * 0.05),
   },
   contentContainer: {
-    padding: screenWidth * 0.05,
-    paddingBottom: vh * 4,
+    paddingHorizontal: screenWidth * 0.05,
   },
   monthSelector: {
-    marginBottom: vh * 2,
-    alignItems: 'center',
+    marginBottom: vh * 1.5,
   },
   monthSelectorInner: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#fff',
-    borderRadius: 12,
-    paddingVertical: vh * 1,
+    borderRadius: 14,
+    paddingVertical: 10,
     paddingHorizontal: screenWidth * 0.04,
-    gap: screenWidth * 0.05,
+    gap: screenWidth * 0.03,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 6,
-    elevation: 3,
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.06,
+    shadowRadius: 4,
+    elevation: 2,
+    width: '100%',
   },
   chevron: {
-    padding: 4,
+    padding: 2,
   },
   monthLabel: {
     fontSize: 16,
     fontWeight: '700',
     color: '#003366',
-    minWidth: screenWidth * 0.45,
+    flex: 1,
     textAlign: 'center',
   },
   centered: {
@@ -313,6 +328,9 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     paddingHorizontal: screenWidth * 0.1,
   },
+  statsCardWrapper: {
+    marginBottom: vh * 2.5,
+  },
   section: {
     marginBottom: vh * 2.5,
   },
@@ -322,27 +340,48 @@ const styles = StyleSheet.create({
     color: '#003366',
     marginBottom: vh * 1.2,
   },
-  insightCard: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    borderRadius: 12,
-    padding: vh * 1.5,
-    marginBottom: vh * 1,
-    gap: 12,
+  insightsScroll: {
+    marginHorizontal: -(screenWidth * 0.05),
   },
-  insightIconContainer: {
+  insightsList: {
+    gap: 12,
+    paddingVertical: 6,
+    paddingHorizontal: screenWidth * 0.05,
+  },
+  insightCard: {
+    width: screenWidth * 0.38,
+    borderRadius: 14,
+    padding: screenWidth * 0.04,
+    gap: 6,
+    backgroundColor: '#fff',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 6,
+    elevation: 3,
+  },
+  insightIconCircle: {
     width: 40,
     height: 40,
     borderRadius: 20,
     justifyContent: 'center',
     alignItems: 'center',
-    flexShrink: 0,
+    marginBottom: 2,
   },
-  insightText: {
-    flex: 1,
-    fontSize: 14,
-    fontWeight: '600',
-    lineHeight: 20,
+  insightLabel: {
+    fontSize: 12,
+    color: '#6b8aa1',
+    fontWeight: '500',
+    lineHeight: 16,
+  },
+  insightValue: {
+    fontSize: 22,
+    fontWeight: '800',
+    lineHeight: 26,
+  },
+  insightSub: {
+    fontSize: 11,
+    fontWeight: '500',
   },
   categoryList: {
     backgroundColor: '#fff',

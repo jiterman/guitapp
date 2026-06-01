@@ -133,12 +133,11 @@ public class IncomeService {
         return switch (period.toLowerCase()) {
         case "daily" -> {
             LocalDate startOfDay = referenceDate;
-            LocalDate endOfDay = startOfDay.plusDays(1);
-            yield incomeRepository.findAllByUserAndDateBetween(user, startOfDay, endOfDay);
+            yield incomeRepository.findAllByUserAndDateBetween(user, startOfDay, startOfDay);
         }
         case "monthly" -> {
             LocalDate startOfMonth = referenceDate.withDayOfMonth(1);
-            LocalDate endOfMonth = startOfMonth.plusMonths(1);
+            LocalDate endOfMonth = YearMonth.from(referenceDate).atEndOfMonth();
             yield incomeRepository.findAllByUserAndDateBetween(user, startOfMonth, endOfMonth);
         }
         case "all" -> incomeRepository.findAllByUser(user);

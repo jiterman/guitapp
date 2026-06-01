@@ -12,7 +12,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { movementService, MovementResponse } from '../services/movementService';
 import MovementFilter, { FilterState } from '../components/MovementFilter/MovementFilter';
 import TransactionCard from '../components/TransactionCard/TransactionCard';
-import BalanceCard from '../components/BalanceCard/BalanceCard';
+import StatsCard from '../components/StatsCard/StatsCard';
 import MonthlySummaryScreen from './MonthlySummaryScreen';
 import { router } from 'expo-router';
 import { useIsFocused } from '@react-navigation/native';
@@ -41,29 +41,6 @@ const applyTypeFilter = (data: MovementResponse[], movementType: FilterState['mo
     return data.filter(movement => movement.type === 'EXPENSE');
   }
   return data;
-};
-
-const formatMonthLabel = (year: number, month: number) => {
-  const label = new Date(year, month - 1, 1).toLocaleString('es-ES', { month: 'long' });
-  return `${label.charAt(0).toUpperCase()}${label.slice(1)} ${year}`;
-};
-
-const formatDayLabel = (date: Date) => {
-  const day = date.getDate();
-  const monthLabel = date.toLocaleString('es-ES', { month: 'long' });
-  const month = `${monthLabel.charAt(0).toUpperCase()}${monthLabel.slice(1)}`;
-  return `${day} de ${month} del ${date.getFullYear()}`;
-};
-
-const buildBalanceTitle = (filterState: FilterState) => {
-  if (filterState.kind === 'all') return 'Balance total';
-  if (filterState.kind === 'day') {
-    return `Balance del ${formatDayLabel(filterState.day)}`;
-  }
-  if (filterState.kind === 'month') {
-    return `Balance de ${formatMonthLabel(filterState.year, filterState.month)}`;
-  }
-  return `Balance del año ${filterState.year}`;
 };
 
 const SummaryScreen: React.FC = () => {
@@ -119,8 +96,6 @@ const SummaryScreen: React.FC = () => {
     );
   }, [periodMovements]);
 
-  const balanceTitle = useMemo(() => buildBalanceTitle(filterState), [filterState]);
-
   return (
     <Layout style={styles.container}>
       <Text category="h6" style={styles.title}>
@@ -162,7 +137,7 @@ const SummaryScreen: React.FC = () => {
         <>
           <MovementFilter onChange={setFilterState} initialKind="month" />
 
-          <BalanceCard title={balanceTitle} income={totals.income} expense={totals.expense} />
+          <StatsCard income={totals.income} expense={totals.expense} />
 
           <Text style={styles.sectionTitle}>Movimientos</Text>
           <FlatList
@@ -258,6 +233,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '700',
     color: '#003366',
+    marginTop: vh * 2,
     marginBottom: vh * 1,
   },
   separator: {

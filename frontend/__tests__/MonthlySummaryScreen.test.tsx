@@ -38,14 +38,34 @@ const mockSummary: MonthlySummaryResponse = {
     { category: 'DELIVERY', totalAmount: 500, percentage: 33.3, changeVsPreviousMonth: -20 },
   ],
   insights: [
-    { type: 'SAVINGS', message: 'Ahorraste $1500 este mes (50% de tus ingresos)', value: 50 },
-    { type: 'TOP_CATEGORY', message: 'Tu mayor gasto fue en Alquiler', value: 66.7 },
+    {
+      type: 'SAVINGS',
+      label: 'Ahorraste',
+      highlight: '50%',
+      sub: 'de tus ingresos',
+      variant: 'positive',
+    },
+    {
+      type: 'TOP_CATEGORY',
+      label: 'Tu mayor gasto fue Alquiler',
+      highlight: '67%',
+      sub: 'del total',
+      variant: 'neutral',
+    },
     {
       type: 'EXPENSES_VS_PREV_MONTH',
-      message: 'Tus gastos totales bajaron un 10% vs el mes pasado',
-      value: -10,
+      label: 'Tus gastos bajaron',
+      highlight: '10%',
+      sub: 'vs el mes pasado',
+      variant: 'positive',
     },
-    { type: 'CATEGORY_CHANGE', message: 'Este mes gastaste un 142% más en Delivery', value: 142 },
+    {
+      type: 'CATEGORY_CHANGE',
+      label: 'Gastaste más en',
+      highlight: '142%',
+      sub: 'Delivery',
+      variant: 'negative',
+    },
   ],
 };
 
@@ -71,19 +91,20 @@ describe('MonthlySummaryScreen', () => {
     const { getByText } = renderScreen();
 
     await waitFor(() => {
-      expect(getByText('Ahorraste $1500 este mes (50% de tus ingresos)')).toBeTruthy();
-      expect(getByText('Tu mayor gasto fue en Alquiler')).toBeTruthy();
+      expect(getByText('Insights')).toBeTruthy();
+      expect(getByText('de tus ingresos')).toBeTruthy();
+      expect(getByText('del total')).toBeTruthy();
     });
   });
 
   it('renders category breakdown', async () => {
     (monthlySummaryService.getMonthlySummary as jest.Mock).mockResolvedValue(mockSummary);
 
-    const { getByText } = renderScreen();
+    const { getAllByText, getByText } = renderScreen();
 
     await waitFor(() => {
       expect(getByText('Alquiler')).toBeTruthy();
-      expect(getByText('Delivery')).toBeTruthy();
+      expect(getAllByText('Delivery').length).toBeGreaterThan(0);
     });
   });
 

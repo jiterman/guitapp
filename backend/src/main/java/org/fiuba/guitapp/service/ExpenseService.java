@@ -229,12 +229,11 @@ public class ExpenseService {
         return switch (period.toLowerCase()) {
         case "daily" -> {
             LocalDate startOfDay = referenceDate;
-            LocalDate endOfDay = startOfDay.plusDays(1);
-            yield expenseRepository.findAllByUserAndDateBetween(user, startOfDay, endOfDay);
+            yield expenseRepository.findAllByUserAndDateBetween(user, startOfDay, startOfDay);
         }
         case "monthly" -> {
             LocalDate startOfMonth = referenceDate.withDayOfMonth(1);
-            LocalDate endOfMonth = startOfMonth.plusMonths(1);
+            LocalDate endOfMonth = YearMonth.from(referenceDate).atEndOfMonth();
             yield expenseRepository.findAllByUserAndDateBetween(user, startOfMonth, endOfMonth);
         }
         case "all" -> expenseRepository.findAllByUser(user);

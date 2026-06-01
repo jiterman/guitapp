@@ -44,7 +44,7 @@ class MonthlySummaryControllerTests {
                 new BigDecimal("1500"),
                 new BigDecimal("1500"),
                 List.of(new MonthlyCategoryBreakdown(ExpenseCategory.RENT, new BigDecimal("1500"), 100.0, null)),
-                List.of(new MonthlyInsight("SAVINGS", "Ahorraste $1500", 50.0)));
+                List.of(new MonthlyInsight("SAVINGS", "Ahorraste", "50%", "de tus ingresos", "positive")));
 
         when(monthlySummaryService.getSummary(eq("test@example.com"), anyInt(), anyInt()))
                 .thenReturn(response);

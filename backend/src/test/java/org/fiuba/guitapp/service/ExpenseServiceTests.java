@@ -435,7 +435,7 @@ class ExpenseServiceTests {
     @Test
     void getExpenseStatistics_ShouldReturnStatistics_WithMonthlyPeriodAndSpecificDate() {
         LocalDate januaryFirst = LocalDate.of(2024, 1, 1);
-        LocalDate januaryEnd = LocalDate.of(2024, 2, 1);
+        LocalDate januaryEnd = LocalDate.of(2024, 1, 31);
 
         Expense expense1 = new Expense();
         expense1.setId(UUID.randomUUID());
@@ -475,7 +475,7 @@ class ExpenseServiceTests {
     @Test
     void getExpenseStatistics_ShouldReturnStatistics_WithDailyPeriodAndSpecificDate() {
         LocalDate dayStart = LocalDate.of(2024, 5, 15);
-        LocalDate dayEnd = LocalDate.of(2024, 5, 16);
+        LocalDate dayEnd = LocalDate.of(2024, 5, 15);
 
         Expense expense1 = new Expense();
         expense1.setId(UUID.randomUUID());
@@ -488,7 +488,7 @@ class ExpenseServiceTests {
         List<Expense> expenses = Arrays.asList(expense1);
 
         when(userRepository.findByEmail(testEmail)).thenReturn(Optional.of(testUser));
-        when(expenseRepository.findAllByUserAndDateBetween(testUser, dayStart, dayEnd))
+        when(expenseRepository.findAllByUserAndDateBetween(testUser, dayStart, dayStart))
                 .thenReturn(expenses);
 
         ExpenseStatisticsResponse response = expenseService.getExpenseStatistics(testEmail, "daily", 2024, 5, 15);
@@ -498,7 +498,7 @@ class ExpenseServiceTests {
         assertEquals(1, response.categories().size());
         assertEquals(ExpenseCategory.CAFE, response.categories().get(0).category());
 
-        verify(expenseRepository, times(1)).findAllByUserAndDateBetween(testUser, dayStart, dayEnd);
+        verify(expenseRepository, times(1)).findAllByUserAndDateBetween(testUser, dayStart, dayStart);
     }
 
     @Test
@@ -536,7 +536,7 @@ class ExpenseServiceTests {
     @Test
     void getExpenseStatistics_ShouldHandleMultipleCategories() {
         LocalDate monthStart = LocalDate.of(2024, 3, 1);
-        LocalDate monthEnd = LocalDate.of(2024, 4, 1);
+        LocalDate monthEnd = LocalDate.of(2024, 3, 31);
 
         Expense expense1 = new Expense();
         expense1.setId(UUID.randomUUID());
@@ -584,7 +584,7 @@ class ExpenseServiceTests {
     @Test
     void getExpenseStatistics_ShouldReturnEmptyList_WhenNoExpenses() {
         LocalDate monthStart = LocalDate.of(2024, 6, 1);
-        LocalDate monthEnd = LocalDate.of(2024, 7, 1);
+        LocalDate monthEnd = LocalDate.of(2024, 6, 30);
 
         when(userRepository.findByEmail(testEmail)).thenReturn(Optional.of(testUser));
         when(expenseRepository.findAllByUserAndDateBetween(testUser, monthStart, monthEnd))
@@ -600,7 +600,7 @@ class ExpenseServiceTests {
     @Test
     void getFixedAndVariableStatistics_ShouldReturnStatistics_WithMonthlyPeriod() {
         LocalDate monthStart = LocalDate.of(2024, 2, 1);
-        LocalDate monthEnd = LocalDate.of(2024, 3, 1);
+        LocalDate monthEnd = LocalDate.of(2024, 2, 29);
 
         Expense fixedExpense = new Expense();
         fixedExpense.setId(UUID.randomUUID());

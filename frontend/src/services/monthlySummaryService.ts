@@ -10,8 +10,10 @@ export interface MonthlyCategoryBreakdown {
 
 export interface MonthlyInsight {
   type: 'EXPENSES_VS_PREV_MONTH' | 'SAVINGS' | 'TOP_CATEGORY' | 'CATEGORY_CHANGE';
-  message: string;
-  value: number;
+  label: string;
+  highlight: string;
+  sub: string;
+  variant: 'positive' | 'negative' | 'neutral';
 }
 
 export interface MonthlySummaryResponse {
