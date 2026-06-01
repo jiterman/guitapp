@@ -14,4 +14,5 @@ public enum ErrorCode {
     VALIDATION_FAILED,
     RATE_LIMIT_EXCEEDED,
     UNKNOWN_ERROR,
+    INVALID_PERIOD,
 }
