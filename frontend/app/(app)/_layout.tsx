@@ -45,10 +45,21 @@ export default function AppLayout() {
         loadUnreadCount();
       });
 
+      // Navigate when user taps a push notification
+      const unsubscribeTap = eventEmitter.on(
+        'notificationTapped',
+        ({ alertType }: { alertType: string }) => {
+          if (alertType === 'MONTHLY_SUMMARY') {
+            router.push({ pathname: '/summary', params: { tab: 'monthly' } });
+          }
+        }
+      );
+
       return () => {
         clearInterval(interval);
         unsubscribe();
         unsubscribeRead();
+        unsubscribeTap();
       };
     }
   }, [user, loadUnreadCount]);

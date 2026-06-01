@@ -5,6 +5,7 @@ import static org.mockito.Mockito.*;
 
 import java.util.UUID;
 
+import org.fiuba.guitapp.model.AlertType;
 import org.fiuba.guitapp.model.User;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -41,7 +42,7 @@ class NotificationServiceTest {
             mockedFirebaseMessaging.when(FirebaseMessaging::getInstance).thenReturn(firebaseMessaging);
             when(firebaseMessaging.send(any(Message.class))).thenReturn("response-id");
 
-            notificationService.sendPushNotification(testUser, "Title", "Body", "context");
+            notificationService.sendPushNotification(testUser, "Title", "Body", AlertType.MONTHLY_SUMMARY);
 
             verify(firebaseMessaging, times(1)).send(any(Message.class));
         }
@@ -54,7 +55,7 @@ class NotificationServiceTest {
         try (MockedStatic<FirebaseMessaging> mockedFirebaseMessaging = mockStatic(FirebaseMessaging.class)) {
             mockedFirebaseMessaging.when(FirebaseMessaging::getInstance).thenReturn(firebaseMessaging);
 
-            notificationService.sendPushNotification(testUser, "Title", "Body", "context");
+            notificationService.sendPushNotification(testUser, "Title", "Body", AlertType.MONTHLY_SUMMARY);
 
             verify(firebaseMessaging, never()).send(any(Message.class));
         }
@@ -67,7 +68,7 @@ class NotificationServiceTest {
             when(firebaseMessaging.send(any(Message.class))).thenThrow(new RuntimeException("Firebase error"));
 
             // Should not throw exception
-            notificationService.sendPushNotification(testUser, "Title", "Body", "context");
+            notificationService.sendPushNotification(testUser, "Title", "Body", AlertType.MONTHLY_SUMMARY);
 
             verify(firebaseMessaging, times(1)).send(any(Message.class));
         }
@@ -80,7 +81,7 @@ class NotificationServiceTest {
         try (MockedStatic<FirebaseMessaging> mockedFirebaseMessaging = mockStatic(FirebaseMessaging.class)) {
             mockedFirebaseMessaging.when(FirebaseMessaging::getInstance).thenReturn(firebaseMessaging);
 
-            notificationService.sendPushNotification(testUser, "Title", "Body", "context");
+            notificationService.sendPushNotification(testUser, "Title", "Body", AlertType.MONTHLY_SUMMARY);
 
             verify(firebaseMessaging, never()).send(any(Message.class));
         }

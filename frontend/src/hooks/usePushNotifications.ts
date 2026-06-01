@@ -42,7 +42,11 @@ export const usePushNotifications = (enabled: boolean = true) => {
 
     // Escuchamos cuando el usuario interactúa con la notificación
     const responseListener = Notifications.addNotificationResponseReceivedListener(response => {
-      console.log('Respuesta a notificación recibida:', response);
+      const data = response.notification.request.content.data as Record<string, string> | undefined;
+      const alertType = data?.alertType;
+      if (alertType) {
+        eventEmitter.emit('notificationTapped', { alertType });
+      }
     });
 
     return () => {

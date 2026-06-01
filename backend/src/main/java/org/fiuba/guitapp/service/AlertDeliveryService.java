@@ -30,7 +30,7 @@ public class AlertDeliveryService {
             return;
         }
 
-        notificationService.sendPushNotification(user, title, body, alertType.getLogContext());
+        notificationService.sendPushNotification(user, title, body, alertType);
     }
 
     private void saveNotification(User user, AlertType alertType, String body) {

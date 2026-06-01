@@ -1,5 +1,6 @@
 package org.fiuba.guitapp.service;
 
+import org.fiuba.guitapp.model.AlertType;
 import org.fiuba.guitapp.model.User;
 import org.springframework.stereotype.Service;
 
@@ -15,7 +16,8 @@ import lombok.extern.slf4j.Slf4j;
 @Service
 public class NotificationService {
 
-    public void sendPushNotification(User user, String title, String body, String logContext) {
+    public void sendPushNotification(User user, String title, String body, AlertType alertType) {
+        String logContext = alertType.getLogContext();
         if (user.getFcmToken() == null || user.getFcmToken().isEmpty()) {
             return;
         }
@@ -38,6 +40,7 @@ public class NotificationService {
                     .setToken(user.getFcmToken())
                     .setNotification(notification)
                     .setAndroidConfig(androidConfig)
+                    .putData("alertType", alertType.name())
                     .build();
 
             String response = FirebaseMessaging.getInstance().send(message);

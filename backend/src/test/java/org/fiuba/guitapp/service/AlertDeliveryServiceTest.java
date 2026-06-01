@@ -68,7 +68,7 @@ class AlertDeliveryServiceTest {
                 testUser,
                 AlertType.CATEGORY_OVERSPENDING.getTitle(),
                 BODY,
-                AlertType.CATEGORY_OVERSPENDING.getLogContext());
+                AlertType.CATEGORY_OVERSPENDING);
         verify(notificationRepository).save(any());
         verify(emailService, never()).sendAlertEmail(
                 any(),
@@ -86,7 +86,7 @@ class AlertDeliveryServiceTest {
                 testUser,
                 AlertType.NEGATIVE_BALANCE_RISK.getTitle(),
                 BODY,
-                AlertType.NEGATIVE_BALANCE_RISK.getLogContext());
+                AlertType.NEGATIVE_BALANCE_RISK);
         verify(notificationRepository).save(any());
         verify(emailService, never()).sendAlertEmail(
                 any(),
