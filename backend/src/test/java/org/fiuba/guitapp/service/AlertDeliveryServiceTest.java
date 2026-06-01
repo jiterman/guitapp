@@ -1,11 +1,13 @@
 package org.fiuba.guitapp.service;
 
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 
 import org.fiuba.guitapp.model.AlertType;
 import org.fiuba.guitapp.model.NotificationChannel;
 import org.fiuba.guitapp.model.User;
+import org.fiuba.guitapp.repository.NotificationRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -21,6 +23,9 @@ class AlertDeliveryServiceTest {
 
     @Mock
     private EmailService emailService;
+
+    @Mock
+    private NotificationRepository notificationRepository;
 
     @InjectMocks
     private AlertDeliveryService alertDeliveryService;
@@ -39,17 +44,18 @@ class AlertDeliveryServiceTest {
     void deliverAlert_ShouldSendEmail_WhenChannelIsEmail() {
         testUser.setNotificationChannel(NotificationChannel.EMAIL);
 
-        alertDeliveryService.deliverAlert(testUser, AlertType.EXPENSE_THRESHOLD_EXCEEDED, BODY);
+        alertDeliveryService.deliverAlert(testUser, AlertType.FIXED_EXPENSE_THRESHOLD_EXCEEDED, BODY);
 
         verify(emailService).sendAlertEmail(
                 testUser.getEmail(),
-                AlertType.EXPENSE_THRESHOLD_EXCEEDED.getTitle(),
+                AlertType.FIXED_EXPENSE_THRESHOLD_EXCEEDED.getTitle(),
                 BODY);
+        verify(notificationRepository).save(any());
         verify(notificationService, never()).sendPushNotification(
-                org.mockito.ArgumentMatchers.any(),
-                org.mockito.ArgumentMatchers.any(),
-                org.mockito.ArgumentMatchers.any(),
-                org.mockito.ArgumentMatchers.any());
+                any(),
+                any(),
+                any(),
+                any());
     }
 
     @Test
@@ -63,10 +69,11 @@ class AlertDeliveryServiceTest {
                 AlertType.CATEGORY_OVERSPENDING.getTitle(),
                 BODY,
                 AlertType.CATEGORY_OVERSPENDING.getLogContext());
+        verify(notificationRepository).save(any());
         verify(emailService, never()).sendAlertEmail(
-                org.mockito.ArgumentMatchers.any(),
-                org.mockito.ArgumentMatchers.any(),
-                org.mockito.ArgumentMatchers.any());
+                any(),
+                any(),
+                any());
     }
 
     @Test
@@ -80,10 +87,11 @@ class AlertDeliveryServiceTest {
                 AlertType.NEGATIVE_BALANCE_RISK.getTitle(),
                 BODY,
                 AlertType.NEGATIVE_BALANCE_RISK.getLogContext());
+        verify(notificationRepository).save(any());
         verify(emailService, never()).sendAlertEmail(
-                org.mockito.ArgumentMatchers.any(),
-                org.mockito.ArgumentMatchers.any(),
-                org.mockito.ArgumentMatchers.any());
+                any(),
+                any(),
+                any());
     }
 
     @Test
@@ -92,9 +100,10 @@ class AlertDeliveryServiceTest {
 
         alertDeliveryService.deliverAlert(testUser, AlertType.SAVINGS_GOAL_AT_RISK, BODY);
 
+        verify(notificationRepository).save(any());
         verify(emailService, never()).sendAlertEmail(
-                org.mockito.ArgumentMatchers.any(),
-                org.mockito.ArgumentMatchers.any(),
-                org.mockito.ArgumentMatchers.any());
+                any(),
+                any(),
+                any());
     }
 }

@@ -170,7 +170,7 @@ public class ExpenseEventListener {
                     "Te pasaste de tu presupuesto de gastos fijos. Llevás gastado %s de los %s de tu objetivo de este mes",
                     formatter.format(totalFixed),
                     formatter.format(fixedLimit));
-            alertDeliveryService.deliverAlert(user, AlertType.EXPENSE_THRESHOLD_EXCEEDED, message);
+            alertDeliveryService.deliverAlert(user, AlertType.FIXED_EXPENSE_THRESHOLD_EXCEEDED, message);
             return true;
         }
 
@@ -203,7 +203,7 @@ public class ExpenseEventListener {
                     "Te pasaste de tu presupuesto de gastos variables. Llevás gastado %s de los %s de tu objetivo de este mes",
                     formatter.format(totalVariable),
                     formatter.format(variableLimit));
-            alertDeliveryService.deliverAlert(user, AlertType.EXPENSE_THRESHOLD_EXCEEDED, message);
+            alertDeliveryService.deliverAlert(user, AlertType.VARIABLE_EXPENSE_THRESHOLD_EXCEEDED, message);
             return true;
         }
 
