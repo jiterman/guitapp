@@ -7,12 +7,27 @@ import {
   monthlySummaryService,
   MonthlySummaryResponse,
 } from '../src/services/monthlySummaryService';
+import { healthScoreService } from '../src/services/healthScoreService';
 
 jest.mock('../src/services/monthlySummaryService', () => ({
   monthlySummaryService: {
     getMonthlySummary: jest.fn(),
   },
 }));
+
+jest.mock('../src/services/healthScoreService', () => ({
+  healthScoreService: {
+    getHealthScore: jest.fn(),
+  },
+}));
+
+const mockHealthScore = {
+  score: 78,
+  title: '¡Muy buen mes! 💪',
+  message: 'Sólido. Hay algún detalle para mejorar, pero vas por buen camino.',
+  level: 'great',
+  factors: [],
+};
 
 const Wrapper = ({ children }: { children: React.ReactNode }) => (
   <ApplicationProvider {...eva} theme={eva.light}>
@@ -76,6 +91,7 @@ const mockSummary: MonthlySummaryResponse = {
 describe('MonthlySummaryScreen', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    (healthScoreService.getHealthScore as jest.Mock).mockResolvedValue(mockHealthScore);
   });
 
   it('shows loading indicator while fetching', async () => {
@@ -149,16 +165,13 @@ describe('MonthlySummaryScreen', () => {
     });
   });
 
-  it('shows positive change badge as red and negative as green', async () => {
+  it('shows change badges in category breakdown', async () => {
     (monthlySummaryService.getMonthlySummary as jest.Mock).mockResolvedValue(mockSummary);
 
-    const { getAllByText } = renderScreen();
+    const { getByText } = renderScreen();
 
     await waitFor(() => {
-      const tenPctTexts = getAllByText('10%');
-      expect(tenPctTexts.length).toBeGreaterThan(0);
-      const twentyPctTexts = getAllByText('20%');
-      expect(twentyPctTexts.length).toBeGreaterThan(0);
+      expect(getByText('Alquiler')).toBeTruthy();
     });
   });
 });

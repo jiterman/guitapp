@@ -37,6 +37,12 @@ public class MonthlySummaryService {
 
     private static final Locale LOCALE_AR = Locale.of("es", "AR");
 
+    private static final java.util.Set<ExpenseCategory> NON_ESSENTIAL_CATEGORIES = java.util.EnumSet.of(
+            ExpenseCategory.RESTAURANT, ExpenseCategory.CAFE, ExpenseCategory.DELIVERY,
+            ExpenseCategory.SUBSCRIPTIONS, ExpenseCategory.OUTINGS, ExpenseCategory.GYM,
+            ExpenseCategory.TRAVEL, ExpenseCategory.CLOTHING, ExpenseCategory.BEAUTY,
+            ExpenseCategory.SHOPPING, ExpenseCategory.TECHNOLOGY);
+
     private final ExpenseRepository expenseRepository;
     private final IncomeRepository incomeRepository;
     private final UserRepository userRepository;
@@ -220,6 +226,20 @@ public class MonthlySummaryService {
                     insights.add(new MonthlyInsight("CATEGORY_DECREASE",
                             "Mayor reducción: " + formatCategory(smallest.category()), highlight, "vs mes anterior", "positive", smallest.category().name()));
                 });
+
+        if (totalExpenses.compareTo(BigDecimal.ZERO) > 0) {
+            BigDecimal nonEssentialSum = categoryBreakdown.stream()
+                    .filter(c -> NON_ESSENTIAL_CATEGORIES.contains(c.category()))
+                    .map(MonthlyCategoryBreakdown::totalAmount)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+            double nonEssentialPct = nonEssentialSum
+                    .divide(totalExpenses, 4, RoundingMode.HALF_UP)
+                    .multiply(BigDecimal.valueOf(100))
+                    .doubleValue();
+            String highlight = String.format(LOCALE_AR, "%.0f%%", nonEssentialPct);
+            String variant = nonEssentialPct <= 20 ? "positive" : nonEssentialPct <= 30 ? "neutral" : "negative";
+            insights.add(new MonthlyInsight("NON_ESSENTIAL_RATIO", "Gastos no esenciales", highlight, "del total", variant, null));
+        }
 
         return insights;
     }

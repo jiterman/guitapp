@@ -1,11 +1,22 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { ActivityIndicator, Dimensions, ScrollView, StyleSheet, View } from 'react-native';
+import {
+  ActivityIndicator,
+  Dimensions,
+  Modal,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 import { Text } from '@ui-kitten/components';
 import { Ionicons } from '@expo/vector-icons';
 import StatsCard from '../components/StatsCard/StatsCard';
 import CategoryLegend from '../components/CategoryLegend/CategoryLegend';
+import HealthScoreCard from '../components/HealthScoreCard/HealthScoreCard';
 import { EXPENSE_CATEGORIES } from '../constants/categories';
 import { MonthlySummaryResponse, monthlySummaryService } from '../services/monthlySummaryService';
+import { HealthScoreResponse, healthScoreService } from '../services/healthScoreService';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 const vh = screenHeight / 100;
@@ -42,12 +53,18 @@ const INSIGHT_ICON: Record<string, string> = {
   TOP_CATEGORY: 'trophy-outline',
   CATEGORY_INCREASE: 'trending-up-outline',
   CATEGORY_DECREASE: 'trending-down-outline',
+  NON_ESSENTIAL_RATIO: 'cart-outline',
 };
 
 const VARIANT_STYLE: Record<string, { color: string; iconBg: string; cardBg: string }> = {
   positive: { color: '#22C55E', iconBg: '#E8F8EE', cardBg: '#F4FCF7' },
   negative: { color: '#EF5350', iconBg: '#FFEDED', cardBg: '#FFF7F7' },
   neutral: { color: '#2196F3', iconBg: '#EAF5FF', cardBg: '#F7FBFF' },
+};
+
+const INSIGHT_INFO: Partial<Record<string, string>> = {
+  NON_ESSENTIAL_RATIO:
+    'Porcentaje del total de tus gastos que corresponde a categorías consideradas no esenciales.\n\nCategorías no esenciales: Restaurantes, Café, Delivery, Suscripciones, Salidas, Gimnasio, Viajes, Ropa, Belleza, Compras y Tecnología.',
 };
 
 interface InsightCardProps {
@@ -67,18 +84,51 @@ const InsightCard: React.FC<InsightCardProps> = ({
   variant,
   category,
 }) => {
+  const [infoVisible, setInfoVisible] = useState(false);
   const { color, iconBg, cardBg } = VARIANT_STYLE[variant] ?? VARIANT_STYLE.neutral;
   const iconName = category
     ? getCategoryIcon(category)
     : (INSIGHT_ICON[type] ?? 'information-circle-outline');
+  const infoText = INSIGHT_INFO[type];
+
   return (
     <View style={[styles.insightCard, { backgroundColor: cardBg, borderColor: color }]}>
+      {infoText && (
+        <TouchableOpacity
+          style={styles.insightInfoBtn}
+          onPress={() => setInfoVisible(true)}
+          hitSlop={8}
+        >
+          <Ionicons name="information-circle-outline" size={14} color="#7D8EA3" />
+        </TouchableOpacity>
+      )}
       <View style={[styles.insightIconCircle, { backgroundColor: iconBg }]}>
         <Ionicons name={iconName as never} size={22} color={color} />
       </View>
       <Text style={[styles.insightLabel, { color }]}>{label}</Text>
       <Text style={[styles.insightValue, { color }]}>{highlight}</Text>
       <Text style={styles.insightSub}>{sub}</Text>
+
+      {infoText && (
+        <Modal
+          transparent
+          animationType="fade"
+          visible={infoVisible}
+          onRequestClose={() => setInfoVisible(false)}
+        >
+          <Pressable style={styles.modalOverlay} onPress={() => setInfoVisible(false)}>
+            <Pressable style={styles.modalBox} onPress={e => e.stopPropagation()}>
+              <View style={styles.modalHeader}>
+                <Text style={styles.modalTitle}>{label}</Text>
+                <TouchableOpacity onPress={() => setInfoVisible(false)} hitSlop={8}>
+                  <Ionicons name="close" size={18} color="#7D8EA3" />
+                </TouchableOpacity>
+              </View>
+              <Text style={styles.modalBody}>{infoText}</Text>
+            </Pressable>
+          </Pressable>
+        </Modal>
+      )}
     </View>
   );
 };
@@ -88,14 +138,19 @@ const MonthlySummaryScreen: React.FC = () => {
   const [year, setYear] = useState(defaultPeriod.year);
   const [month, setMonth] = useState(defaultPeriod.month);
   const [summary, setSummary] = useState<MonthlySummaryResponse | null>(null);
+  const [healthScore, setHealthScore] = useState<HealthScoreResponse | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const fetchSummary = useCallback(async (y: number, m: number) => {
     setLoading(true);
     setError(null);
     try {
-      const data = await monthlySummaryService.getMonthlySummary(y, m);
+      const [data, score] = await Promise.all([
+        monthlySummaryService.getMonthlySummary(y, m),
+        healthScoreService.getHealthScore(y, m),
+      ]);
       setSummary(data);
+      setHealthScore(score);
     } catch {
       setError('No se pudo cargar el resumen mensual.');
     } finally {
@@ -174,6 +229,12 @@ const MonthlySummaryScreen: React.FC = () => {
 
       {!loading && !error && summary && (
         <>
+          {healthScore && (
+            <View style={styles.healthScoreWrapper}>
+              <HealthScoreCard data={healthScore} />
+            </View>
+          )}
+
           <View style={styles.statsCardWrapper}>
             <StatsCard
               income={summary.totalIncome}
@@ -279,6 +340,9 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     paddingHorizontal: screenWidth * 0.1,
   },
+  healthScoreWrapper: {
+    marginBottom: vh * 2,
+  },
   statsCardWrapper: {
     marginBottom: vh * 2.5,
   },
@@ -338,6 +402,41 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     color: '#7D8EA3',
     textAlign: 'center',
+  },
+  insightInfoBtn: {
+    position: 'absolute',
+    top: 6,
+    right: 6,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.35)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: screenWidth * 0.08,
+  },
+  modalBox: {
+    backgroundColor: '#fff',
+    borderRadius: 16,
+    padding: 20,
+    width: '100%',
+    gap: 10,
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  modalTitle: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: '#003366',
+    flex: 1,
+  },
+  modalBody: {
+    fontSize: 13,
+    color: '#4A5568',
+    lineHeight: 20,
   },
 });
 

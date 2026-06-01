@@ -14,7 +14,8 @@ export interface MonthlyInsight {
     | 'SAVINGS'
     | 'TOP_CATEGORY'
     | 'CATEGORY_INCREASE'
-    | 'CATEGORY_DECREASE';
+    | 'CATEGORY_DECREASE'
+    | 'NON_ESSENTIAL_RATIO';
   label: string;
   highlight: string;
   sub: string;
