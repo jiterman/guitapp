@@ -264,7 +264,7 @@ class MonthlySummaryServiceTests {
         assertTrue(summary.insights().stream().anyMatch(i ->
                 i.type().equals("SAVINGS") &&
                 i.label().equals("Ahorraste") &&
-                i.sub().equals("este mes") &&
+                i.sub().equals("de tus ingresos") &&
                 i.variant().equals("positive")));
     }
 
