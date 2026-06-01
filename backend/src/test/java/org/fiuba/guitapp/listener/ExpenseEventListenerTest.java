@@ -100,7 +100,7 @@ class ExpenseEventListenerTest {
         expenseEventListener.handleExpenseCreatedEvent(testExpenseCreatedEvent);
 
         // Should only send variable notification because the event was for a VARIABLE expense
-        verify(alertDeliveryService, times(1)).deliverAlert(eq(testUser), eq(AlertType.EXPENSE_THRESHOLD_EXCEEDED),
+        verify(alertDeliveryService, times(1)).deliverAlert(eq(testUser), eq(AlertType.VARIABLE_EXPENSE_THRESHOLD_EXCEEDED),
                 argThat(s -> !s.contains("gastos fijos") && s.contains("gastos variables")));
     }
 
@@ -125,7 +125,7 @@ class ExpenseEventListenerTest {
         expenseEventListener.handleExpenseCreatedEvent(testExpenseCreatedEvent);
 
         // Should only send fixed notification because the event was for a FIXED expense
-        verify(alertDeliveryService, times(1)).deliverAlert(eq(testUser), eq(AlertType.EXPENSE_THRESHOLD_EXCEEDED),
+        verify(alertDeliveryService, times(1)).deliverAlert(eq(testUser), eq(AlertType.FIXED_EXPENSE_THRESHOLD_EXCEEDED),
                 argThat(s -> s.contains("gastos fijos") && !s.contains("gastos variables")));
     }
 
@@ -144,7 +144,7 @@ class ExpenseEventListenerTest {
 
         expenseEventListener.handleExpenseCreatedEvent(testExpenseCreatedEvent);
 
-        verify(alertDeliveryService, times(1)).deliverAlert(eq(testUser), eq(AlertType.EXPENSE_THRESHOLD_EXCEEDED),
+        verify(alertDeliveryService, times(1)).deliverAlert(eq(testUser), eq(AlertType.FIXED_EXPENSE_THRESHOLD_EXCEEDED),
                 argThat(s -> s.contains("gastos fijos") && !s.contains("gastos variables")));
     }
 
@@ -163,7 +163,7 @@ class ExpenseEventListenerTest {
 
         expenseEventListener.handleExpenseCreatedEvent(testExpenseCreatedEvent);
 
-        verify(alertDeliveryService, times(1)).deliverAlert(eq(testUser), eq(AlertType.EXPENSE_THRESHOLD_EXCEEDED),
+        verify(alertDeliveryService, times(1)).deliverAlert(eq(testUser), eq(AlertType.VARIABLE_EXPENSE_THRESHOLD_EXCEEDED),
                 argThat(s -> !s.contains("gastos fijos") && s.contains("gastos variables")));
     }
 
@@ -239,7 +239,8 @@ class ExpenseEventListenerTest {
 
         verify(alertDeliveryService, times(1)).deliverAlert(eq(testUser), eq(AlertType.CATEGORY_OVERSPENDING),
                 argThat(s -> s.contains("supera al mes anterior") && s.contains("Supermercado")));
-        verify(alertDeliveryService, never()).deliverAlert(eq(testUser), eq(AlertType.EXPENSE_THRESHOLD_EXCEEDED), any());
+        verify(alertDeliveryService, never()).deliverAlert(eq(testUser), eq(AlertType.FIXED_EXPENSE_THRESHOLD_EXCEEDED), any());
+        verify(alertDeliveryService, never()).deliverAlert(eq(testUser), eq(AlertType.VARIABLE_EXPENSE_THRESHOLD_EXCEEDED), any());
         verify(alertDeliveryService, never()).deliverAlert(eq(testUser), eq(AlertType.SAVINGS_GOAL_AT_RISK), any());
         verify(alertDeliveryService, never()).deliverAlert(eq(testUser), eq(AlertType.NEGATIVE_BALANCE_RISK), any());
     }
@@ -457,7 +458,8 @@ class ExpenseEventListenerTest {
         verify(alertDeliveryService, times(1)).deliverAlert(eq(testUser), eq(AlertType.NEGATIVE_BALANCE_RISK),
                 argThat(s -> s.contains("saldo") && s.contains("ingresos")));
         verify(alertDeliveryService, never()).deliverAlert(eq(testUser), eq(AlertType.SAVINGS_GOAL_AT_RISK), any());
-        verify(alertDeliveryService, never()).deliverAlert(eq(testUser), eq(AlertType.EXPENSE_THRESHOLD_EXCEEDED), any());
+        verify(alertDeliveryService, never()).deliverAlert(eq(testUser), eq(AlertType.FIXED_EXPENSE_THRESHOLD_EXCEEDED), any());
+        verify(alertDeliveryService, never()).deliverAlert(eq(testUser), eq(AlertType.VARIABLE_EXPENSE_THRESHOLD_EXCEEDED), any());
         verify(alertDeliveryService, never()).deliverAlert(eq(testUser), eq(AlertType.CATEGORY_OVERSPENDING), any());
     }
 
@@ -497,7 +499,8 @@ class ExpenseEventListenerTest {
         verify(alertDeliveryService, times(1)).deliverAlert(eq(testUser), eq(AlertType.SAVINGS_GOAL_AT_RISK),
                 argThat(s -> s.contains("meta de ahorro") || s.contains("meta")));
         verify(alertDeliveryService, never()).deliverAlert(eq(testUser), eq(AlertType.NEGATIVE_BALANCE_RISK), any());
-        verify(alertDeliveryService, never()).deliverAlert(eq(testUser), eq(AlertType.EXPENSE_THRESHOLD_EXCEEDED), any());
+        verify(alertDeliveryService, never()).deliverAlert(eq(testUser), eq(AlertType.FIXED_EXPENSE_THRESHOLD_EXCEEDED), any());
+        verify(alertDeliveryService, never()).deliverAlert(eq(testUser), eq(AlertType.VARIABLE_EXPENSE_THRESHOLD_EXCEEDED), any());
         verify(alertDeliveryService, never()).deliverAlert(eq(testUser), eq(AlertType.CATEGORY_OVERSPENDING), any());
     }
 

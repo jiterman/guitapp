@@ -1,10 +1,12 @@
 import { View, StyleSheet, TouchableOpacity, Dimensions, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Text, Icon } from '@ui-kitten/components';
-import { Stack } from 'expo-router';
+import { Stack, useRouter } from 'expo-router';
 import { useUser } from '../../src/context/user';
 import BottomNavBar from '../../src/components/BottomNavBar';
 import { usePushNotifications } from '../../src/hooks/usePushNotifications';
+import { notificationService } from '../../src/services/notificationService';
+import { useEffect, useState } from 'react';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
@@ -12,8 +14,32 @@ const vh = screenHeight / 100;
 
 export default function AppLayout() {
   const { user } = useUser();
+  const [unreadCount, setUnreadCount] = useState<number>(0);
+  const router = useRouter();
+
   // Treat a missing channel (existing users) as PUSH; only EMAIL disables push.
   usePushNotifications(!!user && user.notificationChannel !== 'EMAIL');
+
+  useEffect(() => {
+    let mounted = true;
+    const loadUnreadCount = async () => {
+      try {
+        const count = await notificationService.getUnreadCount();
+        if (mounted) setUnreadCount(count);
+      } catch {
+        // ignore
+      }
+    };
+
+    if (user) {
+      loadUnreadCount();
+      const interval = setInterval(loadUnreadCount, 60000);
+      return () => {
+        mounted = false;
+        clearInterval(interval);
+      };
+    }
+  }, [user]);
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
@@ -44,8 +70,16 @@ export default function AppLayout() {
           </View>
         </View>
 
-        <TouchableOpacity style={styles.notificationButton}>
+        <TouchableOpacity
+          style={styles.notificationButton}
+          onPress={() => router.push('/notifications')}
+        >
           <Icon name="bell-outline" style={styles.notificationIcon} fill="#003366" />
+          {unreadCount > 0 && (
+            <View style={styles.badge}>
+              <Text style={styles.badgeText}>{unreadCount > 9 ? '9+' : unreadCount}</Text>
+            </View>
+          )}
         </TouchableOpacity>
       </View>
 
@@ -139,10 +173,29 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3,
+    position: 'relative',
   },
   notificationIcon: {
     width: 24,
     height: 24,
+  },
+  badge: {
+    position: 'absolute',
+    right: -4,
+    top: -4,
+    backgroundColor: '#e74c3c',
+    borderRadius: 9,
+    width: 18,
+    height: 18,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: '#fff',
+  },
+  badgeText: {
+    color: '#fff',
+    fontSize: 10,
+    fontWeight: 'bold',
   },
   logoutButton: {
     backgroundColor: '#fff',

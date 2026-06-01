@@ -11,7 +11,7 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'flex-start',
+    justifyContent: 'space-between',
   },
   title: {
     fontSize: 16,
@@ -22,6 +22,28 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#3498db',
     fontWeight: '700',
+  },
+  notificationButton: {
+    padding: 4,
+    position: 'relative',
+  },
+  badge: {
+    position: 'absolute',
+    right: 0,
+    top: 0,
+    backgroundColor: '#e74c3c',
+    borderRadius: 9,
+    width: 18,
+    height: 18,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: '#fff',
+  },
+  badgeText: {
+    color: '#fff',
+    fontSize: 10,
+    fontWeight: 'bold',
   },
 });
 

@@ -7,10 +7,11 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public enum AlertType {
 
-    EXPENSE_THRESHOLD_EXCEEDED("Se nos fue la mano \uD83D\uDCB8", "limite de gastos excedido"),
+    FIXED_EXPENSE_THRESHOLD_EXCEEDED("Se nos fue la mano \uD83D\uDCB8", "l\u00edmite de gastos fijos excedido"),
+    VARIABLE_EXPENSE_THRESHOLD_EXCEEDED("Se nos fue la mano \uD83D\uDCB8", "l\u00edmite de gastos variables excedido"),
     SAVINGS_GOAL_AT_RISK("Se nos fue la mano \uD83D\uDCB8", "meta de ahorro en riesgo"),
     NEGATIVE_BALANCE_RISK("Se nos fue la mano \uD83D\uDCB8", "saldo negativo proyectado"),
-    CATEGORY_OVERSPENDING("Venimos gastando un poco más 📈", "gasto por categoria superior al mes anterior");
+    CATEGORY_OVERSPENDING("Venimos gastando un poco m\u00e1s \uD83D\uDCC8", "gasto por categor\u00eda superior al mes anterior");
 
     private final String title;
     private final String logContext;
