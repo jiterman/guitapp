@@ -204,6 +204,7 @@ class AlertDeliveryServiceTest {
                 BODY);
         verify(notificationRepository, never()).save(any());
     }
+
     void deliverAlert_ShouldNotSend_WhenAlreadySentThisMonth() {
         when(notificationRepository.existsByUserAndTypeAndCreatedAtBetween(eq(testUser),
                 eq(AlertType.FIXED_EXPENSE_THRESHOLD_EXCEEDED), any(), any())).thenReturn(true);

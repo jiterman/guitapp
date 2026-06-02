@@ -37,8 +37,8 @@ public class AlertDeliveryService {
 
     public void deliverAlert(User user, AlertType alertType, String body) {
         if (isAlreadySentThisMonth(user, alertType)) {
-         log.info("Notificacion de tipo {} ya enviada este mes para el usuario {}", alertType, user.getEmail());
-         return;
+            log.info("Notificacion de tipo {} ya enviada este mes para el usuario {}", alertType, user.getEmail());
+            return;
         }
 
         if (shouldDeferInstantAlert(user, alertType)) {
