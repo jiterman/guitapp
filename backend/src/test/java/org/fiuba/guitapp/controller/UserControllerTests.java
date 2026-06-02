@@ -16,10 +16,12 @@ import org.fiuba.guitapp.dto.UpdateEstimatedMonthlyIncomeRequest;
 import org.fiuba.guitapp.dto.UpdateExpensesStructureRequest;
 import org.fiuba.guitapp.dto.UpdateFcmTokenRequest;
 import org.fiuba.guitapp.dto.UpdateNotificationChannelRequest;
+import org.fiuba.guitapp.dto.UpdateNotificationFrequencyRequest;
 import org.fiuba.guitapp.dto.UpdateUserProfileRequest;
 import org.fiuba.guitapp.dto.UserProfileResponse;
 import org.fiuba.guitapp.dto.VerifyEmailChangeRequest;
 import org.fiuba.guitapp.model.NotificationChannel;
+import org.fiuba.guitapp.model.NotificationFrequency;
 import org.fiuba.guitapp.service.UserService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -64,6 +66,7 @@ class UserControllerTests {
                 50,
                 20,
                 null,
+                NotificationFrequency.INSTANT,
                 java.time.LocalDateTime.now());
 
         when(userService.getUserProfile("test@example.com")).thenReturn(response);
@@ -148,6 +151,7 @@ class UserControllerTests {
                 50,
                 20,
                 null,
+                NotificationFrequency.INSTANT,
                 java.time.LocalDateTime.now());
 
         when(userService.updateUserProfile(
@@ -185,6 +189,7 @@ class UserControllerTests {
                 50,
                 20,
                 null,
+                NotificationFrequency.INSTANT,
                 java.time.LocalDateTime.now());
 
         MockMultipartFile file = new MockMultipartFile(
@@ -304,6 +309,7 @@ class UserControllerTests {
                 50,
                 20,
                 NotificationChannel.EMAIL,
+                NotificationFrequency.INSTANT,
                 java.time.LocalDateTime.now());
 
         when(userService.updateNotificationChannel(eq("test@example.com"), eq(NotificationChannel.EMAIL)))
@@ -331,6 +337,38 @@ class UserControllerTests {
 
     @Test
     @WithMockUser(username = "test@example.com")
+    void updateNotificationFrequency_ShouldReturnUpdatedProfile() throws Exception {
+        UpdateNotificationFrequencyRequest request = new UpdateNotificationFrequencyRequest(NotificationFrequency.DAILY);
+        UUID userId = UUID.randomUUID();
+        UserProfileResponse mockResponse = new UserProfileResponse(
+                userId,
+                "test@example.com",
+                "Test",
+                "User",
+                null,
+                true,
+                BigDecimal.valueOf(10000),
+                30,
+                50,
+                20,
+                null,
+                NotificationFrequency.DAILY,
+                java.time.LocalDateTime.now());
+
+        when(userService.updateNotificationFrequency(eq("test@example.com"), eq(NotificationFrequency.DAILY)))
+                .thenReturn(mockResponse);
+
+        mockMvc.perform(patch("/api/users/me/notification-frequency")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.notificationFrequency").value("DAILY"));
+
+        verify(userService, times(1)).updateNotificationFrequency(eq("test@example.com"), eq(NotificationFrequency.DAILY));
+    }
+
+    @Test
+    @WithMockUser(username = "test@example.com")
     void updateEstimatedMonthlyIncome_ShouldReturnSuccessMessage() throws Exception {
         UpdateEstimatedMonthlyIncomeRequest request = new UpdateEstimatedMonthlyIncomeRequest(BigDecimal.valueOf(75000));
         UUID userId = UUID.randomUUID();
@@ -346,6 +384,7 @@ class UserControllerTests {
                 50,
                 20,
                 null,
+                NotificationFrequency.INSTANT,
                 java.time.LocalDateTime.now());
 
         when(userService.updateEstimatedMonthlyIncome(
@@ -395,6 +434,7 @@ class UserControllerTests {
                 30,
                 20,
                 null,
+                NotificationFrequency.INSTANT,
                 java.time.LocalDateTime.now());
 
         when(userService.updateExpensesStructure(

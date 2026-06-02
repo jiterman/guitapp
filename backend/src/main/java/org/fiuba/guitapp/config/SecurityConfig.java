@@ -27,7 +27,10 @@ public class SecurityConfig {
                 .authorizeHttpRequests(authorize -> authorize
                         .requestMatchers("/api/auth/**", "/error")
                         .permitAll()
-                        .requestMatchers("/api/summary/monthly/notify")
+                        .requestMatchers(
+                                "/api/summary/monthly/notify",
+                                "/api/notifications/daily/notify",
+                                "/api/notifications/weekly/notify")
                         .permitAll()
                         .anyRequest()
                         .authenticated())

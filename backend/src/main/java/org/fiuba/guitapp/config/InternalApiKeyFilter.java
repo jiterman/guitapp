@@ -1,6 +1,7 @@
 package org.fiuba.guitapp.config;
 
 import java.io.IOException;
+import java.util.Set;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
@@ -16,7 +17,10 @@ import jakarta.servlet.http.HttpServletResponse;
 @Component
 public class InternalApiKeyFilter extends OncePerRequestFilter {
 
-    private static final String INTERNAL_PATH = "/api/summary/monthly/notify";
+    private static final Set<String> INTERNAL_PATHS = Set.of(
+            "/api/summary/monthly/notify",
+            "/api/notifications/daily/notify",
+            "/api/notifications/weekly/notify");
     private static final String HEADER = "X-Internal-Key";
 
     @Value("${internal.api.key}")
@@ -24,7 +28,7 @@ public class InternalApiKeyFilter extends OncePerRequestFilter {
 
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
-        return !request.getServletPath().equals(INTERNAL_PATH);
+        return !INTERNAL_PATHS.contains(request.getServletPath());
     }
 
     @Override

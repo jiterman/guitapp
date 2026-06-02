@@ -14,6 +14,7 @@ import org.fiuba.guitapp.dto.VerifyEmailChangeRequest;
 import org.fiuba.guitapp.exception.AuthException;
 import org.fiuba.guitapp.exception.ErrorCode;
 import org.fiuba.guitapp.model.NotificationChannel;
+import org.fiuba.guitapp.model.NotificationFrequency;
 import org.fiuba.guitapp.model.User;
 import org.fiuba.guitapp.repository.UserRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -56,7 +57,19 @@ public class UserService {
                 user.getTargetVariableExpenses(),
                 user.getTargetSavings(),
                 user.getNotificationChannel(),
+                user.getNotificationFrequency(),
                 user.getCreatedAt());
+    }
+
+    @Transactional
+    public UserProfileResponse updateNotificationFrequency(String email, NotificationFrequency notificationFrequency) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new AuthException(ErrorCode.USER_NOT_FOUND, "User not found"));
+
+        user.setNotificationFrequency(notificationFrequency);
+        userRepository.save(user);
+
+        return toUserProfileResponse(user);
     }
 
     @Transactional

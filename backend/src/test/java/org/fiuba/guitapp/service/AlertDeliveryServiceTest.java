@@ -6,7 +6,10 @@ import static org.mockito.Mockito.verify;
 
 import org.fiuba.guitapp.model.AlertType;
 import org.fiuba.guitapp.model.NotificationChannel;
+import org.fiuba.guitapp.model.NotificationEvent;
+import org.fiuba.guitapp.model.NotificationFrequency;
 import org.fiuba.guitapp.model.User;
+import org.fiuba.guitapp.repository.NotificationEventRepository;
 import org.fiuba.guitapp.repository.NotificationRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -26,6 +29,9 @@ class AlertDeliveryServiceTest {
 
     @Mock
     private NotificationRepository notificationRepository;
+
+    @Mock
+    private NotificationEventRepository notificationEventRepository;
 
     @InjectMocks
     private AlertDeliveryService alertDeliveryService;
@@ -105,5 +111,87 @@ class AlertDeliveryServiceTest {
                 any(),
                 any(),
                 any());
+    }
+
+    @Test
+    void deliverAlert_ShouldDeliverImmediately_WhenFrequencyIsInstant() {
+        testUser.setNotificationFrequency(NotificationFrequency.INSTANT);
+        testUser.setNotificationChannel(NotificationChannel.PUSH);
+
+        alertDeliveryService.deliverAlert(testUser, AlertType.CATEGORY_OVERSPENDING, BODY);
+
+        verify(notificationEventRepository, never()).save(any());
+        verify(notificationService).sendPushNotification(
+                testUser,
+                AlertType.CATEGORY_OVERSPENDING.getTitle(),
+                BODY,
+                AlertType.CATEGORY_OVERSPENDING.getLogContext());
+        verify(notificationRepository).save(any());
+    }
+
+    @Test
+    void deliverAlert_ShouldRecordPendingEvent_WhenFrequencyIsDaily() {
+        testUser.setNotificationFrequency(NotificationFrequency.DAILY);
+
+        alertDeliveryService.deliverAlert(testUser, AlertType.SAVINGS_GOAL_AT_RISK, BODY);
+
+        verify(notificationEventRepository).save(any(NotificationEvent.class));
+        verify(notificationRepository, never()).save(any());
+        verify(notificationService, never()).sendPushNotification(any(), any(), any(), any());
+        verify(emailService, never()).sendAlertEmail(any(), any(), any());
+    }
+
+    @Test
+    void deliverAlert_ShouldRecordPendingEvent_WhenFrequencyIsWeekly() {
+        testUser.setNotificationFrequency(NotificationFrequency.WEEKLY);
+
+        alertDeliveryService.deliverAlert(testUser, AlertType.NEGATIVE_BALANCE_RISK, BODY);
+
+        verify(notificationEventRepository).save(any(NotificationEvent.class));
+        verify(notificationRepository, never()).save(any());
+        verify(notificationService, never()).sendPushNotification(any(), any(), any(), any());
+    }
+
+    @Test
+    void deliverAlert_ShouldDeliverMonthlySummary_WhenFrequencyIsDaily() {
+        testUser.setNotificationFrequency(NotificationFrequency.DAILY);
+        testUser.setNotificationChannel(NotificationChannel.PUSH);
+
+        alertDeliveryService.deliverAlert(testUser, AlertType.MONTHLY_SUMMARY, BODY);
+
+        verify(notificationEventRepository, never()).save(any());
+        verify(notificationService).sendPushNotification(
+                testUser,
+                AlertType.MONTHLY_SUMMARY.getTitle(),
+                BODY,
+                AlertType.MONTHLY_SUMMARY.getLogContext());
+    }
+
+    @Test
+    void deliverSummaryNotification_ShouldSendPushWithoutPersistingNotification_WhenChannelIsPush() {
+        testUser.setNotificationChannel(NotificationChannel.PUSH);
+
+        alertDeliveryService.deliverSummaryNotification(testUser, AlertType.DAILY_SUMMARY, BODY);
+
+        verify(notificationService).sendPushNotification(
+                testUser,
+                AlertType.DAILY_SUMMARY.getTitle(),
+                BODY,
+                AlertType.DAILY_SUMMARY.getLogContext());
+        verify(notificationRepository, never()).save(any());
+        verify(emailService, never()).sendAlertEmail(any(), any(), any());
+    }
+
+    @Test
+    void deliverSummaryNotification_ShouldSendEmailWithoutPersistingNotification_WhenChannelIsEmail() {
+        testUser.setNotificationChannel(NotificationChannel.EMAIL);
+
+        alertDeliveryService.deliverSummaryNotification(testUser, AlertType.WEEKLY_SUMMARY, BODY);
+
+        verify(emailService).sendAlertEmail(
+                testUser.getEmail(),
+                AlertType.WEEKLY_SUMMARY.getTitle(),
+                BODY);
+        verify(notificationRepository, never()).save(any());
     }
 }
