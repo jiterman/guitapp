@@ -128,7 +128,7 @@ class AlertDeliveryServiceTest {
                 testUser,
                 AlertType.CATEGORY_OVERSPENDING.getTitle(),
                 BODY,
-                AlertType.CATEGORY_OVERSPENDING.getLogContext());
+                AlertType.CATEGORY_OVERSPENDING);
         verify(notificationRepository).save(any());
     }
 
@@ -167,7 +167,7 @@ class AlertDeliveryServiceTest {
                 testUser,
                 AlertType.MONTHLY_SUMMARY.getTitle(),
                 BODY,
-                AlertType.MONTHLY_SUMMARY.getLogContext());
+                AlertType.MONTHLY_SUMMARY);
     }
 
     @Test
@@ -180,7 +180,7 @@ class AlertDeliveryServiceTest {
                 testUser,
                 AlertType.DAILY_SUMMARY.getTitle(),
                 BODY,
-                AlertType.DAILY_SUMMARY.getLogContext());
+                AlertType.DAILY_SUMMARY);
         verify(notificationRepository, never()).save(any());
         verify(emailService, never()).sendAlertEmail(any(), any(), any());
     }
