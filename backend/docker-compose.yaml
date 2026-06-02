@@ -1,0 +1,33 @@
+version: '3.8'
+
+services:
+  guitapp-db:
+    image: postgres:18-alpine
+    container_name: guitapp-db
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: guitapp
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql
+
+  pgadmin4:
+    image: dpage/pgadmin4
+    container_name: pgadmin4
+    restart: always
+    environment:
+      PGADMIN_DEFAULT_EMAIL: "guitapp@gmail.com"
+      PGADMIN_DEFAULT_PASSWORD: "tpgdsi2026"
+    ports:
+      - "8090:80"
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+    depends_on:
+      - guitapp-db
+
+volumes:
+  postgres_data:
+  pgadmin_data:
