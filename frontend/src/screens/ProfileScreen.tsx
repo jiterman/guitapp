@@ -1,5 +1,5 @@
 import React from 'react';
-import { StyleSheet, Dimensions, ScrollView } from 'react-native';
+import { StyleSheet, Dimensions, ScrollView, View } from 'react-native';
 import { Layout } from '@ui-kitten/components';
 import { authService } from '../services/authService';
 import { useUser } from '../context/user';
@@ -15,8 +15,10 @@ import { usePasswordChange } from '../hooks/Profile/usePasswordChange';
 import ExpensesSheet from '../components/Profile/ExpensesSheet';
 import { useExpensesStructure } from '../hooks/Profile/useExpensesStructure';
 import NotificationChannelSheet from '../components/Profile/NotificationChannelSheet';
+import NotificationFrequencySheet from '../components/Profile/NotificationFrequencySheet';
 import { useNotificationChannel } from '../hooks/Profile/useNotificationChannel';
-import { profileColors } from '../styles/profileStyles';
+import { useNotificationFrequency } from '../hooks/Profile/useNotificationFrequency';
+import { profileColors, profileSharedStyles } from '../styles/profileStyles';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 const vh = screenHeight / 100;
@@ -34,6 +36,7 @@ const ProfileScreen: React.FC = () => {
   const passwordSheet = useModal();
   const expensesSheet = useModal();
   const notificationsSheet = useModal();
+  const notificationFrequencySheet = useModal();
 
   const {
     saving: personalInfoSaving,
@@ -71,7 +74,18 @@ const ProfileScreen: React.FC = () => {
     onSuccess: () => {},
   });
 
-  const saving = personalInfoSaving || passwordSaving || expenses.saving || notifications.saving;
+  const notificationFrequency = useNotificationFrequency({
+    user,
+    setUser,
+    onSuccess: () => {},
+  });
+
+  const saving =
+    personalInfoSaving ||
+    passwordSaving ||
+    expenses.saving ||
+    notifications.saving ||
+    notificationFrequency.saving;
 
   return (
     <>
@@ -113,15 +127,28 @@ const ProfileScreen: React.FC = () => {
             />
           </ProfileSection>
 
-          <ProfileSection title="Preferencias">
-            <ProfileMenuItem
-              title="Notificaciones"
-              subtitle="Elegí cómo querés recibir los avisos"
-              icon="notifications-outline"
-              iconColor="#07a3e4"
-              iconBackground="#E6F2FC"
-              onPress={notificationsSheet.open}
-            />
+          <ProfileSection title="Notificaciones">
+            <View style={profileSharedStyles.menuCardRow}>
+              <ProfileMenuItem
+                title="Medio de aviso"
+                subtitle="Elegí si querés recibir los avisos en el celular o por correo"
+                icon="notifications-outline"
+                iconColor="#07a3e4"
+                iconBackground="#E6F2FC"
+                onPress={notificationsSheet.open}
+              />
+            </View>
+            <View style={profileSharedStyles.menuCardDivider} />
+            <View style={profileSharedStyles.menuCardRow}>
+              <ProfileMenuItem
+                title="Frecuencia de avisos"
+                subtitle="Instantáneas, resumen diario o resumen semanal"
+                icon="time-outline"
+                iconColor="#07a3e4"
+                iconBackground="#E6F2FC"
+                onPress={notificationFrequencySheet.open}
+              />
+            </View>
           </ProfileSection>
 
           <ProfileSection title="Seguridad">
@@ -201,6 +228,21 @@ const ProfileScreen: React.FC = () => {
         error={notifications.error}
         onSave={notifications.handleSave}
         onChange={notifications.clearError}
+      />
+
+      <NotificationFrequencySheet
+        visible={notificationFrequencySheet.visible}
+        scale={notificationFrequencySheet.scale}
+        opacity={notificationFrequencySheet.opacity}
+        onClose={() => {
+          notificationFrequencySheet.close();
+          notificationFrequency.clearError();
+        }}
+        user={user}
+        saving={notificationFrequency.saving}
+        error={notificationFrequency.error}
+        onSave={notificationFrequency.handleSave}
+        onChange={notificationFrequency.clearError}
       />
     </>
   );

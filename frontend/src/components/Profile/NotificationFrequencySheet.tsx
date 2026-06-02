@@ -12,8 +12,8 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { Text } from '@ui-kitten/components';
 
-import NotificationChannelEditor from './NotificationChannelEditor';
-import type { NotificationChannel, UserProfile } from '../../context/user';
+import NotificationFrequencyEditor from './NotificationFrequencyEditor';
+import type { NotificationFrequency, UserProfile } from '../../context/user';
 import { profileModalStyles, profileSharedStyles } from '../../styles/profileStyles';
 
 type Props = {
@@ -24,11 +24,11 @@ type Props = {
   user: UserProfile | null;
   saving: boolean;
   error: string | null;
-  onSave: (channel: NotificationChannel) => Promise<unknown> | unknown;
+  onSave: (frequency: NotificationFrequency) => Promise<unknown> | unknown;
   onChange?: () => void;
 };
 
-const NotificationChannelSheet: React.FC<Props> = ({
+const NotificationFrequencySheet: React.FC<Props> = ({
   visible,
   scale,
   opacity,
@@ -39,11 +39,11 @@ const NotificationChannelSheet: React.FC<Props> = ({
   onSave,
   onChange,
 }) => {
-  const handleSave = async (channel: NotificationChannel) => {
-    const result = await onSave(channel);
+  const handleSave = async (frequency: NotificationFrequency) => {
+    const result = await onSave(frequency);
     if (result) {
       onClose();
-      Alert.alert('Listo', 'Medio de aviso actualizado correctamente');
+      Alert.alert('Listo', 'Frecuencia de notificaciones actualizada correctamente');
     }
   };
 
@@ -60,15 +60,15 @@ const NotificationChannelSheet: React.FC<Props> = ({
       >
         <Animated.View style={[profileModalStyles.card, { transform: [{ scale }], opacity }]}>
           <View style={profileSharedStyles.sheetHeader}>
-            <Text style={profileSharedStyles.sheetTitle}>Medio de aviso</Text>
+            <Text style={profileSharedStyles.sheetTitle}>Frecuencia de avisos</Text>
             <TouchableOpacity onPress={onClose} hitSlop={10}>
               <Ionicons name="close" size={22} color="#003366" />
             </TouchableOpacity>
           </View>
 
           <ScrollView showsVerticalScrollIndicator={false}>
-            <NotificationChannelEditor
-              currentChannel={user?.notificationChannel}
+            <NotificationFrequencyEditor
+              currentFrequency={user?.notificationFrequency}
               saving={saving}
               externalError={error}
               onSave={handleSave}
@@ -81,4 +81,4 @@ const NotificationChannelSheet: React.FC<Props> = ({
   );
 };
 
-export default NotificationChannelSheet;
+export default NotificationFrequencySheet;

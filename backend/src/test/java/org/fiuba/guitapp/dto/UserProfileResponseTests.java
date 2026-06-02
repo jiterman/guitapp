@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.UUID;
 
+import org.fiuba.guitapp.model.NotificationFrequency;
 import org.junit.jupiter.api.Test;
 
 class UserProfileResponseTests {
@@ -33,6 +34,7 @@ class UserProfileResponseTests {
                 targetVariable,
                 targetSavings,
                 null,
+                NotificationFrequency.INSTANT,
                 java.time.LocalDateTime.now());
 
         assertEquals(id, response.id());
@@ -62,6 +64,7 @@ class UserProfileResponseTests {
                 null,
                 null,
                 null,
+                NotificationFrequency.INSTANT,
                 java.time.LocalDateTime.now());
 
         assertEquals(id, response.id());
@@ -92,6 +95,7 @@ class UserProfileResponseTests {
                 50,
                 20,
                 null,
+                NotificationFrequency.INSTANT,
                 createdAt);
         UserProfileResponse response2 = new UserProfileResponse(
                 id,
@@ -105,6 +109,7 @@ class UserProfileResponseTests {
                 50,
                 20,
                 null,
+                NotificationFrequency.INSTANT,
                 createdAt);
         assertEquals(response1, response2);
         assertEquals(response1.hashCode(), response2.hashCode());
@@ -125,6 +130,7 @@ class UserProfileResponseTests {
                 50,
                 20,
                 null,
+                NotificationFrequency.INSTANT,
                 java.time.LocalDateTime.now());
 
         String toString = response.toString();

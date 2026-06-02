@@ -84,4 +84,27 @@ describe('userService', () => {
 
     await expect(userService.uploadAvatar(new FormData())).rejects.toThrow('Upload failed');
   });
+
+  it('should call updateNotificationFrequency endpoint correctly', async () => {
+    (authService.authService.getToken as jest.Mock).mockResolvedValue('fake-token');
+
+    (global.fetch as jest.Mock).mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({ notificationFrequency: 'WEEKLY' }),
+    });
+
+    await userService.updateNotificationFrequency('WEEKLY');
+
+    expect(global.fetch).toHaveBeenCalledWith(
+      expect.stringContaining('/api/users/me/notification-frequency'),
+      expect.objectContaining({
+        method: 'PATCH',
+        headers: expect.objectContaining({
+          Authorization: 'Bearer fake-token',
+          'Content-Type': 'application/json',
+        }),
+        body: JSON.stringify({ notificationFrequency: 'WEEKLY' }),
+      })
+    );
+  });
 });

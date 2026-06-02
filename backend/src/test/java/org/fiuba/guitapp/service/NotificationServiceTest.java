@@ -3,6 +3,7 @@ package org.fiuba.guitapp.service;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
+import java.util.List;
 import java.util.UUID;
 
 import org.fiuba.guitapp.model.AlertType;
@@ -14,6 +15,7 @@ import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import com.google.firebase.FirebaseApp;
 import com.google.firebase.messaging.FirebaseMessaging;
 import com.google.firebase.messaging.Message;
 
@@ -24,6 +26,9 @@ class NotificationServiceTest {
 
     @Mock
     private FirebaseMessaging firebaseMessaging;
+
+    @Mock
+    private FirebaseApp firebaseApp;
 
     private User testUser;
 
@@ -38,7 +43,10 @@ class NotificationServiceTest {
 
     @Test
     void sendPushNotification_ShouldSendMessage_WhenTokenIsPresent() throws Exception {
-        try (MockedStatic<FirebaseMessaging> mockedFirebaseMessaging = mockStatic(FirebaseMessaging.class)) {
+        try (MockedStatic<FirebaseApp> mockedFirebaseApp = mockStatic(FirebaseApp.class);
+                MockedStatic<FirebaseMessaging> mockedFirebaseMessaging = mockStatic(FirebaseMessaging.class)) {
+
+            mockedFirebaseApp.when(FirebaseApp::getApps).thenReturn(List.of(firebaseApp));
             mockedFirebaseMessaging.when(FirebaseMessaging::getInstance).thenReturn(firebaseMessaging);
             when(firebaseMessaging.send(any(Message.class))).thenReturn("response-id");
 
@@ -52,7 +60,10 @@ class NotificationServiceTest {
     void sendPushNotification_ShouldNotSendMessage_WhenTokenIsMissing() throws Exception {
         testUser.setFcmToken(null);
 
-        try (MockedStatic<FirebaseMessaging> mockedFirebaseMessaging = mockStatic(FirebaseMessaging.class)) {
+        try (MockedStatic<FirebaseApp> mockedFirebaseApp = mockStatic(FirebaseApp.class);
+                MockedStatic<FirebaseMessaging> mockedFirebaseMessaging = mockStatic(FirebaseMessaging.class)) {
+
+            mockedFirebaseApp.when(FirebaseApp::getApps).thenReturn(List.of(firebaseApp));
             mockedFirebaseMessaging.when(FirebaseMessaging::getInstance).thenReturn(firebaseMessaging);
 
             notificationService.sendPushNotification(testUser, "Title", "Body", AlertType.MONTHLY_SUMMARY);
@@ -63,7 +74,10 @@ class NotificationServiceTest {
 
     @Test
     void sendPushNotification_ShouldLogAndHandleException_WhenFirebaseFails() throws Exception {
-        try (MockedStatic<FirebaseMessaging> mockedFirebaseMessaging = mockStatic(FirebaseMessaging.class)) {
+        try (MockedStatic<FirebaseApp> mockedFirebaseApp = mockStatic(FirebaseApp.class);
+                MockedStatic<FirebaseMessaging> mockedFirebaseMessaging = mockStatic(FirebaseMessaging.class)) {
+
+            mockedFirebaseApp.when(FirebaseApp::getApps).thenReturn(List.of(firebaseApp));
             mockedFirebaseMessaging.when(FirebaseMessaging::getInstance).thenReturn(firebaseMessaging);
             when(firebaseMessaging.send(any(Message.class))).thenThrow(new RuntimeException("Firebase error"));
 
@@ -78,7 +92,10 @@ class NotificationServiceTest {
     void sendPushNotification_ShouldNotSendMessage_WhenTokenIsEmpty() throws Exception {
         testUser.setFcmToken("");
 
-        try (MockedStatic<FirebaseMessaging> mockedFirebaseMessaging = mockStatic(FirebaseMessaging.class)) {
+        try (MockedStatic<FirebaseApp> mockedFirebaseApp = mockStatic(FirebaseApp.class);
+                MockedStatic<FirebaseMessaging> mockedFirebaseMessaging = mockStatic(FirebaseMessaging.class)) {
+
+            mockedFirebaseApp.when(FirebaseApp::getApps).thenReturn(List.of(firebaseApp));
             mockedFirebaseMessaging.when(FirebaseMessaging::getInstance).thenReturn(firebaseMessaging);
 
             notificationService.sendPushNotification(testUser, "Title", "Body", AlertType.MONTHLY_SUMMARY);

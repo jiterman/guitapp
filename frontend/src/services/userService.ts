@@ -246,6 +246,27 @@ export const userService = {
     return data;
   },
 
+  updateNotificationFrequency: async (notificationFrequency: 'INSTANT' | 'DAILY' | 'WEEKLY') => {
+    const token = await authService.getToken();
+
+    const response = await fetch(`${API_URL}/api/users/me/notification-frequency`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ notificationFrequency }),
+    });
+
+    const data = await response.json().catch(() => ({}));
+
+    if (!response.ok) {
+      throw new Error(data.message || 'Error al actualizar la frecuencia de notificaciones');
+    }
+
+    return data;
+  },
+
   updateEstimatedMonthlyIncome: async (estimatedMonthlyIncome: number) => {
     const token = await authService.getToken();
 

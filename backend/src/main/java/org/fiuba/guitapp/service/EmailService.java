@@ -79,9 +79,9 @@ public class EmailService {
 
         try {
             mailSender.send(message);
-        } catch (MailException ex) {
+            log.info("Alert email sent to {} with subject: {}", to, subject);
+        } catch (Exception ex) {
             log.warn("Failed to send alert email to {}: {}. Continuing without failing.", to, ex.getMessage());
         }
-        log.info("Alert email sent to {} with subject: {}", to, subject);
     }
 }

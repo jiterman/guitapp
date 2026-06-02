@@ -88,6 +88,11 @@ public class User implements UserDetails {
     @Column
     private NotificationChannel notificationChannel;
 
+    @NotNull
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, columnDefinition = "varchar(20) default 'INSTANT'")
+    private NotificationFrequency notificationFrequency = NotificationFrequency.INSTANT;
+
     @Column
     private java.time.LocalDateTime otpCreatedAt;
 

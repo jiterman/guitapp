@@ -41,16 +41,23 @@ public class ExpenseEventListener {
     public void handleExpenseCreatedEvent(ExpenseCreatedEvent event) {
         log.info("Procesando ExpenseCreatedEvent de forma asincrona tras el commit: {}", event.getExpenseId());
 
+        YearMonth expenseMonth = YearMonth.from(event.getDate());
+        YearMonth currentMonth = YearMonth.now();
+
+        if (!expenseMonth.equals(currentMonth)) {
+            log.info("Omitiendo notificaciones para gasto de mes no actual: {}", expenseMonth);
+            return;
+        }
+
         User user = userRepository.findByEmail(event.getUserEmail())
                 .orElseThrow(() -> new AuthException(ErrorCode.USER_NOT_FOUND, "User not found"));
 
-        YearMonth currentMonth = YearMonth.from(event.getDate());
         List<Expense> monthlyExpenses = expenseRepository.findAllByUserAndDateBetween(
                 user,
-                currentMonth.atDay(1),
-                currentMonth.atEndOfMonth());
+                expenseMonth.atDay(1),
+                expenseMonth.atEndOfMonth());
 
-        ProjectionData projectionData = buildProjectionData(user, monthlyExpenses, currentMonth);
+        ProjectionData projectionData = buildProjectionData(user, monthlyExpenses, expenseMonth);
         if (checkNegativeBalanceRisk(user, projectionData)) {
             return;
         }

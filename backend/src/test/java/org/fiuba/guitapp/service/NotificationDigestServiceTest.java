@@ -1,0 +1,131 @@
+package org.fiuba.guitapp.service;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
+import java.util.Collections;
+import java.util.List;
+import java.util.UUID;
+
+import org.fiuba.guitapp.model.AlertType;
+import org.fiuba.guitapp.model.NotificationEvent;
+import org.fiuba.guitapp.model.NotificationFrequency;
+import org.fiuba.guitapp.model.User;
+import org.fiuba.guitapp.model.UserStatus;
+import org.fiuba.guitapp.repository.NotificationEventRepository;
+import org.fiuba.guitapp.repository.UserRepository;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+
+@ExtendWith(MockitoExtension.class)
+class NotificationDigestServiceTest {
+
+    @Mock
+    private UserRepository userRepository;
+
+    @Mock
+    private NotificationEventRepository notificationEventRepository;
+
+    @Mock
+    private AlertDeliveryService alertDeliveryService;
+
+    @Mock
+    private NotificationSummarySender notificationSummarySender;
+
+    @InjectMocks
+    private NotificationDigestService notificationDigestService;
+
+    private User dailyUser;
+    private User weeklyUser;
+    private NotificationEvent pendingEvent;
+
+    @BeforeEach
+    void setUp() {
+        dailyUser = new User();
+        dailyUser.setId(UUID.randomUUID());
+        dailyUser.setEmail("daily@example.com");
+        dailyUser.setStatus(UserStatus.ACTIVE);
+        dailyUser.setNotificationFrequency(NotificationFrequency.DAILY);
+
+        weeklyUser = new User();
+        weeklyUser.setId(UUID.randomUUID());
+        weeklyUser.setEmail("weekly@example.com");
+        weeklyUser.setStatus(UserStatus.ACTIVE);
+        weeklyUser.setNotificationFrequency(NotificationFrequency.WEEKLY);
+
+        pendingEvent = NotificationEvent.builder()
+                .id(1L)
+                .user(dailyUser)
+                .alertType(AlertType.CATEGORY_OVERSPENDING)
+                .body("Category alert body")
+                .processed(false)
+                .build();
+    }
+
+    @Test
+    void processDailySummaries_ShouldNotifyDailyUsersAndProcessEvents() {
+        when(userRepository.findByNotificationFrequencyAndStatus(NotificationFrequency.DAILY, UserStatus.ACTIVE))
+                .thenReturn(List.of(dailyUser));
+        when(notificationEventRepository.findByUserAndProcessedFalse(dailyUser))
+                .thenReturn(List.of(pendingEvent));
+        when(notificationEventRepository.saveAll(any())).thenReturn(List.of(pendingEvent));
+
+        var result = notificationDigestService.processDailySummaries();
+
+        assertEquals(1, result.usersNotified());
+        assertEquals(1, result.eventsProcessed());
+        verify(alertDeliveryService).persistNotification(
+                eq(dailyUser), eq(AlertType.CATEGORY_OVERSPENDING), eq("Category alert body"));
+        verify(notificationSummarySender).sendSummary(
+                eq(dailyUser), eq(AlertType.DAILY_SUMMARY), eq("Tus notificaciones diarias ya están disponibles"));
+        verify(notificationEventRepository).saveAll(any());
+    }
+
+    @Test
+    void processDailySummaries_ShouldSkipUsersWithoutPendingEvents() {
+        when(userRepository.findByNotificationFrequencyAndStatus(NotificationFrequency.DAILY, UserStatus.ACTIVE))
+                .thenReturn(List.of(dailyUser));
+        when(notificationEventRepository.findByUserAndProcessedFalse(dailyUser))
+                .thenReturn(Collections.emptyList());
+
+        var result = notificationDigestService.processDailySummaries();
+
+        assertEquals(0, result.usersNotified());
+        assertEquals(0, result.eventsProcessed());
+        verify(notificationSummarySender, never()).sendSummary(any(), any(), any());
+    }
+
+    @Test
+    void processWeeklySummaries_ShouldNotifyWeeklyUsersAndProcessEvents() {
+        NotificationEvent weeklyEvent = NotificationEvent.builder()
+                .id(2L)
+                .user(weeklyUser)
+                .alertType(AlertType.SAVINGS_GOAL_AT_RISK)
+                .body("Savings alert")
+                .processed(false)
+                .build();
+
+        when(userRepository.findByNotificationFrequencyAndStatus(NotificationFrequency.WEEKLY, UserStatus.ACTIVE))
+                .thenReturn(List.of(weeklyUser));
+        when(notificationEventRepository.findByUserAndProcessedFalse(weeklyUser))
+                .thenReturn(List.of(weeklyEvent));
+        when(notificationEventRepository.saveAll(any())).thenReturn(List.of(weeklyEvent));
+
+        var result = notificationDigestService.processWeeklySummaries();
+
+        assertEquals(1, result.usersNotified());
+        assertEquals(1, result.eventsProcessed());
+        verify(alertDeliveryService).persistNotification(
+                eq(weeklyUser), eq(AlertType.SAVINGS_GOAL_AT_RISK), eq("Savings alert"));
+        verify(notificationSummarySender).sendSummary(
+                eq(weeklyUser), eq(AlertType.WEEKLY_SUMMARY), eq("Tus notificaciones de la semana ya están disponibles"));
+    }
+}
