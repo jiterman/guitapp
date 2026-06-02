@@ -84,7 +84,7 @@ public class AlertDeliveryService {
             emailService.sendAlertEmail(user.getEmail(), title, body);
             return;
         }
-        notificationService.sendPushNotification(user, title, body, alertType.getLogContext());
+        notificationService.sendPushNotification(user, title, body, alertType);
     }
 
     private boolean shouldDeferInstantAlert(User user, AlertType alertType) {
