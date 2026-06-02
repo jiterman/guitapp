@@ -2,6 +2,7 @@ package org.fiuba.guitapp.service;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -207,5 +208,62 @@ class AlertDeliveryServiceTest {
         verify(notificationRepository, never()).save(any());
         verify(emailService, never()).sendAlertEmail(any(), any(), any());
         verify(notificationService, never()).sendPushNotification(any(), any(), any(), any());
+    }
+
+    @Test
+    void deliverAlert_ShouldNotCheckDuplicate_WhenAlertTypeIsNotMonthlySummary() {
+        when(notificationRepository.existsByUserAndTypeAndCreatedAtBetween(eq(testUser),
+                eq(AlertType.CATEGORY_OVERSPENDING), any(), any())).thenReturn(false);
+        testUser.setNotificationChannel(NotificationChannel.PUSH);
+
+        alertDeliveryService.deliverAlert(testUser, AlertType.CATEGORY_OVERSPENDING, BODY);
+
+        verify(notificationService).sendPushNotification(any(), any(), any(), any());
+        verify(notificationRepository).save(any());
+    }
+
+    @Test
+    void deliverAlert_ShouldDeliverImmediately_WhenFrequencyIsNullAndAlertTypeIsNotSummary() {
+        testUser.setNotificationFrequency(null);
+        testUser.setNotificationChannel(NotificationChannel.PUSH);
+
+        alertDeliveryService.deliverAlert(testUser, AlertType.SAVINGS_GOAL_AT_RISK, BODY);
+
+        verify(notificationEventRepository, never()).save(any());
+        verify(notificationService).sendPushNotification(any(), any(), any(), any());
+    }
+
+    @Test
+    void deliverSummaryNotification_ShouldLogError_WhenExceptionOccurs() {
+        testUser.setNotificationChannel(NotificationChannel.PUSH);
+        doThrow(new RuntimeException("Test exception"))
+                .when(notificationService)
+                .sendPushNotification(any(), any(), any(), any());
+
+        alertDeliveryService.deliverSummaryNotification(testUser, AlertType.DAILY_SUMMARY, BODY);
+
+        // Should not throw, just log error
+    }
+
+    @Test
+    void deliverAlert_ShouldDeferWhenFrequencyIsDaily_AndNotSummaryType() {
+        testUser.setNotificationFrequency(NotificationFrequency.DAILY);
+
+        alertDeliveryService.deliverAlert(testUser, AlertType.CATEGORY_OVERSPENDING, BODY);
+
+        verify(notificationEventRepository).save(any(NotificationEvent.class));
+    }
+
+    @Test
+    void deliverAlert_ShouldDeliverImmediatelyMonthlySummary_IgnoringFrequency() {
+        testUser.setNotificationFrequency(NotificationFrequency.WEEKLY);
+        testUser.setNotificationChannel(NotificationChannel.PUSH);
+        when(notificationRepository.existsByUserAndTypeAndCreatedAtBetween(eq(testUser),
+                eq(AlertType.MONTHLY_SUMMARY), any(), any())).thenReturn(false);
+
+        alertDeliveryService.deliverAlert(testUser, AlertType.MONTHLY_SUMMARY, BODY);
+
+        verify(notificationService).sendPushNotification(any(), any(), any(), any());
+        verify(notificationRepository).save(any());
     }
 }

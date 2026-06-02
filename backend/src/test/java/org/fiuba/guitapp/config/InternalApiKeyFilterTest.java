@@ -76,4 +76,20 @@ class InternalApiKeyFilterTest {
 
         assertEquals(401, response.getStatus());
     }
+
+    @Test
+    void shouldNotFilter_ShouldReturnFalse_ForInternalPaths() {
+        MockHttpServletRequest dailyPath = new MockHttpServletRequest();
+        dailyPath.setServletPath("/api/notifications/daily/notify");
+
+        MockHttpServletRequest weeklyPath = new MockHttpServletRequest();
+        weeklyPath.setServletPath("/api/notifications/weekly/notify");
+
+        MockHttpServletRequest monthlyPath = new MockHttpServletRequest();
+        monthlyPath.setServletPath("/api/summary/monthly/notify");
+
+        assertEquals(false, filter.shouldNotFilter(dailyPath));
+        assertEquals(false, filter.shouldNotFilter(weeklyPath));
+        assertEquals(false, filter.shouldNotFilter(monthlyPath));
+    }
 }
