@@ -71,12 +71,23 @@ class ExpenseEventListenerTest {
         testUser.setTargetFixedExpenses(50); // Limit: 50,000
         testUser.setTargetVariableExpenses(30); // Limit: 30,000
 
-        baseDate = LocalDate.now().minusMonths(1).withDayOfMonth(10);
+        baseDate = LocalDate.now().withDayOfMonth(10);
         testExpenseCreatedEvent = new ExpenseCreatedEvent(expenseId, userEmail, amount, baseDate, ExpenseType.VARIABLE);
 
         lenient().when(expenseRepository.findById(expenseId)).thenReturn(Optional.empty());
         lenient().when(expenseRepository.findAllByUserAndDateBetween(eq(testUser), any(LocalDate.class), any(LocalDate.class)))
                 .thenReturn(Collections.emptyList());
+    }
+
+    @Test
+    void handleExpenseCreatedEvent_ShouldSkip_WhenExpenseIsFromPastMonth() {
+        LocalDate pastDate = LocalDate.now().minusMonths(1);
+        testExpenseCreatedEvent = new ExpenseCreatedEvent(expenseId, userEmail, amount, pastDate, ExpenseType.VARIABLE);
+
+        expenseEventListener.handleExpenseCreatedEvent(testExpenseCreatedEvent);
+
+        verify(userRepository, never()).findByEmail(any());
+        verify(alertDeliveryService, never()).deliverAlert(any(), any(), any());
     }
 
     @Test
@@ -403,7 +414,6 @@ class ExpenseEventListenerTest {
 
         LocalDate eventDate = LocalDate.now().minusMonths(2).withDayOfMonth(10);
         testExpenseCreatedEvent = new ExpenseCreatedEvent(expenseId, userEmail, amount, eventDate, ExpenseType.VARIABLE);
-        when(userRepository.findByEmail(userEmail)).thenReturn(Optional.of(testUser));
 
         expenseEventListener.handleExpenseCreatedEvent(testExpenseCreatedEvent);
 
