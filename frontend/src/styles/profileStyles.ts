@@ -52,6 +52,21 @@ export const profileSharedStyles = StyleSheet.create({
     ...profileShadow,
   },
 
+  menuCardSplit: {
+    marginVertical: -vh * 0.5,
+  },
+
+  menuCardRow: {
+    minHeight: vh * 9,
+    justifyContent: 'center',
+  },
+
+  menuCardDivider: {
+    height: 1,
+    backgroundColor: '#D1D5DB',
+    marginHorizontal: screenWidth * 0.04,
+  },
+
   overlay: {
     flex: 1,
     backgroundColor: profileColors.overlay,

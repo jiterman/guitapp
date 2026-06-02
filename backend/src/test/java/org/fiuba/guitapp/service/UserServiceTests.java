@@ -19,6 +19,7 @@ import org.fiuba.guitapp.dto.UserProfileResponse;
 import org.fiuba.guitapp.dto.VerifyEmailChangeRequest;
 import org.fiuba.guitapp.exception.AuthException;
 import org.fiuba.guitapp.exception.ErrorCode;
+import org.fiuba.guitapp.model.NotificationFrequency;
 import org.fiuba.guitapp.model.User;
 import org.fiuba.guitapp.model.UserStatus;
 import org.fiuba.guitapp.repository.UserRepository;
@@ -88,6 +89,7 @@ class UserServiceTests {
         assertEquals(testUser.getId(), response.id());
         assertEquals(testUser.getEmail(), response.email());
         assertEquals(testUser.getFirstName(), response.firstName());
+        assertEquals(NotificationFrequency.INSTANT, response.notificationFrequency());
         assertTrue(response.onboardingCompleted());
         assertEquals(java.math.BigDecimal.valueOf(5000), response.estimatedMonthlyIncome());
         assertEquals(30, response.targetFixedExpenses());
@@ -789,6 +791,31 @@ class UserServiceTests {
                 () -> userService.updateNotificationChannel(
                         testEmail,
                         org.fiuba.guitapp.model.NotificationChannel.PUSH));
+
+        assertEquals(ErrorCode.USER_NOT_FOUND, ex.getErrorCode());
+        verify(userRepository, never()).save(any());
+    }
+
+    @Test
+    void updateNotificationFrequency_ShouldUpdateUser_WhenValidFrequency() {
+        when(userRepository.findByEmail(testEmail)).thenReturn(Optional.of(testUser));
+
+        UserProfileResponse response = userService.updateNotificationFrequency(
+                testEmail,
+                NotificationFrequency.WEEKLY);
+
+        assertEquals(NotificationFrequency.WEEKLY, testUser.getNotificationFrequency());
+        verify(userRepository).save(testUser);
+        assertEquals(NotificationFrequency.WEEKLY, response.notificationFrequency());
+    }
+
+    @Test
+    void updateNotificationFrequency_ShouldThrowException_WhenUserNotFound() {
+        when(userRepository.findByEmail(testEmail)).thenReturn(Optional.empty());
+
+        AuthException ex = assertThrows(
+                AuthException.class,
+                () -> userService.updateNotificationFrequency(testEmail, NotificationFrequency.DAILY));
 
         assertEquals(ErrorCode.USER_NOT_FOUND, ex.getErrorCode());
         verify(userRepository, never()).save(any());

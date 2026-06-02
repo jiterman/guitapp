@@ -5,6 +5,7 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 import org.fiuba.guitapp.model.NotificationChannel;
+import org.fiuba.guitapp.model.NotificationFrequency;
 
 public record UserProfileResponse(
         UUID id,
@@ -18,5 +19,6 @@ public record UserProfileResponse(
         Integer targetVariableExpenses,
         Integer targetSavings,
         NotificationChannel notificationChannel,
+        NotificationFrequency notificationFrequency,
         LocalDateTime createdAt) {
 }

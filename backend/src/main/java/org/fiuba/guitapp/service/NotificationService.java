@@ -3,6 +3,7 @@ package org.fiuba.guitapp.service;
 import org.fiuba.guitapp.model.User;
 import org.springframework.stereotype.Service;
 
+import com.google.firebase.FirebaseApp;
 import com.google.firebase.messaging.AndroidConfig;
 import com.google.firebase.messaging.AndroidNotification;
 import com.google.firebase.messaging.FirebaseMessaging;
@@ -17,6 +18,12 @@ public class NotificationService {
 
     public void sendPushNotification(User user, String title, String body, String logContext) {
         if (user.getFcmToken() == null || user.getFcmToken().isEmpty()) {
+            log.warn("Push omitido para {}: sin token FCM registrado", user.getEmail());
+            return;
+        }
+
+        if (!isFirebaseInitialized()) {
+            log.warn("Push omitido para {} ({}): Firebase no está inicializado", user.getEmail(), logContext);
             return;
         }
 
@@ -45,5 +52,9 @@ public class NotificationService {
         } catch (Exception e) {
             log.error("Error al enviar notificacion FCM ({}) al usuario {}", logContext, user.getEmail(), e);
         }
+    }
+
+    private boolean isFirebaseInitialized() {
+        return !FirebaseApp.getApps().isEmpty();
     }
 }

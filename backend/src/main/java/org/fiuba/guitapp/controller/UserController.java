@@ -11,6 +11,7 @@ import org.fiuba.guitapp.dto.UpdateEstimatedMonthlyIncomeRequest;
 import org.fiuba.guitapp.dto.UpdateExpensesStructureRequest;
 import org.fiuba.guitapp.dto.UpdateFcmTokenRequest;
 import org.fiuba.guitapp.dto.UpdateNotificationChannelRequest;
+import org.fiuba.guitapp.dto.UpdateNotificationFrequencyRequest;
 import org.fiuba.guitapp.dto.UpdateUserProfileRequest;
 import org.fiuba.guitapp.dto.UserProfileResponse;
 import org.fiuba.guitapp.dto.VerifyEmailChangeRequest;
@@ -129,6 +130,17 @@ public class UserController {
         UserProfileResponse response = userService.updateNotificationChannel(
                 principal.getName(),
                 request.notificationChannel());
+        return ResponseEntity.ok(response);
+    }
+
+    @PatchMapping("/me/notification-frequency")
+    public ResponseEntity<UserProfileResponse> updateNotificationFrequency(
+            Principal principal,
+            @Valid @RequestBody UpdateNotificationFrequencyRequest request) {
+
+        UserProfileResponse response = userService.updateNotificationFrequency(
+                principal.getName(),
+                request.notificationFrequency());
         return ResponseEntity.ok(response);
     }
 
