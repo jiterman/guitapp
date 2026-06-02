@@ -55,4 +55,25 @@ class InternalApiKeyFilterTest {
 
         assertEquals(true, filter.shouldNotFilter(request));
     }
+
+    @Test
+    void doFilterInternal_ShouldReturnUnauthorized_WhenApiKeyIsInvalid() throws Exception {
+        MockHttpServletRequest request = new MockHttpServletRequest("POST", "/api/notifications/daily/notify");
+        request.addHeader("X-Internal-Key", "wrong-key");
+
+        filter.doFilterInternal(request, response, filterChain);
+
+        assertEquals(401, response.getStatus());
+        verify(filterChain, never()).doFilter(request, response);
+    }
+
+    @Test
+    void doFilterInternal_ShouldReturnUnauthorized_WhenApiKeyIsIncorrect() throws Exception {
+        MockHttpServletRequest request = new MockHttpServletRequest("POST", "/api/summary/monthly/notify");
+        request.addHeader("X-Internal-Key", "invalid");
+
+        filter.doFilterInternal(request, response, filterChain);
+
+        assertEquals(401, response.getStatus());
+    }
 }

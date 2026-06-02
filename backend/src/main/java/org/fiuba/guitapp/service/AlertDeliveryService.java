@@ -27,9 +27,6 @@ public class AlertDeliveryService {
             AlertType.DAILY_SUMMARY,
             AlertType.WEEKLY_SUMMARY);
 
-    private static final Set<AlertType> ONCE_PER_MONTH_ALERT_TYPES = Set.of(
-            AlertType.MONTHLY_SUMMARY);
-
     private final NotificationService notificationService;
     private final EmailService emailService;
     private final NotificationRepository notificationRepository;

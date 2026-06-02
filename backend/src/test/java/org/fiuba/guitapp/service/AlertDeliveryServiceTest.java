@@ -51,8 +51,6 @@ class AlertDeliveryServiceTest {
     @Test
     void deliverAlert_ShouldSendEmail_WhenChannelIsEmail() {
         testUser.setNotificationChannel(NotificationChannel.EMAIL);
-        when(notificationRepository.existsByUserAndTypeAndCreatedAtBetween(eq(testUser),
-                eq(AlertType.FIXED_EXPENSE_THRESHOLD_EXCEEDED), any(), any())).thenReturn(false);
 
         alertDeliveryService.deliverAlert(testUser, AlertType.FIXED_EXPENSE_THRESHOLD_EXCEEDED, BODY);
 
@@ -71,8 +69,6 @@ class AlertDeliveryServiceTest {
     @Test
     void deliverAlert_ShouldSendPush_WhenChannelIsPushAndTokenPresent() {
         testUser.setNotificationChannel(NotificationChannel.PUSH);
-        when(notificationRepository.existsByUserAndTypeAndCreatedAtBetween(eq(testUser),
-                eq(AlertType.CATEGORY_OVERSPENDING), any(), any())).thenReturn(false);
 
         alertDeliveryService.deliverAlert(testUser, AlertType.CATEGORY_OVERSPENDING, BODY);
 
@@ -91,8 +87,6 @@ class AlertDeliveryServiceTest {
     @Test
     void deliverAlert_ShouldDefaultToPush_WhenChannelIsNull() {
         testUser.setNotificationChannel(null);
-        when(notificationRepository.existsByUserAndTypeAndCreatedAtBetween(eq(testUser),
-                eq(AlertType.NEGATIVE_BALANCE_RISK), any(), any())).thenReturn(false);
 
         alertDeliveryService.deliverAlert(testUser, AlertType.NEGATIVE_BALANCE_RISK, BODY);
 
@@ -111,8 +105,6 @@ class AlertDeliveryServiceTest {
     @Test
     void deliverAlert_ShouldNotSendEmail_WhenChannelIsPush() {
         testUser.setNotificationChannel(NotificationChannel.PUSH);
-        when(notificationRepository.existsByUserAndTypeAndCreatedAtBetween(eq(testUser),
-                eq(AlertType.SAVINGS_GOAL_AT_RISK), any(), any())).thenReturn(false);
 
         alertDeliveryService.deliverAlert(testUser, AlertType.SAVINGS_GOAL_AT_RISK, BODY);
 
@@ -205,11 +197,12 @@ class AlertDeliveryServiceTest {
         verify(notificationRepository, never()).save(any());
     }
 
+    @Test
     void deliverAlert_ShouldNotSend_WhenAlreadySentThisMonth() {
         when(notificationRepository.existsByUserAndTypeAndCreatedAtBetween(eq(testUser),
-                eq(AlertType.FIXED_EXPENSE_THRESHOLD_EXCEEDED), any(), any())).thenReturn(true);
+                eq(AlertType.MONTHLY_SUMMARY), any(), any())).thenReturn(true);
 
-        alertDeliveryService.deliverAlert(testUser, AlertType.FIXED_EXPENSE_THRESHOLD_EXCEEDED, BODY);
+        alertDeliveryService.deliverAlert(testUser, AlertType.MONTHLY_SUMMARY, BODY);
 
         verify(notificationRepository, never()).save(any());
         verify(emailService, never()).sendAlertEmail(any(), any(), any());
