@@ -7,7 +7,7 @@ import org.springframework.stereotype.Service;
 import lombok.RequiredArgsConstructor;
 
 /**
- * Sends digest summary notifications outside the digest persistence transaction so delivery failures cannot roll back processed notification events.
+ * Sends digest summary push/email reminders without creating or modifying in-app notifications.
  */
 @Service
 @RequiredArgsConstructor

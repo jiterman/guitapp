@@ -68,6 +68,10 @@ const NotificationsScreen: React.FC = () => {
 
   useEffect(() => {
     loadNotifications();
+    const unsubscribe = eventEmitter.on('notificationReceived', () => {
+      loadNotifications();
+    });
+    return unsubscribe;
   }, [loadNotifications]);
 
   const handleRefresh = () => {

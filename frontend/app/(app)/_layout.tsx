@@ -35,7 +35,7 @@ export default function AppLayout() {
       loadUnreadCount();
       const interval = setInterval(loadUnreadCount, 60000);
 
-      // Listen for real-time notifications
+      // Push (INSTANT) or in-app refresh after expense alerts (DAILY/WEEKLY)
       const unsubscribe = eventEmitter.on('notificationReceived', () => {
         loadUnreadCount();
       });

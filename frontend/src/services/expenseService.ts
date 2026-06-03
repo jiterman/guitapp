@@ -1,5 +1,6 @@
 import { authService, API_URL } from './authService';
 import type { ExpenseCategory, ExpenseType } from '../constants/categories';
+import { scheduleNotificationBadgeRefresh } from '../utils/notificationBadge';
 
 export interface AddExpenseRequest {
   amount: number;
@@ -42,7 +43,9 @@ const addExpense = async (request: AddExpenseRequest): Promise<ExpenseResponse> 
     throw { code: error.code, message: error.message };
   }
 
-  return response.json();
+  const created = await response.json();
+  scheduleNotificationBadgeRefresh();
+  return created;
 };
 
 const updateExpense = async (
@@ -64,7 +67,9 @@ const updateExpense = async (
     throw { code: error.code, message: error.message ?? 'Update expense failed' };
   }
 
-  return response.json();
+  const updated = await response.json();
+  scheduleNotificationBadgeRefresh();
+  return updated;
 };
 
 const getExpenseById = async (expenseId: string): Promise<ExpenseResponse> => {
