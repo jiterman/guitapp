@@ -3,10 +3,9 @@ package org.fiuba.guitapp.controller;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import org.fiuba.guitapp.dto.NotificationDigestJobResponse;
 import org.fiuba.guitapp.service.NotificationDigestService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,28 +28,24 @@ class NotificationJobControllerTests {
 
     @Test
     void sendDailySummaryNotifications_ShouldReturnOk_WithApiKey() throws Exception {
-        when(notificationDigestService.processDailySummaries())
-                .thenReturn(new NotificationDigestJobResponse(2, 5));
+        when(notificationDigestService.processDailySummaries()).thenReturn(2);
 
         mockMvc.perform(post("/api/notifications/daily/notify")
                 .header("X-Internal-Key", "test-internal-key"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.usersNotified").value(2))
-                .andExpect(jsonPath("$.eventsProcessed").value(5));
+                .andExpect(content().string("2"));
 
         verify(notificationDigestService).processDailySummaries();
     }
 
     @Test
     void sendWeeklySummaryNotifications_ShouldReturnOk_WithApiKey() throws Exception {
-        when(notificationDigestService.processWeeklySummaries())
-                .thenReturn(new NotificationDigestJobResponse(1, 3));
+        when(notificationDigestService.processWeeklySummaries()).thenReturn(1);
 
         mockMvc.perform(post("/api/notifications/weekly/notify")
                 .header("X-Internal-Key", "test-internal-key"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.usersNotified").value(1))
-                .andExpect(jsonPath("$.eventsProcessed").value(3));
+                .andExpect(content().string("1"));
 
         verify(notificationDigestService).processWeeklySummaries();
     }
