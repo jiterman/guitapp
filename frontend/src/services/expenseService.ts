@@ -1,4 +1,5 @@
 import { authService, API_URL } from './authService';
+import { eventEmitter } from '../utils/eventEmitter';
 import type { ExpenseCategory, ExpenseType } from '../constants/categories';
 
 export interface AddExpenseRequest {
@@ -42,7 +43,9 @@ const addExpense = async (request: AddExpenseRequest): Promise<ExpenseResponse> 
     throw { code: error.code, message: error.message };
   }
 
-  return response.json();
+  const expense = await response.json();
+  eventEmitter.emit('notificationsUpdated');
+  return expense;
 };
 
 const updateExpense = async (

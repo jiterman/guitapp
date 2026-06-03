@@ -35,8 +35,11 @@ export default function AppLayout() {
       loadUnreadCount();
       const interval = setInterval(loadUnreadCount, 60000);
 
-      // Listen for real-time notifications
+      // Listen for push notifications and server-side notification changes (e.g. daily/weekly digest)
       const unsubscribe = eventEmitter.on('notificationReceived', () => {
+        loadUnreadCount();
+      });
+      const unsubscribeUpdated = eventEmitter.on('notificationsUpdated', () => {
         loadUnreadCount();
       });
 
@@ -48,6 +51,7 @@ export default function AppLayout() {
       return () => {
         clearInterval(interval);
         unsubscribe();
+        unsubscribeUpdated();
         unsubscribeRead();
       };
     }

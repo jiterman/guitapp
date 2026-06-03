@@ -1,6 +1,5 @@
 package org.fiuba.guitapp.controller;
 
-import org.fiuba.guitapp.dto.NotificationDigestJobResponse;
 import org.fiuba.guitapp.service.NotificationDigestService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -17,14 +16,14 @@ public class NotificationJobController {
     private final NotificationDigestService notificationDigestService;
 
     @PostMapping("/daily/notify")
-    public ResponseEntity<NotificationDigestJobResponse> sendDailySummaryNotifications() {
-        NotificationDigestJobResponse response = notificationDigestService.processDailySummaries();
-        return ResponseEntity.ok(response);
+    public ResponseEntity<Integer> sendDailySummaryNotifications() {
+        int usersNotified = notificationDigestService.processDailySummaries();
+        return ResponseEntity.ok(usersNotified);
     }
 
     @PostMapping("/weekly/notify")
-    public ResponseEntity<NotificationDigestJobResponse> sendWeeklySummaryNotifications() {
-        NotificationDigestJobResponse response = notificationDigestService.processWeeklySummaries();
-        return ResponseEntity.ok(response);
+    public ResponseEntity<Integer> sendWeeklySummaryNotifications() {
+        int usersNotified = notificationDigestService.processWeeklySummaries();
+        return ResponseEntity.ok(usersNotified);
     }
 }

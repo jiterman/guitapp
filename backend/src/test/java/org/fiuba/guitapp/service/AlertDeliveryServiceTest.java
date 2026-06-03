@@ -9,10 +9,8 @@ import static org.mockito.Mockito.when;
 
 import org.fiuba.guitapp.model.AlertType;
 import org.fiuba.guitapp.model.NotificationChannel;
-import org.fiuba.guitapp.model.NotificationEvent;
 import org.fiuba.guitapp.model.NotificationFrequency;
 import org.fiuba.guitapp.model.User;
-import org.fiuba.guitapp.repository.NotificationEventRepository;
 import org.fiuba.guitapp.repository.NotificationRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -32,9 +30,6 @@ class AlertDeliveryServiceTest {
 
     @Mock
     private NotificationRepository notificationRepository;
-
-    @Mock
-    private NotificationEventRepository notificationEventRepository;
 
     @InjectMocks
     private AlertDeliveryService alertDeliveryService;
@@ -123,7 +118,6 @@ class AlertDeliveryServiceTest {
 
         alertDeliveryService.deliverAlert(testUser, AlertType.CATEGORY_OVERSPENDING, BODY);
 
-        verify(notificationEventRepository, never()).save(any());
         verify(notificationService).sendPushNotification(
                 testUser,
                 AlertType.CATEGORY_OVERSPENDING.getTitle(),
@@ -133,26 +127,25 @@ class AlertDeliveryServiceTest {
     }
 
     @Test
-    void deliverAlert_ShouldRecordPendingEvent_WhenFrequencyIsDaily() {
+    void deliverAlert_ShouldPersistNotificationWithoutSending_WhenFrequencyIsDaily() {
         testUser.setNotificationFrequency(NotificationFrequency.DAILY);
 
         alertDeliveryService.deliverAlert(testUser, AlertType.SAVINGS_GOAL_AT_RISK, BODY);
 
-        verify(notificationEventRepository).save(any(NotificationEvent.class));
-        verify(notificationRepository, never()).save(any());
+        verify(notificationRepository).save(any());
         verify(notificationService, never()).sendPushNotification(any(), any(), any(), any());
         verify(emailService, never()).sendAlertEmail(any(), any(), any());
     }
 
     @Test
-    void deliverAlert_ShouldRecordPendingEvent_WhenFrequencyIsWeekly() {
+    void deliverAlert_ShouldPersistNotificationWithoutSending_WhenFrequencyIsWeekly() {
         testUser.setNotificationFrequency(NotificationFrequency.WEEKLY);
 
         alertDeliveryService.deliverAlert(testUser, AlertType.NEGATIVE_BALANCE_RISK, BODY);
 
-        verify(notificationEventRepository).save(any(NotificationEvent.class));
-        verify(notificationRepository, never()).save(any());
+        verify(notificationRepository).save(any());
         verify(notificationService, never()).sendPushNotification(any(), any(), any(), any());
+        verify(emailService, never()).sendAlertEmail(any(), any(), any());
     }
 
     @Test
@@ -162,12 +155,12 @@ class AlertDeliveryServiceTest {
 
         alertDeliveryService.deliverAlert(testUser, AlertType.MONTHLY_SUMMARY, BODY);
 
-        verify(notificationEventRepository, never()).save(any());
         verify(notificationService).sendPushNotification(
                 testUser,
                 AlertType.MONTHLY_SUMMARY.getTitle(),
                 BODY,
                 AlertType.MONTHLY_SUMMARY.getLogContext());
+        verify(notificationRepository).save(any());
     }
 
     @Test
@@ -229,8 +222,8 @@ class AlertDeliveryServiceTest {
 
         alertDeliveryService.deliverAlert(testUser, AlertType.SAVINGS_GOAL_AT_RISK, BODY);
 
-        verify(notificationEventRepository, never()).save(any());
         verify(notificationService).sendPushNotification(any(), any(), any(), any());
+        verify(notificationRepository).save(any());
     }
 
     @Test
@@ -246,12 +239,13 @@ class AlertDeliveryServiceTest {
     }
 
     @Test
-    void deliverAlert_ShouldDeferWhenFrequencyIsDaily_AndNotSummaryType() {
+    void deliverAlert_ShouldPersistWithoutSending_WhenFrequencyIsDaily_AndNotSummaryType() {
         testUser.setNotificationFrequency(NotificationFrequency.DAILY);
 
         alertDeliveryService.deliverAlert(testUser, AlertType.CATEGORY_OVERSPENDING, BODY);
 
-        verify(notificationEventRepository).save(any(NotificationEvent.class));
+        verify(notificationRepository).save(any());
+        verify(notificationService, never()).sendPushNotification(any(), any(), any(), any());
     }
 
     @Test
