@@ -9,6 +9,7 @@ import org.fiuba.guitapp.model.Notification;
 import org.fiuba.guitapp.model.NotificationChannel;
 import org.fiuba.guitapp.model.NotificationFrequency;
 import org.fiuba.guitapp.model.User;
+import org.fiuba.guitapp.repository.NotificationEventRepository;
 import org.fiuba.guitapp.repository.NotificationRepository;
 import org.springframework.stereotype.Service;
 
@@ -28,6 +29,7 @@ public class AlertDeliveryService {
     private final NotificationService notificationService;
     private final EmailService emailService;
     private final NotificationRepository notificationRepository;
+    private final NotificationEventRepository notificationEventRepository;
 
     public void deliverAlert(User user, AlertType alertType, String body) {
         // if (isAlreadySentThisMonth(user, alertType)) {
@@ -35,6 +37,32 @@ public class AlertDeliveryService {
         // return;
         // }
 
+        if (shouldDeferInstantAlert(user, alertType)) {
+            recordPendingEvent(user, alertType, body);
+            return;
+        }
+
+        deliverImmediately(user, alertType, body);
+    }
+
+    public void persistNotification(User user, AlertType alertType, String body) {
+        saveNotification(user, alertType, body);
+    }
+
+    public void deliverSummaryNotification(User user, AlertType alertType, String body) {
+        try {
+            deliverSummaryImmediately(user, alertType, body);
+            log.info("Resumen {} entregado a {}", alertType, user.getEmail());
+        } catch (Exception e) {
+            log.error(
+                    "No se pudo enviar el resumen {} al usuario {}",
+                    alertType,
+                    user.getEmail(),
+                    e);
+        }
+    }
+
+    private void deliverImmediately(User user, AlertType alertType, String body) {
         saveNotification(user, alertType, body);
 
         if (shouldSendImmediately(user, alertType)) {

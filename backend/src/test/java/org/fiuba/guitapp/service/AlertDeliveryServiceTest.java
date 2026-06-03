@@ -11,6 +11,7 @@ import org.fiuba.guitapp.model.AlertType;
 import org.fiuba.guitapp.model.NotificationChannel;
 import org.fiuba.guitapp.model.NotificationFrequency;
 import org.fiuba.guitapp.model.User;
+import org.fiuba.guitapp.repository.NotificationEventRepository;
 import org.fiuba.guitapp.repository.NotificationRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -30,6 +31,9 @@ class AlertDeliveryServiceTest {
 
     @Mock
     private NotificationRepository notificationRepository;
+
+    @Mock
+    private NotificationEventRepository notificationEventRepository;
 
     @InjectMocks
     private AlertDeliveryService alertDeliveryService;
