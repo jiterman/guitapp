@@ -1,8 +1,8 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import { Alert, TouchableOpacity, View } from 'react-native';
 import { Layout, Text } from '@ui-kitten/components';
 import { Ionicons, Feather } from '@expo/vector-icons';
-import { router, useLocalSearchParams } from 'expo-router';
+import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import type { ExpenseResponse } from '../services/expenseService';
 import { expenseService } from '../services/expenseService';
 import { getCategoryLabel, getCategoryIcon } from '../constants/categories';
@@ -20,26 +20,29 @@ const ExpenseDetailScreen: React.FC = () => {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isDeleting, setIsDeleting] = useState<boolean>(false);
 
-  useEffect(() => {
-    let mounted = true;
-    (async () => {
-      try {
-        if (!expenseId) {
+  useFocusEffect(
+    useCallback(() => {
+      let mounted = true;
+      setIsLoading(true);
+      (async () => {
+        try {
+          if (!expenseId) {
+            if (mounted) setExpense(null);
+            return;
+          }
+          const found = await expenseService.getExpenseById(expenseId);
+          if (mounted) setExpense(found);
+        } catch {
           if (mounted) setExpense(null);
-          return;
+        } finally {
+          if (mounted) setIsLoading(false);
         }
-        const found = await expenseService.getExpenseById(expenseId);
-        if (mounted) setExpense(found);
-      } catch {
-        if (mounted) setExpense(null);
-      } finally {
-        if (mounted) setIsLoading(false);
-      }
-    })();
-    return () => {
-      mounted = false;
-    };
-  }, [expenseId]);
+      })();
+      return () => {
+        mounted = false;
+      };
+    }, [expenseId])
+  );
 
   const title = useMemo(() => {
     if (isLoading) return 'Detalle';
