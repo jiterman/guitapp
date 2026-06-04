@@ -14,8 +14,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import { router, useLocalSearchParams } from 'expo-router';
-import * as ImagePicker from 'expo-image-picker';
 import * as ImageManipulator from 'expo-image-manipulator';
+import CameraModal from '../components/CameraModal/CameraModal';
 import { expenseService } from '../services/expenseService';
 import type { ExpenseType } from '../constants/categories';
 import {
@@ -55,46 +55,16 @@ const AddExpenseScreen = () => {
   const [categoryError, setCategoryError] = useState<string | null>(null);
   const [typeError, setTypeError] = useState<string | null>(null);
   const [scanningReceipt, setScanningReceipt] = useState(false);
+  const [cameraVisible, setCameraVisible] = useState(false);
 
-  const onScanReceipt = () => {
-    Alert.alert('Escanear ticket', 'Elegí una opción', [
-      {
-        text: 'Cámara',
-        onPress: () => pickImage('camera'),
-      },
-      {
-        text: 'Galería',
-        onPress: () => pickImage('gallery'),
-      },
-      { text: 'Cancelar', style: 'cancel' },
-    ]);
-  };
+  const onScanReceipt = () => setCameraVisible(true);
 
-  const pickImage = async (source: 'camera' | 'gallery') => {
-    let result: ImagePicker.ImagePickerResult;
-    if (source === 'camera') {
-      const { status } = await ImagePicker.requestCameraPermissionsAsync();
-      if (status !== 'granted') {
-        Alert.alert('Permiso requerido', 'Necesitamos acceso a la cámara para escanear el ticket.');
-        return;
-      }
-      result = await ImagePicker.launchCameraAsync({
-        mediaTypes: ['images'],
-        quality: 0.9,
-      });
-    } else {
-      result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ['images'],
-        quality: 0.9,
-      });
-    }
-
-    if (result.canceled || !result.assets[0]) return;
-
+  const onImageCaptured = async (uri: string) => {
+    setCameraVisible(false);
     setScanningReceipt(true);
     try {
       const manipulated = await ImageManipulator.manipulateAsync(
-        result.assets[0].uri,
+        uri,
         [{ resize: { width: 800 } }],
         { compress: 0.7, format: ImageManipulator.SaveFormat.JPEG }
       );
@@ -434,6 +404,12 @@ const AddExpenseScreen = () => {
           maximumDate={new Date()}
         />
       )}
+
+      <CameraModal
+        visible={cameraVisible}
+        onClose={() => setCameraVisible(false)}
+        onCapture={onImageCaptured}
+      />
     </>
   );
 };
