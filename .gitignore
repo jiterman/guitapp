@@ -3,3 +3,4 @@
 CLAUDE.md
 config_local
 backend/local.properties
+seed_data.sh

@@ -29,6 +29,31 @@ export const transactionFormStyles = StyleSheet.create({
     justifyContent: 'space-between',
     marginBottom: vh * 1.5,
   },
+  subHeaderActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  scanButton: {
+    padding: 4,
+  },
+  scanOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(230, 242, 252, 0.9)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 10,
+  },
+  scanOverlayText: {
+    marginTop: 12,
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#003366',
+  },
   closeButton: {
     fontSize: 20,
     color: '#006699',
