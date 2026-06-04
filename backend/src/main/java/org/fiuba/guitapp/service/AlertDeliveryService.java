@@ -7,10 +7,8 @@ import java.util.Set;
 import org.fiuba.guitapp.model.AlertType;
 import org.fiuba.guitapp.model.Notification;
 import org.fiuba.guitapp.model.NotificationChannel;
-import org.fiuba.guitapp.model.NotificationEvent;
 import org.fiuba.guitapp.model.NotificationFrequency;
 import org.fiuba.guitapp.model.User;
-import org.fiuba.guitapp.repository.NotificationEventRepository;
 import org.fiuba.guitapp.repository.NotificationRepository;
 import org.springframework.stereotype.Service;
 
@@ -22,15 +20,11 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class AlertDeliveryService {
 
-    private static final Set<AlertType> SUMMARY_ALERT_TYPES = Set.of(
-            AlertType.MONTHLY_SUMMARY,
-            AlertType.DAILY_SUMMARY,
-            AlertType.WEEKLY_SUMMARY);
+    private static final Set<AlertType> IMMEDIATE_SUMMARY_ALERT_TYPES = Set.of(AlertType.MONTHLY_SUMMARY);
 
     private final NotificationService notificationService;
     private final EmailService emailService;
     private final NotificationRepository notificationRepository;
-    private final NotificationEventRepository notificationEventRepository;
 
     public void deliverAlert(User user, AlertType alertType, String body) {
         if (isAlreadySentThisMonth(user, alertType)) {
@@ -38,21 +32,16 @@ public class AlertDeliveryService {
             return;
         }
 
-        if (shouldDeferInstantAlert(user, alertType)) {
-            recordPendingEvent(user, alertType, body);
-            return;
-        }
-
-        deliverImmediately(user, alertType, body);
-    }
-
-    public void persistNotification(User user, AlertType alertType, String body) {
         saveNotification(user, alertType, body);
+
+        if (shouldSendImmediately(user, alertType)) {
+            sendAlert(user, alertType, body);
+        }
     }
 
     public void deliverSummaryNotification(User user, AlertType alertType, String body) {
         try {
-            deliverSummaryImmediately(user, alertType, body);
+            sendAlert(user, alertType, body);
             log.info("Resumen {} entregado a {}", alertType, user.getEmail());
         } catch (Exception e) {
             log.error(
@@ -63,9 +52,7 @@ public class AlertDeliveryService {
         }
     }
 
-    private void deliverImmediately(User user, AlertType alertType, String body) {
-        saveNotification(user, alertType, body);
-
+    private void sendAlert(User user, AlertType alertType, String body) {
         NotificationChannel channel = resolveChannel(user);
         String title = alertType.getTitle();
         if (channel == NotificationChannel.EMAIL) {
@@ -77,36 +64,15 @@ public class AlertDeliveryService {
         notificationService.sendPushNotification(user, title, body, alertType);
     }
 
-    private void deliverSummaryImmediately(User user, AlertType alertType, String body) {
-        NotificationChannel channel = resolveChannel(user);
-        String title = alertType.getTitle();
-        if (channel == NotificationChannel.EMAIL) {
-            emailService.sendAlertEmail(user.getEmail(), title, body);
-            return;
-        }
-        notificationService.sendPushNotification(user, title, body, alertType);
-    }
-
-    private boolean shouldDeferInstantAlert(User user, AlertType alertType) {
-        if (SUMMARY_ALERT_TYPES.contains(alertType)) {
-            return false;
+    private boolean shouldSendImmediately(User user, AlertType alertType) {
+        if (IMMEDIATE_SUMMARY_ALERT_TYPES.contains(alertType)) {
+            return true;
         }
         NotificationFrequency frequency = user.getNotificationFrequency();
         if (frequency == null) {
-            frequency = NotificationFrequency.INSTANT;
+            return true;
         }
-        return frequency != NotificationFrequency.INSTANT;
-    }
-
-    private void recordPendingEvent(User user, AlertType alertType, String body) {
-        NotificationEvent event = NotificationEvent.builder()
-                .user(user)
-                .alertType(alertType)
-                .body(body)
-                .createdAt(LocalDateTime.now())
-                .processed(false)
-                .build();
-        notificationEventRepository.save(event);
+        return frequency == NotificationFrequency.INSTANT;
     }
 
     private void saveNotification(User user, AlertType alertType, String body) {
