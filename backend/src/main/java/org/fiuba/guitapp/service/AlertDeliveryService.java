@@ -61,7 +61,7 @@ public class AlertDeliveryService {
             return;
         }
         System.out.println("Enviando notificación por canal " + channel);
-        notificationService.sendPushNotification(user, title, body, alertType.getLogContext());
+        notificationService.sendPushNotification(user, title, body, alertType);
     }
 
     private boolean shouldSendImmediately(User user, AlertType alertType) {

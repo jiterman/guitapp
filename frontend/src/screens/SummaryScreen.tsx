@@ -14,7 +14,7 @@ import MovementFilter, { FilterState } from '../components/MovementFilter/Moveme
 import TransactionCard from '../components/TransactionCard/TransactionCard';
 import StatsCard from '../components/StatsCard/StatsCard';
 import MonthlySummaryScreen from './MonthlySummaryScreen';
-import { router } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import { useIsFocused } from '@react-navigation/native';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
@@ -44,7 +44,8 @@ const applyTypeFilter = (data: MovementResponse[], movementType: FilterState['mo
 };
 
 const SummaryScreen: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<Tab>('movements');
+  const { tab } = useLocalSearchParams<{ tab?: string }>();
+  const [activeTab, setActiveTab] = useState<Tab>(tab === 'monthly' ? 'monthly' : 'movements');
   const [movements, setMovements] = useState<MovementResponse[]>([]);
   const [periodMovements, setPeriodMovements] = useState<MovementResponse[]>([]);
   const [filterState, setFilterState] = useState<FilterState>(() => buildInitialFilter());

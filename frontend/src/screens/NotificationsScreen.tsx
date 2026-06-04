@@ -43,8 +43,19 @@ const getNotificationIcon = (type: AlertType) => {
       return { name: 'alert-circle-outline' as const, color: '#c0392b' };
     case 'CATEGORY_OVERSPENDING':
       return { name: 'stats-chart-outline' as const, color: '#3498db' };
+    case 'MONTHLY_SUMMARY':
+      return { name: 'calendar-outline' as const, color: '#07a3e4' };
     default:
       return { name: 'notifications-outline' as const, color: '#95a5a6' };
+  }
+};
+
+const getNotificationRoute = (type: AlertType): string | null => {
+  switch (type) {
+    case 'MONTHLY_SUMMARY':
+      return '/summary?tab=monthly';
+    default:
+      return null;
   }
 };
 
@@ -95,15 +106,26 @@ const NotificationsScreen: React.FC = () => {
     }
   };
 
+  const handleNotificationPress = async (item: Notification) => {
+    if (!item.read) {
+      await handleMarkAsRead(item.id);
+    }
+    const route = getNotificationRoute(item.type);
+    if (route) {
+      router.push(route as Parameters<typeof router.push>[0]);
+    }
+  };
+
   const renderItem = ({ item }: { item: Notification }) => {
     const icon = getNotificationIcon(item.type);
     const date = new Date(item.createdAt);
+    const isNavigable = getNotificationRoute(item.type) !== null;
 
     return (
       <TouchableOpacity
         style={[styles.notificationItem, !item.read && styles.unreadItem]}
-        onPress={() => !item.read && handleMarkAsRead(item.id)}
-        disabled={item.read}
+        onPress={() => handleNotificationPress(item)}
+        disabled={item.read && !isNavigable}
       >
         <View style={styles.iconContainer}>
           <Ionicons name={icon.name} size={24} color={icon.color} />

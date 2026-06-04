@@ -5,7 +5,8 @@ export type AlertType =
   | 'VARIABLE_EXPENSE_THRESHOLD_EXCEEDED'
   | 'SAVINGS_GOAL_AT_RISK'
   | 'NEGATIVE_BALANCE_RISK'
-  | 'CATEGORY_OVERSPENDING';
+  | 'CATEGORY_OVERSPENDING'
+  | 'MONTHLY_SUMMARY';
 
 export interface Notification {
   id: number;
