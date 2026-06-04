@@ -66,7 +66,7 @@ class NotificationDigestIntegrationTest {
                 dailyUser, AlertType.CATEGORY_OVERSPENDING, "Gasto elevado en supermercado");
 
         assertEquals(1, notificationRepository.count());
-        verify(notificationService, never()).sendPushNotification(any(), anyString(), anyString(), anyString());
+        verify(notificationService, never()).sendPushNotification(any(), anyString(), anyString(), any(AlertType.class));
     }
 
     @Test
@@ -76,7 +76,7 @@ class NotificationDigestIntegrationTest {
                 weeklyUser, AlertType.SAVINGS_GOAL_AT_RISK, "Meta de ahorro en riesgo");
 
         assertEquals(1, notificationRepository.count());
-        verify(notificationService, never()).sendPushNotification(any(), anyString(), anyString(), anyString());
+        verify(notificationService, never()).sendPushNotification(any(), anyString(), anyString(), any(AlertType.class));
     }
 
     @Test
@@ -86,7 +86,7 @@ class NotificationDigestIntegrationTest {
                 instantUser, AlertType.NEGATIVE_BALANCE_RISK, "Saldo negativo proyectado");
 
         assertEquals(1, notificationRepository.count());
-        verify(notificationService, times(1)).sendPushNotification(any(), anyString(), anyString(), anyString());
+        verify(notificationService, times(1)).sendPushNotification(any(), anyString(), anyString(), any(AlertType.class));
     }
 
     @Test
@@ -100,7 +100,7 @@ class NotificationDigestIntegrationTest {
 
         assertEquals(1, usersNotified);
         assertEquals(notificationsBeforeJob, notificationRepository.count());
-        verify(notificationService, times(1)).sendPushNotification(any(), anyString(), anyString(), anyString());
+        verify(notificationService, times(1)).sendPushNotification(any(), anyString(), anyString(), any(AlertType.class));
     }
 
     @Test
@@ -114,7 +114,7 @@ class NotificationDigestIntegrationTest {
 
         assertEquals(1, usersNotified);
         assertEquals(notificationsBeforeJob, notificationRepository.count());
-        verify(notificationService, times(1)).sendPushNotification(any(), anyString(), anyString(), anyString());
+        verify(notificationService, times(1)).sendPushNotification(any(), anyString(), anyString(), any(AlertType.class));
     }
 
     private User createUser(NotificationFrequency frequency, String prefix) {
