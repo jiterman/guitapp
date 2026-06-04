@@ -204,7 +204,8 @@ const AddExpenseScreen = () => {
               style={styles.scanButton}
               disabled={scanningReceipt}
             >
-              <Ionicons name="camera-outline" size={ICON_SIZES.large} color={ICON_COLORS.primary} />
+              <Ionicons name="camera-outline" size={18} color={ICON_COLORS.primary} />
+              <Text style={styles.scanButtonText}>Escanear ticket</Text>
             </TouchableOpacity>
             <TouchableOpacity
               onPress={() => {

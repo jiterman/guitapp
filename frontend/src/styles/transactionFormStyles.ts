@@ -35,7 +35,20 @@ export const transactionFormStyles = StyleSheet.create({
     gap: 12,
   },
   scanButton: {
-    padding: 4,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingVertical: 7,
+    paddingHorizontal: 12,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: '#C8DCF0',
+    backgroundColor: '#F0F7FF',
+  },
+  scanButtonText: {
+    fontSize: 13,
+    fontWeight: '500',
+    color: '#2383F2',
   },
   scanOverlay: {
     position: 'absolute',
