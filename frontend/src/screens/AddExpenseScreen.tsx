@@ -7,12 +7,15 @@ import {
   FlatList,
   TextInput,
   ScrollView,
+  ActivityIndicator,
 } from 'react-native';
 import { Layout, Text } from '@ui-kitten/components';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import { router, useLocalSearchParams } from 'expo-router';
+import * as ImageManipulator from 'expo-image-manipulator';
+import CameraModal from '../components/CameraModal/CameraModal';
 import { expenseService } from '../services/expenseService';
 import type { ExpenseType } from '../constants/categories';
 import {
@@ -51,6 +54,45 @@ const AddExpenseScreen = () => {
   const [amountError, setAmountError] = useState<string | null>(null);
   const [categoryError, setCategoryError] = useState<string | null>(null);
   const [typeError, setTypeError] = useState<string | null>(null);
+  const [scanningReceipt, setScanningReceipt] = useState(false);
+  const [cameraVisible, setCameraVisible] = useState(false);
+
+  const onScanReceipt = () => setCameraVisible(true);
+
+  const onImageCaptured = async (uri: string) => {
+    setCameraVisible(false);
+    setScanningReceipt(true);
+    try {
+      const manipulated = await ImageManipulator.manipulateAsync(
+        uri,
+        [{ resize: { width: 800 } }],
+        { compress: 0.7, format: ImageManipulator.SaveFormat.JPEG }
+      );
+      const analysis = await expenseService.analyzeReceipt(manipulated.uri);
+      if (analysis.amount && analysis.amount > 0) {
+        handleAmountChange(analysis.amount.toString());
+      }
+      if (analysis.description) {
+        setDescription(analysis.description);
+      }
+      if (analysis.category) {
+        const cat = getExpenseCategory(analysis.category);
+        if (cat) {
+          setSelectedCategory(cat);
+          setSelectedType(cat.defaultType);
+          setCategoryError(null);
+          setTypeError(null);
+        }
+      }
+      if (analysis.date) {
+        setSelectedDate(new Date(analysis.date));
+      }
+    } catch {
+      Alert.alert('Error', 'No se pudo analizar el ticket. Intentá de nuevo.');
+    } finally {
+      setScanningReceipt(false);
+    }
+  };
 
   const filteredCategories = EXPENSE_CATEGORIES.filter(cat =>
     cat.label.toLowerCase().includes(search.toLowerCase())
@@ -126,18 +168,35 @@ const AddExpenseScreen = () => {
           <Text category="h4" style={styles.title}>
             Agregar gasto
           </Text>
-          <TouchableOpacity
-            onPress={() => {
-              if (params.fromShareIntent === 'true') {
-                router.replace('/(app)/home');
-              } else {
-                router.back();
-              }
-            }}
-          >
-            <Text style={styles.closeButton}>✕</Text>
-          </TouchableOpacity>
+          <View style={styles.subHeaderActions}>
+            <TouchableOpacity
+              onPress={onScanReceipt}
+              style={styles.scanButton}
+              disabled={scanningReceipt}
+            >
+              <Ionicons name="camera-outline" size={18} color={ICON_COLORS.primary} />
+              <Text style={styles.scanButtonText}>Escanear ticket</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => {
+                if (params.fromShareIntent === 'true') {
+                  router.replace('/(app)/home');
+                } else {
+                  router.back();
+                }
+              }}
+            >
+              <Text style={styles.closeButton}>✕</Text>
+            </TouchableOpacity>
+          </View>
         </View>
+
+        {scanningReceipt && (
+          <View style={styles.scanOverlay}>
+            <ActivityIndicator size="large" color="#2383F2" />
+            <Text style={styles.scanOverlayText}>Analizando ticket...</Text>
+          </View>
+        )}
 
         <ScrollView showsVerticalScrollIndicator={false}>
           <Text style={styles.label}>Monto *</Text>
@@ -345,6 +404,12 @@ const AddExpenseScreen = () => {
           maximumDate={new Date()}
         />
       )}
+
+      <CameraModal
+        visible={cameraVisible}
+        onClose={() => setCameraVisible(false)}
+        onCapture={onImageCaptured}
+      />
     </>
   );
 };

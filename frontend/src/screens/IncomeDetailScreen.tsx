@@ -1,8 +1,8 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import { Alert, TouchableOpacity, View } from 'react-native';
 import { Layout, Text } from '@ui-kitten/components';
 import { Ionicons, Feather } from '@expo/vector-icons';
-import { router, useLocalSearchParams } from 'expo-router';
+import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import type { IncomeResponse } from '../services/incomeService';
 import { incomeService } from '../services/incomeService';
 import { getCategoryLabel, getCategoryIcon } from '../constants/categories';
@@ -17,26 +17,29 @@ const IncomeDetailScreen: React.FC = () => {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isDeleting, setIsDeleting] = useState<boolean>(false);
 
-  useEffect(() => {
-    let mounted = true;
-    (async () => {
-      try {
-        if (!incomeId) {
+  useFocusEffect(
+    useCallback(() => {
+      let mounted = true;
+      setIsLoading(true);
+      (async () => {
+        try {
+          if (!incomeId) {
+            if (mounted) setIncome(null);
+            return;
+          }
+          const found = await incomeService.getIncomeById(incomeId);
+          if (mounted) setIncome(found);
+        } catch {
           if (mounted) setIncome(null);
-          return;
+        } finally {
+          if (mounted) setIsLoading(false);
         }
-        const found = await incomeService.getIncomeById(incomeId);
-        if (mounted) setIncome(found);
-      } catch {
-        if (mounted) setIncome(null);
-      } finally {
-        if (mounted) setIsLoading(false);
-      }
-    })();
-    return () => {
-      mounted = false;
-    };
-  }, [incomeId]);
+      })();
+      return () => {
+        mounted = false;
+      };
+    }, [incomeId])
+  );
 
   const title = useMemo(() => {
     if (isLoading) return 'Detalle';

@@ -7,6 +7,7 @@ import { movementService, MovementResponse } from '../services/movementService';
 import TransactionCard from '../components/TransactionCard/TransactionCard';
 import BalanceCard from '../components/BalanceCard/BalanceCard';
 import { useIsFocused } from '@react-navigation/native';
+import { parseLocalDate } from '../utils/dateFormatter';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 const vh = screenHeight / 100;
@@ -41,7 +42,7 @@ const HomeScreen = () => {
     const incomesThisMonth = movements
       .filter(m => m.type === 'INCOME')
       .filter(m => {
-        const d = new Date(m.date);
+        const d = parseLocalDate(String(m.date));
         return d.getMonth() === currentMonth && d.getFullYear() === currentYear;
       })
       .reduce((acc, m) => acc + Number(m.amount), 0);
@@ -49,7 +50,7 @@ const HomeScreen = () => {
     const expensesThisMonth = movements
       .filter(m => m.type === 'EXPENSE')
       .filter(m => {
-        const d = new Date(m.date);
+        const d = parseLocalDate(String(m.date));
         return d.getMonth() === currentMonth && d.getFullYear() === currentYear;
       })
       .reduce((acc, m) => acc + Number(m.amount), 0);
