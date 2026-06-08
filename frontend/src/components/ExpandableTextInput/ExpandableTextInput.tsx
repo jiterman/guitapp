@@ -64,7 +64,11 @@ const ExpandableTextInput: React.FC<Props> = ({
   return (
     <>
       <Text style={styles.label}>{label}</Text>
-      <View ref={containerRef} style={styles.inputWithIcon} collapsable={false}>
+      <View
+        ref={containerRef}
+        style={[styles.inputWithIcon, expanded && { alignItems: 'flex-start' }]}
+        collapsable={false}
+      >
         <View style={styles.inputIconContainer}>
           <Ionicons name="document-text-outline" size={ICON_SIZES.small} color={ICON_COLORS.gray} />
         </View>
@@ -72,7 +76,11 @@ const ExpandableTextInput: React.FC<Props> = ({
           value={value}
           onChangeText={onChangeText}
           placeholder={placeholder}
-          style={[styles.textInput, expanded && styles.textInputMultiline]}
+          style={[
+            styles.textInput,
+            expanded && styles.textInputMultiline,
+            { textAlignVertical: expanded ? 'top' : 'center' },
+          ]}
           placeholderTextColor="#B0BEC5"
           maxLength={255}
           multiline={expanded}
@@ -84,7 +92,11 @@ const ExpandableTextInput: React.FC<Props> = ({
             isFocusedRef.current = false;
           }}
         />
-        <TouchableOpacity onPress={() => setExpanded(e => !e)} hitSlop={8}>
+        <TouchableOpacity
+          onPress={() => setExpanded(e => !e)}
+          hitSlop={8}
+          style={expanded ? { paddingTop: 9 } : undefined}
+        >
           <Ionicons name={expanded ? 'chevron-up' : 'chevron-down'} size={18} color="#999" />
         </TouchableOpacity>
       </View>

@@ -165,6 +165,7 @@ export const transactionFormStyles = StyleSheet.create({
   textInputMultiline: {
     minHeight: 80,
     textAlignVertical: 'top',
+    paddingTop: 8.75,
   },
   errorText: {
     color: '#FF3333',
@@ -271,7 +272,7 @@ export const transactionFormStyles = StyleSheet.create({
     width: 52,
     height: 52,
     borderRadius: 26,
-    backgroundColor: '#FFBB00',
+    backgroundColor: '#5bbfdd',
     justifyContent: 'center',
     alignItems: 'center',
     shadowColor: '#000',

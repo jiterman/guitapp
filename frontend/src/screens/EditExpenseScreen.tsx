@@ -167,7 +167,7 @@ const EditExpenseScreen = () => {
         <ScrollView
           ref={scrollViewRef}
           showsVerticalScrollIndicator={false}
-          contentContainerStyle={{ paddingBottom: 50 }}
+          contentContainerStyle={{ paddingBottom: 100 }}
           onScroll={e => {
             scrollYRef.current = e.nativeEvent.contentOffset.y;
           }}

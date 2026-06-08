@@ -150,7 +150,7 @@ const EditIncomeScreen = () => {
         <ScrollView
           ref={scrollViewRef}
           showsVerticalScrollIndicator={false}
-          contentContainerStyle={{ paddingBottom: 50 }}
+          contentContainerStyle={{ paddingBottom: 100 }}
         >
           <Text style={styles.label}>Monto *</Text>
           <View style={[styles.amountInputContainer, amountError ? styles.amountInputError : null]}>
