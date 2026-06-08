@@ -66,31 +66,6 @@ const HomeScreen = () => {
     <Layout style={styles.container}>
       <BalanceCard title={`Balance de ${monthLabel}`} income={incomeSum} expense={expenseSum} />
 
-      <Text style={styles.sectionTitle}>Acciones</Text>
-      <View style={styles.actionsRow}>
-        <TouchableOpacity
-          style={[styles.actionButton, styles.actionButtonPrimary]}
-          onPress={() => router.push('/add-expense')}
-        >
-          <Ionicons name="remove-circle-outline" size={40} color="#FFBB00" />
-          <Text style={[styles.actionLabel, { color: '#07a3e4' }]}>Gasto</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[styles.actionButton, styles.actionButtonPrimary]}
-          onPress={() => router.push('/add-income')}
-        >
-          <Ionicons name="add-circle-outline" size={40} color="#FFBB00" />
-          <Text style={[styles.actionLabel, { color: '#07a3e4' }]}>Ingreso</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[styles.actionButton, styles.actionButtonPrimary]}
-          onPress={() => router.push('/summary')}
-        >
-          <Ionicons name="bar-chart-outline" size={40} color="#FFBB00" />
-          <Text style={[styles.actionLabel, { color: '#07a3e4' }]}>Resumen</Text>
-        </TouchableOpacity>
-      </View>
-
       <View style={styles.sectionHeader}>
         <Text style={styles.sectionTitle}>Últimos movimientos</Text>
         <TouchableOpacity style={styles.seeAllButton} onPress={() => router.push('/transactions')}>
