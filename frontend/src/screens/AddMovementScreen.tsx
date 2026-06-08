@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import {
   View,
   Alert,
@@ -11,6 +11,7 @@ import {
   StyleSheet,
   Dimensions,
 } from 'react-native';
+import { transactionFormStyles as tStyles, ICON_COLORS } from '../styles/transactionFormStyles';
 import { Layout, Text } from '@ui-kitten/components';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -18,6 +19,7 @@ import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/dat
 import { router, useLocalSearchParams } from 'expo-router';
 import * as ImageManipulator from 'expo-image-manipulator';
 import CameraModal from '../components/CameraModal/CameraModal';
+import ExpandableTextInput from '../components/ExpandableTextInput/ExpandableTextInput';
 import { expenseService } from '../services/expenseService';
 import { incomeService } from '../services/incomeService';
 import type { ExpenseType, IncomeCategory } from '../constants/categories';
@@ -32,17 +34,19 @@ import {
 import { useCurrencyInput } from '../hooks/useCurrencyInput';
 import { formatDate, toLocalDateString } from '../utils/dateFormatter';
 
-const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
-const vh = screenHeight / 100;
+const vh = Dimensions.get('window').height / 100;
 
 const AddMovementScreen = () => {
+  const scrollViewRef = useRef<ScrollView>(null);
+  const scrollYRef = useRef(0);
   const params = useLocalSearchParams();
   const [movementType, setMovementType] = useState<'EXPENSE' | 'INCOME'>('EXPENSE');
 
   const { displayValue, amount, handleAmountChange } = useCurrencyInput(
     (params.amount as string) || ''
   );
-  const [description, setDescription] = useState((params.description as string) || '');
+  const [title, setTitle] = useState((params.title as string) || '');
+  const [description, setDescription] = useState('');
   const initialCategory =
     movementType === 'EXPENSE'
       ? getExpenseCategory(params.category as string) || null
@@ -83,8 +87,8 @@ const AddMovementScreen = () => {
       if (analysis.amount && analysis.amount > 0) {
         handleAmountChange(analysis.amount.toString());
       }
-      if (analysis.description) {
-        setDescription(analysis.description);
+      if (analysis.title) {
+        setTitle(analysis.title.slice(0, 20));
       }
       if (analysis.category) {
         const cat = getExpenseCategory(analysis.category);
@@ -147,6 +151,7 @@ const AddMovementScreen = () => {
       if (movementType === 'EXPENSE') {
         await expenseService.addExpense({
           amount: parseFloat(amount),
+          title: title.trim() || undefined,
           description: description.trim() || undefined,
           category: selectedCategory!.value,
           type: selectedExpenseType!,
@@ -155,6 +160,7 @@ const AddMovementScreen = () => {
       } else {
         await incomeService.addIncome({
           amount: parseFloat(amount),
+          title: title.trim() || undefined,
           description: description.trim() || undefined,
           category: selectedCategory!.value as unknown as IncomeCategory,
           date: dateString,
@@ -244,7 +250,7 @@ const AddMovementScreen = () => {
                 style={styles.scanButton}
                 disabled={scanningReceipt}
               >
-                <Ionicons name="camera-outline" size={16} color="#07a3e4" />
+                <Ionicons name="camera-outline" size={16} color={ICON_COLORS.primary} />
                 <Text style={styles.scanButtonText}>Escanear ticket</Text>
               </TouchableOpacity>
             )}
@@ -270,8 +276,13 @@ const AddMovementScreen = () => {
         )}
 
         <ScrollView
+          ref={scrollViewRef}
           showsVerticalScrollIndicator={false}
           contentContainerStyle={{ paddingBottom: 100 }}
+          onScroll={e => {
+            scrollYRef.current = e.nativeEvent.contentOffset.y;
+          }}
+          scrollEventThrottle={16}
         >
           <Text style={styles.label}>Monto *</Text>
           <View style={[styles.amountInputContainer, amountError ? styles.amountInputError : null]}>
@@ -292,17 +303,18 @@ const AddMovementScreen = () => {
           </View>
           {amountError && <Text style={styles.errorText}>{amountError}</Text>}
 
-          <Text style={styles.label}>Descripción</Text>
+          <Text style={styles.label}>Título</Text>
           <View style={styles.inputWithIcon}>
             <View style={styles.inputIconContainer}>
-              <Ionicons name="document-text-outline" size={18} color="#90A4AE" />
+              <Ionicons name="text-outline" size={18} color="#90A4AE" />
             </View>
             <TextInput
-              value={description}
-              onChangeText={setDescription}
+              value={title}
+              onChangeText={text => setTitle(text.slice(0, 20))}
               placeholder="Ej. Compra del mes (opcional)"
               style={styles.textInput}
               placeholderTextColor="#B0BEC5"
+              maxLength={20}
             />
           </View>
 
@@ -390,6 +402,15 @@ const AddMovementScreen = () => {
               </View>
             </>
           )}
+
+          <ExpandableTextInput
+            label="Descripción"
+            value={description}
+            onChangeText={text => setDescription(text.slice(0, 255))}
+            placeholder="Información adicional (opcional)"
+            scrollViewRef={scrollViewRef}
+            scrollYRef={scrollYRef}
+          />
         </ScrollView>
 
         <TouchableOpacity
@@ -400,7 +421,7 @@ const AddMovementScreen = () => {
           {submitting ? (
             <ActivityIndicator size="small" color="#fff" />
           ) : (
-            <Ionicons name="checkmark" size={32} color="#fff" />
+            <Ionicons name="checkmark" size={24} color="#fff" />
           )}
         </TouchableOpacity>
       </Layout>
@@ -489,13 +510,7 @@ const AddMovementScreen = () => {
   );
 };
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#E6F2FC',
-    paddingHorizontal: screenWidth * 0.05,
-    paddingTop: vh * 2,
-  },
+const localStyles = StyleSheet.create({
   tabContainer: {
     flexDirection: 'row',
     backgroundColor: '#fff',
@@ -545,314 +560,8 @@ const styles = StyleSheet.create({
   tabTextInactive: {
     color: '#A8C8E0',
   },
-  subHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: vh * 2,
-  },
-  subHeaderActions: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-  },
-  scanButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    paddingVertical: 6,
-    paddingHorizontal: 12,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: '#C8DCF0',
-    backgroundColor: '#fff',
-  },
-  scanButtonText: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: '#07a3e4',
-  },
-  title: {
-    fontSize: 22,
-    color: '#003366',
-    fontWeight: 'bold',
-  },
-  label: {
-    fontSize: 14,
-    fontWeight: 'bold',
-    color: '#003366',
-    marginBottom: 8,
-    marginTop: 16,
-  },
-  amountInputContainer: {
-    backgroundColor: '#FFF9EB',
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#F6C54F',
-    paddingVertical: 10,
-    paddingHorizontal: 14,
-    flexDirection: 'row',
-    alignItems: 'center',
-    shadowColor: '#506E96',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.06,
-    shadowRadius: 14,
-    elevation: 2,
-  },
-  amountInputError: {
-    borderColor: '#FF3333',
-  },
-  amountIconContainer: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: '#FFF2CC',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 10,
-  },
-  amountCurrencySymbol: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#F2A900',
-  },
-  amountInput: {
-    flex: 1,
-    fontSize: 32,
-    fontWeight: 'bold',
-    color: '#F2A900',
-    padding: 0,
-  },
-  inputWithIcon: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#E0E0E0',
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    shadowColor: '#506E96',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.06,
-    shadowRadius: 14,
-    elevation: 2,
-  },
-  inputIconContainer: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: '#F5F5F5',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 10,
-  },
-  textInput: {
-    flex: 1,
-    fontSize: 15,
-    color: '#003366',
-    padding: 0,
-  },
-  errorText: {
-    color: '#FF3333',
-    fontSize: 13,
-    marginTop: 4,
-  },
-  dropdownButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#E0E0E0',
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    shadowColor: '#506E96',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.06,
-    shadowRadius: 14,
-    elevation: 2,
-  },
-  dropdownButtonError: {
-    borderColor: '#FF3333',
-  },
-  dropdownContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flex: 1,
-  },
-  dropdownIconContainer: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: '#EDF5FF',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 10,
-  },
-  dropdownButtonText: {
-    fontSize: 15,
-    color: '#003366',
-  },
-  dropdownPlaceholder: {
-    fontSize: 15,
-    color: '#B0BEC5',
-  },
-  dateButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#E0E0E0',
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    shadowColor: '#506E96',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.06,
-    shadowRadius: 14,
-    elevation: 2,
-  },
-  typeContainer: {
-    flexDirection: 'row',
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#E0E0E0',
-    padding: 4,
-    shadowColor: '#506E96',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.06,
-    shadowRadius: 14,
-    elevation: 2,
-  },
-  typeButton: {
-    flex: 1,
-    paddingVertical: 14,
-    borderRadius: 10,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  typeButtonActive: {
-    backgroundColor: '#EAF4FF',
-    borderWidth: 1,
-    borderColor: '#8EC2FF',
-  },
-  typeButtonInactive: {
-    backgroundColor: 'transparent',
-  },
-  typeButtonText: {
-    fontSize: 15,
-    fontWeight: 'bold',
-  },
-  typeButtonTextActive: {
-    color: '#2383F2',
-  },
-  typeButtonTextInactive: {
-    color: '#546E7A',
-  },
-  saveButton: {
-    position: 'absolute',
-    bottom: 30,
-    right: 25,
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    backgroundColor: '#FFBB00',
-    justifyContent: 'center',
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 6,
-    elevation: 8,
-    zIndex: 10,
-  },
-  saveButtonDisabled: {
-    opacity: 0.6,
-  },
-  saveIcon: {
-    marginRight: 8,
-  },
-  saveButtonText: {
-    color: '#003366',
-    fontWeight: 'bold',
-    fontSize: 16,
-  },
-  scanOverlay: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: 'rgba(230, 242, 252, 0.9)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    zIndex: 10,
-  },
-  scanOverlayText: {
-    marginTop: 12,
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#003366',
-  },
-  modalFullScreen: {
-    flex: 1,
-    backgroundColor: '#fff',
-  },
-  modalContainer: {
-    flex: 1,
-    backgroundColor: '#fff',
-  },
-  modalHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingVertical: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#eee',
-  },
-  modalTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#003366',
-  },
-  modalClose: {
-    fontSize: 20,
-    color: '#003366',
-  },
-  searchInput: {
-    margin: 16,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-    backgroundColor: '#f5f5f5',
-    borderRadius: 10,
-    fontSize: 15,
-    color: '#003366',
-  },
-  categoryItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingVertical: 14,
-  },
-  categoryItemSelected: {
-    backgroundColor: '#E6F2FC',
-  },
-  categoryIconContainer: {
-    marginRight: 14,
-  },
-  categoryLabel: {
-    fontSize: 15,
-    color: '#003366',
-  },
-  categoryLabelSelected: {
-    color: '#006699',
-    fontWeight: 'bold',
-  },
 });
+
+const styles = { ...tStyles, ...localStyles };
 
 export default AddMovementScreen;

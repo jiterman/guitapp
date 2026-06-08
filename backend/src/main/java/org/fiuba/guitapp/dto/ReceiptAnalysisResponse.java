@@ -8,5 +8,5 @@ public record ReceiptAnalysisResponse(
         String date,
         BigDecimal amount,
         ExpenseCategory category,
-        String description) {
+        String title) {
 }

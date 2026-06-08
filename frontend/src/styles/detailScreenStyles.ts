@@ -6,8 +6,10 @@ const vh = screenHeight / 100;
 export const detailScreenStyles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: screenWidth * 0.05,
     backgroundColor: '#E6F2FC',
+  },
+  scrollContent: {
+    padding: screenWidth * 0.05,
   },
   backButtonTop: {
     flexDirection: 'row',

@@ -80,9 +80,7 @@ const TransactionsScreen: React.FC = () => {
 
   return (
     <Layout style={styles.container}>
-      <Text category="h6" style={styles.title}>
-        Lista de Transacciones
-      </Text>
+      <Text style={styles.title}>Últimos movimientos</Text>
 
       <MovementFilter onChange={setFilterState} initialKind="all" />
 
@@ -111,6 +109,7 @@ const styles = StyleSheet.create({
     marginBottom: vh * 1.2,
     color: '#003366',
     fontWeight: '700',
+    fontSize: 22,
   },
   separator: {
     height: 1,

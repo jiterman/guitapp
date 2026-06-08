@@ -3,6 +3,7 @@ import type { IncomeCategory } from '../constants/categories';
 
 export interface AddIncomeRequest {
   amount: number;
+  title?: string;
   description?: string;
   category: IncomeCategory;
   date: string;
@@ -11,6 +12,7 @@ export interface AddIncomeRequest {
 export interface IncomeResponse {
   id: string;
   amount: number;
+  title?: string;
   description?: string;
   category: IncomeCategory;
   date: string;
@@ -18,6 +20,7 @@ export interface IncomeResponse {
 
 export interface UpdateIncomeRequest {
   amount?: number;
+  title?: string;
   description?: string;
   category?: IncomeCategory;
   date?: string;

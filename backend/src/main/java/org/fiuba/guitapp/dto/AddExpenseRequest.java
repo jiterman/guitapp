@@ -12,6 +12,7 @@ import jakarta.validation.constraints.Size;
 
 public record AddExpenseRequest(
         @NotNull @Positive BigDecimal amount,
+        @Size(max = 20) String title,
         @Size(max = 255) String description,
         @NotNull ExpenseCategory category,
         @NotNull ExpenseType type,

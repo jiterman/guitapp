@@ -57,12 +57,13 @@ class ExpenseControllerTests {
     void addExpense_ShouldReturnExpenseResponse_WhenRequestIsValid() throws Exception {
         UUID expenseId = UUID.randomUUID();
         AddExpenseRequest request = new AddExpenseRequest(
-                new BigDecimal("1500.00"), "Lunch", ExpenseCategory.RESTAURANT, ExpenseType.VARIABLE, LocalDate.now());
+                new BigDecimal("1500.00"), "Almuerzo", "Lunch details", ExpenseCategory.RESTAURANT, ExpenseType.VARIABLE, LocalDate.now());
 
         ExpenseResponse response = new ExpenseResponse(
                 expenseId,
                 new BigDecimal("1500.00"),
-                "Lunch",
+                "Almuerzo",
+                "Lunch details",
                 ExpenseCategory.RESTAURANT,
                 ExpenseType.VARIABLE,
                 LocalDate.now());
@@ -76,7 +77,7 @@ class ExpenseControllerTests {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(expenseId.toString()))
                 .andExpect(jsonPath("$.amount").value(1500.00))
-                .andExpect(jsonPath("$.description").value("Lunch"))
+                .andExpect(jsonPath("$.title").value("Almuerzo"))
                 .andExpect(jsonPath("$.category").value("RESTAURANT"));
 
         verify(expenseService, times(1)).addExpense(eq("test@example.com"), any(AddExpenseRequest.class));
@@ -87,11 +88,12 @@ class ExpenseControllerTests {
     void addExpense_ShouldReturnOk_WhenDescriptionIsNull() throws Exception {
         UUID expenseId = UUID.randomUUID();
         AddExpenseRequest request = new AddExpenseRequest(
-                new BigDecimal("500.00"), null, ExpenseCategory.SUPERMARKET, ExpenseType.FIXED, LocalDate.now());
+                new BigDecimal("500.00"), null, null, ExpenseCategory.SUPERMARKET, ExpenseType.FIXED, LocalDate.now());
 
         ExpenseResponse response = new ExpenseResponse(
                 expenseId,
                 new BigDecimal("500.00"),
+                null,
                 null,
                 ExpenseCategory.SUPERMARKET,
                 ExpenseType.FIXED,
@@ -126,7 +128,7 @@ class ExpenseControllerTests {
     @WithMockUser(username = "test@example.com")
     void addExpense_ShouldReturnBadRequest_WhenAmountIsNegative() throws Exception {
         AddExpenseRequest request = new AddExpenseRequest(
-                new BigDecimal("-100.00"), null, ExpenseCategory.OTHER, ExpenseType.VARIABLE, LocalDate.now());
+                new BigDecimal("-100.00"), null, null, ExpenseCategory.OTHER, ExpenseType.VARIABLE, LocalDate.now());
 
         mockMvc.perform(post("/api/expenses")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -170,6 +172,7 @@ class ExpenseControllerTests {
                 expenseId,
                 new BigDecimal("150.00"),
                 "Taxi",
+                "Taxi al aeropuerto",
                 ExpenseCategory.TAXI,
                 ExpenseType.VARIABLE,
                 LocalDate.now());
@@ -180,7 +183,8 @@ class ExpenseControllerTests {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(expenseId.toString()))
                 .andExpect(jsonPath("$.amount").value(150.00))
-                .andExpect(jsonPath("$.description").value("Taxi"))
+                .andExpect(jsonPath("$.title").value("Taxi"))
+                .andExpect(jsonPath("$.description").value("Taxi al aeropuerto"))
                 .andExpect(jsonPath("$.category").value("TAXI"))
                 .andExpect(jsonPath("$.type").value("VARIABLE"));
 
@@ -226,7 +230,8 @@ class ExpenseControllerTests {
         UUID expenseId = UUID.randomUUID();
         UpdateExpenseRequest request = new UpdateExpenseRequest(
                 new BigDecimal("88.50"),
-                "Groceries",
+                "Supermercado",
+                "Groceries details",
                 ExpenseCategory.SUPERMARKET,
                 ExpenseType.VARIABLE,
                 LocalDate.now());
@@ -234,7 +239,8 @@ class ExpenseControllerTests {
         ExpenseResponse response = new ExpenseResponse(
                 expenseId,
                 new BigDecimal("88.50"),
-                "Groceries",
+                "Supermercado",
+                "Groceries details",
                 ExpenseCategory.SUPERMARKET,
                 ExpenseType.VARIABLE,
                 LocalDate.now());
@@ -248,7 +254,7 @@ class ExpenseControllerTests {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(expenseId.toString()))
                 .andExpect(jsonPath("$.amount").value(88.50))
-                .andExpect(jsonPath("$.description").value("Groceries"))
+                .andExpect(jsonPath("$.title").value("Supermercado"))
                 .andExpect(jsonPath("$.category").value("SUPERMARKET"))
                 .andExpect(jsonPath("$.type").value("VARIABLE"));
 
@@ -262,6 +268,7 @@ class ExpenseControllerTests {
         UpdateExpenseRequest request = new UpdateExpenseRequest(
                 new BigDecimal("-1.00"),
                 "Bad",
+                null,
                 ExpenseCategory.OTHER,
                 ExpenseType.VARIABLE,
                 LocalDate.now());
@@ -290,7 +297,7 @@ class ExpenseControllerTests {
                 .contentType(MediaType.MULTIPART_FORM_DATA))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.amount").value(123.45))
-                .andExpect(jsonPath("$.description").value("Test Analysis"))
+                .andExpect(jsonPath("$.title").value("Test Analysis"))
                 .andExpect(jsonPath("$.category").value("OTHER"));
 
         verify(geminiService, times(1)).analyzeReceipt(any());

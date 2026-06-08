@@ -116,17 +116,17 @@ const MovementFilter: React.FC<MovementFilterProps> = ({
 
   const handleFilterSelect = (index: IndexPath | IndexPath[]) => {
     const idx = Array.isArray(index) ? index[0].row : index.row;
-    setDraftFilterIndex(idx);
+    setTimeout(() => setDraftFilterIndex(idx), 0);
   };
 
   const handleMonthSelect = (index: IndexPath | IndexPath[]) => {
     const idx = Array.isArray(index) ? index[0].row : index.row;
-    setDraftMonth(idx + 1);
+    setTimeout(() => setDraftMonth(idx + 1), 0);
   };
 
   const handleYearSelect = (index: IndexPath | IndexPath[]) => {
     const idx = Array.isArray(index) ? index[0].row : index.row;
-    setDraftYear(years[idx]);
+    setTimeout(() => setDraftYear(years[idx]), 0);
   };
 
   const draftKind = FILTER_OPTIONS[draftFilterIndex].key;

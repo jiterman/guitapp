@@ -6,6 +6,7 @@ export interface MovementResponse {
   id: string;
   type: MovementType;
   amount: number;
+  title?: string;
   description?: string;
   category?: string;
   expenseType?: 'FIXED' | 'VARIABLE';

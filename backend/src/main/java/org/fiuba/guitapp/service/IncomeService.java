@@ -52,6 +52,7 @@ public class IncomeService {
 
         Income income = new Income();
         income.setAmount(request.amount());
+        income.setTitle(request.title());
         income.setDescription(request.description());
         income.setCategory(request.category());
         income.setDate(request.date());
@@ -62,6 +63,7 @@ public class IncomeService {
         return new IncomeResponse(
                 saved.getId(),
                 saved.getAmount(),
+                saved.getTitle(),
                 saved.getDescription(),
                 saved.getCategory(),
                 saved.getDate());
@@ -80,6 +82,7 @@ public class IncomeService {
         return new IncomeResponse(
                 income.getId(),
                 income.getAmount(),
+                income.getTitle(),
                 income.getDescription(),
                 income.getCategory(),
                 income.getDate());
@@ -92,6 +95,9 @@ public class IncomeService {
 
         if (request.amount() != null) {
             income.setAmount(request.amount());
+        }
+        if (request.title() != null) {
+            income.setTitle(request.title());
         }
         if (request.description() != null) {
             income.setDescription(request.description());
@@ -107,6 +113,7 @@ public class IncomeService {
         return new IncomeResponse(
                 saved.getId(),
                 saved.getAmount(),
+                saved.getTitle(),
                 saved.getDescription(),
                 saved.getCategory(),
                 saved.getDate());

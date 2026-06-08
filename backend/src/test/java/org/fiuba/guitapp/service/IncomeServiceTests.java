@@ -58,11 +58,12 @@ class IncomeServiceTests {
     @Test
     void addIncome_ShouldReturnIncomeResponse_WhenUserExists() {
         AddIncomeRequest request = new AddIncomeRequest(
-                new BigDecimal("1500.00"), "Freelance work", IncomeCategory.FREELANCE, LocalDate.now());
+                new BigDecimal("1500.00"), "Freelance", "Freelance work", IncomeCategory.FREELANCE, LocalDate.now());
 
         Income savedIncome = new Income();
         savedIncome.setId(UUID.randomUUID());
         savedIncome.setAmount(request.amount());
+        savedIncome.setTitle(request.title());
         savedIncome.setDescription(request.description());
         savedIncome.setCategory(request.category());
         savedIncome.setDate(LocalDate.now());
@@ -76,6 +77,7 @@ class IncomeServiceTests {
         assertNotNull(response);
         assertEquals(savedIncome.getId(), response.id());
         assertEquals(new BigDecimal("1500.00"), response.amount());
+        assertEquals("Freelance", response.title());
         assertEquals("Freelance work", response.description());
         assertEquals(IncomeCategory.FREELANCE, response.category());
         assertNotNull(response.date());
@@ -86,7 +88,7 @@ class IncomeServiceTests {
     @Test
     void addIncome_ShouldThrowAuthException_WhenUserNotFound() {
         AddIncomeRequest request = new AddIncomeRequest(
-                new BigDecimal("100.00"), null, IncomeCategory.OTHER, LocalDate.now());
+                new BigDecimal("100.00"), null, null, IncomeCategory.OTHER, LocalDate.now());
 
         when(userRepository.findByEmail(testEmail)).thenReturn(Optional.empty());
 
@@ -99,11 +101,12 @@ class IncomeServiceTests {
     @Test
     void addIncome_ShouldSaveIncomeWithNullDescription_WhenDescriptionIsNull() {
         AddIncomeRequest request = new AddIncomeRequest(
-                new BigDecimal("500.00"), null, IncomeCategory.SALARY, LocalDate.now());
+                new BigDecimal("500.00"), null, null, IncomeCategory.SALARY, LocalDate.now());
 
         Income savedIncome = new Income();
         savedIncome.setId(UUID.randomUUID());
         savedIncome.setAmount(request.amount());
+        savedIncome.setTitle(null);
         savedIncome.setDescription(null);
         savedIncome.setCategory(request.category());
         savedIncome.setDate(LocalDate.now());
@@ -114,6 +117,7 @@ class IncomeServiceTests {
 
         IncomeResponse response = incomeService.addIncome(testEmail, request);
 
+        assertNull(response.title());
         assertNull(response.description());
         verify(incomeRepository, times(1)).save(any(Income.class));
     }
@@ -121,7 +125,7 @@ class IncomeServiceTests {
     @Test
     void addIncome_ShouldAssociateIncomeWithUser() {
         AddIncomeRequest request = new AddIncomeRequest(
-                new BigDecimal("200.00"), "Bonus", IncomeCategory.SALARY, LocalDate.now());
+                new BigDecimal("200.00"), "Bonus", null, IncomeCategory.SALARY, LocalDate.now());
 
         Income savedIncome = new Income();
         savedIncome.setId(UUID.randomUUID());
@@ -218,6 +222,7 @@ class IncomeServiceTests {
         Income income = new Income();
         income.setId(incomeId);
         income.setAmount(new BigDecimal("123.45"));
+        income.setTitle("Salario");
         income.setDescription("Salary");
         income.setCategory(IncomeCategory.SALARY);
         income.setDate(now);
@@ -230,6 +235,7 @@ class IncomeServiceTests {
 
         assertEquals(incomeId, response.id());
         assertEquals(new BigDecimal("123.45"), response.amount());
+        assertEquals("Salario", response.title());
         assertEquals("Salary", response.description());
         assertEquals(IncomeCategory.SALARY, response.category());
         assertEquals(now, response.date());
@@ -295,6 +301,7 @@ class IncomeServiceTests {
         Income income = new Income();
         income.setId(incomeId);
         income.setAmount(new BigDecimal("100.00"));
+        income.setTitle("Old title");
         income.setDescription("Old");
         income.setCategory(IncomeCategory.OTHER);
         income.setDate(now);
@@ -302,6 +309,7 @@ class IncomeServiceTests {
 
         UpdateIncomeRequest request = new UpdateIncomeRequest(
                 new BigDecimal("250.00"),
+                "New title",
                 "New description",
                 IncomeCategory.SALARY,
                 LocalDate.now());
@@ -314,6 +322,7 @@ class IncomeServiceTests {
 
         assertEquals(incomeId, response.id());
         assertEquals(new BigDecimal("250.00"), response.amount());
+        assertEquals("New title", response.title());
         assertEquals("New description", response.description());
         assertEquals(IncomeCategory.SALARY, response.category());
         assertEquals(now, response.date());
@@ -327,12 +336,13 @@ class IncomeServiceTests {
         Income income = new Income();
         income.setId(incomeId);
         income.setAmount(new BigDecimal("100.00"));
+        income.setTitle("Keep title");
         income.setDescription("Keep me");
         income.setCategory(IncomeCategory.FREELANCE);
         income.setDate(now);
         income.setUser(testUser);
 
-        UpdateIncomeRequest request = new UpdateIncomeRequest(null, null, null, null);
+        UpdateIncomeRequest request = new UpdateIncomeRequest(null, null, null, null, null);
 
         when(userRepository.findByEmail(testEmail)).thenReturn(Optional.of(testUser));
         when(incomeRepository.findById(incomeId)).thenReturn(Optional.of(income));
@@ -341,6 +351,7 @@ class IncomeServiceTests {
         IncomeResponse response = incomeService.updateIncome(testEmail, incomeId, request);
 
         assertEquals(new BigDecimal("100.00"), response.amount());
+        assertEquals("Keep title", response.title());
         assertEquals("Keep me", response.description());
         assertEquals(IncomeCategory.FREELANCE, response.category());
     }
@@ -353,12 +364,13 @@ class IncomeServiceTests {
         Income income = new Income();
         income.setId(incomeId);
         income.setAmount(new BigDecimal("100.00"));
+        income.setTitle("Old title");
         income.setDescription("Old text");
         income.setCategory(IncomeCategory.SALARY);
         income.setDate(now);
         income.setUser(testUser);
 
-        UpdateIncomeRequest request = new UpdateIncomeRequest(null, "", null, null);
+        UpdateIncomeRequest request = new UpdateIncomeRequest(null, "", "", null, null);
 
         when(userRepository.findByEmail(testEmail)).thenReturn(Optional.of(testUser));
         when(incomeRepository.findById(incomeId)).thenReturn(Optional.of(income));
@@ -374,7 +386,7 @@ class IncomeServiceTests {
     @Test
     void updateIncome_ShouldThrowAuthException_WhenIncomeNotFound() {
         UUID incomeId = UUID.randomUUID();
-        UpdateIncomeRequest request = new UpdateIncomeRequest(new BigDecimal("1.00"), "x", IncomeCategory.OTHER, LocalDate.now());
+        UpdateIncomeRequest request = new UpdateIncomeRequest(new BigDecimal("1.00"), "x", "x", IncomeCategory.OTHER, LocalDate.now());
 
         when(userRepository.findByEmail(testEmail)).thenReturn(Optional.of(testUser));
         when(incomeRepository.findById(incomeId)).thenReturn(Optional.empty());
@@ -398,7 +410,7 @@ class IncomeServiceTests {
         income.setId(incomeId);
         income.setUser(otherUser);
 
-        UpdateIncomeRequest request = new UpdateIncomeRequest(new BigDecimal("1.00"), "x", IncomeCategory.OTHER, LocalDate.now());
+        UpdateIncomeRequest request = new UpdateIncomeRequest(new BigDecimal("1.00"), "x", "x", IncomeCategory.OTHER, LocalDate.now());
 
         when(userRepository.findByEmail(testEmail)).thenReturn(Optional.of(testUser));
         when(incomeRepository.findById(incomeId)).thenReturn(Optional.of(income));

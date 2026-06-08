@@ -58,3 +58,23 @@ eas init  # solo la primera vez, vincula el proyecto a tu cuenta
 | `production` | `eas build --profile production --platform android` | Build final (AAB) para publicar |
 
 > **Nota:** En Expo Go el splash screen y los íconos no se ven como en la build final. Usar `preview` o `development` build para verlos correctamente.
+
+## Migraciones de Base de Datos
+
+Las migraciones se corren manualmente contra la base de datos. Los scripts están en `backend/src/main/resources/migrations/`.
+
+### Llenar título a partir de la descripción
+
+Copia el valor existente del campo `description` al nuevo campo `title` (truncado a 20 caracteres) para movimientos creados antes de la separación de ambos campos.
+
+Si tenés `psql` instalado:
+```bash
+psql -d guitapp -f backend/src/main/resources/migrations/V1__backfill_title_from_description.sql
+```
+
+Si usás el contenedor Docker local (`make db-up`):
+```bash
+docker exec -i guitapp-db psql -U postgres -d guitapp -f - < backend/src/main/resources/migrations/V1__backfill_title_from_description.sql
+```
+
+> El nombre de la base por defecto es `guitapp`. Si usás la variable de entorno `DB_NAME`, reemplazalo.

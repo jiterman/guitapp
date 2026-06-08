@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   View,
   Alert,
@@ -6,11 +6,12 @@ import {
   Modal,
   FlatList,
   TextInput,
-  ScrollView,
+  ActivityIndicator,
 } from 'react-native';
+import { ScrollView } from 'react-native';
 import { Layout, Text } from '@ui-kitten/components';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Ionicons, MaterialIcons } from '@expo/vector-icons';
+import { Ionicons } from '@expo/vector-icons';
 import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import { router, useLocalSearchParams } from 'expo-router';
 import type { IncomeCategory } from '../constants/categories';
@@ -23,10 +24,13 @@ import {
   ICON_COLORS,
 } from '../styles/transactionFormStyles';
 import { formatDate, toLocalDateString, parseLocalDate } from '../utils/dateFormatter';
+import ExpandableTextInput from '../components/ExpandableTextInput/ExpandableTextInput';
 
 const EditIncomeScreen = () => {
+  const scrollViewRef = useRef<ScrollView>(null);
   const { incomeId } = useLocalSearchParams<{ incomeId?: string }>();
   const { displayValue, amount, handleAmountChange, setAmount } = useCurrencyInput();
+  const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<IncomeCategoryOption | null>(null);
   const [selectedDate, setSelectedDate] = useState(new Date());
@@ -49,6 +53,7 @@ const EditIncomeScreen = () => {
         const income = await incomeService.getIncomeById(incomeId);
         if (mounted) {
           setAmount(String(income.amount));
+          setTitle(income.title ?? '');
           setDescription(income.description ?? '');
           const selected = INCOME_CATEGORIES.find(c => c.value === income.category) ?? null;
           setSelectedCategory(selected);
@@ -109,6 +114,7 @@ const EditIncomeScreen = () => {
       const dateString = toLocalDateString(selectedDate);
       await incomeService.updateIncome(incomeId, {
         amount: parseFloat(amount),
+        title: title.trim() || undefined,
         description: description.trim() || undefined,
         category: selectedCategory!.value as unknown as IncomeCategory,
         date: dateString,
@@ -141,7 +147,11 @@ const EditIncomeScreen = () => {
           </TouchableOpacity>
         </View>
 
-        <ScrollView showsVerticalScrollIndicator={false}>
+        <ScrollView
+          ref={scrollViewRef}
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={{ paddingBottom: 100 }}
+        >
           <Text style={styles.label}>Monto *</Text>
           <View style={[styles.amountInputContainer, amountError ? styles.amountInputError : null]}>
             <View style={styles.amountIconContainer}>
@@ -161,21 +171,18 @@ const EditIncomeScreen = () => {
           </View>
           {amountError && <Text style={styles.errorText}>{amountError}</Text>}
 
-          <Text style={styles.label}>Descripción</Text>
+          <Text style={styles.label}>Título</Text>
           <View style={styles.inputWithIcon}>
             <View style={styles.inputIconContainer}>
-              <Ionicons
-                name="document-text-outline"
-                size={ICON_SIZES.small}
-                color={ICON_COLORS.gray}
-              />
+              <Ionicons name="text-outline" size={ICON_SIZES.small} color={ICON_COLORS.gray} />
             </View>
             <TextInput
-              value={description}
-              onChangeText={setDescription}
+              value={title}
+              onChangeText={text => setTitle(text.slice(0, 20))}
               placeholder="Ej. Pago por proyecto (opcional)"
               style={styles.textInput}
               placeholderTextColor="#B0BEC5"
+              maxLength={20}
             />
           </View>
 
@@ -221,17 +228,25 @@ const EditIncomeScreen = () => {
             />
           </TouchableOpacity>
 
-          <TouchableOpacity
-            style={[styles.saveButton, submitting && styles.saveButtonDisabled]}
-            onPress={onSubmit}
-            disabled={submitting}
-          >
-            <MaterialIcons name="save" size={20} color="#000" style={styles.saveIcon} />
-            <Text style={styles.saveButtonText}>
-              {submitting ? 'Guardando...' : 'Guardar cambios'}
-            </Text>
-          </TouchableOpacity>
+          <ExpandableTextInput
+            label="Descripción"
+            value={description}
+            onChangeText={text => setDescription(text.slice(0, 255))}
+            placeholder="Información adicional (opcional)"
+            scrollViewRef={scrollViewRef}
+          />
         </ScrollView>
+        <TouchableOpacity
+          style={[styles.saveButton, submitting && styles.saveButtonDisabled]}
+          onPress={onSubmit}
+          disabled={submitting}
+        >
+          {submitting ? (
+            <ActivityIndicator size="small" color="#fff" />
+          ) : (
+            <Ionicons name="checkmark" size={24} color="#fff" />
+          )}
+        </TouchableOpacity>
       </Layout>
 
       <Modal
