@@ -11,7 +11,7 @@ export const ICON_SIZES = {
 };
 
 export const ICON_COLORS = {
-  primary: '#2383F2',
+  primary: '#07a3e4',
   secondary: '#07a3e4',
   gray: '#90A4AE',
 };
@@ -43,12 +43,12 @@ export const transactionFormStyles = StyleSheet.create({
     borderRadius: 20,
     borderWidth: 1,
     borderColor: '#C8DCF0',
-    backgroundColor: '#F0F7FF',
+    backgroundColor: '#F8FBFF',
   },
   scanButtonText: {
     fontSize: 13,
     fontWeight: '500',
-    color: '#2383F2',
+    color: '#0796d2',
   },
   scanOverlay: {
     position: 'absolute',

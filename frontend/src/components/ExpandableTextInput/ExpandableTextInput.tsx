@@ -87,6 +87,7 @@ const ExpandableTextInput: React.FC<Props> = ({
           numberOfLines={expanded ? undefined : 1}
           onFocus={() => {
             isFocusedRef.current = true;
+            if (!expanded) setExpanded(true);
           }}
           onBlur={() => {
             isFocusedRef.current = false;
@@ -100,7 +101,7 @@ const ExpandableTextInput: React.FC<Props> = ({
           <Ionicons name={expanded ? 'chevron-up' : 'chevron-down'} size={18} color="#999" />
         </TouchableOpacity>
       </View>
-      {keyboardHeight > 0 && <View style={{ height: keyboardHeight - 80 }} />}
+      {keyboardHeight > 0 && <View style={{ height: keyboardHeight - 125 }} />}
     </>
   );
 };

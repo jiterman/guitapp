@@ -11,7 +11,7 @@ import {
   StyleSheet,
   Dimensions,
 } from 'react-native';
-import { transactionFormStyles as tStyles } from '../styles/transactionFormStyles';
+import { transactionFormStyles as tStyles, ICON_COLORS } from '../styles/transactionFormStyles';
 import { Layout, Text } from '@ui-kitten/components';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -250,7 +250,7 @@ const AddMovementScreen = () => {
                 style={styles.scanButton}
                 disabled={scanningReceipt}
               >
-                <Ionicons name="camera-outline" size={16} color="#07a3e4" />
+                <Ionicons name="camera-outline" size={16} color={ICON_COLORS.primary} />
                 <Text style={styles.scanButtonText}>Escanear ticket</Text>
               </TouchableOpacity>
             )}
