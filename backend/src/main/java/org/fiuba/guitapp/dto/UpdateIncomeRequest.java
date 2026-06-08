@@ -10,6 +10,7 @@ import jakarta.validation.constraints.Size;
 
 public record UpdateIncomeRequest(
         @Positive BigDecimal amount,
+        @Size(max = 20) String title,
         @Size(max = 255) String description,
         IncomeCategory category,
         LocalDate date) {

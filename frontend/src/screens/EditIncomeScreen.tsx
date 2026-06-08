@@ -1,13 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import {
-  View,
-  Alert,
-  TouchableOpacity,
-  Modal,
-  FlatList,
-  TextInput,
-  ScrollView,
-} from 'react-native';
+import { View, Alert, TouchableOpacity, Modal, FlatList, TextInput } from 'react-native';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import { Layout, Text } from '@ui-kitten/components';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
@@ -23,10 +16,12 @@ import {
   ICON_COLORS,
 } from '../styles/transactionFormStyles';
 import { formatDate, toLocalDateString, parseLocalDate } from '../utils/dateFormatter';
+import ExpandableTextInput from '../components/ExpandableTextInput/ExpandableTextInput';
 
 const EditIncomeScreen = () => {
   const { incomeId } = useLocalSearchParams<{ incomeId?: string }>();
   const { displayValue, amount, handleAmountChange, setAmount } = useCurrencyInput();
+  const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<IncomeCategoryOption | null>(null);
   const [selectedDate, setSelectedDate] = useState(new Date());
@@ -49,6 +44,7 @@ const EditIncomeScreen = () => {
         const income = await incomeService.getIncomeById(incomeId);
         if (mounted) {
           setAmount(String(income.amount));
+          setTitle(income.title ?? '');
           setDescription(income.description ?? '');
           const selected = INCOME_CATEGORIES.find(c => c.value === income.category) ?? null;
           setSelectedCategory(selected);
@@ -109,6 +105,7 @@ const EditIncomeScreen = () => {
       const dateString = toLocalDateString(selectedDate);
       await incomeService.updateIncome(incomeId, {
         amount: parseFloat(amount),
+        title: title.trim() || undefined,
         description: description.trim() || undefined,
         category: selectedCategory!.value as unknown as IncomeCategory,
         date: dateString,
@@ -141,7 +138,7 @@ const EditIncomeScreen = () => {
           </TouchableOpacity>
         </View>
 
-        <ScrollView showsVerticalScrollIndicator={false}>
+        <KeyboardAwareScrollView showsVerticalScrollIndicator={false}>
           <Text style={styles.label}>Monto *</Text>
           <View style={[styles.amountInputContainer, amountError ? styles.amountInputError : null]}>
             <View style={styles.amountIconContainer}>
@@ -161,21 +158,18 @@ const EditIncomeScreen = () => {
           </View>
           {amountError && <Text style={styles.errorText}>{amountError}</Text>}
 
-          <Text style={styles.label}>Descripción</Text>
+          <Text style={styles.label}>Título</Text>
           <View style={styles.inputWithIcon}>
             <View style={styles.inputIconContainer}>
-              <Ionicons
-                name="document-text-outline"
-                size={ICON_SIZES.small}
-                color={ICON_COLORS.gray}
-              />
+              <Ionicons name="text-outline" size={ICON_SIZES.small} color={ICON_COLORS.gray} />
             </View>
             <TextInput
-              value={description}
-              onChangeText={setDescription}
+              value={title}
+              onChangeText={text => setTitle(text.slice(0, 20))}
               placeholder="Ej. Pago por proyecto (opcional)"
               style={styles.textInput}
               placeholderTextColor="#B0BEC5"
+              maxLength={20}
             />
           </View>
 
@@ -221,6 +215,13 @@ const EditIncomeScreen = () => {
             />
           </TouchableOpacity>
 
+          <ExpandableTextInput
+            label="Descripción"
+            value={description}
+            onChangeText={text => setDescription(text.slice(0, 255))}
+            placeholder="Información adicional (opcional)"
+          />
+
           <TouchableOpacity
             style={[styles.saveButton, submitting && styles.saveButtonDisabled]}
             onPress={onSubmit}
@@ -231,7 +232,7 @@ const EditIncomeScreen = () => {
               {submitting ? 'Guardando...' : 'Guardar cambios'}
             </Text>
           </TouchableOpacity>
-        </ScrollView>
+        </KeyboardAwareScrollView>
       </Layout>
 
       <Modal

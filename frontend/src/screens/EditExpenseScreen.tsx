@@ -1,13 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import {
-  View,
-  Alert,
-  TouchableOpacity,
-  Modal,
-  FlatList,
-  TextInput,
-  ScrollView,
-} from 'react-native';
+import { View, Alert, TouchableOpacity, Modal, FlatList, TextInput } from 'react-native';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import { Layout, Text } from '@ui-kitten/components';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
@@ -23,10 +16,12 @@ import {
   ICON_COLORS,
 } from '../styles/transactionFormStyles';
 import { formatDate, toLocalDateString, parseLocalDate } from '../utils/dateFormatter';
+import ExpandableTextInput from '../components/ExpandableTextInput/ExpandableTextInput';
 
 const EditExpenseScreen = () => {
   const { expenseId } = useLocalSearchParams<{ expenseId?: string }>();
   const { displayValue, amount, handleAmountChange, setAmount } = useCurrencyInput();
+  const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<ExpenseCategoryOption | null>(null);
   const [selectedType, setSelectedType] = useState<ExpenseType | null>(null);
@@ -51,6 +46,7 @@ const EditExpenseScreen = () => {
         const expense = await expenseService.getExpenseById(expenseId);
         if (mounted) {
           setAmount(String(expense.amount));
+          setTitle(expense.title ?? '');
           setDescription(expense.description ?? '');
           const selected = EXPENSE_CATEGORIES.find(c => c.value === expense.category) ?? null;
           setSelectedCategory(selected);
@@ -124,6 +120,7 @@ const EditExpenseScreen = () => {
       const dateString = toLocalDateString(selectedDate);
       await expenseService.updateExpense(expenseId, {
         amount: parseFloat(amount),
+        title: title.trim() || undefined,
         description: description.trim() || undefined,
         category: selectedCategory!.value as ExpenseCategory,
         type: selectedType!,
@@ -157,7 +154,7 @@ const EditExpenseScreen = () => {
           </TouchableOpacity>
         </View>
 
-        <ScrollView showsVerticalScrollIndicator={false}>
+        <KeyboardAwareScrollView showsVerticalScrollIndicator={false}>
           <Text style={styles.label}>Monto *</Text>
           <View style={[styles.amountInputContainer, amountError ? styles.amountInputError : null]}>
             <View style={styles.amountIconContainer}>
@@ -177,21 +174,18 @@ const EditExpenseScreen = () => {
           </View>
           {amountError && <Text style={styles.errorText}>{amountError}</Text>}
 
-          <Text style={styles.label}>Descripción</Text>
+          <Text style={styles.label}>Título</Text>
           <View style={styles.inputWithIcon}>
             <View style={styles.inputIconContainer}>
-              <Ionicons
-                name="document-text-outline"
-                size={ICON_SIZES.small}
-                color={ICON_COLORS.gray}
-              />
+              <Ionicons name="text-outline" size={ICON_SIZES.small} color={ICON_COLORS.gray} />
             </View>
             <TextInput
-              value={description}
-              onChangeText={setDescription}
+              value={title}
+              onChangeText={text => setTitle(text.slice(0, 20))}
               placeholder="Ej. Compra del mes (opcional)"
               style={styles.textInput}
               placeholderTextColor="#B0BEC5"
+              maxLength={20}
             />
           </View>
 
@@ -219,23 +213,6 @@ const EditExpenseScreen = () => {
             <Ionicons name="chevron-down" size={ICON_SIZES.medium} color={ICON_COLORS.secondary} />
           </TouchableOpacity>
           {categoryError && <Text style={styles.categoryErrorText}>{categoryError}</Text>}
-
-          <Text style={styles.label}>Fecha *</Text>
-          <TouchableOpacity style={styles.dateButton} onPress={() => setShowDatePicker(true)}>
-            <View style={styles.dropdownIconContainer}>
-              <Ionicons
-                name="calendar-outline"
-                size={ICON_SIZES.small}
-                color={ICON_COLORS.primary}
-              />
-            </View>
-            <Text style={styles.dropdownButtonText}>{formatDate(selectedDate)}</Text>
-            <Ionicons
-              name="chevron-forward"
-              size={ICON_SIZES.medium}
-              color={ICON_COLORS.secondary}
-            />
-          </TouchableOpacity>
 
           <Text style={styles.typeLabel}>Tipo de gasto *</Text>
           <View style={styles.typeContainer}>
@@ -276,6 +253,30 @@ const EditExpenseScreen = () => {
           </View>
           {typeError && <Text style={styles.typeErrorText}>{typeError}</Text>}
 
+          <Text style={styles.label}>Fecha *</Text>
+          <TouchableOpacity style={styles.dateButton} onPress={() => setShowDatePicker(true)}>
+            <View style={styles.dropdownIconContainer}>
+              <Ionicons
+                name="calendar-outline"
+                size={ICON_SIZES.small}
+                color={ICON_COLORS.primary}
+              />
+            </View>
+            <Text style={styles.dropdownButtonText}>{formatDate(selectedDate)}</Text>
+            <Ionicons
+              name="chevron-forward"
+              size={ICON_SIZES.medium}
+              color={ICON_COLORS.secondary}
+            />
+          </TouchableOpacity>
+
+          <ExpandableTextInput
+            label="Descripción"
+            value={description}
+            onChangeText={text => setDescription(text.slice(0, 255))}
+            placeholder="Información adicional (opcional)"
+          />
+
           <TouchableOpacity
             style={[styles.saveButton, submitting && styles.saveButtonDisabled]}
             onPress={onSubmit}
@@ -286,7 +287,7 @@ const EditExpenseScreen = () => {
               {submitting ? 'Guardando...' : 'Guardar cambios'}
             </Text>
           </TouchableOpacity>
-        </ScrollView>
+        </KeyboardAwareScrollView>
       </Layout>
 
       <Modal

@@ -9,6 +9,7 @@ import org.fiuba.guitapp.model.IncomeCategory;
 public record IncomeResponse(
         UUID id,
         BigDecimal amount,
+        String title,
         String description,
         IncomeCategory category,
         LocalDate date) {

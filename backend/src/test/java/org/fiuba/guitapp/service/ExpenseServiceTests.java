@@ -65,11 +65,12 @@ class ExpenseServiceTests {
     @Test
     void addExpense_ShouldReturnExpenseResponse_WhenUserExists() {
         AddExpenseRequest request = new AddExpenseRequest(
-                new BigDecimal("1500.00"), "Lunch", ExpenseCategory.RESTAURANT, ExpenseType.VARIABLE, LocalDate.now());
+                new BigDecimal("1500.00"), "Almuerzo", "Lunch at restaurant", ExpenseCategory.RESTAURANT, ExpenseType.VARIABLE, LocalDate.now());
 
         Expense savedExpense = new Expense();
         savedExpense.setId(UUID.randomUUID());
         savedExpense.setAmount(request.amount());
+        savedExpense.setTitle(request.title());
         savedExpense.setDescription(request.description());
         savedExpense.setCategory(request.category());
         savedExpense.setType(request.type());
@@ -84,7 +85,8 @@ class ExpenseServiceTests {
         assertNotNull(response);
         assertEquals(savedExpense.getId(), response.id());
         assertEquals(new BigDecimal("1500.00"), response.amount());
-        assertEquals("Lunch", response.description());
+        assertEquals("Almuerzo", response.title());
+        assertEquals("Lunch at restaurant", response.description());
         assertEquals(ExpenseCategory.RESTAURANT, response.category());
         assertEquals(ExpenseType.VARIABLE, response.type());
         assertNotNull(response.date());
@@ -96,7 +98,7 @@ class ExpenseServiceTests {
     @Test
     void addExpense_ShouldThrowAuthException_WhenUserNotFound() {
         AddExpenseRequest request = new AddExpenseRequest(
-                new BigDecimal("100.00"), null, ExpenseCategory.OTHER, ExpenseType.FIXED, LocalDate.now());
+                new BigDecimal("100.00"), null, null, ExpenseCategory.OTHER, ExpenseType.FIXED, LocalDate.now());
 
         when(userRepository.findByEmail(testEmail)).thenReturn(Optional.empty());
 
@@ -110,11 +112,12 @@ class ExpenseServiceTests {
     @Test
     void addExpense_ShouldSaveExpenseWithNullDescription_WhenDescriptionIsNull() {
         AddExpenseRequest request = new AddExpenseRequest(
-                new BigDecimal("500.00"), null, ExpenseCategory.SUPERMARKET, ExpenseType.VARIABLE, LocalDate.now());
+                new BigDecimal("500.00"), null, null, ExpenseCategory.SUPERMARKET, ExpenseType.VARIABLE, LocalDate.now());
 
         Expense savedExpense = new Expense();
         savedExpense.setId(UUID.randomUUID());
         savedExpense.setAmount(request.amount());
+        savedExpense.setTitle(null);
         savedExpense.setDescription(null);
         savedExpense.setCategory(request.category());
         savedExpense.setDate(LocalDate.now());
@@ -125,6 +128,7 @@ class ExpenseServiceTests {
 
         ExpenseResponse response = expenseService.addExpense(testEmail, request);
 
+        assertNull(response.title());
         assertNull(response.description());
         verify(expenseRepository, times(1)).save(any(Expense.class));
         verify(applicationEventPublisher, times(1)).publishEvent(any(ExpenseCreatedEvent.class)); // Verify ExpenseCreatedEvent publishing
@@ -133,7 +137,7 @@ class ExpenseServiceTests {
     @Test
     void addExpense_ShouldAssociateExpenseWithUser() {
         AddExpenseRequest request = new AddExpenseRequest(
-                new BigDecimal("200.00"), "Transport", ExpenseCategory.PUBLIC_TRANSPORT, ExpenseType.FIXED, LocalDate.now());
+                new BigDecimal("200.00"), "Transport", null, ExpenseCategory.PUBLIC_TRANSPORT, ExpenseType.FIXED, LocalDate.now());
 
         Expense savedExpense = new Expense();
         savedExpense.setId(UUID.randomUUID());
@@ -232,7 +236,8 @@ class ExpenseServiceTests {
         Expense expense = new Expense();
         expense.setId(expenseId);
         expense.setAmount(new BigDecimal("99.99"));
-        expense.setDescription("Coffee");
+        expense.setTitle("Cafe");
+        expense.setDescription("Coffee at the office");
         expense.setCategory(ExpenseCategory.CAFE);
         expense.setType(ExpenseType.VARIABLE);
         expense.setDate(now);
@@ -245,7 +250,8 @@ class ExpenseServiceTests {
 
         assertEquals(expenseId, response.id());
         assertEquals(new BigDecimal("99.99"), response.amount());
-        assertEquals("Coffee", response.description());
+        assertEquals("Cafe", response.title());
+        assertEquals("Coffee at the office", response.description());
         assertEquals(ExpenseCategory.CAFE, response.category());
         assertEquals(ExpenseType.VARIABLE, response.type());
         assertEquals(now, response.date());
@@ -311,6 +317,7 @@ class ExpenseServiceTests {
         Expense expense = new Expense();
         expense.setId(expenseId);
         expense.setAmount(new BigDecimal("50.00"));
+        expense.setTitle("Cafe");
         expense.setDescription("Old");
         expense.setCategory(ExpenseCategory.CAFE);
         expense.setType(ExpenseType.VARIABLE);
@@ -319,7 +326,8 @@ class ExpenseServiceTests {
 
         UpdateExpenseRequest request = new UpdateExpenseRequest(
                 new BigDecimal("120.00"),
-                "Updated lunch",
+                "Almuerzo",
+                "Updated lunch details",
                 ExpenseCategory.RESTAURANT,
                 ExpenseType.FIXED,
                 LocalDate.now());
@@ -332,7 +340,8 @@ class ExpenseServiceTests {
 
         assertEquals(expenseId, response.id());
         assertEquals(new BigDecimal("120.00"), response.amount());
-        assertEquals("Updated lunch", response.description());
+        assertEquals("Almuerzo", response.title());
+        assertEquals("Updated lunch details", response.description());
         assertEquals(ExpenseCategory.RESTAURANT, response.category());
         assertEquals(ExpenseType.FIXED, response.type());
         assertEquals(now, response.date());
@@ -346,13 +355,14 @@ class ExpenseServiceTests {
         Expense expense = new Expense();
         expense.setId(expenseId);
         expense.setAmount(new BigDecimal("50.00"));
+        expense.setTitle("Gym");
         expense.setDescription("Keep");
         expense.setCategory(ExpenseCategory.GYM);
         expense.setType(ExpenseType.FIXED);
         expense.setDate(now);
         expense.setUser(testUser);
 
-        UpdateExpenseRequest request = new UpdateExpenseRequest(null, null, null, null, null);
+        UpdateExpenseRequest request = new UpdateExpenseRequest(null, null, null, null, null, null);
 
         when(userRepository.findByEmail(testEmail)).thenReturn(Optional.of(testUser));
         when(expenseRepository.findById(expenseId)).thenReturn(Optional.of(expense));
@@ -361,6 +371,7 @@ class ExpenseServiceTests {
         ExpenseResponse response = expenseService.updateExpense(testEmail, expenseId, request);
 
         assertEquals(new BigDecimal("50.00"), response.amount());
+        assertEquals("Gym", response.title());
         assertEquals("Keep", response.description());
         assertEquals(ExpenseCategory.GYM, response.category());
         assertEquals(ExpenseType.FIXED, response.type());
@@ -374,13 +385,14 @@ class ExpenseServiceTests {
         Expense expense = new Expense();
         expense.setId(expenseId);
         expense.setAmount(new BigDecimal("40.00"));
+        expense.setTitle("Salida");
         expense.setDescription("Note");
         expense.setCategory(ExpenseCategory.OUTINGS);
         expense.setType(ExpenseType.VARIABLE);
         expense.setDate(now);
         expense.setUser(testUser);
 
-        UpdateExpenseRequest request = new UpdateExpenseRequest(null, "", null, null, null);
+        UpdateExpenseRequest request = new UpdateExpenseRequest(null, "", "", null, null, null);
 
         when(userRepository.findByEmail(testEmail)).thenReturn(Optional.of(testUser));
         when(expenseRepository.findById(expenseId)).thenReturn(Optional.of(expense));
@@ -388,6 +400,7 @@ class ExpenseServiceTests {
 
         ExpenseResponse response = expenseService.updateExpense(testEmail, expenseId, request);
 
+        assertEquals("", response.title());
         assertEquals("", response.description());
         assertEquals(new BigDecimal("40.00"), response.amount());
         assertEquals(ExpenseCategory.OUTINGS, response.category());
@@ -397,7 +410,7 @@ class ExpenseServiceTests {
     @Test
     void updateExpense_ShouldThrowAuthException_WhenExpenseNotFound() {
         UUID expenseId = UUID.randomUUID();
-        UpdateExpenseRequest request = new UpdateExpenseRequest(new BigDecimal("1.00"), "x", ExpenseCategory.OTHER, ExpenseType.VARIABLE, LocalDate.now());
+        UpdateExpenseRequest request = new UpdateExpenseRequest(new BigDecimal("1.00"), "x", "x", ExpenseCategory.OTHER, ExpenseType.VARIABLE, LocalDate.now());
 
         when(userRepository.findByEmail(testEmail)).thenReturn(Optional.of(testUser));
         when(expenseRepository.findById(expenseId)).thenReturn(Optional.empty());
@@ -421,7 +434,7 @@ class ExpenseServiceTests {
         expense.setId(expenseId);
         expense.setUser(otherUser);
 
-        UpdateExpenseRequest request = new UpdateExpenseRequest(new BigDecimal("1.00"), "x", ExpenseCategory.OTHER, ExpenseType.VARIABLE, LocalDate.now());
+        UpdateExpenseRequest request = new UpdateExpenseRequest(new BigDecimal("1.00"), "x", "x", ExpenseCategory.OTHER, ExpenseType.VARIABLE, LocalDate.now());
 
         when(userRepository.findByEmail(testEmail)).thenReturn(Optional.of(testUser));
         when(expenseRepository.findById(expenseId)).thenReturn(Optional.of(expense));

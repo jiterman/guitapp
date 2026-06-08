@@ -6,9 +6,9 @@ import {
   Modal,
   FlatList,
   TextInput,
-  ScrollView,
   ActivityIndicator,
 } from 'react-native';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import { Layout, Text } from '@ui-kitten/components';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
@@ -16,6 +16,7 @@ import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/dat
 import { router, useLocalSearchParams } from 'expo-router';
 import * as ImageManipulator from 'expo-image-manipulator';
 import CameraModal from '../components/CameraModal/CameraModal';
+import ExpandableTextInput from '../components/ExpandableTextInput/ExpandableTextInput';
 import { expenseService } from '../services/expenseService';
 import type { ExpenseType } from '../constants/categories';
 import {
@@ -36,7 +37,8 @@ const AddExpenseScreen = () => {
   const { displayValue, amount, handleAmountChange } = useCurrencyInput(
     (params.amount as string) || ''
   );
-  const [description, setDescription] = useState((params.description as string) || '');
+  const [title, setTitle] = useState((params.title as string) || '');
+  const [description, setDescription] = useState('');
   const initialCategory = getExpenseCategory(params.category as string) || null;
   const initialDate = params.date ? new Date(params.date as string) : new Date();
 
@@ -72,8 +74,8 @@ const AddExpenseScreen = () => {
       if (analysis.amount && analysis.amount > 0) {
         handleAmountChange(analysis.amount.toString());
       }
-      if (analysis.description) {
-        setDescription(analysis.description);
+      if (analysis.title) {
+        setTitle(analysis.title.slice(0, 20));
       }
       if (analysis.category) {
         const cat = getExpenseCategory(analysis.category);
@@ -144,6 +146,7 @@ const AddExpenseScreen = () => {
       const dateString = toLocalDateString(selectedDate);
       await expenseService.addExpense({
         amount: parseFloat(amount),
+        title: title.trim() || undefined,
         description: description.trim() || undefined,
         category: selectedCategory!.value,
         type: selectedType!,
@@ -198,7 +201,7 @@ const AddExpenseScreen = () => {
           </View>
         )}
 
-        <ScrollView showsVerticalScrollIndicator={false}>
+        <KeyboardAwareScrollView showsVerticalScrollIndicator={false}>
           <Text style={styles.label}>Monto *</Text>
           <View style={[styles.amountInputContainer, amountError ? styles.amountInputError : null]}>
             <View style={styles.amountIconContainer}>
@@ -218,21 +221,18 @@ const AddExpenseScreen = () => {
           </View>
           {amountError && <Text style={styles.errorText}>{amountError}</Text>}
 
-          <Text style={styles.label}>Descripción</Text>
+          <Text style={styles.label}>Título</Text>
           <View style={styles.inputWithIcon}>
             <View style={styles.inputIconContainer}>
-              <Ionicons
-                name="document-text-outline"
-                size={ICON_SIZES.small}
-                color={ICON_COLORS.gray}
-              />
+              <Ionicons name="text-outline" size={ICON_SIZES.small} color={ICON_COLORS.gray} />
             </View>
             <TextInput
-              value={description}
-              onChangeText={setDescription}
+              value={title}
+              onChangeText={text => setTitle(text.slice(0, 20))}
               placeholder="Ej. Compra del mes (opcional)"
               style={styles.textInput}
               placeholderTextColor="#B0BEC5"
+              maxLength={20}
             />
           </View>
 
@@ -260,23 +260,6 @@ const AddExpenseScreen = () => {
             <Ionicons name="chevron-down" size={ICON_SIZES.medium} color={ICON_COLORS.secondary} />
           </TouchableOpacity>
           {categoryError && <Text style={styles.categoryErrorText}>{categoryError}</Text>}
-
-          <Text style={styles.label}>Fecha *</Text>
-          <TouchableOpacity style={styles.dateButton} onPress={() => setShowDatePicker(true)}>
-            <View style={styles.dropdownIconContainer}>
-              <Ionicons
-                name="calendar-outline"
-                size={ICON_SIZES.small}
-                color={ICON_COLORS.primary}
-              />
-            </View>
-            <Text style={styles.dropdownButtonText}>{formatDate(selectedDate)}</Text>
-            <Ionicons
-              name="chevron-forward"
-              size={ICON_SIZES.medium}
-              color={ICON_COLORS.secondary}
-            />
-          </TouchableOpacity>
 
           <Text style={styles.typeLabel}>Tipo de gasto *</Text>
           <View style={styles.typeContainer}>
@@ -317,6 +300,30 @@ const AddExpenseScreen = () => {
           </View>
           {typeError && <Text style={styles.typeErrorText}>{typeError}</Text>}
 
+          <Text style={styles.label}>Fecha *</Text>
+          <TouchableOpacity style={styles.dateButton} onPress={() => setShowDatePicker(true)}>
+            <View style={styles.dropdownIconContainer}>
+              <Ionicons
+                name="calendar-outline"
+                size={ICON_SIZES.small}
+                color={ICON_COLORS.primary}
+              />
+            </View>
+            <Text style={styles.dropdownButtonText}>{formatDate(selectedDate)}</Text>
+            <Ionicons
+              name="chevron-forward"
+              size={ICON_SIZES.medium}
+              color={ICON_COLORS.secondary}
+            />
+          </TouchableOpacity>
+
+          <ExpandableTextInput
+            label="Descripción"
+            value={description}
+            onChangeText={text => setDescription(text.slice(0, 255))}
+            placeholder="Información adicional (opcional)"
+          />
+
           <TouchableOpacity
             style={[styles.saveButton, submitting && styles.saveButtonDisabled]}
             onPress={onSubmit}
@@ -327,7 +334,7 @@ const AddExpenseScreen = () => {
               {submitting ? 'Guardando...' : 'Guardar cambios'}
             </Text>
           </TouchableOpacity>
-        </ScrollView>
+        </KeyboardAwareScrollView>
       </Layout>
 
       <Modal

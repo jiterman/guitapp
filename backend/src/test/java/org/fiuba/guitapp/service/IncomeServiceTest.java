@@ -50,7 +50,7 @@ class IncomeServiceTest {
 
     @Test
     void addIncome_ShouldSaveAndReturnResponse() {
-        AddIncomeRequest req = new AddIncomeRequest(new BigDecimal("1200.00"), "Salary", null, LocalDate.of(2023, 5, 10));
+        AddIncomeRequest req = new AddIncomeRequest(new BigDecimal("1200.00"), "Salary", null, null, LocalDate.of(2023, 5, 10));
 
         when(userRepository.findByEmail("test@example.com")).thenReturn(Optional.of(user));
 
@@ -58,6 +58,7 @@ class IncomeServiceTest {
         UUID id = UUID.randomUUID();
         saved.setId(id);
         saved.setAmount(req.amount());
+        saved.setTitle(req.title());
         saved.setDescription(req.description());
         saved.setDate(req.date());
 
@@ -106,12 +107,13 @@ class IncomeServiceTest {
 
         when(incomeRepository.findById(id)).thenReturn(Optional.of(stored));
 
-        UpdateIncomeRequest req = new UpdateIncomeRequest(new BigDecimal("200.00"), "New desc", null, LocalDate.of(2023, 6, 1));
+        UpdateIncomeRequest req = new UpdateIncomeRequest(new BigDecimal("200.00"), "New title", "New desc", null, LocalDate.of(2023, 6, 1));
 
         Income saved = new Income();
         saved.setId(id);
         saved.setUser(user);
         saved.setAmount(req.amount());
+        saved.setTitle(req.title());
         saved.setDescription(req.description());
         saved.setDate(req.date());
 
@@ -120,6 +122,7 @@ class IncomeServiceTest {
         IncomeResponse resp = incomeService.updateIncome("test@example.com", id, req);
 
         assertEquals(new BigDecimal("200.00"), resp.amount());
+        assertEquals("New title", resp.title());
         assertEquals("New desc", resp.description());
         assertEquals(req.date(), resp.date());
         verify(incomeRepository, times(1)).save(any(Income.class));
