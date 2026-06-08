@@ -15,7 +15,9 @@ export interface MonthlyInsight {
     | 'TOP_CATEGORY'
     | 'CATEGORY_INCREASE'
     | 'CATEGORY_DECREASE'
-    | 'NON_ESSENTIAL_RATIO';
+    | 'NON_ESSENTIAL_RATIO'
+    | 'CATEGORY_WEEKDAY_CONCENTRATION'
+    | 'WEEKLY_VARIABLE_CONCENTRATION';
   label: string;
   highlight: string;
   sub: string;

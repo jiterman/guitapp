@@ -166,7 +166,7 @@ const SummaryScreen: React.FC = () => {
             ItemSeparatorComponent={() => <View style={styles.separator} />}
             ListEmptyComponent={
               <View style={styles.emptyContainer}>
-                <Text appearance="hint">No hay transacciones para este filtro.</Text>
+                <Text appearance="hint">No hay movimientos para este filtro.</Text>
               </View>
             }
           />
