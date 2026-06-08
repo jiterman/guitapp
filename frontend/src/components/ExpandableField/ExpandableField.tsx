@@ -27,8 +27,16 @@ const ExpandableField: React.FC<Props> = ({
   const [isTruncated, setIsTruncated] = useState(false);
   const hasContent = !!value?.trim();
 
+  const toggle = () => {
+    if (hasContent && isTruncated) setExpanded(e => !e);
+  };
+
   return (
-    <View style={[styles.detailRow, styles.detailRowWithBg, { backgroundColor }]}>
+    <TouchableOpacity
+      style={[styles.detailRow, styles.detailRowWithBg, { backgroundColor }]}
+      onPress={toggle}
+      activeOpacity={isTruncated ? 0.7 : 1}
+    >
       <View style={[styles.iconContainer, iconContainerStyle]}>
         <Ionicons name={iconName} size={24} color={iconColor} />
       </View>
@@ -53,11 +61,9 @@ const ExpandableField: React.FC<Props> = ({
         </Text>
       </View>
       {hasContent && isTruncated && (
-        <TouchableOpacity onPress={() => setExpanded(e => !e)} hitSlop={8}>
-          <Ionicons name={expanded ? 'chevron-up' : 'chevron-down'} size={18} color="#999" />
-        </TouchableOpacity>
+        <Ionicons name={expanded ? 'chevron-up' : 'chevron-down'} size={18} color="#999" />
       )}
-    </View>
+    </TouchableOpacity>
   );
 };
 
