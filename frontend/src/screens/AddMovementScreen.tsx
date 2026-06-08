@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import {
   View,
   Alert,
@@ -37,6 +37,8 @@ import { formatDate, toLocalDateString } from '../utils/dateFormatter';
 const vh = Dimensions.get('window').height / 100;
 
 const AddMovementScreen = () => {
+  const scrollViewRef = useRef<ScrollView>(null);
+  const scrollYRef = useRef(0);
   const params = useLocalSearchParams();
   const [movementType, setMovementType] = useState<'EXPENSE' | 'INCOME'>('EXPENSE');
 
@@ -274,8 +276,13 @@ const AddMovementScreen = () => {
         )}
 
         <ScrollView
+          ref={scrollViewRef}
           showsVerticalScrollIndicator={false}
           contentContainerStyle={{ paddingBottom: 50 }}
+          onScroll={e => {
+            scrollYRef.current = e.nativeEvent.contentOffset.y;
+          }}
+          scrollEventThrottle={16}
         >
           <Text style={styles.label}>Monto *</Text>
           <View style={[styles.amountInputContainer, amountError ? styles.amountInputError : null]}>
@@ -401,6 +408,8 @@ const AddMovementScreen = () => {
             value={description}
             onChangeText={text => setDescription(text.slice(0, 255))}
             placeholder="Información adicional (opcional)"
+            scrollViewRef={scrollViewRef}
+            scrollYRef={scrollYRef}
           />
         </ScrollView>
 

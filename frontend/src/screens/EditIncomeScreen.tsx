@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   View,
   Alert,
@@ -27,6 +27,7 @@ import { formatDate, toLocalDateString, parseLocalDate } from '../utils/dateForm
 import ExpandableTextInput from '../components/ExpandableTextInput/ExpandableTextInput';
 
 const EditIncomeScreen = () => {
+  const scrollViewRef = useRef<ScrollView>(null);
   const { incomeId } = useLocalSearchParams<{ incomeId?: string }>();
   const { displayValue, amount, handleAmountChange, setAmount } = useCurrencyInput();
   const [title, setTitle] = useState('');
@@ -152,6 +153,7 @@ const EditIncomeScreen = () => {
           </View>
 
           <ScrollView
+            ref={scrollViewRef}
             showsVerticalScrollIndicator={false}
             contentContainerStyle={{ paddingBottom: 50 }}
           >
@@ -242,6 +244,7 @@ const EditIncomeScreen = () => {
               value={description}
               onChangeText={text => setDescription(text.slice(0, 255))}
               placeholder="Información adicional (opcional)"
+              scrollViewRef={scrollViewRef}
             />
           </ScrollView>
         </KeyboardAvoidingView>

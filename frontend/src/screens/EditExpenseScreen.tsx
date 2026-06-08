@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   View,
   Alert,
@@ -27,6 +27,8 @@ import { formatDate, toLocalDateString, parseLocalDate } from '../utils/dateForm
 import ExpandableTextInput from '../components/ExpandableTextInput/ExpandableTextInput';
 
 const EditExpenseScreen = () => {
+  const scrollViewRef = useRef<ScrollView>(null);
+  const scrollYRef = useRef(0);
   const { expenseId } = useLocalSearchParams<{ expenseId?: string }>();
   const { displayValue, amount, handleAmountChange, setAmount } = useCurrencyInput();
   const [title, setTitle] = useState('');
@@ -168,8 +170,13 @@ const EditExpenseScreen = () => {
           </View>
 
           <ScrollView
+            ref={scrollViewRef}
             showsVerticalScrollIndicator={false}
             contentContainerStyle={{ paddingBottom: 50 }}
+            onScroll={e => {
+              scrollYRef.current = e.nativeEvent.contentOffset.y;
+            }}
+            scrollEventThrottle={16}
           >
             <Text style={styles.label}>Monto *</Text>
             <View
@@ -301,6 +308,8 @@ const EditExpenseScreen = () => {
               value={description}
               onChangeText={text => setDescription(text.slice(0, 255))}
               placeholder="Información adicional (opcional)"
+              scrollViewRef={scrollViewRef}
+              scrollYRef={scrollYRef}
             />
           </ScrollView>
         </KeyboardAvoidingView>
