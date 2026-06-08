@@ -1,9 +1,17 @@
 import React, { useEffect, useState } from 'react';
-import { View, Alert, TouchableOpacity, Modal, FlatList, TextInput } from 'react-native';
-import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
+import {
+  View,
+  Alert,
+  TouchableOpacity,
+  Modal,
+  FlatList,
+  TextInput,
+  ActivityIndicator,
+} from 'react-native';
+import { ScrollView, KeyboardAvoidingView } from 'react-native';
 import { Layout, Text } from '@ui-kitten/components';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Ionicons, MaterialIcons } from '@expo/vector-icons';
+import { Ionicons } from '@expo/vector-icons';
 import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import { router, useLocalSearchParams } from 'expo-router';
 import type { IncomeCategory } from '../constants/categories';
@@ -129,110 +137,125 @@ const EditIncomeScreen = () => {
   return (
     <>
       <Layout style={styles.container}>
-        <View style={styles.subHeader}>
-          <Text category="h4" style={styles.title}>
-            Editar ingreso
-          </Text>
-          <TouchableOpacity onPress={() => router.back()}>
-            <Text style={styles.closeButton}>✕</Text>
-          </TouchableOpacity>
-        </View>
-
-        <KeyboardAwareScrollView showsVerticalScrollIndicator={false}>
-          <Text style={styles.label}>Monto *</Text>
-          <View style={[styles.amountInputContainer, amountError ? styles.amountInputError : null]}>
-            <View style={styles.amountIconContainer}>
-              <Text style={styles.amountCurrencySymbol}>$</Text>
-            </View>
-            <TextInput
-              value={displayValue}
-              onChangeText={text => {
-                handleAmountChange(text);
-                if (amountError) setAmountError(null);
-              }}
-              placeholder="0,00"
-              keyboardType="decimal-pad"
-              style={styles.amountInput}
-              placeholderTextColor="#FFC947"
-            />
-          </View>
-          {amountError && <Text style={styles.errorText}>{amountError}</Text>}
-
-          <Text style={styles.label}>Título</Text>
-          <View style={styles.inputWithIcon}>
-            <View style={styles.inputIconContainer}>
-              <Ionicons name="text-outline" size={ICON_SIZES.small} color={ICON_COLORS.gray} />
-            </View>
-            <TextInput
-              value={title}
-              onChangeText={text => setTitle(text.slice(0, 20))}
-              placeholder="Ej. Pago por proyecto (opcional)"
-              style={styles.textInput}
-              placeholderTextColor="#B0BEC5"
-              maxLength={20}
-            />
+        <KeyboardAvoidingView
+          style={{ flex: 1, backgroundColor: '#E6F2FC' }}
+          behavior="height"
+          keyboardVerticalOffset={60}
+        >
+          <View style={styles.subHeader}>
+            <Text category="h4" style={styles.title}>
+              Editar ingreso
+            </Text>
+            <TouchableOpacity onPress={() => router.back()}>
+              <Text style={styles.closeButton}>✕</Text>
+            </TouchableOpacity>
           </View>
 
-          <Text style={styles.label}>Categoría *</Text>
-          <TouchableOpacity
-            style={[styles.dropdownButton, categoryError ? styles.dropdownButtonError : null]}
-            onPress={() => setModalVisible(true)}
+          <ScrollView
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={{ paddingBottom: 50 }}
           >
-            <View style={styles.dropdownContent}>
+            <Text style={styles.label}>Monto *</Text>
+            <View
+              style={[styles.amountInputContainer, amountError ? styles.amountInputError : null]}
+            >
+              <View style={styles.amountIconContainer}>
+                <Text style={styles.amountCurrencySymbol}>$</Text>
+              </View>
+              <TextInput
+                value={displayValue}
+                onChangeText={text => {
+                  handleAmountChange(text);
+                  if (amountError) setAmountError(null);
+                }}
+                placeholder="0,00"
+                keyboardType="decimal-pad"
+                style={styles.amountInput}
+                placeholderTextColor="#FFC947"
+              />
+            </View>
+            {amountError && <Text style={styles.errorText}>{amountError}</Text>}
+
+            <Text style={styles.label}>Título</Text>
+            <View style={styles.inputWithIcon}>
+              <View style={styles.inputIconContainer}>
+                <Ionicons name="text-outline" size={ICON_SIZES.small} color={ICON_COLORS.gray} />
+              </View>
+              <TextInput
+                value={title}
+                onChangeText={text => setTitle(text.slice(0, 20))}
+                placeholder="Ej. Pago por proyecto (opcional)"
+                style={styles.textInput}
+                placeholderTextColor="#B0BEC5"
+                maxLength={20}
+              />
+            </View>
+
+            <Text style={styles.label}>Categoría *</Text>
+            <TouchableOpacity
+              style={[styles.dropdownButton, categoryError ? styles.dropdownButtonError : null]}
+              onPress={() => setModalVisible(true)}
+            >
+              <View style={styles.dropdownContent}>
+                <View style={styles.dropdownIconContainer}>
+                  <Ionicons
+                    name={
+                      (selectedCategory?.icon || 'cash-outline') as keyof typeof Ionicons.glyphMap
+                    }
+                    size={ICON_SIZES.small}
+                    color={ICON_COLORS.primary}
+                  />
+                </View>
+                <Text
+                  style={selectedCategory ? styles.dropdownButtonText : styles.dropdownPlaceholder}
+                >
+                  {selectedCategory ? selectedCategory.label : 'Seleccioná una categoría'}
+                </Text>
+              </View>
+              <Ionicons
+                name="chevron-down"
+                size={ICON_SIZES.medium}
+                color={ICON_COLORS.secondary}
+              />
+            </TouchableOpacity>
+            {categoryError && <Text style={styles.categoryErrorText}>{categoryError}</Text>}
+
+            <Text style={styles.label}>Fecha *</Text>
+            <TouchableOpacity style={styles.dateButton} onPress={() => setShowDatePicker(true)}>
               <View style={styles.dropdownIconContainer}>
                 <Ionicons
-                  name={
-                    (selectedCategory?.icon || 'cash-outline') as keyof typeof Ionicons.glyphMap
-                  }
+                  name="calendar-outline"
                   size={ICON_SIZES.small}
                   color={ICON_COLORS.primary}
                 />
               </View>
-              <Text
-                style={selectedCategory ? styles.dropdownButtonText : styles.dropdownPlaceholder}
-              >
-                {selectedCategory ? selectedCategory.label : 'Seleccioná una categoría'}
-              </Text>
-            </View>
-            <Ionicons name="chevron-down" size={ICON_SIZES.medium} color={ICON_COLORS.secondary} />
-          </TouchableOpacity>
-          {categoryError && <Text style={styles.categoryErrorText}>{categoryError}</Text>}
-
-          <Text style={styles.label}>Fecha *</Text>
-          <TouchableOpacity style={styles.dateButton} onPress={() => setShowDatePicker(true)}>
-            <View style={styles.dropdownIconContainer}>
+              <Text style={styles.dropdownButtonText}>{formatDate(selectedDate)}</Text>
               <Ionicons
-                name="calendar-outline"
-                size={ICON_SIZES.small}
-                color={ICON_COLORS.primary}
+                name="chevron-forward"
+                size={ICON_SIZES.medium}
+                color={ICON_COLORS.secondary}
               />
-            </View>
-            <Text style={styles.dropdownButtonText}>{formatDate(selectedDate)}</Text>
-            <Ionicons
-              name="chevron-forward"
-              size={ICON_SIZES.medium}
-              color={ICON_COLORS.secondary}
+            </TouchableOpacity>
+
+            <ExpandableTextInput
+              label="Descripción"
+              value={description}
+              onChangeText={text => setDescription(text.slice(0, 255))}
+              placeholder="Información adicional (opcional)"
             />
-          </TouchableOpacity>
-
-          <ExpandableTextInput
-            label="Descripción"
-            value={description}
-            onChangeText={text => setDescription(text.slice(0, 255))}
-            placeholder="Información adicional (opcional)"
-          />
-
-          <TouchableOpacity
-            style={[styles.saveButton, submitting && styles.saveButtonDisabled]}
-            onPress={onSubmit}
-            disabled={submitting}
-          >
-            <MaterialIcons name="save" size={20} color="#000" style={styles.saveIcon} />
-            <Text style={styles.saveButtonText}>
-              {submitting ? 'Guardando...' : 'Guardar cambios'}
-            </Text>
-          </TouchableOpacity>
-        </KeyboardAwareScrollView>
+          </ScrollView>
+        </KeyboardAvoidingView>
+        <TouchableOpacity
+          style={[styles.saveButton, submitting && styles.saveButtonDisabled]}
+          onPress={onSubmit}
+          disabled={submitting}
+        >
+          {submitting ? (
+            <ActivityIndicator size="small" color="#fff" />
+          ) : (
+            <Ionicons name="checkmark" size={32} color="#fff" />
+          )}
+        </TouchableOpacity>
       </Layout>
 
       <Modal

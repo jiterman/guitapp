@@ -45,7 +45,7 @@ const ShareIntentScreen = () => {
           params: {
             fromShareIntent: 'true',
             amount: analysisResponse.amount?.toString() || '',
-            description: analysisResponse.description || '',
+            title: analysisResponse.title || '',
             category: analysisResponse.category || 'OTHER',
             date: analysisResponse.date || new Date().toISOString().split('T')[0],
             imagePath: manipulatedImage.uri,
