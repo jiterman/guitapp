@@ -244,7 +244,7 @@ const EditIncomeScreen = () => {
           {submitting ? (
             <ActivityIndicator size="small" color="#fff" />
           ) : (
-            <Ionicons name="checkmark" size={32} color="#fff" />
+            <Ionicons name="checkmark" size={24} color="#fff" />
           )}
         </TouchableOpacity>
       </Layout>

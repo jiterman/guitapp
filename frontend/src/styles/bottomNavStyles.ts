@@ -35,7 +35,7 @@ export const bottomNavStyles = StyleSheet.create({
     backgroundColor: '#FFBB00',
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 20, // Elevation effect
+    marginBottom: 20,
     ...Platform.select({
       ios: {
         shadowColor: '#3a9fc0',
