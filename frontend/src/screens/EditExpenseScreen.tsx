@@ -8,7 +8,7 @@ import {
   TextInput,
   ActivityIndicator,
 } from 'react-native';
-import { ScrollView, KeyboardAvoidingView } from 'react-native';
+import { ScrollView } from 'react-native';
 import { Layout, Text } from '@ui-kitten/components';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -155,164 +155,148 @@ const EditExpenseScreen = () => {
   return (
     <>
       <Layout style={styles.container}>
-        <KeyboardAvoidingView
-          style={{ flex: 1, backgroundColor: '#E6F2FC' }}
-          behavior="height"
-          keyboardVerticalOffset={60}
+        <View style={styles.subHeader}>
+          <Text category="h4" style={styles.title}>
+            Editar gasto
+          </Text>
+          <TouchableOpacity onPress={() => router.back()}>
+            <Text style={styles.closeButton}>✕</Text>
+          </TouchableOpacity>
+        </View>
+
+        <ScrollView
+          ref={scrollViewRef}
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={{ paddingBottom: 50 }}
+          onScroll={e => {
+            scrollYRef.current = e.nativeEvent.contentOffset.y;
+          }}
+          scrollEventThrottle={16}
         >
-          <View style={styles.subHeader}>
-            <Text category="h4" style={styles.title}>
-              Editar gasto
-            </Text>
-            <TouchableOpacity onPress={() => router.back()}>
-              <Text style={styles.closeButton}>✕</Text>
-            </TouchableOpacity>
+          <Text style={styles.label}>Monto *</Text>
+          <View style={[styles.amountInputContainer, amountError ? styles.amountInputError : null]}>
+            <View style={styles.amountIconContainer}>
+              <Text style={styles.amountCurrencySymbol}>$</Text>
+            </View>
+            <TextInput
+              value={displayValue}
+              onChangeText={text => {
+                handleAmountChange(text);
+                if (amountError) setAmountError(null);
+              }}
+              placeholder="0,00"
+              keyboardType="decimal-pad"
+              style={styles.amountInput}
+              placeholderTextColor="#FFC947"
+            />
+          </View>
+          {amountError && <Text style={styles.errorText}>{amountError}</Text>}
+
+          <Text style={styles.label}>Título</Text>
+          <View style={styles.inputWithIcon}>
+            <View style={styles.inputIconContainer}>
+              <Ionicons name="text-outline" size={ICON_SIZES.small} color={ICON_COLORS.gray} />
+            </View>
+            <TextInput
+              value={title}
+              onChangeText={text => setTitle(text.slice(0, 20))}
+              placeholder="Ej. Compra del mes (opcional)"
+              style={styles.textInput}
+              placeholderTextColor="#B0BEC5"
+              maxLength={20}
+            />
           </View>
 
-          <ScrollView
-            ref={scrollViewRef}
-            showsVerticalScrollIndicator={false}
-            contentContainerStyle={{ paddingBottom: 50 }}
-            onScroll={e => {
-              scrollYRef.current = e.nativeEvent.contentOffset.y;
-            }}
-            scrollEventThrottle={16}
+          <Text style={styles.label}>Categoría *</Text>
+          <TouchableOpacity
+            style={[styles.dropdownButton, categoryError ? styles.dropdownButtonError : null]}
+            onPress={() => setModalVisible(true)}
           >
-            <Text style={styles.label}>Monto *</Text>
-            <View
-              style={[styles.amountInputContainer, amountError ? styles.amountInputError : null]}
-            >
-              <View style={styles.amountIconContainer}>
-                <Text style={styles.amountCurrencySymbol}>$</Text>
-              </View>
-              <TextInput
-                value={displayValue}
-                onChangeText={text => {
-                  handleAmountChange(text);
-                  if (amountError) setAmountError(null);
-                }}
-                placeholder="0,00"
-                keyboardType="decimal-pad"
-                style={styles.amountInput}
-                placeholderTextColor="#FFC947"
-              />
-            </View>
-            {amountError && <Text style={styles.errorText}>{amountError}</Text>}
-
-            <Text style={styles.label}>Título</Text>
-            <View style={styles.inputWithIcon}>
-              <View style={styles.inputIconContainer}>
-                <Ionicons name="text-outline" size={ICON_SIZES.small} color={ICON_COLORS.gray} />
-              </View>
-              <TextInput
-                value={title}
-                onChangeText={text => setTitle(text.slice(0, 20))}
-                placeholder="Ej. Compra del mes (opcional)"
-                style={styles.textInput}
-                placeholderTextColor="#B0BEC5"
-                maxLength={20}
-              />
-            </View>
-
-            <Text style={styles.label}>Categoría *</Text>
-            <TouchableOpacity
-              style={[styles.dropdownButton, categoryError ? styles.dropdownButtonError : null]}
-              onPress={() => setModalVisible(true)}
-            >
-              <View style={styles.dropdownContent}>
-                <View style={styles.dropdownIconContainer}>
-                  <Ionicons
-                    name={
-                      (selectedCategory?.icon || 'cart-outline') as keyof typeof Ionicons.glyphMap
-                    }
-                    size={ICON_SIZES.small}
-                    color={ICON_COLORS.primary}
-                  />
-                </View>
-                <Text
-                  style={selectedCategory ? styles.dropdownButtonText : styles.dropdownPlaceholder}
-                >
-                  {selectedCategory ? selectedCategory.label : 'Seleccioná una categoría'}
-                </Text>
-              </View>
-              <Ionicons
-                name="chevron-down"
-                size={ICON_SIZES.medium}
-                color={ICON_COLORS.secondary}
-              />
-            </TouchableOpacity>
-            {categoryError && <Text style={styles.categoryErrorText}>{categoryError}</Text>}
-
-            <Text style={styles.typeLabel}>Tipo de gasto *</Text>
-            <View style={styles.typeContainer}>
-              <TouchableOpacity
-                style={[
-                  styles.typeButton,
-                  selectedType === 'FIXED' ? styles.typeButtonActive : styles.typeButtonInactive,
-                ]}
-                onPress={() => onSelectType('FIXED')}
-              >
-                <Text
-                  style={[
-                    styles.typeButtonText,
-                    selectedType === 'FIXED'
-                      ? styles.typeButtonTextActive
-                      : styles.typeButtonTextInactive,
-                  ]}
-                >
-                  Fijo
-                </Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[
-                  styles.typeButton,
-                  selectedType === 'VARIABLE' ? styles.typeButtonActive : styles.typeButtonInactive,
-                ]}
-                onPress={() => onSelectType('VARIABLE')}
-              >
-                {selectedType === 'VARIABLE' ? (
-                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                    <Ionicons name="trending-up" size={16} color="#2383F2" />
-                    <Text style={[styles.typeButtonText, styles.typeButtonTextActive]}>
-                      Variable
-                    </Text>
-                  </View>
-                ) : (
-                  <Text style={[styles.typeButtonText, styles.typeButtonTextInactive]}>
-                    Variable
-                  </Text>
-                )}
-              </TouchableOpacity>
-            </View>
-            {typeError && <Text style={styles.typeErrorText}>{typeError}</Text>}
-
-            <Text style={styles.label}>Fecha *</Text>
-            <TouchableOpacity style={styles.dateButton} onPress={() => setShowDatePicker(true)}>
+            <View style={styles.dropdownContent}>
               <View style={styles.dropdownIconContainer}>
                 <Ionicons
-                  name="calendar-outline"
+                  name={
+                    (selectedCategory?.icon || 'cart-outline') as keyof typeof Ionicons.glyphMap
+                  }
                   size={ICON_SIZES.small}
                   color={ICON_COLORS.primary}
                 />
               </View>
-              <Text style={styles.dropdownButtonText}>{formatDate(selectedDate)}</Text>
-              <Ionicons
-                name="chevron-forward"
-                size={ICON_SIZES.medium}
-                color={ICON_COLORS.secondary}
-              />
-            </TouchableOpacity>
+              <Text
+                style={selectedCategory ? styles.dropdownButtonText : styles.dropdownPlaceholder}
+              >
+                {selectedCategory ? selectedCategory.label : 'Seleccioná una categoría'}
+              </Text>
+            </View>
+            <Ionicons name="chevron-down" size={ICON_SIZES.medium} color={ICON_COLORS.secondary} />
+          </TouchableOpacity>
+          {categoryError && <Text style={styles.categoryErrorText}>{categoryError}</Text>}
 
-            <ExpandableTextInput
-              label="Descripción"
-              value={description}
-              onChangeText={text => setDescription(text.slice(0, 255))}
-              placeholder="Información adicional (opcional)"
-              scrollViewRef={scrollViewRef}
-              scrollYRef={scrollYRef}
+          <Text style={styles.typeLabel}>Tipo de gasto *</Text>
+          <View style={styles.typeContainer}>
+            <TouchableOpacity
+              style={[
+                styles.typeButton,
+                selectedType === 'FIXED' ? styles.typeButtonActive : styles.typeButtonInactive,
+              ]}
+              onPress={() => onSelectType('FIXED')}
+            >
+              <Text
+                style={[
+                  styles.typeButtonText,
+                  selectedType === 'FIXED'
+                    ? styles.typeButtonTextActive
+                    : styles.typeButtonTextInactive,
+                ]}
+              >
+                Fijo
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[
+                styles.typeButton,
+                selectedType === 'VARIABLE' ? styles.typeButtonActive : styles.typeButtonInactive,
+              ]}
+              onPress={() => onSelectType('VARIABLE')}
+            >
+              {selectedType === 'VARIABLE' ? (
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                  <Ionicons name="trending-up" size={16} color="#2383F2" />
+                  <Text style={[styles.typeButtonText, styles.typeButtonTextActive]}>Variable</Text>
+                </View>
+              ) : (
+                <Text style={[styles.typeButtonText, styles.typeButtonTextInactive]}>Variable</Text>
+              )}
+            </TouchableOpacity>
+          </View>
+          {typeError && <Text style={styles.typeErrorText}>{typeError}</Text>}
+
+          <Text style={styles.label}>Fecha *</Text>
+          <TouchableOpacity style={styles.dateButton} onPress={() => setShowDatePicker(true)}>
+            <View style={styles.dropdownIconContainer}>
+              <Ionicons
+                name="calendar-outline"
+                size={ICON_SIZES.small}
+                color={ICON_COLORS.primary}
+              />
+            </View>
+            <Text style={styles.dropdownButtonText}>{formatDate(selectedDate)}</Text>
+            <Ionicons
+              name="chevron-forward"
+              size={ICON_SIZES.medium}
+              color={ICON_COLORS.secondary}
             />
-          </ScrollView>
-        </KeyboardAvoidingView>
+          </TouchableOpacity>
+
+          <ExpandableTextInput
+            label="Descripción"
+            value={description}
+            onChangeText={text => setDescription(text.slice(0, 255))}
+            placeholder="Información adicional (opcional)"
+            scrollViewRef={scrollViewRef}
+            scrollYRef={scrollYRef}
+          />
+        </ScrollView>
         <TouchableOpacity
           style={[styles.saveButton, submitting && styles.saveButtonDisabled]}
           onPress={onSubmit}

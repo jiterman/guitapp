@@ -42,7 +42,7 @@ const ExpandableTextInput: React.FC<Props> = ({
       containerRef.current.measure((_x, _y, _w, h, _pageX, pageY) => {
         const fieldBottomOnScreen = pageY + h;
         const keyboardTop = screenHeight - keyboardHeightRef.current;
-        const overlap = fieldBottomOnScreen - keyboardTop + 16;
+        const overlap = fieldBottomOnScreen - keyboardTop + 32;
         if (overlap > 0) {
           scrollViewRef.current?.scrollTo({
             y: scrollYRef.current + overlap,
@@ -88,7 +88,7 @@ const ExpandableTextInput: React.FC<Props> = ({
           <Ionicons name={expanded ? 'chevron-up' : 'chevron-down'} size={18} color="#999" />
         </TouchableOpacity>
       </View>
-      {keyboardHeight > 0 && <View style={{ height: keyboardHeight }} />}
+      {keyboardHeight > 0 && <View style={{ height: keyboardHeight - 80 }} />}
     </>
   );
 };
