@@ -102,6 +102,9 @@ class ExpenseEventListenerTest {
 
     @Test
     void handleExpenseCreatedEvent_ShouldOnlySendVariableNotification_WhenVariableExpenseCreatedAndBothExceeded() {
+        testUser.setEstimatedMonthlyIncome(new BigDecimal("1000000"));
+        testUser.setTargetFixedExpenses(5);
+        testUser.setTargetVariableExpenses(3);
         testExpenseCreatedEvent = new ExpenseCreatedEvent(expenseId, userEmail, amount, baseDate, ExpenseType.VARIABLE);
         when(userRepository.findByEmail(userEmail)).thenReturn(Optional.of(testUser));
 
@@ -127,6 +130,9 @@ class ExpenseEventListenerTest {
 
     @Test
     void handleExpenseCreatedEvent_ShouldOnlySendFixedNotification_WhenFixedExpenseCreatedAndBothExceeded() {
+        testUser.setEstimatedMonthlyIncome(new BigDecimal("1000000"));
+        testUser.setTargetFixedExpenses(5);
+        testUser.setTargetVariableExpenses(3);
         testExpenseCreatedEvent = new ExpenseCreatedEvent(expenseId, userEmail, amount, baseDate, ExpenseType.FIXED);
         when(userRepository.findByEmail(userEmail)).thenReturn(Optional.of(testUser));
 
@@ -152,6 +158,8 @@ class ExpenseEventListenerTest {
 
     @Test
     void handleExpenseCreatedEvent_ShouldSendFixedNotification_WhenFixedExceeded() {
+        testUser.setEstimatedMonthlyIncome(new BigDecimal("1000000"));
+        testUser.setTargetFixedExpenses(5);
         testExpenseCreatedEvent = new ExpenseCreatedEvent(expenseId, userEmail, amount, baseDate, ExpenseType.FIXED);
         when(userRepository.findByEmail(userEmail)).thenReturn(Optional.of(testUser));
 
@@ -171,6 +179,8 @@ class ExpenseEventListenerTest {
 
     @Test
     void handleExpenseCreatedEvent_ShouldSendVariableNotification_WhenVariableExceeded() {
+        testUser.setEstimatedMonthlyIncome(new BigDecimal("1000000"));
+        testUser.setTargetVariableExpenses(3);
         testExpenseCreatedEvent = new ExpenseCreatedEvent(expenseId, userEmail, amount, baseDate, ExpenseType.VARIABLE);
         when(userRepository.findByEmail(userEmail)).thenReturn(Optional.of(testUser));
 

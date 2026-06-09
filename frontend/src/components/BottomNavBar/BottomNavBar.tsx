@@ -52,11 +52,11 @@ const BottomNavBar: React.FC = () => {
         if (dx < -50 && idx < ROUTE_ORDER.length - 1) {
           const next = idx + 1;
           currentIndex.current = next;
-          router.push(ROUTE_ORDER[next]);
+          router.navigate(ROUTE_ORDER[next]);
         } else if (dx > 50 && idx > 0) {
           const prev = idx - 1;
           currentIndex.current = prev;
-          router.push(ROUTE_ORDER[prev]);
+          router.navigate(ROUTE_ORDER[prev]);
         }
       },
     })
@@ -77,7 +77,7 @@ const BottomNavBar: React.FC = () => {
       style={styles.button}
       onPress={() => {
         currentIndex.current = index;
-        router.push(path);
+        router.navigate(path);
       }}
       accessibilityRole="button"
     >
@@ -101,7 +101,7 @@ const BottomNavBar: React.FC = () => {
         <Pressable
           style={styles.fabButton}
           onPress={() => {
-            if (pathname !== '/add-movement') router.push('/add-movement');
+            if (pathname !== '/add-movement') router.navigate('/add-movement');
           }}
           accessibilityRole="button"
           accessibilityLabel="Agregar movimiento"
