@@ -109,6 +109,124 @@ class RecurringIncomeServiceTests {
     }
 
     @Test
+    void getRecurringIncomes_ShouldThrowAuthException_WhenUserNotFound() {
+        when(userRepository.findByEmail(testEmail)).thenReturn(Optional.empty());
+
+        AuthException exception = assertThrows(AuthException.class,
+                () -> recurringIncomeService.getRecurringIncomes(testEmail));
+        assertEquals(ErrorCode.USER_NOT_FOUND, exception.getErrorCode());
+        verify(recurringIncomeRepository, never()).findAllByUserOrderByStartDateDesc(any());
+    }
+
+    @Test
+    void getRecurringIncomeById_ShouldThrow_WhenTemplateHasNoUser() {
+        UUID id = UUID.randomUUID();
+        RecurringIncome template = buildTemplate(id);
+        template.setUser(null);
+
+        when(userRepository.findByEmail(testEmail)).thenReturn(Optional.of(testUser));
+        when(recurringIncomeRepository.findById(id)).thenReturn(Optional.of(template));
+
+        AuthException exception = assertThrows(AuthException.class,
+                () -> recurringIncomeService.getRecurringIncomeById(testEmail, id));
+        assertEquals(ErrorCode.RECURRING_INCOME_ACCESS_DENIED, exception.getErrorCode());
+    }
+
+    @Test
+    void getRecurringIncomeById_ShouldThrow_WhenTemplateUserHasNoId() {
+        UUID id = UUID.randomUUID();
+        RecurringIncome template = buildTemplate(id);
+        User userWithoutId = new User();
+        userWithoutId.setEmail("orphan@example.com");
+        template.setUser(userWithoutId);
+
+        when(userRepository.findByEmail(testEmail)).thenReturn(Optional.of(testUser));
+        when(recurringIncomeRepository.findById(id)).thenReturn(Optional.of(template));
+
+        AuthException exception = assertThrows(AuthException.class,
+                () -> recurringIncomeService.getRecurringIncomeById(testEmail, id));
+        assertEquals(ErrorCode.RECURRING_INCOME_ACCESS_DENIED, exception.getErrorCode());
+    }
+
+    @Test
+    void addRecurringIncome_ShouldPersistEndDate_WhenProvided() {
+        LocalDate startDate = LocalDate.now().plusDays(3);
+        LocalDate endDate = startDate.plusMonths(6);
+        AddRecurringIncomeRequest request = new AddRecurringIncomeRequest(
+                new BigDecimal("100.00"), null, IncomeCategory.FREELANCE,
+                RecurrenceFrequency.WEEKLY, startDate, endDate);
+
+        when(userRepository.findByEmail(testEmail)).thenReturn(Optional.of(testUser));
+        when(recurringIncomeRepository.save(any(RecurringIncome.class))).thenAnswer(invocation -> {
+            RecurringIncome saved = invocation.getArgument(0);
+            saved.setId(UUID.randomUUID());
+            return saved;
+        });
+
+        RecurringIncomeResponse response = recurringIncomeService.addRecurringIncome(testEmail, request);
+
+        assertEquals(endDate, response.endDate());
+    }
+
+    @Test
+    void updateRecurringIncome_ShouldUpdateCategory_WithoutChangingSchedule() {
+        UUID id = UUID.randomUUID();
+        RecurringIncome template = buildTemplate(id);
+        LocalDate originalNextOccurrence = template.getNextOccurrence();
+        UpdateRecurringIncomeRequest request = new UpdateRecurringIncomeRequest(
+                null, null, IncomeCategory.FREELANCE, null, null, null, null);
+
+        when(userRepository.findByEmail(testEmail)).thenReturn(Optional.of(testUser));
+        when(recurringIncomeRepository.findById(id)).thenReturn(Optional.of(template));
+        when(recurringIncomeRepository.save(any(RecurringIncome.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        RecurringIncomeResponse response = recurringIncomeService.updateRecurringIncome(testEmail, id, request);
+
+        assertEquals(IncomeCategory.FREELANCE, response.category());
+        assertEquals(originalNextOccurrence, response.nextOccurrence());
+    }
+
+    @Test
+    void updateRecurringIncome_ShouldUpdateEndDate_WithoutRecomputingNextOccurrence() {
+        UUID id = UUID.randomUUID();
+        RecurringIncome template = buildTemplate(id);
+        LocalDate originalNextOccurrence = template.getNextOccurrence();
+        LocalDate endDate = LocalDate.now().plusMonths(12);
+        UpdateRecurringIncomeRequest request = new UpdateRecurringIncomeRequest(
+                null, null, null, null, null, endDate, null);
+
+        when(userRepository.findByEmail(testEmail)).thenReturn(Optional.of(testUser));
+        when(recurringIncomeRepository.findById(id)).thenReturn(Optional.of(template));
+        when(recurringIncomeRepository.save(any(RecurringIncome.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        RecurringIncomeResponse response = recurringIncomeService.updateRecurringIncome(testEmail, id, request);
+
+        assertEquals(endDate, response.endDate());
+        assertEquals(originalNextOccurrence, response.nextOccurrence());
+    }
+
+    @Test
+    void updateRecurringIncome_ShouldRecomputeNextOccurrence_WhenOnlyFrequencyChanges() {
+        UUID id = UUID.randomUUID();
+        RecurringIncome template = buildTemplate(id);
+        LocalDate startDate = LocalDate.now().minusWeeks(1);
+        template.setStartDate(startDate);
+        template.setFrequency(RecurrenceFrequency.MONTHLY);
+        template.setNextOccurrence(startDate);
+        UpdateRecurringIncomeRequest request = new UpdateRecurringIncomeRequest(
+                null, null, null, RecurrenceFrequency.WEEKLY, null, null, null);
+
+        when(userRepository.findByEmail(testEmail)).thenReturn(Optional.of(testUser));
+        when(recurringIncomeRepository.findById(id)).thenReturn(Optional.of(template));
+        when(recurringIncomeRepository.save(any(RecurringIncome.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        RecurringIncomeResponse response = recurringIncomeService.updateRecurringIncome(testEmail, id, request);
+
+        assertEquals(RecurrenceFrequency.WEEKLY, response.frequency());
+        assertFalse(response.nextOccurrence().isBefore(LocalDate.now()));
+    }
+
+    @Test
     void getRecurringIncomes_ShouldReturnUserTemplates() {
         RecurringIncome template = buildTemplate(UUID.randomUUID());
 

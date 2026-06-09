@@ -63,6 +63,22 @@ class RecurringIncomeGenerationServiceTest {
     }
 
     @Test
+    void generateDueIncomes_ShouldRemainActive_WhenEndDateIsStillInFuture() {
+        LocalDate today = LocalDate.now();
+        LocalDate endDate = today.plusMonths(2);
+        RecurringIncome template = buildTemplate(RecurrenceFrequency.WEEKLY, today, today, endDate);
+
+        when(recurringIncomeRepository.findAllByActiveTrueAndNextOccurrenceLessThanEqual(any(LocalDate.class)))
+                .thenReturn(List.of(template));
+
+        int generated = generationService.generateDueIncomes();
+
+        assertEquals(1, generated);
+        assertTrue(template.isActive());
+        assertTrue(template.getNextOccurrence().isBefore(endDate) || template.getNextOccurrence().isEqual(endDate));
+    }
+
+    @Test
     void generateDueIncomes_ShouldReturnZero_WhenNoTemplatesDue() {
         when(recurringIncomeRepository.findAllByActiveTrueAndNextOccurrenceLessThanEqual(any(LocalDate.class)))
                 .thenReturn(List.of());
