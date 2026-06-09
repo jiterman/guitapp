@@ -73,8 +73,7 @@ const ShareIntent: React.FC = () => {
       pathname.includes('login') ||
       pathname.includes('register') ||
       pathname.includes('onboarding') ||
-      pathname.includes('add-expense') ||
-      pathname.includes('add-income');
+      pathname.includes('add-movement');
 
     console.log('pathname', pathname);
     console.log('isAlreadyInShare', hasShareIntent);

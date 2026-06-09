@@ -22,6 +22,10 @@ import CameraModal from '../components/CameraModal/CameraModal';
 import ExpandableTextInput from '../components/ExpandableTextInput/ExpandableTextInput';
 import { expenseService } from '../services/expenseService';
 import { incomeService } from '../services/incomeService';
+import {
+  recurringIncomeService,
+  type RecurrenceFrequency,
+} from '../services/recurringIncomeService';
 import type { ExpenseType, IncomeCategory } from '../constants/categories';
 import {
   EXPENSE_CATEGORIES,
@@ -40,7 +44,9 @@ const AddMovementScreen = () => {
   const scrollViewRef = useRef<ScrollView>(null);
   const scrollYRef = useRef(0);
   const params = useLocalSearchParams();
-  const [movementType, setMovementType] = useState<'EXPENSE' | 'INCOME'>('EXPENSE');
+  const [movementType, setMovementType] = useState<'EXPENSE' | 'INCOME'>(
+    params.type === 'INCOME' ? 'INCOME' : 'EXPENSE'
+  );
 
   const { displayValue, amount, handleAmountChange } = useCurrencyInput(
     (params.amount as string) || ''
@@ -63,6 +69,8 @@ const AddMovementScreen = () => {
       : null
   );
   const [selectedDate, setSelectedDate] = useState(initialDate);
+  const [isRecurring, setIsRecurring] = useState(params.recurring === 'true');
+  const [frequency, setFrequency] = useState<RecurrenceFrequency>('MONTHLY');
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
@@ -157,6 +165,14 @@ const AddMovementScreen = () => {
           type: selectedExpenseType!,
           date: dateString,
         });
+      } else if (isRecurring) {
+        await recurringIncomeService.addRecurringIncome({
+          amount: parseFloat(amount),
+          description: description.trim() || undefined,
+          category: selectedCategory!.value as unknown as IncomeCategory,
+          frequency,
+          startDate: dateString,
+        });
       } else {
         await incomeService.addIncome({
           amount: parseFloat(amount),
@@ -187,6 +203,7 @@ const AddMovementScreen = () => {
       setMovementType(type);
       setSelectedCategory(null);
       setSelectedExpenseType(type === 'EXPENSE' ? 'VARIABLE' : null);
+      setIsRecurring(false);
       setCategoryError(null);
     }
   };
@@ -303,20 +320,24 @@ const AddMovementScreen = () => {
           </View>
           {amountError && <Text style={styles.errorText}>{amountError}</Text>}
 
-          <Text style={styles.label}>Título</Text>
-          <View style={styles.inputWithIcon}>
-            <View style={styles.inputIconContainer}>
-              <Ionicons name="text-outline" size={18} color="#90A4AE" />
-            </View>
-            <TextInput
-              value={title}
-              onChangeText={text => setTitle(text.slice(0, 20))}
-              placeholder="Ej. Compra del mes (opcional)"
-              style={styles.textInput}
-              placeholderTextColor="#B0BEC5"
-              maxLength={20}
-            />
-          </View>
+          {!(movementType === 'INCOME' && isRecurring) && (
+            <>
+              <Text style={styles.label}>Título</Text>
+              <View style={styles.inputWithIcon}>
+                <View style={styles.inputIconContainer}>
+                  <Ionicons name="text-outline" size={18} color="#90A4AE" />
+                </View>
+                <TextInput
+                  value={title}
+                  onChangeText={text => setTitle(text.slice(0, 20))}
+                  placeholder="Ej. Compra del mes (opcional)"
+                  style={styles.textInput}
+                  placeholderTextColor="#B0BEC5"
+                  maxLength={20}
+                />
+              </View>
+            </>
+          )}
 
           <Text style={styles.label}>Categoría *</Text>
           <TouchableOpacity
@@ -346,7 +367,97 @@ const AddMovementScreen = () => {
           </TouchableOpacity>
           {categoryError && <Text style={styles.errorText}>{categoryError}</Text>}
 
-          <Text style={styles.label}>Fecha *</Text>
+          {movementType === 'INCOME' && (
+            <>
+              <Text style={styles.label}>Tipo de ingreso</Text>
+              <View style={styles.typeContainer}>
+                <TouchableOpacity
+                  style={[
+                    styles.typeButton,
+                    !isRecurring ? styles.typeButtonActive : styles.typeButtonInactive,
+                  ]}
+                  onPress={() => setIsRecurring(false)}
+                >
+                  <Text
+                    style={[
+                      styles.typeButtonText,
+                      !isRecurring ? styles.typeButtonTextActive : styles.typeButtonTextInactive,
+                    ]}
+                  >
+                    Único
+                  </Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[
+                    styles.typeButton,
+                    isRecurring ? styles.typeButtonActive : styles.typeButtonInactive,
+                  ]}
+                  onPress={() => setIsRecurring(true)}
+                >
+                  <Text
+                    style={[
+                      styles.typeButtonText,
+                      isRecurring ? styles.typeButtonTextActive : styles.typeButtonTextInactive,
+                    ]}
+                  >
+                    Recurrente
+                  </Text>
+                </TouchableOpacity>
+              </View>
+
+              {isRecurring && (
+                <>
+                  <Text style={styles.label}>Frecuencia</Text>
+                  <View style={styles.typeContainer}>
+                    <TouchableOpacity
+                      style={[
+                        styles.typeButton,
+                        frequency === 'WEEKLY'
+                          ? styles.typeButtonActive
+                          : styles.typeButtonInactive,
+                      ]}
+                      onPress={() => setFrequency('WEEKLY')}
+                    >
+                      <Text
+                        style={[
+                          styles.typeButtonText,
+                          frequency === 'WEEKLY'
+                            ? styles.typeButtonTextActive
+                            : styles.typeButtonTextInactive,
+                        ]}
+                      >
+                        Semanal
+                      </Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={[
+                        styles.typeButton,
+                        frequency === 'MONTHLY'
+                          ? styles.typeButtonActive
+                          : styles.typeButtonInactive,
+                      ]}
+                      onPress={() => setFrequency('MONTHLY')}
+                    >
+                      <Text
+                        style={[
+                          styles.typeButtonText,
+                          frequency === 'MONTHLY'
+                            ? styles.typeButtonTextActive
+                            : styles.typeButtonTextInactive,
+                        ]}
+                      >
+                        Mensual
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
+                </>
+              )}
+            </>
+          )}
+
+          <Text style={styles.label}>
+            {movementType === 'INCOME' && isRecurring ? 'Fecha de inicio *' : 'Fecha *'}
+          </Text>
           <TouchableOpacity style={styles.dateButton} onPress={() => setShowDatePicker(true)}>
             <View style={styles.dropdownIconContainer}>
               <Ionicons name="calendar-outline" size={18} color="#07a3e4" />
@@ -497,7 +608,7 @@ const AddMovementScreen = () => {
           value={selectedDate}
           display="default"
           onChange={onDateChange}
-          maximumDate={new Date()}
+          maximumDate={movementType === 'INCOME' && isRecurring ? undefined : new Date()}
         />
       )}
 

@@ -125,6 +125,14 @@ const ProfileScreen: React.FC = () => {
               iconBackground="rgba(255,187,0,0.12)"
               onPress={expensesSheet.open}
             />
+            <ProfileMenuItem
+              title="Ingresos recurrentes"
+              subtitle="Configurá ingresos que se registran automáticamente, como tu sueldo"
+              icon="repeat-outline"
+              iconColor="#1a9e5c"
+              iconBackground="rgba(26,158,92,0.12)"
+              onPress={() => router.push('/recurring-incomes')}
+            />
           </ProfileSection>
 
           <ProfileSection title="Notificaciones">
