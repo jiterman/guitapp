@@ -8,6 +8,7 @@ public record MovementResponse(
         UUID id,
         String type,
         BigDecimal amount,
+        String title,
         String description,
         String category,
         String expenseType,

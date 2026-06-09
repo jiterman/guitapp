@@ -10,6 +10,7 @@ import org.fiuba.guitapp.model.ExpenseType;
 public record ExpenseResponse(
         UUID id,
         BigDecimal amount,
+        String title,
         String description,
         ExpenseCategory category,
         ExpenseType type,

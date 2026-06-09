@@ -99,9 +99,7 @@ const SummaryScreen: React.FC = () => {
 
   return (
     <Layout style={[styles.container, activeTab === 'monthly' && styles.containerMonthly]}>
-      <Text category="h6" style={styles.title}>
-        Resumen
-      </Text>
+      <Text style={styles.title}>Resumen</Text>
 
       <View style={styles.chartTabs}>
         <TouchableOpacity style={styles.chartTabWrapper} onPress={() => setActiveTab('movements')}>
@@ -189,6 +187,7 @@ const styles = StyleSheet.create({
     marginBottom: vh * 1.2,
     color: '#003366',
     fontWeight: '700',
+    fontSize: 22,
   },
   chartTabs: {
     marginBottom: vh * 2,

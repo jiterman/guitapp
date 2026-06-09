@@ -11,7 +11,7 @@ export const ICON_SIZES = {
 };
 
 export const ICON_COLORS = {
-  primary: '#2383F2',
+  primary: '#07a3e4',
   secondary: '#07a3e4',
   gray: '#90A4AE',
 };
@@ -43,12 +43,12 @@ export const transactionFormStyles = StyleSheet.create({
     borderRadius: 20,
     borderWidth: 1,
     borderColor: '#C8DCF0',
-    backgroundColor: '#F0F7FF',
+    backgroundColor: '#F8FBFF',
   },
   scanButtonText: {
     fontSize: 13,
     fontWeight: '500',
-    color: '#2383F2',
+    color: '#0796d2',
   },
   scanOverlay: {
     position: 'absolute',
@@ -162,6 +162,11 @@ export const transactionFormStyles = StyleSheet.create({
     color: '#003366',
     padding: 0,
   },
+  textInputMultiline: {
+    minHeight: 80,
+    textAlignVertical: 'top',
+    paddingTop: 8.75,
+  },
   errorText: {
     color: '#FF3333',
     fontSize: 13,
@@ -261,13 +266,21 @@ export const transactionFormStyles = StyleSheet.create({
     color: '#546E7A',
   },
   saveButton: {
-    backgroundColor: '#FFBB00',
-    borderRadius: 12,
-    paddingVertical: vh * 1.5,
-    flexDirection: 'row',
-    alignItems: 'center',
+    position: 'absolute',
+    bottom: 30,
+    right: 25,
+    width: 52,
+    height: 52,
+    borderRadius: 26,
+    backgroundColor: '#5bbfdd',
     justifyContent: 'center',
-    marginTop: vh * 3,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 6,
+    elevation: 8,
+    zIndex: 10,
   },
   saveButtonDisabled: {
     opacity: 0.6,

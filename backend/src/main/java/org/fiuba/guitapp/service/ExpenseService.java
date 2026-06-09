@@ -62,6 +62,7 @@ public class ExpenseService {
 
         Expense expense = new Expense();
         expense.setAmount(request.amount());
+        expense.setTitle(request.title());
         expense.setDescription(request.description());
         expense.setCategory(request.category());
         expense.setType(request.type());
@@ -80,6 +81,7 @@ public class ExpenseService {
         return new ExpenseResponse(
                 saved.getId(),
                 saved.getAmount(),
+                saved.getTitle(),
                 saved.getDescription(),
                 saved.getCategory(),
                 saved.getType(),
@@ -99,6 +101,7 @@ public class ExpenseService {
         return new ExpenseResponse(
                 expense.getId(),
                 expense.getAmount(),
+                expense.getTitle(),
                 expense.getDescription(),
                 expense.getCategory(),
                 expense.getType(),
@@ -112,6 +115,9 @@ public class ExpenseService {
 
         if (request.amount() != null) {
             expense.setAmount(request.amount());
+        }
+        if (request.title() != null) {
+            expense.setTitle(request.title());
         }
         if (request.description() != null) {
             expense.setDescription(request.description());
@@ -138,6 +144,7 @@ public class ExpenseService {
         return new ExpenseResponse(
                 saved.getId(),
                 saved.getAmount(),
+                saved.getTitle(),
                 saved.getDescription(),
                 saved.getCategory(),
                 saved.getType(),

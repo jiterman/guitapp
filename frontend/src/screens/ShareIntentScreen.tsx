@@ -39,13 +39,13 @@ const ShareIntentScreen = () => {
 
         setStatusMessage('¡Datos extraídos con éxito!');
 
-        // 3. Viajamos a la pantalla de agregar gasto con los datos extraídos
+        // 3. Viajamos a la pantalla de agregar movimiento con los datos extraídos
         router.replace({
-          pathname: '/(app)/add-expense',
+          pathname: '/(app)/add-movement',
           params: {
             fromShareIntent: 'true',
             amount: analysisResponse.amount?.toString() || '',
-            description: analysisResponse.description || '',
+            title: analysisResponse.title || '',
             category: analysisResponse.category || 'OTHER',
             date: analysisResponse.date || new Date().toISOString().split('T')[0],
             imagePath: manipulatedImage.uri,

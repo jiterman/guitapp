@@ -9,8 +9,10 @@ import static org.mockito.Mockito.*;
 import java.lang.reflect.Method;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.time.Clock;
 import java.time.LocalDate;
 import java.time.YearMonth;
+import java.time.ZoneId;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Optional;
@@ -28,7 +30,6 @@ import org.fiuba.guitapp.model.UserStatus;
 import org.fiuba.guitapp.repository.ExpenseRepository;
 import org.fiuba.guitapp.repository.UserRepository;
 import org.fiuba.guitapp.service.AlertDeliveryService;
-import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -71,7 +72,16 @@ class ExpenseEventListenerTest {
         testUser.setTargetFixedExpenses(50); // Limit: 50,000
         testUser.setTargetVariableExpenses(30); // Limit: 30,000
 
-        baseDate = LocalDate.now().withDayOfMonth(10);
+        // Fix the clock to day 3 of the current month so buildProjectionData always
+        // returns null (day <= 5 guard), preventing NEGATIVE_BALANCE_RISK from
+        // interfering with threshold and category tests regardless of when tests run.
+        LocalDate fixedDay = LocalDate.now().withDayOfMonth(3);
+        Clock fixedClock = Clock.fixed(
+                fixedDay.atStartOfDay(ZoneId.systemDefault()).toInstant(),
+                ZoneId.systemDefault());
+        expenseEventListener.setClock(fixedClock);
+
+        baseDate = fixedDay;
         testExpenseCreatedEvent = new ExpenseCreatedEvent(expenseId, userEmail, amount, baseDate, ExpenseType.VARIABLE);
 
         lenient().when(expenseRepository.findById(expenseId)).thenReturn(Optional.empty());
@@ -432,8 +442,9 @@ class ExpenseEventListenerTest {
 
     @Test
     void handleExpenseCreatedEvent_ShouldNotSendProjectionNotifications_WhenEstimatedMonthlyIncomeIsNull() {
-        LocalDate today = LocalDate.now();
-        Assumptions.assumeTrue(today.getDayOfMonth() > 5);
+        LocalDate today = LocalDate.now().withDayOfMonth(15);
+        expenseEventListener.setClock(Clock.fixed(
+                today.atStartOfDay(ZoneId.systemDefault()).toInstant(), ZoneId.systemDefault()));
 
         testUser.setTargetFixedExpenses(null);
         testUser.setTargetVariableExpenses(null);
@@ -450,24 +461,26 @@ class ExpenseEventListenerTest {
 
     @Test
     void handleExpenseCreatedEvent_ShouldSendNegativeBalanceRiskNotification_WhenProjectedExpensesExceedIncome() {
-        LocalDate today = LocalDate.now();
-        Assumptions.assumeTrue(today.getDayOfMonth() > 5);
+        LocalDate today = LocalDate.now().withDayOfMonth(15);
+        expenseEventListener.setClock(Clock.fixed(
+                today.atStartOfDay(ZoneId.systemDefault()).toInstant(), ZoneId.systemDefault()));
 
         testUser.setTargetFixedExpenses(null);
         testUser.setTargetVariableExpenses(null);
         testUser.setTargetSavings(20);
 
-        testExpenseCreatedEvent = new ExpenseCreatedEvent(
-                expenseId,
-                userEmail,
-                amount,
-                today,
-                ExpenseType.VARIABLE);
+        testExpenseCreatedEvent = new ExpenseCreatedEvent(expenseId, userEmail, amount, today, ExpenseType.VARIABLE);
         when(userRepository.findByEmail(userEmail)).thenReturn(Optional.of(testUser));
 
-        BigDecimal expenseAmount = testUser.getEstimatedMonthlyIncome().add(BigDecimal.ONE);
+        int daysElapsed = today.getDayOfMonth();
+        int daysInMonth = YearMonth.from(today).lengthOfMonth();
+        // expense that when projected to full month exceeds income (100k)
+        BigDecimal totalExpenses = testUser.getEstimatedMonthlyIncome()
+                .multiply(BigDecimal.valueOf(daysElapsed))
+                .divide(BigDecimal.valueOf(daysInMonth), 4, java.math.RoundingMode.HALF_UP)
+                .add(BigDecimal.ONE);
         Expense expense = new Expense();
-        expense.setAmount(expenseAmount);
+        expense.setAmount(totalExpenses);
         expense.setType(ExpenseType.VARIABLE);
 
         when(expenseRepository.findAllByUserAndDateBetween(eq(testUser), any(LocalDate.class), any(LocalDate.class)))
@@ -485,21 +498,18 @@ class ExpenseEventListenerTest {
 
     @Test
     void handleExpenseCreatedEvent_ShouldSendSavingsGoalRiskNotification_WhenProjectedExpensesExceedSavingsTargetButNotIncome() {
-        LocalDate today = LocalDate.now();
-        Assumptions.assumeTrue(today.getDayOfMonth() > 5);
+        LocalDate today = LocalDate.now().withDayOfMonth(15);
+        expenseEventListener.setClock(Clock.fixed(
+                today.atStartOfDay(ZoneId.systemDefault()).toInstant(), ZoneId.systemDefault()));
 
         testUser.setTargetFixedExpenses(null);
         testUser.setTargetVariableExpenses(null);
         testUser.setTargetSavings(20);
 
-        testExpenseCreatedEvent = new ExpenseCreatedEvent(
-                expenseId,
-                userEmail,
-                amount,
-                today,
-                ExpenseType.VARIABLE);
+        testExpenseCreatedEvent = new ExpenseCreatedEvent(expenseId, userEmail, amount, today, ExpenseType.VARIABLE);
         when(userRepository.findByEmail(userEmail)).thenReturn(Optional.of(testUser));
 
+        // today is day 15; project to 90k/month → totalExpenses = 90k * 15 / daysInMonth
         int daysElapsed = today.getDayOfMonth();
         int daysInMonth = YearMonth.from(today).lengthOfMonth();
         BigDecimal projectedTarget = new BigDecimal("90000");
