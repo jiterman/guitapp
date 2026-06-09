@@ -77,7 +77,7 @@ const BottomNavBar: React.FC = () => {
       style={styles.button}
       onPress={() => {
         currentIndex.current = index;
-        router.push(path);
+        router.navigate(path);
       }}
       accessibilityRole="button"
     >
@@ -101,7 +101,7 @@ const BottomNavBar: React.FC = () => {
         <Pressable
           style={styles.fabButton}
           onPress={() => {
-            if (pathname !== '/add-movement') router.push('/add-movement');
+            if (pathname !== '/add-movement') router.navigate('/add-movement');
           }}
           accessibilityRole="button"
           accessibilityLabel="Agregar movimiento"
