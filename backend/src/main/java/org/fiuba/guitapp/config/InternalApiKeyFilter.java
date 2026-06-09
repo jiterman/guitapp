@@ -20,7 +20,8 @@ public class InternalApiKeyFilter extends OncePerRequestFilter {
     private static final Set<String> INTERNAL_PATHS = Set.of(
             "/api/summary/monthly/notify",
             "/api/notifications/daily/notify",
-            "/api/notifications/weekly/notify");
+            "/api/notifications/weekly/notify",
+            "/api/incomes/recurring/run");
     private static final String HEADER = "X-Internal-Key";
 
     @Value("${internal.api.key}")

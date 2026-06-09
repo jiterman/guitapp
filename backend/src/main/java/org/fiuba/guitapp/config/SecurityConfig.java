@@ -30,7 +30,8 @@ public class SecurityConfig {
                         .requestMatchers(
                                 "/api/summary/monthly/notify",
                                 "/api/notifications/daily/notify",
-                                "/api/notifications/weekly/notify")
+                                "/api/notifications/weekly/notify",
+                                "/api/incomes/recurring/run")
                         .permitAll()
                         .anyRequest()
                         .authenticated())
