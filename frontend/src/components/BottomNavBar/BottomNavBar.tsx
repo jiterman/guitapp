@@ -39,11 +39,11 @@ const BottomNavBar: React.FC = () => {
         if (dx < -50 && idx < ROUTE_ORDER.length - 1) {
           const next = idx + 1;
           currentIndex.current = next;
-          router.push(ROUTE_ORDER[next]);
+          router.navigate(ROUTE_ORDER[next]);
         } else if (dx > 50 && idx > 0) {
           const prev = idx - 1;
           currentIndex.current = prev;
-          router.push(ROUTE_ORDER[prev]);
+          router.navigate(ROUTE_ORDER[prev]);
         }
       },
     })
@@ -59,7 +59,7 @@ const BottomNavBar: React.FC = () => {
         style={styles.button}
         onPress={() => {
           currentIndex.current = 0;
-          router.push('/home');
+          router.navigate('/home');
         }}
         accessibilityRole="button"
       >
@@ -71,7 +71,7 @@ const BottomNavBar: React.FC = () => {
         style={styles.button}
         onPress={() => {
           currentIndex.current = 1;
-          router.push('/statistics');
+          router.navigate('/statistics');
         }}
         accessibilityRole="button"
       >
@@ -85,7 +85,7 @@ const BottomNavBar: React.FC = () => {
         style={styles.button}
         onPress={() => {
           currentIndex.current = 2;
-          router.push('/transactions');
+          router.navigate('/transactions');
         }}
         accessibilityRole="button"
       >
@@ -99,7 +99,7 @@ const BottomNavBar: React.FC = () => {
         style={styles.button}
         onPress={() => {
           currentIndex.current = 3;
-          router.push('/profile');
+          router.navigate('/profile');
         }}
         accessibilityRole="button"
       >
