@@ -14,6 +14,8 @@ import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import { router } from 'expo-router';
 import { incomeService } from '../services/incomeService';
+import { recurringIncomeService } from '../services/recurringIncomeService';
+import type { RecurrenceFrequency } from '../services/recurringIncomeService';
 import type { IncomeCategory } from '../constants/categories';
 import { INCOME_CATEGORIES, IncomeCategoryOption } from '../constants/categories';
 import { useCurrencyInput } from '../hooks/useCurrencyInput';
@@ -30,6 +32,8 @@ const AddIncomeScreen = () => {
   const [selectedCategory, setSelectedCategory] = useState<IncomeCategoryOption | null>(null);
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [showDatePicker, setShowDatePicker] = useState(false);
+  const [isRecurring, setIsRecurring] = useState(false);
+  const [frequency, setFrequency] = useState<RecurrenceFrequency>('MONTHLY');
   const [submitting, setSubmitting] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
   const [search, setSearch] = useState('');
@@ -72,12 +76,22 @@ const AddIncomeScreen = () => {
     setSubmitting(true);
     try {
       const dateString = toLocalDateString(selectedDate);
-      await incomeService.addIncome({
-        amount: parseFloat(amount),
-        description: description.trim() || undefined,
-        category: selectedCategory!.value as unknown as IncomeCategory,
-        date: dateString,
-      });
+      if (isRecurring) {
+        await recurringIncomeService.addRecurringIncome({
+          amount: parseFloat(amount),
+          description: description.trim() || undefined,
+          category: selectedCategory!.value as unknown as IncomeCategory,
+          frequency,
+          startDate: dateString,
+        });
+      } else {
+        await incomeService.addIncome({
+          amount: parseFloat(amount),
+          description: description.trim() || undefined,
+          category: selectedCategory!.value as unknown as IncomeCategory,
+          date: dateString,
+        });
+      }
       router.back();
     } catch {
       Alert.alert('Error', 'No se pudo registrar el ingreso. Intentá de nuevo.');
@@ -161,7 +175,87 @@ const AddIncomeScreen = () => {
           </TouchableOpacity>
           {categoryError && <Text style={styles.categoryErrorText}>{categoryError}</Text>}
 
-          <Text style={styles.label}>Fecha *</Text>
+          <Text style={styles.label}>Tipo de ingreso</Text>
+          <View style={styles.typeContainer}>
+            <TouchableOpacity
+              style={[
+                styles.typeButton,
+                !isRecurring ? styles.typeButtonActive : styles.typeButtonInactive,
+              ]}
+              onPress={() => setIsRecurring(false)}
+            >
+              <Text
+                style={[
+                  styles.typeButtonText,
+                  !isRecurring ? styles.typeButtonTextActive : styles.typeButtonTextInactive,
+                ]}
+              >
+                Único
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[
+                styles.typeButton,
+                isRecurring ? styles.typeButtonActive : styles.typeButtonInactive,
+              ]}
+              onPress={() => setIsRecurring(true)}
+            >
+              <Text
+                style={[
+                  styles.typeButtonText,
+                  isRecurring ? styles.typeButtonTextActive : styles.typeButtonTextInactive,
+                ]}
+              >
+                Recurrente
+              </Text>
+            </TouchableOpacity>
+          </View>
+
+          {isRecurring && (
+            <>
+              <Text style={styles.label}>Frecuencia</Text>
+              <View style={styles.typeContainer}>
+                <TouchableOpacity
+                  style={[
+                    styles.typeButton,
+                    frequency === 'WEEKLY' ? styles.typeButtonActive : styles.typeButtonInactive,
+                  ]}
+                  onPress={() => setFrequency('WEEKLY')}
+                >
+                  <Text
+                    style={[
+                      styles.typeButtonText,
+                      frequency === 'WEEKLY'
+                        ? styles.typeButtonTextActive
+                        : styles.typeButtonTextInactive,
+                    ]}
+                  >
+                    Semanal
+                  </Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[
+                    styles.typeButton,
+                    frequency === 'MONTHLY' ? styles.typeButtonActive : styles.typeButtonInactive,
+                  ]}
+                  onPress={() => setFrequency('MONTHLY')}
+                >
+                  <Text
+                    style={[
+                      styles.typeButtonText,
+                      frequency === 'MONTHLY'
+                        ? styles.typeButtonTextActive
+                        : styles.typeButtonTextInactive,
+                    ]}
+                  >
+                    Mensual
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </>
+          )}
+
+          <Text style={styles.label}>{isRecurring ? 'Fecha de inicio *' : 'Fecha *'}</Text>
           <TouchableOpacity style={styles.dateButton} onPress={() => setShowDatePicker(true)}>
             <View style={styles.dropdownIconContainer}>
               <Ionicons
@@ -262,7 +356,7 @@ const AddIncomeScreen = () => {
           value={selectedDate}
           display="default"
           onChange={onDateChange}
-          maximumDate={new Date()}
+          maximumDate={isRecurring ? undefined : new Date()}
         />
       )}
     </>
