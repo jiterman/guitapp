@@ -80,7 +80,15 @@ const RecurringIncomesScreen = () => {
 
       <View style={styles.headerRow}>
         <Text style={styles.title}>Ingresos recurrentes</Text>
-        <TouchableOpacity style={styles.addButton} onPress={() => router.push('/add-income')}>
+        <TouchableOpacity
+          style={styles.addButton}
+          onPress={() =>
+            router.push({
+              pathname: '/add-movement',
+              params: { type: 'INCOME', recurring: 'true' },
+            })
+          }
+        >
           <Ionicons name="add" size={18} color="#0c2b52" />
           <Text style={styles.addButtonText}>Agregar</Text>
         </TouchableOpacity>

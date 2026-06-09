@@ -54,6 +54,7 @@ const INSIGHT_ICON: Record<string, string> = {
   CATEGORY_INCREASE: 'trending-up-outline',
   CATEGORY_DECREASE: 'trending-down-outline',
   NON_ESSENTIAL_RATIO: 'cart-outline',
+  WEEKLY_VARIABLE_CONCENTRATION: 'calendar-outline',
 };
 
 const VARIANT_STYLE: Record<string, { color: string; iconBg: string; cardBg: string }> = {

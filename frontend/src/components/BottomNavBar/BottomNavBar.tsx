@@ -1,5 +1,5 @@
 import React, { useRef, useState, useEffect } from 'react';
-import { View, Pressable, PanResponder } from 'react-native';
+import { View, Pressable, PanResponder, Text } from 'react-native';
 import { useRouter, usePathname } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { SvgXml } from 'react-native-svg';
@@ -7,10 +7,14 @@ import { SvgXml } from 'react-native-svg';
 import HOME_ICON from '../../../assets/icons/homeIcon';
 import LIST_ICON from '../../../assets/icons/listIcon';
 import CHART_ICON from '../../../assets/icons/chartIcon';
-import PERSON_ICON from '../../../assets/icons/personIcon';
+import SUMMARY_ICON from '../../../assets/icons/summaryIcon';
+import PLUS_ICON from '../../../assets/icons/plusIcon';
 import styles from '../../styles/bottomNavStyles';
 
-const ROUTE_ORDER = ['/home', '/statistics', '/transactions', '/profile'];
+const ROUTE_ORDER = ['/home', '/statistics', '/transactions', '/summary'];
+
+const ACTIVE_COLOR = '#07a3e4';
+const INACTIVE_COLOR = '#a8c8e0';
 
 const BottomNavBar: React.FC = () => {
   const router = useRouter();
@@ -28,6 +32,15 @@ const BottomNavBar: React.FC = () => {
     }
   }, [pathname]);
 
+  const getIconColor = (path: string) => (currentPath === path ? ACTIVE_COLOR : INACTIVE_COLOR);
+
+  const renderIcon = (xml: string, path: string) => {
+    const color = getIconColor(path);
+    // Replace the hardcoded color in icons with the dynamic one
+    const modifiedXml = xml.replace(/#07a3e4/g, color);
+    return <SvgXml xml={modifiedXml} width={24} height={24} />;
+  };
+
   const panRef = useRef(
     PanResponder.create({
       onStartShouldSetPanResponder: () => false,
@@ -39,74 +52,66 @@ const BottomNavBar: React.FC = () => {
         if (dx < -50 && idx < ROUTE_ORDER.length - 1) {
           const next = idx + 1;
           currentIndex.current = next;
-          router.push(ROUTE_ORDER[next]);
+          router.navigate(ROUTE_ORDER[next]);
         } else if (dx > 50 && idx > 0) {
           const prev = idx - 1;
           currentIndex.current = prev;
-          router.push(ROUTE_ORDER[prev]);
+          router.navigate(ROUTE_ORDER[prev]);
         }
       },
     })
   );
 
+  const NavButton = ({
+    path,
+    icon,
+    label,
+    index,
+  }: {
+    path: string;
+    icon: string;
+    label: string;
+    index: number;
+  }) => (
+    <Pressable
+      style={styles.button}
+      onPress={() => {
+        currentIndex.current = index;
+        router.navigate(path);
+      }}
+      accessibilityRole="button"
+    >
+      <View style={currentPath === path ? styles.iconWrapper : styles.iconWrapperInactive}>
+        {renderIcon(icon, path)}
+      </View>
+      <Text style={[styles.label, { color: getIconColor(path) }]}>{label}</Text>
+    </Pressable>
+  );
+
   return (
     <View
-      style={[styles.container, { paddingBottom: insets.bottom }]}
+      style={[styles.container, { paddingBottom: insets.bottom, height: 65 + insets.bottom }]}
       accessibilityRole="tablist"
       {...panRef.current.panHandlers}
     >
-      <Pressable
-        style={styles.button}
-        onPress={() => {
-          currentIndex.current = 0;
-          router.push('/home');
-        }}
-        accessibilityRole="button"
-      >
-        <View style={currentPath === '/home' ? styles.iconWrapper : styles.iconWrapperInactive}>
-          <SvgXml xml={HOME_ICON} width={24} height={24} />
-        </View>
-      </Pressable>
-      <Pressable
-        style={styles.button}
-        onPress={() => {
-          currentIndex.current = 1;
-          router.push('/statistics');
-        }}
-        accessibilityRole="button"
-      >
-        <View
-          style={currentPath === '/statistics' ? styles.iconWrapper : styles.iconWrapperInactive}
+      <NavButton path="/home" icon={HOME_ICON} label="Inicio" index={0} />
+      <NavButton path="/statistics" icon={CHART_ICON} label="Estadísticas" index={1} />
+
+      <View style={styles.fabContainer}>
+        <Pressable
+          style={styles.fabButton}
+          onPress={() => {
+            if (pathname !== '/add-movement') router.navigate('/add-movement');
+          }}
+          accessibilityRole="button"
+          accessibilityLabel="Agregar movimiento"
         >
-          <SvgXml xml={CHART_ICON} width={24} height={24} />
-        </View>
-      </Pressable>
-      <Pressable
-        style={styles.button}
-        onPress={() => {
-          currentIndex.current = 2;
-          router.push('/transactions');
-        }}
-        accessibilityRole="button"
-      >
-        <View
-          style={currentPath === '/transactions' ? styles.iconWrapper : styles.iconWrapperInactive}
-        >
-          <SvgXml xml={LIST_ICON} width={24} height={24} />
-        </View>
-      </Pressable>
-      <Pressable
-        style={styles.button}
-        onPress={() => {
-          currentIndex.current = 3;
-          router.push('/profile');
-        }}
-        accessibilityRole="button"
-      >
-        <View style={currentPath === '/profile' ? styles.iconWrapper : styles.iconWrapperInactive}>
-          <SvgXml xml={PERSON_ICON} width={24} height={24} />
-        </View>
-      </Pressable>
+          <SvgXml xml={PLUS_ICON.replace('currentColor', '#fff')} width={30} height={30} />
+        </Pressable>
+      </View>
+
+      <NavButton path="/transactions" icon={LIST_ICON} label="Movimientos" index={2} />
+      <NavButton path="/summary" icon={SUMMARY_ICON} label="Resumen" index={3} />
     </View>
   );
 };

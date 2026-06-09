@@ -35,6 +35,11 @@ public class ExpenseEventListener {
     private final AlertDeliveryService alertDeliveryService;
     private final UserRepository userRepository;
     private final ExpenseRepository expenseRepository;
+    private java.time.Clock clock = java.time.Clock.systemDefaultZone();
+
+    void setClock(java.time.Clock clock) {
+        this.clock = clock;
+    }
 
     @Async
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
@@ -42,7 +47,7 @@ public class ExpenseEventListener {
         log.info("Procesando ExpenseCreatedEvent de forma asincrona tras el commit: {}", event.getExpenseId());
 
         YearMonth expenseMonth = YearMonth.from(event.getDate());
-        YearMonth currentMonth = YearMonth.now();
+        YearMonth currentMonth = YearMonth.now(clock);
 
         if (!expenseMonth.equals(currentMonth)) {
             log.info("Omitiendo notificaciones para gasto de mes no actual: {}", expenseMonth);
@@ -265,7 +270,7 @@ public class ExpenseEventListener {
             User user,
             List<Expense> monthlyExpenses,
             YearMonth expenseMonth) {
-        LocalDate today = LocalDate.now();
+        LocalDate today = LocalDate.now(clock);
         YearMonth currentMonth = YearMonth.from(today);
         if (!currentMonth.equals(expenseMonth)) {
             return null;

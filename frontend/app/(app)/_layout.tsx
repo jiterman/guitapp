@@ -71,7 +71,11 @@ export default function AppLayout() {
   return (
     <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
       <View style={styles.header}>
-        <View style={styles.greetingRow}>
+        <TouchableOpacity
+          style={styles.greetingRow}
+          onPress={() => router.push('/profile')}
+          activeOpacity={0.7}
+        >
           {user?.avatarUrl ? (
             <Image source={{ uri: user.avatarUrl }} style={styles.avatar} resizeMode="cover" />
           ) : (
@@ -81,9 +85,12 @@ export default function AppLayout() {
           )}
 
           <View style={styles.greetingTextContainer}>
-            <Text style={styles.name}>
-              Hola, <Text style={styles.nameBold}>{user?.firstName ?? 'Usuario'}</Text>
-            </Text>
+            <View style={styles.nameRow}>
+              <Text style={styles.name}>
+                Hola, <Text style={styles.nameBold}>{user?.firstName ?? 'Usuario'}</Text>
+              </Text>
+              <Icon name="chevron-right-outline" style={styles.chevronIcon} fill="#6b8aa1" />
+            </View>
             <View style={styles.dateRow}>
               <Icon name="calendar-outline" style={styles.dateIcon} fill="#6b8aa1" />
               <Text style={styles.dateText}>
@@ -95,7 +102,7 @@ export default function AppLayout() {
               </Text>
             </View>
           </View>
-        </View>
+        </TouchableOpacity>
 
         <TouchableOpacity
           style={styles.notificationButton}
@@ -136,10 +143,14 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
-    flex: 1,
   },
   greetingTextContainer: {
-    flex: 1,
+    marginRight: 4,
+  },
+  nameRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
   },
   avatar: {
     width: 46,
@@ -185,6 +196,11 @@ const styles = StyleSheet.create({
   dateText: {
     fontSize: 13,
     color: '#6b8aa1',
+  },
+  chevronIcon: {
+    width: 22,
+    height: 22,
+    marginLeft: 0,
   },
   notificationButton: {
     width: 44,

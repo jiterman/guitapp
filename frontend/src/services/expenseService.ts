@@ -4,6 +4,7 @@ import type { ExpenseCategory, ExpenseType } from '../constants/categories';
 
 export interface AddExpenseRequest {
   amount: number;
+  title?: string;
   description?: string;
   category: ExpenseCategory;
   type: ExpenseType;
@@ -13,6 +14,7 @@ export interface AddExpenseRequest {
 export interface ExpenseResponse {
   id: string;
   amount: number;
+  title?: string;
   description?: string;
   category: ExpenseCategory;
   type: ExpenseType;
@@ -21,6 +23,7 @@ export interface ExpenseResponse {
 
 export interface UpdateExpenseRequest {
   amount?: number;
+  title?: string;
   description?: string;
   category?: ExpenseCategory;
   type?: ExpenseType;
@@ -104,7 +107,7 @@ const deleteExpense = async (expenseId: string): Promise<void> => {
 
 export interface ReceiptAnalysisResponse {
   amount?: number;
-  description?: string;
+  title?: string;
   category?: ExpenseCategory;
   date?: string;
 }

@@ -60,14 +60,14 @@ public class GeminiService {
                     "\"date\": date (yyyy-MM-dd), " +
                     "\"amount\": number, " +
                     "\"category\": one of " + categories + ", " +
-                    "\"description\": \"string (max 3 words)\"" +
+                    "\"title\": \"string (max 3 words, max 20 chars)\"" +
                     "}. " +
                     "If a field cannot be determined, use null. " +
                     "If any part of the date cannot be determined, use current date information, for example, if year is missing use current year. The current date is "
                     + formatedCurrentDate + ". " +
                     "The amount should be a number (e.g. 1500.50) and has to be the total amount of the ticket." +
                     "The category must match exactly one of the provided values." +
-                    "The description must specify over the category, for example, if category is RESTAURANT, the description must include something related to RESTAURANT like \"Breakfast\", \"Coffee\", \"Lunch\", \"Dinner\". Description must be in spanish. "
+                    "The title must specify over the category, for example, if category is RESTAURANT, the title must include something related to RESTAURANT like \"Almuerzo\", \"Cafe\", \"Cena\". Title must be in spanish and max 20 characters. "
                     +
                     "CRITICAL: Only return the JSON.";
 

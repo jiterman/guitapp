@@ -58,7 +58,7 @@ class GeminiServiceTests {
                       "content": {
                         "parts": [
                           {
-                            "text": "{\\"amount\\": 1500.50, \\"category\\": \\"RESTAURANT\\", \\"description\\": \\"Pizza Lunch\\"}"
+                            "text": "{\\"amount\\": 1500.50, \\"category\\": \\"RESTAURANT\\", \\"title\\": \\"Pizza Lunch\\"}"
                           }
                         ]
                       }
@@ -76,7 +76,7 @@ class GeminiServiceTests {
         assertNotNull(response);
         assertEquals(0, new BigDecimal("1500.5").compareTo(response.amount()));
         assertEquals(ExpenseCategory.RESTAURANT, response.category());
-        assertEquals("Pizza Lunch", response.description());
+        assertEquals("Pizza Lunch", response.title());
     }
 
     @Test
@@ -93,7 +93,7 @@ class GeminiServiceTests {
                       "content": {
                         "parts": [
                           {
-                            "text": "```json\\n{\\"amount\\": 1500.50, \\"category\\": \\"RESTAURANT\\", \\"description\\": \\"Pizza Lunch\\"}\\n```"
+                            "text": "```json\\n{\\"amount\\": 1500.50, \\"category\\": \\"RESTAURANT\\", \\"title\\": \\"Pizza Lunch\\"}\\n```"
                           }
                         ]
                       }
@@ -127,7 +127,7 @@ class GeminiServiceTests {
                       "content": {
                         "parts": [
                           {
-                            "text": "```JSON\\n{\\"amount\\": 1500.50, \\"category\\": \\"RESTAURANT\\", \\"description\\": \\"Pizza Lunch\\"}\\n```"
+                            "text": "```JSON\\n{\\"amount\\": 1500.50, \\"category\\": \\"RESTAURANT\\", \\"title\\": \\"Pizza Lunch\\"}\\n```"
                           }
                         ]
                       }

@@ -95,6 +95,10 @@ export const getExpenseCategory = (category: string): ExpenseCategoryOption => {
   return getCategoryOption(category, 'EXPENSE') as ExpenseCategoryOption;
 };
 
+export const getIncomeCategory = (category: string): IncomeCategoryOption => {
+  return getCategoryOption(category, 'INCOME') as IncomeCategoryOption;
+};
+
 export const getCategoryIcon = (category: string): string => {
   const expenseOption = EXPENSE_CATEGORIES.find(c => c.value === category);
   if (expenseOption) return expenseOption.icon;

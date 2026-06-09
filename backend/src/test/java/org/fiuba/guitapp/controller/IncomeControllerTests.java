@@ -47,12 +47,13 @@ class IncomeControllerTests {
     void addIncome_ShouldReturnIncomeResponse_WhenRequestIsValid() throws Exception {
         UUID incomeId = UUID.randomUUID();
         AddIncomeRequest request = new AddIncomeRequest(
-                new BigDecimal("1500.00"), "Freelance", IncomeCategory.FREELANCE, LocalDate.now());
+                new BigDecimal("1500.00"), "Freelance", "Freelance project", IncomeCategory.FREELANCE, LocalDate.now());
 
         IncomeResponse response = new IncomeResponse(
                 incomeId,
                 new BigDecimal("1500.00"),
                 "Freelance",
+                "Freelance project",
                 IncomeCategory.FREELANCE,
                 LocalDate.now());
 
@@ -65,7 +66,7 @@ class IncomeControllerTests {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(incomeId.toString()))
                 .andExpect(jsonPath("$.amount").value(1500.00))
-                .andExpect(jsonPath("$.description").value("Freelance"))
+                .andExpect(jsonPath("$.title").value("Freelance"))
                 .andExpect(jsonPath("$.category").value("FREELANCE"));
 
         verify(incomeService, times(1)).addIncome(eq("test@example.com"), any(AddIncomeRequest.class));
@@ -76,11 +77,12 @@ class IncomeControllerTests {
     void addIncome_ShouldReturnOk_WhenDescriptionIsNull() throws Exception {
         UUID incomeId = UUID.randomUUID();
         AddIncomeRequest request = new AddIncomeRequest(
-                new BigDecimal("500.00"), null, IncomeCategory.SALARY, LocalDate.now());
+                new BigDecimal("500.00"), null, null, IncomeCategory.SALARY, LocalDate.now());
 
         IncomeResponse response = new IncomeResponse(
                 incomeId,
                 new BigDecimal("500.00"),
+                null,
                 null,
                 IncomeCategory.SALARY,
                 LocalDate.now());
@@ -114,7 +116,7 @@ class IncomeControllerTests {
     @WithMockUser(username = "test@example.com")
     void addIncome_ShouldReturnBadRequest_WhenAmountIsNegative() throws Exception {
         AddIncomeRequest request = new AddIncomeRequest(
-                new BigDecimal("-100.00"), null, IncomeCategory.OTHER, LocalDate.now());
+                new BigDecimal("-100.00"), null, null, IncomeCategory.OTHER, LocalDate.now());
 
         mockMvc.perform(post("/api/incomes")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -181,6 +183,7 @@ class IncomeControllerTests {
                 incomeId,
                 new BigDecimal("1500.00"),
                 "Freelance",
+                "Freelance project details",
                 IncomeCategory.FREELANCE,
                 LocalDate.now());
 
@@ -190,7 +193,7 @@ class IncomeControllerTests {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(incomeId.toString()))
                 .andExpect(jsonPath("$.amount").value(1500.00))
-                .andExpect(jsonPath("$.description").value("Freelance"))
+                .andExpect(jsonPath("$.title").value("Freelance"))
                 .andExpect(jsonPath("$.category").value("FREELANCE"));
 
         verify(incomeService, times(1)).getIncomeById("test@example.com", incomeId);
@@ -212,14 +215,16 @@ class IncomeControllerTests {
         UUID incomeId = UUID.randomUUID();
         UpdateIncomeRequest request = new UpdateIncomeRequest(
                 new BigDecimal("2000.00"),
-                "Updated",
+                "Salario",
+                "Updated salary details",
                 IncomeCategory.SALARY,
                 LocalDate.now());
 
         IncomeResponse response = new IncomeResponse(
                 incomeId,
                 new BigDecimal("2000.00"),
-                "Updated",
+                "Salario",
+                "Updated salary details",
                 IncomeCategory.SALARY,
                 LocalDate.now());
 
@@ -232,7 +237,7 @@ class IncomeControllerTests {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(incomeId.toString()))
                 .andExpect(jsonPath("$.amount").value(2000.00))
-                .andExpect(jsonPath("$.description").value("Updated"))
+                .andExpect(jsonPath("$.title").value("Salario"))
                 .andExpect(jsonPath("$.category").value("SALARY"));
 
         verify(incomeService, times(1)).updateIncome(eq("test@example.com"), eq(incomeId), any(UpdateIncomeRequest.class));
@@ -245,6 +250,7 @@ class IncomeControllerTests {
         UpdateIncomeRequest request = new UpdateIncomeRequest(
                 new BigDecimal("-1.00"),
                 "Updated",
+                null,
                 IncomeCategory.SALARY,
                 LocalDate.now());
 

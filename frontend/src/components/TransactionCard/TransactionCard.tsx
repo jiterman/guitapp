@@ -14,7 +14,7 @@ interface Props {
 const TransactionCard: React.FC<Props> = ({ movement, onPress }) => {
   const Container = onPress ? TouchableOpacity : View;
   const displayText =
-    movement.description?.trim() ||
+    movement.title?.trim() ||
     (movement.category ? getCategoryLabel(movement.category, movement.type) : 'Sin categoría');
 
   const categoryOption = movement.category
