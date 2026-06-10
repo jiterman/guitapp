@@ -159,6 +159,17 @@ const ProfileScreen: React.FC = () => {
             </View>
           </ProfileSection>
 
+          <ProfileSection title="Reglas">
+            <ProfileMenuItem
+              title="Reglas por categoría"
+              subtitle="Definí si los gastos de cada categoría son fijos o variables"
+              icon="options-outline"
+              iconColor="#8A4FFF"
+              iconBackground="rgba(138, 79, 255, 0.12)"
+              onPress={() => router.push('/category-rules')}
+            />
+          </ProfileSection>
+
           <ProfileSection title="Seguridad">
             <ProfileMenuItem
               title="Contraseña"
