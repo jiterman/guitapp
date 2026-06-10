@@ -2,13 +2,8 @@ import React from 'react';
 import { StyleSheet, View, TouchableOpacity } from 'react-native';
 import { Text } from '@ui-kitten/components';
 import { Ionicons } from '@expo/vector-icons';
-
-export interface CategoryRuleResponse {
-  id: number;
-  categoryName: string;
-  categoryId: string;
-  expenseType: 'FIXED' | 'VARIABLE';
-}
+import { CategoryRuleResponse } from '../../services/ruleService';
+import { EXPENSE_CATEGORIES } from '../../constants/categories';
 
 interface CategoryRuleCardProps {
   rule: CategoryRuleResponse;
@@ -16,7 +11,9 @@ interface CategoryRuleCardProps {
 }
 
 export const CategoryRuleCard: React.FC<CategoryRuleCardProps> = ({ rule, onPress }) => {
-  const isFixed = rule.expenseType === 'FIXED';
+  const isFixed = rule.type === 'FIXED';
+  const matchedCategory = EXPENSE_CATEGORIES.find(c => c.value === rule.category);
+  const categoryLabel = matchedCategory?.label || rule.category;
 
   return (
     <TouchableOpacity style={styles.card} onPress={() => onPress(rule)} activeOpacity={0.7}>
@@ -33,8 +30,8 @@ export const CategoryRuleCard: React.FC<CategoryRuleCardProps> = ({ rule, onPres
             color={isFixed ? '#2383F2' : '#8A4FFF'}
           />
         </View>
-        <View>
-          <Text style={styles.categoryTitle}>{rule.categoryName}</Text>
+        <View style={{ flex: 1 }}>
+          <Text style={styles.categoryTitle}>{categoryLabel}</Text>
           <Text appearance="hint" style={styles.subtitle}>
             Gasto predeterminado
           </Text>

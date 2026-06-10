@@ -1,23 +1,17 @@
 import React, { useState } from 'react';
-import { View, FlatList, TouchableOpacity, Alert } from 'react-native';
+import { View, FlatList, TouchableOpacity } from 'react-native';
 import { Layout, Text } from '@ui-kitten/components';
 import { Ionicons } from '@expo/vector-icons';
 import { useModal } from '../hooks/Profile/useModal';
-import {
-  CategoryRuleCard,
-  CategoryRuleResponse,
-} from '../components/CategoryRuleCard/CategoryRuleCard';
+import { CategoryRuleCard } from '../components/CategoryRuleCard/CategoryRuleCard';
 import { CategoryRuleModal } from '../components/CategoryRuleModal/CategoryRuleModal';
-import { EXPENSE_CATEGORIES, ExpenseCategory } from '../constants/categories';
-import { ruleService } from '../services/ruleService';
+import { ExpenseCategory } from '../constants/categories';
+import { ruleService, CategoryRuleResponse } from '../services/ruleService';
 import { rulesScreenStyles } from '../styles/rulesStyles';
+import { useRules } from '../context/rules';
 
 export default function CategoryRulesScreen() {
-  // Hardcodeo temporal con ids numéricos simulando el formato definitivo
-  const [rules, setRules] = useState<CategoryRuleResponse[]>([
-    { id: 1, categoryName: 'Supermercado', categoryId: 'SUPERMARKET', expenseType: 'VARIABLE' },
-    { id: 2, categoryName: 'Alquiler', categoryId: 'RENT', expenseType: 'FIXED' },
-  ]);
+  const { rules, addRule, updateRuleInState } = useRules();
 
   const ruleModal = useModal();
   const [selectedRule, setSelectedRule] = useState<CategoryRuleResponse | null>(null);
@@ -37,28 +31,14 @@ export default function CategoryRulesScreen() {
     setSaving(true);
     try {
       if (selectedRule) {
-        setRules(prev =>
-          prev.map(r => (r.id === selectedRule.id ? { ...r, expenseType: type } : r))
-        );
+        updateRuleInState(selectedRule.id, type);
         ruleModal.close();
       } else {
         const response = await ruleService.createCategoryRule({
           category: categoryValue as ExpenseCategory,
           type: type,
         });
-
-        // Opcional: Feedback rápido de éxito antes de cerrar
-        Alert.alert('¡Éxito! Regla persistida en base de datos.');
-
-        const matchedCat = EXPENSE_CATEGORIES.find(c => c.value === categoryValue);
-        const newRule: CategoryRuleResponse = {
-          id: Math.random(), // Generador flotante provisorio
-          categoryName: matchedCat?.label || 'Categoría',
-          categoryId: categoryValue,
-          expenseType: type,
-        };
-
-        setRules(prev => [newRule, ...prev]);
+        addRule(response);
         ruleModal.close();
       }
     } catch (e: any) {

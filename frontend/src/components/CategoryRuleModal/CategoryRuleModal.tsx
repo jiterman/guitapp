@@ -11,7 +11,7 @@ import {
 import { Text } from '@ui-kitten/components';
 import { Ionicons } from '@expo/vector-icons';
 import { EXPENSE_CATEGORIES } from '../../constants/categories';
-import { CategoryRuleResponse } from '../CategoryRuleCard/CategoryRuleCard';
+import { CategoryRuleResponse } from '../../services/ruleService';
 import { rulesModalStyles } from '../../styles/rulesStyles';
 
 interface CategoryRuleModalProps {
@@ -39,8 +39,8 @@ export const CategoryRuleModal: React.FC<CategoryRuleModalProps> = ({
 
   useEffect(() => {
     if (visible) {
-      setSelectedCategory(rule ? rule.categoryId : '');
-      setSelectedType(rule ? rule.expenseType : 'VARIABLE');
+      setSelectedCategory(rule ? rule.category : '');
+      setSelectedType(rule ? rule.type : 'VARIABLE');
       setError(null);
     }
   }, [visible, rule]);
@@ -48,7 +48,7 @@ export const CategoryRuleModal: React.FC<CategoryRuleModalProps> = ({
   const handleCategorySelect = (value: string) => {
     if (rule) return;
     setSelectedCategory(value);
-    setError(null); // Limpia el error al cambiar de categoría
+    setError(null);
 
     const categoryConfig = EXPENSE_CATEGORIES.find(c => c.value === value);
     if (categoryConfig) {
@@ -63,7 +63,6 @@ export const CategoryRuleModal: React.FC<CategoryRuleModalProps> = ({
     try {
       await onSave(selectedCategory, selectedType);
     } catch (err: any) {
-      // Captura y muestra el mensaje exacto enviado por Spring Boot
       setError(err.message || 'Ocurrió un problema al guardar la regla.');
     }
   };
@@ -87,7 +86,6 @@ export const CategoryRuleModal: React.FC<CategoryRuleModalProps> = ({
           </View>
 
           <View style={rulesModalStyles.editBlock}>
-            {/* Campo 1: Selección de Categoría */}
             <View style={rulesModalStyles.inputRow}>
               <Text style={rulesModalStyles.inputLabel}>Si la categoría es:</Text>
 
@@ -131,10 +129,8 @@ export const CategoryRuleModal: React.FC<CategoryRuleModalProps> = ({
               </View>
             </View>
 
-            {/* Divisor inputDivider */}
             <View style={rulesModalStyles.inputDivider} />
 
-            {/* Campo 2: Tipo de Gasto */}
             <View style={rulesModalStyles.inputRow}>
               <Text style={rulesModalStyles.inputLabel}>Entonces el tipo de gasto será:</Text>
 

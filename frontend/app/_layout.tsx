@@ -10,6 +10,7 @@ import * as SplashScreen from 'expo-splash-screen';
 import { UserProvider } from '../src/context/user';
 import { ShareIntentProvider, useShareIntentContext } from 'expo-share-intent';
 import { useUser } from '../src/context/user';
+import { RulesProvider } from '../src/context/rules';
 
 SplashScreen.preventAutoHideAsync().catch(err => {
   console.warn('Error previniendo auth hide:', err);
@@ -33,7 +34,9 @@ export default function RootLayout() {
       <ApplicationProvider {...eva} theme={customTheme}>
         <ShareIntentProvider>
           <UserProvider>
-            <RootLayoutNav />
+            <RulesProvider>
+              <RootLayoutNav />
+            </RulesProvider>
           </UserProvider>
         </ShareIntentProvider>
         <StatusBar style="auto" />
