@@ -50,4 +50,9 @@ public class Notification {
 
     @Column(nullable = false)
     private boolean read;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, columnDefinition = "varchar(20) default 'SENT'")
+    @Builder.Default
+    private NotificationSentState sentState = NotificationSentState.SENT;
 }

@@ -8,6 +8,7 @@ import org.fiuba.guitapp.model.AlertType;
 import org.fiuba.guitapp.model.Notification;
 import org.fiuba.guitapp.model.NotificationChannel;
 import org.fiuba.guitapp.model.NotificationFrequency;
+import org.fiuba.guitapp.model.NotificationSentState;
 import org.fiuba.guitapp.model.User;
 import org.fiuba.guitapp.repository.NotificationRepository;
 import org.springframework.stereotype.Service;
@@ -75,6 +76,17 @@ public class AlertDeliveryService {
         return frequency == NotificationFrequency.INSTANT;
     }
 
+    private NotificationSentState resolveSentState(User user, AlertType alertType) {
+        if (IMMEDIATE_SUMMARY_ALERT_TYPES.contains(alertType)) {
+            return NotificationSentState.SENT;
+        }
+        NotificationFrequency frequency = user.getNotificationFrequency();
+        if (frequency == null || frequency == NotificationFrequency.INSTANT) {
+            return NotificationSentState.SENT;
+        }
+        return NotificationSentState.PENDING;
+    }
+
     private void saveNotification(User user, AlertType alertType, String body) {
         Notification notification = Notification.builder()
                 .user(user)
@@ -83,6 +95,7 @@ public class AlertDeliveryService {
                 .body(body)
                 .createdAt(LocalDateTime.now())
                 .read(false)
+                .sentState(resolveSentState(user, alertType))
                 .build();
         notificationRepository.save(notification);
     }

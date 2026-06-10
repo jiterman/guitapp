@@ -30,6 +30,9 @@ class NotificationDigestServiceTest {
     private UserRepository userRepository;
 
     @Mock
+    private UserNotificationService userNotificationService;
+
+    @Mock
     private NotificationSummarySender notificationSummarySender;
 
     @InjectMocks
@@ -54,13 +57,14 @@ class NotificationDigestServiceTest {
     }
 
     @Test
-    void processDailySummaries_ShouldSendReminderToAllDailyUsers() {
+    void processDailySummaries_ShouldReleasePendingAndSendReminderToAllDailyUsers() {
         when(userRepository.findByNotificationFrequencyAndStatus(NotificationFrequency.DAILY, UserStatus.ACTIVE))
                 .thenReturn(List.of(dailyUser));
 
         int usersNotified = notificationDigestService.processDailySummaries();
 
         assertEquals(1, usersNotified);
+        verify(userNotificationService).releasePendingNotifications(dailyUser);
         verify(notificationSummarySender).sendSummary(
                 eq(dailyUser),
                 eq(AlertType.DAILY_SUMMARY),
@@ -75,17 +79,19 @@ class NotificationDigestServiceTest {
         int usersNotified = notificationDigestService.processDailySummaries();
 
         assertEquals(0, usersNotified);
+        verify(userNotificationService, never()).releasePendingNotifications(any());
         verify(notificationSummarySender, never()).sendSummary(any(), any(), any());
     }
 
     @Test
-    void processWeeklySummaries_ShouldSendReminderToAllWeeklyUsers() {
+    void processWeeklySummaries_ShouldReleasePendingAndSendReminderToAllWeeklyUsers() {
         when(userRepository.findByNotificationFrequencyAndStatus(NotificationFrequency.WEEKLY, UserStatus.ACTIVE))
                 .thenReturn(List.of(weeklyUser));
 
         int usersNotified = notificationDigestService.processWeeklySummaries();
 
         assertEquals(1, usersNotified);
+        verify(userNotificationService).releasePendingNotifications(weeklyUser);
         verify(notificationSummarySender).sendSummary(
                 eq(weeklyUser),
                 eq(AlertType.WEEKLY_SUMMARY),
@@ -93,7 +99,7 @@ class NotificationDigestServiceTest {
     }
 
     @Test
-    void processWeeklySummaries_ShouldNotifyAllWeeklyUsers_RegardlessOfPendingNotifications() {
+    void processWeeklySummaries_ShouldNotifyAllWeeklyUsers() {
         User anotherWeeklyUser = new User();
         anotherWeeklyUser.setId(UUID.randomUUID());
         anotherWeeklyUser.setEmail("weekly2@example.com");
@@ -106,6 +112,7 @@ class NotificationDigestServiceTest {
         int usersNotified = notificationDigestService.processWeeklySummaries();
 
         assertEquals(2, usersNotified);
+        verify(userNotificationService, times(2)).releasePendingNotifications(any());
         verify(notificationSummarySender, times(2)).sendSummary(any(), eq(AlertType.WEEKLY_SUMMARY), any());
     }
 }
