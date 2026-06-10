@@ -834,6 +834,26 @@ class UserServiceTests {
     }
 
     @Test
+    void updateNotificationFrequency_ShouldNotReleasePendingNotifications_WhenAlreadyInstant() {
+        testUser.setNotificationFrequency(NotificationFrequency.INSTANT);
+        when(userRepository.findByEmail(testEmail)).thenReturn(Optional.of(testUser));
+
+        userService.updateNotificationFrequency(testEmail, NotificationFrequency.INSTANT);
+
+        verify(userNotificationService, never()).releasePendingNotifications(any());
+    }
+
+    @Test
+    void updateNotificationFrequency_ShouldNotReleasePendingNotifications_WhenSwitchingFromDailyToWeekly() {
+        testUser.setNotificationFrequency(NotificationFrequency.DAILY);
+        when(userRepository.findByEmail(testEmail)).thenReturn(Optional.of(testUser));
+
+        userService.updateNotificationFrequency(testEmail, NotificationFrequency.WEEKLY);
+
+        verify(userNotificationService, never()).releasePendingNotifications(any());
+    }
+
+    @Test
     void updateNotificationFrequency_ShouldThrowException_WhenUserNotFound() {
         when(userRepository.findByEmail(testEmail)).thenReturn(Optional.empty());
 
