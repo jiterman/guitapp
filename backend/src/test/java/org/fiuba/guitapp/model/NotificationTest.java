@@ -26,6 +26,7 @@ class NotificationTest {
         notification.setBody(body);
         notification.setCreatedAt(now);
         notification.setRead(true);
+        notification.setSentState(NotificationSentState.PENDING);
 
         assertEquals(1L, notification.getId());
         assertEquals(user, notification.getUser());
@@ -34,6 +35,7 @@ class NotificationTest {
         assertEquals(body, notification.getBody());
         assertEquals(now, notification.getCreatedAt());
         assertTrue(notification.isRead());
+        assertEquals(NotificationSentState.PENDING, notification.getSentState());
     }
 
     @Test
@@ -51,6 +53,7 @@ class NotificationTest {
                 .body("Body")
                 .createdAt(now)
                 .read(false)
+                .sentState(NotificationSentState.SENT)
                 .build();
 
         assertEquals(1L, notification.getId());
@@ -60,6 +63,7 @@ class NotificationTest {
         assertEquals("Body", notification.getBody());
         assertEquals(now, notification.getCreatedAt());
         assertFalse(notification.isRead());
+        assertEquals(NotificationSentState.SENT, notification.getSentState());
     }
 
     @Test
@@ -73,5 +77,6 @@ class NotificationTest {
         assertNull(notification.getBody());
         assertNull(notification.getCreatedAt());
         assertFalse(notification.isRead());
+        assertEquals(NotificationSentState.SENT, notification.getSentState());
     }
 }

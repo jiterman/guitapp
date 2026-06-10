@@ -22,6 +22,7 @@ public class NotificationDigestService {
     static final String WEEKLY_SUMMARY_MESSAGE = "¿Cómo vienen los movimientos de la semana? 👀. Revisa la app.";
 
     private final UserRepository userRepository;
+    private final UserNotificationService userNotificationService;
     private final NotificationSummarySender notificationSummarySender;
 
     public int processDailySummaries() {
@@ -39,6 +40,7 @@ public class NotificationDigestService {
         List<User> users = userRepository.findByNotificationFrequencyAndStatus(frequency, UserStatus.ACTIVE);
 
         for (User user : users) {
+            userNotificationService.releasePendingNotifications(user);
             notificationSummarySender.sendSummary(user, summaryType, summaryMessage);
             log.info("Recordatorio {} enviado a {}", summaryType, user.getEmail());
         }

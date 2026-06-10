@@ -31,6 +31,7 @@ import lombok.RequiredArgsConstructor;
 public class UserService {
 
     private final UserRepository userRepository;
+    private final UserNotificationService userNotificationService;
     private final Cloudinary cloudinary;
     private final OtpService otpService;
     private final EmailService emailService;
@@ -66,8 +67,15 @@ public class UserService {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new AuthException(ErrorCode.USER_NOT_FOUND, "User not found"));
 
+        NotificationFrequency previousFrequency = user.getNotificationFrequency();
         user.setNotificationFrequency(notificationFrequency);
         userRepository.save(user);
+
+        if (notificationFrequency == NotificationFrequency.INSTANT
+                && (previousFrequency == NotificationFrequency.DAILY
+                        || previousFrequency == NotificationFrequency.WEEKLY)) {
+            userNotificationService.releasePendingNotifications(user);
+        }
 
         return toUserProfileResponse(user);
     }

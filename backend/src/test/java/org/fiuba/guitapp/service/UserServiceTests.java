@@ -59,6 +59,9 @@ class UserServiceTests {
     @Mock
     private PasswordEncoder passwordEncoder;
 
+    @Mock
+    private UserNotificationService userNotificationService;
+
     private User testUser;
     private String testEmail = "test@example.com";
 
@@ -807,6 +810,27 @@ class UserServiceTests {
         assertEquals(NotificationFrequency.WEEKLY, testUser.getNotificationFrequency());
         verify(userRepository).save(testUser);
         assertEquals(NotificationFrequency.WEEKLY, response.notificationFrequency());
+        verify(userNotificationService, never()).releasePendingNotifications(any());
+    }
+
+    @Test
+    void updateNotificationFrequency_ShouldReleasePendingNotifications_WhenSwitchingToInstantFromDaily() {
+        testUser.setNotificationFrequency(NotificationFrequency.DAILY);
+        when(userRepository.findByEmail(testEmail)).thenReturn(Optional.of(testUser));
+
+        userService.updateNotificationFrequency(testEmail, NotificationFrequency.INSTANT);
+
+        verify(userNotificationService).releasePendingNotifications(testUser);
+    }
+
+    @Test
+    void updateNotificationFrequency_ShouldReleasePendingNotifications_WhenSwitchingToInstantFromWeekly() {
+        testUser.setNotificationFrequency(NotificationFrequency.WEEKLY);
+        when(userRepository.findByEmail(testEmail)).thenReturn(Optional.of(testUser));
+
+        userService.updateNotificationFrequency(testEmail, NotificationFrequency.INSTANT);
+
+        verify(userNotificationService).releasePendingNotifications(testUser);
     }
 
     @Test

@@ -1,5 +1,6 @@
 package org.fiuba.guitapp.service;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
@@ -8,13 +9,17 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import org.fiuba.guitapp.model.AlertType;
+import org.fiuba.guitapp.model.Notification;
 import org.fiuba.guitapp.model.NotificationChannel;
 import org.fiuba.guitapp.model.NotificationFrequency;
+import org.fiuba.guitapp.model.NotificationSentState;
 import org.fiuba.guitapp.model.User;
 import org.fiuba.guitapp.repository.NotificationRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -33,6 +38,9 @@ class AlertDeliveryServiceTest {
 
     @InjectMocks
     private AlertDeliveryService alertDeliveryService;
+
+    @Captor
+    private ArgumentCaptor<Notification> notificationCaptor;
 
     private User testUser;
     private static final String BODY = "Test alert body";
@@ -112,18 +120,19 @@ class AlertDeliveryServiceTest {
     }
 
     @Test
-    void deliverAlert_ShouldDeliverImmediately_WhenFrequencyIsInstant() {
+    void deliverAlert_ShouldPersistNotificationWithSentState_WhenFrequencyIsInstant() {
         testUser.setNotificationFrequency(NotificationFrequency.INSTANT);
         testUser.setNotificationChannel(NotificationChannel.PUSH);
 
         alertDeliveryService.deliverAlert(testUser, AlertType.CATEGORY_OVERSPENDING, BODY);
 
+        verify(notificationRepository).save(notificationCaptor.capture());
+        assertEquals(NotificationSentState.SENT, notificationCaptor.getValue().getSentState());
         verify(notificationService).sendPushNotification(
                 testUser,
                 AlertType.CATEGORY_OVERSPENDING.getTitle(),
                 BODY,
                 AlertType.CATEGORY_OVERSPENDING);
-        verify(notificationRepository).save(any());
     }
 
     @Test
@@ -132,7 +141,8 @@ class AlertDeliveryServiceTest {
 
         alertDeliveryService.deliverAlert(testUser, AlertType.SAVINGS_GOAL_AT_RISK, BODY);
 
-        verify(notificationRepository).save(any());
+        verify(notificationRepository).save(notificationCaptor.capture());
+        assertEquals(NotificationSentState.PENDING, notificationCaptor.getValue().getSentState());
         verify(notificationService, never()).sendPushNotification(any(), any(), any(), any());
         verify(emailService, never()).sendAlertEmail(any(), any(), any());
     }
@@ -143,7 +153,8 @@ class AlertDeliveryServiceTest {
 
         alertDeliveryService.deliverAlert(testUser, AlertType.NEGATIVE_BALANCE_RISK, BODY);
 
-        verify(notificationRepository).save(any());
+        verify(notificationRepository).save(notificationCaptor.capture());
+        assertEquals(NotificationSentState.PENDING, notificationCaptor.getValue().getSentState());
         verify(notificationService, never()).sendPushNotification(any(), any(), any(), any());
         verify(emailService, never()).sendAlertEmail(any(), any(), any());
     }
@@ -155,12 +166,13 @@ class AlertDeliveryServiceTest {
 
         alertDeliveryService.deliverAlert(testUser, AlertType.MONTHLY_SUMMARY, BODY);
 
+        verify(notificationRepository).save(notificationCaptor.capture());
+        assertEquals(NotificationSentState.SENT, notificationCaptor.getValue().getSentState());
         verify(notificationService).sendPushNotification(
                 testUser,
                 AlertType.MONTHLY_SUMMARY.getTitle(),
                 BODY,
                 AlertType.MONTHLY_SUMMARY);
-        verify(notificationRepository).save(any());
     }
 
     @Test
