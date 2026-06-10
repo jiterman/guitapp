@@ -4,7 +4,7 @@ import { Text } from '@ui-kitten/components';
 import { Ionicons } from '@expo/vector-icons';
 
 export interface CategoryRuleResponse {
-  id: string;
+  id: number;
   categoryName: string;
   categoryId: string;
   expenseType: 'FIXED' | 'VARIABLE';

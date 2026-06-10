@@ -13,6 +13,7 @@ export const rulesColors = {
   textMuted: '#6b8aa1',
   btnYellow: '#FFBB00',
   btnYellowText: '#0c2b52',
+  errorText: '#FF3D71',
 };
 
 // ESTILOS EXCLUSIVOS DE LA PANTALLA (Screen Styles)
@@ -206,5 +207,19 @@ export const rulesModalStyles = StyleSheet.create({
   },
   typeButtonTextInactive: {
     color: rulesColors.textMuted,
+  },
+
+  errorRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 4,
+    marginTop: 12,
+    gap: 6,
+  },
+  errorText: {
+    color: rulesColors.errorText,
+    fontSize: 13,
+    fontWeight: '500',
+    flex: 1,
   },
 });

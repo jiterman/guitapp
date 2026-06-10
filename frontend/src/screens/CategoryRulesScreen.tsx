@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, FlatList, TouchableOpacity } from 'react-native';
+import { View, FlatList, TouchableOpacity, Alert } from 'react-native';
 import { Layout, Text } from '@ui-kitten/components';
 import { Ionicons } from '@expo/vector-icons';
 import { useModal } from '../hooks/Profile/useModal';
@@ -8,14 +8,15 @@ import {
   CategoryRuleResponse,
 } from '../components/CategoryRuleCard/CategoryRuleCard';
 import { CategoryRuleModal } from '../components/CategoryRuleModal/CategoryRuleModal';
-import { EXPENSE_CATEGORIES } from '../constants/categories';
+import { EXPENSE_CATEGORIES, ExpenseCategory } from '../constants/categories';
+import { ruleService } from '../services/ruleService';
 import { rulesScreenStyles } from '../styles/rulesStyles';
 
 export default function CategoryRulesScreen() {
-  // TODO: Traer reglas del usuario desde el backend
+  // Hardcodeo temporal con ids numéricos simulando el formato definitivo
   const [rules, setRules] = useState<CategoryRuleResponse[]>([
-    { id: '1', categoryName: 'Supermercado', categoryId: 'SUPERMARKET', expenseType: 'VARIABLE' },
-    { id: '2', categoryName: 'Alquiler', categoryId: 'RENT', expenseType: 'FIXED' },
+    { id: 1, categoryName: 'Supermercado', categoryId: 'SUPERMARKET', expenseType: 'VARIABLE' },
+    { id: 2, categoryName: 'Alquiler', categoryId: 'RENT', expenseType: 'FIXED' },
   ]);
 
   const ruleModal = useModal();
@@ -39,19 +40,30 @@ export default function CategoryRulesScreen() {
         setRules(prev =>
           prev.map(r => (r.id === selectedRule.id ? { ...r, expenseType: type } : r))
         );
+        ruleModal.close();
       } else {
+        const response = await ruleService.createCategoryRule({
+          category: categoryValue as ExpenseCategory,
+          type: type,
+        });
+
+        // Opcional: Feedback rápido de éxito antes de cerrar
+        Alert.alert('¡Éxito! Regla persistida en base de datos.');
+
         const matchedCat = EXPENSE_CATEGORIES.find(c => c.value === categoryValue);
         const newRule: CategoryRuleResponse = {
-          id: Math.random().toString(),
+          id: Math.random(), // Generador flotante provisorio
           categoryName: matchedCat?.label || 'Categoría',
           categoryId: categoryValue,
           expenseType: type,
         };
+
         setRules(prev => [newRule, ...prev]);
+        ruleModal.close();
       }
-      ruleModal.close();
-    } catch (e) {
-      console.error(e);
+    } catch (e: any) {
+      console.error('Error detectado en Screen:', e);
+      throw e;
     } finally {
       setSaving(false);
     }
@@ -65,7 +77,7 @@ export default function CategoryRulesScreen() {
 
       <FlatList
         data={rules}
-        keyExtractor={item => item.id}
+        keyExtractor={item => item.id.toString()}
         renderItem={({ item }) => <CategoryRuleCard rule={item} onPress={handleOpenEdit} />}
         ItemSeparatorComponent={() => <View style={rulesScreenStyles.separator} />}
         contentContainerStyle={rulesScreenStyles.listPadding}

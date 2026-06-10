@@ -35,17 +35,20 @@ export const CategoryRuleModal: React.FC<CategoryRuleModalProps> = ({
 }) => {
   const [selectedCategory, setSelectedCategory] = useState<string>('');
   const [selectedType, setSelectedType] = useState<'FIXED' | 'VARIABLE'>('VARIABLE');
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (visible) {
       setSelectedCategory(rule ? rule.categoryId : '');
       setSelectedType(rule ? rule.expenseType : 'VARIABLE');
+      setError(null);
     }
   }, [visible, rule]);
 
   const handleCategorySelect = (value: string) => {
     if (rule) return;
     setSelectedCategory(value);
+    setError(null); // Limpia el error al cambiar de categoría
 
     const categoryConfig = EXPENSE_CATEGORIES.find(c => c.value === value);
     if (categoryConfig) {
@@ -55,7 +58,14 @@ export const CategoryRuleModal: React.FC<CategoryRuleModalProps> = ({
 
   const handleSave = async () => {
     if (!selectedCategory) return;
-    await onSave(selectedCategory, selectedType);
+    setError(null);
+
+    try {
+      await onSave(selectedCategory, selectedType);
+    } catch (err: any) {
+      // Captura y muestra el mensaje exacto enviado por Spring Boot
+      setError(err.message || 'Ocurrió un problema al guardar la regla.');
+    }
   };
 
   return (
@@ -136,7 +146,10 @@ export const CategoryRuleModal: React.FC<CategoryRuleModalProps> = ({
                       ? rulesModalStyles.typeButtonActive
                       : rulesModalStyles.typeButtonInactive,
                   ]}
-                  onPress={() => setSelectedType('FIXED')}
+                  onPress={() => {
+                    setSelectedType('FIXED');
+                    setError(null);
+                  }}
                 >
                   <Text
                     style={[
@@ -157,37 +170,36 @@ export const CategoryRuleModal: React.FC<CategoryRuleModalProps> = ({
                       ? rulesModalStyles.typeButtonActive
                       : rulesModalStyles.typeButtonInactive,
                   ]}
-                  onPress={() => setSelectedType('VARIABLE')}
+                  onPress={() => {
+                    setSelectedType('VARIABLE');
+                    setError(null);
+                  }}
                 >
-                  {selectedType === 'VARIABLE' ? (
-                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                      <Text
-                        style={[
-                          rulesModalStyles.typeButtonText,
-                          rulesModalStyles.typeButtonTextActive,
-                        ]}
-                      >
-                        Variable
-                      </Text>
-                    </View>
-                  ) : (
-                    <Text
-                      style={[
-                        rulesModalStyles.typeButtonText,
-                        rulesModalStyles.typeButtonTextInactive,
-                      ]}
-                    >
-                      Variable
-                    </Text>
-                  )}
+                  <Text
+                    style={[
+                      rulesModalStyles.typeButtonText,
+                      selectedType === 'VARIABLE'
+                        ? rulesModalStyles.typeButtonTextActive
+                        : rulesModalStyles.typeButtonTextInactive,
+                    ]}
+                  >
+                    Variable
+                  </Text>
                 </TouchableOpacity>
               </View>
             </View>
+
+            {error && (
+              <View style={rulesModalStyles.errorRow}>
+                <Text style={rulesModalStyles.errorText}>{error}</Text>
+              </View>
+            )}
 
             <TouchableOpacity
               style={[
                 rulesModalStyles.saveButton,
                 (!selectedCategory || saving) && { opacity: 0.6 },
+                error ? { marginTop: 4 } : { marginTop: 12 },
               ]}
               onPress={handleSave}
               disabled={!selectedCategory || saving}
