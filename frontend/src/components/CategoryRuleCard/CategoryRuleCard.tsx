@@ -25,13 +25,15 @@ export const CategoryRuleCard: React.FC<CategoryRuleCardProps> = ({ rule, onPres
           ]}
         >
           <Ionicons
-            name={isFixed ? 'pin-outline' : 'trending-up'}
+            name={isFixed ? 'pin-outline' : 'trending-down'}
             size={20}
             color={isFixed ? '#2383F2' : '#8A4FFF'}
           />
         </View>
         <View style={{ flex: 1 }}>
-          <Text style={styles.categoryTitle}>{categoryLabel}</Text>
+          <Text style={styles.categoryTitle} numberOfLines={1} ellipsizeMode="tail">
+            {categoryLabel}
+          </Text>
           <Text appearance="hint" style={styles.subtitle}>
             Gasto predeterminado
           </Text>
@@ -64,6 +66,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 12,
     flex: 1,
+    marginRight: 8,
   },
   iconContainer: {
     width: 40,

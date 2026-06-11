@@ -5,6 +5,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useModal } from '../hooks/Profile/useModal';
 import { CategoryRuleCard } from '../components/CategoryRuleCard/CategoryRuleCard';
 import { CategoryRuleModal } from '../components/CategoryRuleModal/CategoryRuleModal';
+import { EditCategoryRuleModal } from '../components/CategoryRuleModal/EditCategoryRuleModal';
 import { ExpenseCategory } from '../constants/categories';
 import { ruleService, CategoryRuleResponse } from '../services/ruleService';
 import { rulesScreenStyles } from '../styles/rulesStyles';
@@ -13,9 +14,12 @@ import { useRules } from '../context/rules';
 export default function CategoryRulesScreen() {
   const { rules, addRule, updateRuleInState, setRules } = useRules();
 
-  const ruleModal = useModal();
+  const createRuleModal = useModal();
+  const editRuleModal = useModal();
+
   const [selectedRule, setSelectedRule] = useState<CategoryRuleResponse | null>(null);
   const [saving, setSaving] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   // Estados locales para controlar el flujo de auto-recuperación
   const [screenLoading, setScreenLoading] = useState(false);
@@ -30,12 +34,12 @@ export default function CategoryRulesScreen() {
       setScreenLoading(true);
       try {
         const rulesData = await ruleService.getCategoryRules();
-        setRules(rulesData); // Guardamos el resultado en el contexto global
+        setRules(rulesData);
       } catch (err) {
         console.warn('Fallo también la auto-recuperación de reglas en la Screen:', err);
       } finally {
         setScreenLoading(false);
-        setHasChecked(true); // Marcamos como revisado para evitar un bucle infinito de peticiones
+        setHasChecked(true);
       }
     };
 
@@ -44,33 +48,57 @@ export default function CategoryRulesScreen() {
 
   const handleOpenEdit = (rule: CategoryRuleResponse) => {
     setSelectedRule(rule);
-    ruleModal.open();
+    editRuleModal.open();
   };
 
   const handleOpenCreate = () => {
     setSelectedRule(null);
-    ruleModal.open();
+    createRuleModal.open();
   };
 
-  const handleSaveRule = async (categoryValue: string, type: 'FIXED' | 'VARIABLE') => {
+  const handleCreateRule = async (categoryValue: string, type: 'FIXED' | 'VARIABLE') => {
     setSaving(true);
     try {
-      if (selectedRule) {
-        updateRuleInState(selectedRule.id, type);
-        ruleModal.close();
-      } else {
-        const response = await ruleService.createCategoryRule({
-          category: categoryValue as ExpenseCategory,
-          type: type,
-        });
-        addRule(response);
-        ruleModal.close();
-      }
+      const response = await ruleService.createCategoryRule({
+        category: categoryValue as ExpenseCategory,
+        type: type,
+      });
+      addRule(response);
+      createRuleModal.close();
     } catch (e: any) {
-      console.error('Error detectado en Screen:', e);
+      console.error('Error detectado al crear:', e);
       throw e;
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleUpdateRule = async (type: 'FIXED' | 'VARIABLE') => {
+    if (!selectedRule) return;
+    setSaving(true);
+    try {
+      // TODO: Lógica de actualización (service y contexto)
+      updateRuleInState(selectedRule.id, type);
+      editRuleModal.close();
+    } catch (e: any) {
+      console.error('Error detectado al actualizar:', e);
+      throw e;
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleDeleteRule = async () => {
+    if (!selectedRule) return;
+    setDeleting(true);
+    try {
+      // TODO: Lógica de eliminación (service y contexto)
+      editRuleModal.close();
+    } catch (e: any) {
+      console.error('Error detectado al eliminar:', e);
+      throw e;
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -113,7 +141,7 @@ export default function CategoryRulesScreen() {
         <TouchableOpacity
           style={rulesScreenStyles.footerButton}
           onPress={handleOpenCreate}
-          disabled={screenLoading} // Deshabilitamos el botón mientras se intenta auto-recuperar
+          disabled={screenLoading}
           activeOpacity={0.8}
         >
           <Text style={rulesScreenStyles.footerButtonText}>Crear nueva regla</Text>
@@ -121,13 +149,25 @@ export default function CategoryRulesScreen() {
       </View>
 
       <CategoryRuleModal
-        visible={ruleModal.visible}
-        scale={ruleModal.scale}
-        opacity={ruleModal.opacity}
-        onClose={ruleModal.close}
-        rule={selectedRule}
-        onSave={handleSaveRule}
+        visible={createRuleModal.visible}
+        scale={createRuleModal.scale}
+        opacity={createRuleModal.opacity}
+        onClose={createRuleModal.close}
+        rule={null}
+        onSave={handleCreateRule}
         saving={saving}
+      />
+
+      <EditCategoryRuleModal
+        visible={editRuleModal.visible}
+        scale={editRuleModal.scale}
+        opacity={editRuleModal.opacity}
+        onClose={editRuleModal.close}
+        rule={selectedRule}
+        onUpdate={handleUpdateRule}
+        onDelete={handleDeleteRule}
+        saving={saving}
+        deleting={deleting}
       />
     </Layout>
   );
