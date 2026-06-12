@@ -49,12 +49,13 @@ export const CategoryRuleSuggestion: React.FC<CategoryRuleSuggestionProps> = ({
           <Ionicons name="bulb-outline" size={16} color="#07a3e4" />
         </View>
         <Text style={styles.suggestionText}>
-          ¿Deseas guardar <Text style={styles.boldText}>{selectedCategory.label}</Text> siempre como
-          gasto{' '}
+          ¿Querés configurar una <Text style={styles.boldText}>regla</Text> para que{' '}
+          <Text style={styles.boldText}>{selectedCategory.label.toLowerCase()}</Text> se asigne
+          automáticamente como gasto{' '}
           <Text style={styles.boldText}>
-            {selectedExpenseType === 'FIXED' ? 'Fijo' : 'Variable'}
+            {selectedExpenseType === 'FIXED' ? 'fijo' : 'variable'}{' '}
           </Text>
-          ?
+          la próxima vez?
         </Text>
       </View>
 
@@ -64,7 +65,7 @@ export const CategoryRuleSuggestion: React.FC<CategoryRuleSuggestionProps> = ({
           onPress={() => onAcceptSuggestion(selectedCategory.value, selectedExpenseType)}
           activeOpacity={0.7}
         >
-          <Ionicons name="checkmark-sharp" size={16} color="#fff" />
+          <Ionicons name="settings-sharp" size={15} color="#fff" />
         </TouchableOpacity>
 
         <TouchableOpacity style={styles.closeButton} onPress={() => setIsVisible(false)}>
@@ -107,6 +108,7 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: '#0369A1',
     flex: 1,
+    lineHeight: 18,
   },
   boldText: {
     fontWeight: '700',
