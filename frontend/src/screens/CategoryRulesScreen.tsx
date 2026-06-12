@@ -12,23 +12,20 @@ import { rulesScreenStyles } from '../styles/rulesStyles';
 import { useRules } from '../context/rules';
 
 export default function CategoryRulesScreen() {
-  const { rules, addRule, updateRuleInState, setRules } = useRules();
+  const { rules, addRule, setRules } = useRules();
 
   const createRuleModal = useModal();
   const editRuleModal = useModal();
 
   const [selectedRule, setSelectedRule] = useState<CategoryRuleResponse | null>(null);
-  const [saving, setSaving] = useState(false);
-  const [deleting, setDeleting] = useState(false);
 
-  // Estados locales para controlar el flujo de auto-recuperación
+  const [saving, setSaving] = useState(false);
+
   const [screenLoading, setScreenLoading] = useState(false);
   const [hasChecked, setHasChecked] = useState(false);
 
-  // Mecanismo de Auto-Recuperación (Lazy Loading)
   useEffect(() => {
     const fetchRulesIfEmpty = async () => {
-      // Si ya hay reglas en memoria o ya intentamos buscarlas en esta sesión, cancelamos
       if (rules.length > 0 || hasChecked) return;
 
       setScreenLoading(true);
@@ -72,43 +69,12 @@ export default function CategoryRulesScreen() {
       setSaving(false);
     }
   };
-
-  const handleUpdateRule = async (type: 'FIXED' | 'VARIABLE') => {
-    if (!selectedRule) return;
-    setSaving(true);
-    try {
-      // TODO: Lógica de actualización (service y contexto)
-      updateRuleInState(selectedRule.id, type);
-      editRuleModal.close();
-    } catch (e: any) {
-      console.error('Error detectado al actualizar:', e);
-      throw e;
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const handleDeleteRule = async () => {
-    if (!selectedRule) return;
-    setDeleting(true);
-    try {
-      // TODO: Lógica de eliminación (service y contexto)
-      editRuleModal.close();
-    } catch (e: any) {
-      console.error('Error detectado al eliminar:', e);
-      throw e;
-    } finally {
-      setDeleting(false);
-    }
-  };
-
   return (
     <Layout style={rulesScreenStyles.container}>
       <View style={rulesScreenStyles.headerRow}>
         <Text style={rulesScreenStyles.title}>Reglas por categoría</Text>
       </View>
 
-      {/* Recuperando reglas del backend */}
       {screenLoading ? (
         <View style={rulesScreenStyles.emptyContainer}>
           <ActivityIndicator size="large" color="#3498db" />
@@ -164,10 +130,6 @@ export default function CategoryRulesScreen() {
         opacity={editRuleModal.opacity}
         onClose={editRuleModal.close}
         rule={selectedRule}
-        onUpdate={handleUpdateRule}
-        onDelete={handleDeleteRule}
-        saving={saving}
-        deleting={deleting}
       />
     </Layout>
   );

@@ -10,8 +10,9 @@ import {
 import { Text } from '@ui-kitten/components';
 import { Ionicons, Feather } from '@expo/vector-icons';
 import { EXPENSE_CATEGORIES } from '../../../../constants/categories';
-import { CategoryRuleResponse } from '../../../../services/ruleService';
+import { CategoryRuleResponse, ruleService } from '../../../../services/ruleService';
 import { rulesModalStyles } from '../../../../styles/rulesStyles';
+import { useRules } from '../../../../context/rules';
 
 interface EditCategoryRuleModalProps {
   visible: boolean;
@@ -19,10 +20,6 @@ interface EditCategoryRuleModalProps {
   opacity: Animated.Value;
   onClose: () => void;
   rule: CategoryRuleResponse | null;
-  onUpdate: (type: 'FIXED' | 'VARIABLE') => Promise<void>;
-  onDelete: () => Promise<void>;
-  saving: boolean;
-  deleting?: boolean;
 }
 
 export const EditCategoryRuleModal: React.FC<EditCategoryRuleModalProps> = ({
@@ -31,15 +28,13 @@ export const EditCategoryRuleModal: React.FC<EditCategoryRuleModalProps> = ({
   opacity,
   onClose,
   rule,
-  onUpdate,
-  onDelete,
-  saving,
-  deleting = false,
 }) => {
+  const { updateRuleInState, removeRuleFromState } = useRules();
+
   const [selectedType, setSelectedType] = useState<'FIXED' | 'VARIABLE'>('VARIABLE');
   const [error, setError] = useState<string | null>(null);
-
-  // Validamos si el tipo seleccionado es EXACTAMENTE el mismo que ya está guardado
+  const [isSaving, setIsSaving] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const hasChanged = rule ? selectedType !== rule.type : false;
 
   const matchedCategory = EXPENSE_CATEGORIES.find(c => c.value === rule?.category);
@@ -50,10 +45,13 @@ export const EditCategoryRuleModal: React.FC<EditCategoryRuleModalProps> = ({
     if (visible && rule) {
       setSelectedType(rule.type);
       setError(null);
+      setIsSaving(false);
+      setIsDeleting(false);
     }
   }, [visible, rule]);
 
   const handleUpdate = async () => {
+    if (!rule) return;
     setError(null);
 
     if (!hasChanged) {
@@ -61,19 +59,33 @@ export const EditCategoryRuleModal: React.FC<EditCategoryRuleModalProps> = ({
       return;
     }
 
+    setIsSaving(true);
     try {
-      await onUpdate(selectedType);
+      await ruleService.updateCategoryRule(rule.id, {
+        type: selectedType,
+      });
+      updateRuleInState(rule.id, selectedType);
+      onClose();
     } catch (err: any) {
       setError(err.message || 'Ocurrió un problema al actualizar la regla.');
+    } finally {
+      setIsSaving(false);
     }
   };
 
   const handleDelete = async () => {
+    if (!rule) return;
     setError(null);
+    setIsDeleting(true);
+
     try {
-      await onDelete();
+      await ruleService.deleteCategoryRule(rule.id);
+      removeRuleFromState(rule.id);
+      onClose();
     } catch (err: any) {
       setError(err.message || 'Ocurrió un problema al eliminar la regla.');
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -91,11 +103,11 @@ export const EditCategoryRuleModal: React.FC<EditCategoryRuleModalProps> = ({
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 16 }}>
               <TouchableOpacity
                 onPress={handleDelete}
-                disabled={saving || deleting}
+                disabled={isSaving || isDeleting}
                 hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-                style={{ opacity: saving || deleting ? 0.5 : 1 }}
+                style={{ opacity: isSaving || isDeleting ? 0.5 : 1 }}
               >
-                {deleting ? (
+                {isDeleting ? (
                   <ActivityIndicator size="small" color="#ff4d4d" />
                 ) : (
                   <Feather name="trash-2" size={19} color="#c0392b" />
@@ -104,6 +116,7 @@ export const EditCategoryRuleModal: React.FC<EditCategoryRuleModalProps> = ({
 
               <TouchableOpacity
                 onPress={onClose}
+                disabled={isSaving || isDeleting}
                 hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
               >
                 <Ionicons name="close" size={20} color="#003366" />
@@ -156,7 +169,7 @@ export const EditCategoryRuleModal: React.FC<EditCategoryRuleModalProps> = ({
                     setSelectedType('FIXED');
                     setError(null);
                   }}
-                  disabled={saving || deleting}
+                  disabled={isSaving || isDeleting}
                 >
                   <Text
                     style={[
@@ -181,7 +194,7 @@ export const EditCategoryRuleModal: React.FC<EditCategoryRuleModalProps> = ({
                     setSelectedType('VARIABLE');
                     setError(null);
                   }}
-                  disabled={saving || deleting}
+                  disabled={isSaving || isDeleting}
                 >
                   <Text
                     style={[
@@ -204,11 +217,15 @@ export const EditCategoryRuleModal: React.FC<EditCategoryRuleModalProps> = ({
             )}
 
             <TouchableOpacity
-              style={[rulesModalStyles.saveButton, error ? { marginTop: 4 } : { marginTop: 12 }]}
+              style={[
+                rulesModalStyles.saveButton,
+                isSaving && { opacity: 0.6 },
+                error ? { marginTop: 4 } : { marginTop: 12 },
+              ]}
               onPress={handleUpdate}
-              disabled={saving || deleting}
+              disabled={isSaving || isDeleting}
             >
-              {saving ? (
+              {isSaving ? (
                 <ActivityIndicator color="#fff" />
               ) : (
                 <Text style={rulesModalStyles.saveButtonText}>
