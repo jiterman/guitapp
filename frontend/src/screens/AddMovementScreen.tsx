@@ -22,11 +22,16 @@ import CameraModal from '../components/CameraModal/CameraModal';
 import ExpandableTextInput from '../components/ExpandableTextInput/ExpandableTextInput';
 import { expenseService } from '../services/expenseService';
 import { incomeService } from '../services/incomeService';
+import { ruleService } from '../services/ruleService';
+import { useModal } from '../hooks/Profile/useModal';
+import { CategoryRuleModal } from '../components/Rules/CategoryRule/Modal/CategoryRuleModal';
+import { CategoryRuleSuggestion } from '../components/Rules/CategoryRule/Suggestion/CategoryRuleSuggestion';
+import { useRules } from '../context/rules';
 import {
   recurringIncomeService,
   type RecurrenceFrequency,
 } from '../services/recurringIncomeService';
-import type { ExpenseType, IncomeCategory } from '../constants/categories';
+import type { ExpenseType, IncomeCategory, ExpenseCategory } from '../constants/categories';
 import {
   EXPENSE_CATEGORIES,
   INCOME_CATEGORIES,
@@ -79,6 +84,12 @@ const AddMovementScreen = () => {
   const [categoryError, setCategoryError] = useState<string | null>(null);
   const [scanningReceipt, setScanningReceipt] = useState(false);
   const [cameraVisible, setCameraVisible] = useState(false);
+
+  // Estados para el flujo de la regla sugerida
+  const suggestRuleModal = useModal();
+  const [suggestedRuleData, setSuggestedRuleData] = useState<any | null>(null);
+  const [ruleSaving, setRuleSaving] = useState(false);
+  const { addRule } = useRules();
 
   const onScanReceipt = () => setCameraVisible(true);
 
@@ -135,6 +146,32 @@ const AddMovementScreen = () => {
     setShowDatePicker(false);
     if (event.type === 'set' && date) {
       setSelectedDate(date);
+    }
+  };
+
+  const handleAcceptRuleSuggestion = (categoryValue: string, type: 'FIXED' | 'VARIABLE') => {
+    setSuggestedRuleData({
+      id: 0,
+      category: categoryValue,
+      type: type,
+    });
+    suggestRuleModal.open();
+  };
+
+  const handleSaveSuggestedRule = async (categoryValue: string, type: 'FIXED' | 'VARIABLE') => {
+    setRuleSaving(true);
+    try {
+      const response = await ruleService.createCategoryRule({
+        category: categoryValue as ExpenseCategory,
+        type: type,
+      });
+      addRule(response); // Agregamos al contexto para que se oculte el banner dinámicamente
+      suggestRuleModal.close();
+    } catch (e: any) {
+      console.error('Error detectado al guardar regla sugerida:', e);
+      throw e;
+    } finally {
+      setRuleSaving(false);
     }
   };
 
@@ -511,6 +548,13 @@ const AddMovementScreen = () => {
                   </Text>
                 </TouchableOpacity>
               </View>
+
+              <CategoryRuleSuggestion
+                movementType={movementType}
+                selectedCategory={selectedCategory}
+                selectedExpenseType={selectedExpenseType}
+                onAcceptSuggestion={handleAcceptRuleSuggestion}
+              />
             </>
           )}
 
@@ -616,6 +660,16 @@ const AddMovementScreen = () => {
         visible={cameraVisible}
         onClose={() => setCameraVisible(false)}
         onCapture={onImageCaptured}
+      />
+
+      <CategoryRuleModal
+        visible={suggestRuleModal.visible}
+        scale={suggestRuleModal.scale}
+        opacity={suggestRuleModal.opacity}
+        onClose={suggestRuleModal.close}
+        rule={suggestedRuleData}
+        onSave={handleSaveSuggestedRule}
+        saving={ruleSaving}
       />
     </>
   );
