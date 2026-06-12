@@ -2,8 +2,8 @@ import React from 'react';
 import { StyleSheet, View, TouchableOpacity } from 'react-native';
 import { Text } from '@ui-kitten/components';
 import { Ionicons } from '@expo/vector-icons';
-import { CategoryRuleResponse } from '../../services/ruleService';
-import { EXPENSE_CATEGORIES } from '../../constants/categories';
+import { CategoryRuleResponse } from '../../../../services/ruleService';
+import { EXPENSE_CATEGORIES } from '../../../../constants/categories';
 
 interface CategoryRuleCardProps {
   rule: CategoryRuleResponse;

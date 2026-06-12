@@ -3,9 +3,9 @@ import { View, FlatList, TouchableOpacity, ActivityIndicator } from 'react-nativ
 import { Layout, Text } from '@ui-kitten/components';
 import { Ionicons } from '@expo/vector-icons';
 import { useModal } from '../hooks/Profile/useModal';
-import { CategoryRuleCard } from '../components/CategoryRuleCard/CategoryRuleCard';
-import { CategoryRuleModal } from '../components/CategoryRuleModal/CategoryRuleModal';
-import { EditCategoryRuleModal } from '../components/CategoryRuleModal/EditCategoryRuleModal';
+import { CategoryRuleCard } from '../components/Rules/CategoryRule/Card/CategoryRuleCard';
+import { CategoryRuleModal } from '../components/Rules/CategoryRule/Modal/CategoryRuleModal';
+import { EditCategoryRuleModal } from '../components/Rules/CategoryRule/Modal/EditCategoryRuleModal';
 import { ExpenseCategory } from '../constants/categories';
 import { ruleService, CategoryRuleResponse } from '../services/ruleService';
 import { rulesScreenStyles } from '../styles/rulesStyles';

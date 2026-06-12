@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import {
   View,
-  ScrollView,
   Animated,
   Modal,
   TouchableOpacity,
@@ -9,61 +8,72 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { Text } from '@ui-kitten/components';
-import { Ionicons } from '@expo/vector-icons';
-import { EXPENSE_CATEGORIES } from '../../constants/categories';
-import { CategoryRuleResponse } from '../../services/ruleService';
-import { rulesModalStyles } from '../../styles/rulesStyles';
+import { Ionicons, Feather } from '@expo/vector-icons';
+import { EXPENSE_CATEGORIES } from '../../../../constants/categories';
+import { CategoryRuleResponse } from '../../../../services/ruleService';
+import { rulesModalStyles } from '../../../../styles/rulesStyles';
 
-interface CategoryRuleModalProps {
+interface EditCategoryRuleModalProps {
   visible: boolean;
   scale: Animated.Value;
   opacity: Animated.Value;
   onClose: () => void;
   rule: CategoryRuleResponse | null;
-  onSave: (categoryValue: string, type: 'FIXED' | 'VARIABLE') => Promise<void>;
+  onUpdate: (type: 'FIXED' | 'VARIABLE') => Promise<void>;
+  onDelete: () => Promise<void>;
   saving: boolean;
+  deleting?: boolean;
 }
 
-export const CategoryRuleModal: React.FC<CategoryRuleModalProps> = ({
+export const EditCategoryRuleModal: React.FC<EditCategoryRuleModalProps> = ({
   visible,
   scale,
   opacity,
   onClose,
   rule,
-  onSave,
+  onUpdate,
+  onDelete,
   saving,
+  deleting = false,
 }) => {
-  const [selectedCategory, setSelectedCategory] = useState<string>('');
   const [selectedType, setSelectedType] = useState<'FIXED' | 'VARIABLE'>('VARIABLE');
   const [error, setError] = useState<string | null>(null);
 
+  // Validamos si el tipo seleccionado es EXACTAMENTE el mismo que ya está guardado
+  const hasChanged = rule ? selectedType !== rule.type : false;
+
+  const matchedCategory = EXPENSE_CATEGORIES.find(c => c.value === rule?.category);
+  const categoryLabel = matchedCategory?.label || rule?.category || '';
+  const categoryIcon = matchedCategory?.icon || 'bookmark-outline';
+
   useEffect(() => {
-    if (visible) {
-      setSelectedCategory(rule ? rule.category : '');
-      setSelectedType(rule ? rule.type : 'VARIABLE');
+    if (visible && rule) {
+      setSelectedType(rule.type);
       setError(null);
     }
   }, [visible, rule]);
 
-  const handleCategorySelect = (value: string) => {
-    if (rule) return;
-    setSelectedCategory(value);
+  const handleUpdate = async () => {
     setError(null);
 
-    const categoryConfig = EXPENSE_CATEGORIES.find(c => c.value === value);
-    if (categoryConfig) {
-      setSelectedType(categoryConfig.defaultType);
+    if (!hasChanged) {
+      onClose();
+      return;
+    }
+
+    try {
+      await onUpdate(selectedType);
+    } catch (err: any) {
+      setError(err.message || 'Ocurrió un problema al actualizar la regla.');
     }
   };
 
-  const handleSave = async () => {
-    if (!selectedCategory) return;
+  const handleDelete = async () => {
     setError(null);
-
     try {
-      await onSave(selectedCategory, selectedType);
+      await onDelete();
     } catch (err: any) {
-      setError(err.message || 'Ocurrió un problema al guardar la regla.');
+      setError(err.message || 'Ocurrió un problema al eliminar la regla.');
     }
   };
 
@@ -76,56 +86,56 @@ export const CategoryRuleModal: React.FC<CategoryRuleModalProps> = ({
       <View style={rulesModalStyles.centeredContainer} pointerEvents="box-none">
         <Animated.View style={[rulesModalStyles.modalCard, { transform: [{ scale }], opacity }]}>
           <View style={rulesModalStyles.sheetHeader}>
-            <Text style={rulesModalStyles.sheetTitle}>{rule ? 'Editar regla' : 'Nueva regla'}</Text>
-            <TouchableOpacity
-              onPress={onClose}
-              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-            >
-              <Ionicons name="close" size={20} color="#003366" />
-            </TouchableOpacity>
+            <Text style={rulesModalStyles.sheetTitle}>Editar regla</Text>
+
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 16 }}>
+              <TouchableOpacity
+                onPress={handleDelete}
+                disabled={saving || deleting}
+                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                style={{ opacity: saving || deleting ? 0.5 : 1 }}
+              >
+                {deleting ? (
+                  <ActivityIndicator size="small" color="#ff4d4d" />
+                ) : (
+                  <Feather name="trash-2" size={19} color="#c0392b" />
+                )}
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                onPress={onClose}
+                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+              >
+                <Ionicons name="close" size={20} color="#003366" />
+              </TouchableOpacity>
+            </View>
           </View>
 
           <View style={rulesModalStyles.editBlock}>
             <View style={rulesModalStyles.inputRow}>
               <Text style={rulesModalStyles.inputLabel}>Si la categoría es:</Text>
 
-              <View style={rulesModalStyles.listContainer}>
-                <ScrollView showsVerticalScrollIndicator={true} nestedScrollEnabled={true}>
-                  {EXPENSE_CATEGORIES.map(cat => {
-                    const isSelected = selectedCategory === cat.value;
-                    return (
-                      <TouchableOpacity
-                        key={cat.value}
-                        style={[
-                          rulesModalStyles.categoryOption,
-                          isSelected && rulesModalStyles.categoryOptionActive,
-                        ]}
-                        onPress={() => handleCategorySelect(cat.value)}
-                        disabled={!!rule}
-                      >
-                        <View style={rulesModalStyles.categoryLeftInfo}>
-                          <Ionicons
-                            name={cat.icon as any}
-                            size={16}
-                            color={isSelected ? '#07a3e4' : '#6b8aa1'}
-                            style={{ marginRight: 8 }}
-                          />
-                          <Text
-                            style={[
-                              rulesModalStyles.categoryText,
-                              isSelected && rulesModalStyles.categoryTextActive,
-                            ]}
-                          >
-                            {cat.label}
-                          </Text>
-                        </View>
-                        {isSelected && (
-                          <Ionicons name="checkmark-circle" size={18} color="#07a3e4" />
-                        )}
-                      </TouchableOpacity>
-                    );
-                  })}
-                </ScrollView>
+              <View
+                style={[
+                  rulesModalStyles.categoryOption,
+                  rulesModalStyles.categoryOptionActive,
+                  { borderColor: '#e4e9f2', backgroundColor: '#f7f9fc' },
+                ]}
+              >
+                <View style={rulesModalStyles.categoryLeftInfo}>
+                  <Ionicons
+                    name={categoryIcon as any}
+                    size={16}
+                    color="#003366"
+                    style={{ marginRight: 8 }}
+                  />
+                  <Text
+                    style={[rulesModalStyles.categoryText, { color: '#003366', fontWeight: '600' }]}
+                  >
+                    {categoryLabel}
+                  </Text>
+                </View>
+                <Ionicons name="lock-closed-outline" size={16} color="#6b8aa1" />
               </View>
             </View>
 
@@ -146,6 +156,7 @@ export const CategoryRuleModal: React.FC<CategoryRuleModalProps> = ({
                     setSelectedType('FIXED');
                     setError(null);
                   }}
+                  disabled={saving || deleting}
                 >
                   <Text
                     style={[
@@ -170,6 +181,7 @@ export const CategoryRuleModal: React.FC<CategoryRuleModalProps> = ({
                     setSelectedType('VARIABLE');
                     setError(null);
                   }}
+                  disabled={saving || deleting}
                 >
                   <Text
                     style={[
@@ -192,18 +204,16 @@ export const CategoryRuleModal: React.FC<CategoryRuleModalProps> = ({
             )}
 
             <TouchableOpacity
-              style={[
-                rulesModalStyles.saveButton,
-                (!selectedCategory || saving) && { opacity: 0.6 },
-                error ? { marginTop: 4 } : { marginTop: 12 },
-              ]}
-              onPress={handleSave}
-              disabled={!selectedCategory || saving}
+              style={[rulesModalStyles.saveButton, error ? { marginTop: 4 } : { marginTop: 12 }]}
+              onPress={handleUpdate}
+              disabled={saving || deleting}
             >
               {saving ? (
                 <ActivityIndicator color="#fff" />
               ) : (
-                <Text style={rulesModalStyles.saveButtonText}>Guardar regla</Text>
+                <Text style={rulesModalStyles.saveButtonText}>
+                  {hasChanged ? 'Guardar cambios' : 'Cerrar'}
+                </Text>
               )}
             </TouchableOpacity>
           </View>
