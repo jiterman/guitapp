@@ -14,6 +14,7 @@ export const CategoryRuleCard: React.FC<CategoryRuleCardProps> = ({ rule, onPres
   const isFixed = rule.type === 'FIXED';
   const matchedCategory = EXPENSE_CATEGORIES.find(c => c.value === rule.category);
   const categoryLabel = matchedCategory?.label || rule.category;
+  const categoryIcon = (matchedCategory as any)?.icon || 'bookmark-outline';
 
   return (
     <TouchableOpacity style={styles.card} onPress={() => onPress(rule)} activeOpacity={0.7}>
@@ -24,11 +25,7 @@ export const CategoryRuleCard: React.FC<CategoryRuleCardProps> = ({ rule, onPres
             { backgroundColor: isFixed ? 'rgba(35,131,242,0.1)' : 'rgba(138,79,255,0.1)' },
           ]}
         >
-          <Ionicons
-            name={isFixed ? 'pin-outline' : 'trending-down'}
-            size={20}
-            color={isFixed ? '#2383F2' : '#8A4FFF'}
-          />
+          <Ionicons name={categoryIcon} size={20} color={isFixed ? '#2383F2' : '#8A4FFF'} />
         </View>
         <View style={{ flex: 1 }}>
           <Text style={styles.categoryTitle} numberOfLines={1} ellipsizeMode="tail">
