@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import {
   View,
   Alert,
@@ -22,11 +22,16 @@ import CameraModal from '../components/CameraModal/CameraModal';
 import ExpandableTextInput from '../components/ExpandableTextInput/ExpandableTextInput';
 import { expenseService } from '../services/expenseService';
 import { incomeService } from '../services/incomeService';
+import { ruleService } from '../services/ruleService';
+import { useModal } from '../hooks/Profile/useModal';
+import { CategoryRuleModal } from '../components/Rules/CategoryRule/Modal/CategoryRuleModal';
+import { CategoryRuleSuggestion } from '../components/Rules/CategoryRule/Banners/CategoryRuleSuggestion';
+import { useRules } from '../context/rules';
 import {
   recurringIncomeService,
   type RecurrenceFrequency,
 } from '../services/recurringIncomeService';
-import type { ExpenseType, IncomeCategory } from '../constants/categories';
+import type { ExpenseType, IncomeCategory, ExpenseCategory } from '../constants/categories';
 import {
   EXPENSE_CATEGORIES,
   INCOME_CATEGORIES,
@@ -39,6 +44,24 @@ import { useCurrencyInput } from '../hooks/useCurrencyInput';
 import { formatDate, toLocalDateString } from '../utils/dateFormatter';
 
 const vh = Dimensions.get('window').height / 100;
+interface InferredRuleBannerProps {
+  isVisible: boolean;
+}
+
+const InferredRuleBanner: React.FC<InferredRuleBannerProps> = ({ isVisible }) => {
+  if (!isVisible) return null;
+  return (
+    <View style={styles.inferredBannerContainer}>
+      <Ionicons
+        name="information-circle-outline"
+        size={16}
+        color="#07a3e4"
+        style={{ marginRight: 6 }}
+      />
+      <Text style={styles.inferredBannerText}>Tipo de gasto inferido por regla existente</Text>
+    </View>
+  );
+};
 
 const AddMovementScreen = () => {
   const scrollViewRef = useRef<ScrollView>(null);
@@ -80,6 +103,30 @@ const AddMovementScreen = () => {
   const [scanningReceipt, setScanningReceipt] = useState(false);
   const [cameraVisible, setCameraVisible] = useState(false);
 
+  // Estados para el flujo de la regla sugerida
+  const suggestRuleModal = useModal();
+  const [suggestedRuleData, setSuggestedRuleData] = useState<any | null>(null);
+  const [ruleSaving, setRuleSaving] = useState(false);
+
+  // Aviso de regla inferida
+  const { rules, addRule } = useRules();
+  const [showInferredNotice, setShowInferredNotice] = useState(false);
+
+  useEffect(() => {
+    if (movementType === 'EXPENSE' && selectedCategory?.value) {
+      const matchingRule = rules.find(r => r.category === selectedCategory.value);
+
+      if (matchingRule) {
+        setSelectedExpenseType(matchingRule.type as ExpenseType);
+        setShowInferredNotice(true);
+      } else {
+        setShowInferredNotice(false);
+      }
+    } else {
+      setShowInferredNotice(false);
+    }
+  }, [selectedCategory, movementType, rules]);
+
   const onScanReceipt = () => setCameraVisible(true);
 
   const onImageCaptured = async (uri: string) => {
@@ -104,6 +151,8 @@ const AddMovementScreen = () => {
           setSelectedCategory(cat);
           setSelectedExpenseType(cat.defaultType);
           setCategoryError(null);
+          const ruleMatch = rules.find(r => r.category === cat.value);
+          setSelectedExpenseType(ruleMatch ? (ruleMatch.type as ExpenseType) : cat.defaultType);
         }
       }
       if (analysis.date) {
@@ -124,7 +173,12 @@ const AddMovementScreen = () => {
   const onSelectCategory = (cat: ExpenseCategoryOption | IncomeCategoryOption) => {
     setSelectedCategory(cat);
     if (movementType === 'EXPENSE') {
-      setSelectedExpenseType((cat as ExpenseCategoryOption).defaultType);
+      const matchingRule = rules.find(r => r.category === cat.value);
+      setSelectedExpenseType(
+        matchingRule
+          ? (matchingRule.type as ExpenseType)
+          : (cat as ExpenseCategoryOption).defaultType
+      );
     }
     setCategoryError(null);
     setModalVisible(false);
@@ -135,6 +189,32 @@ const AddMovementScreen = () => {
     setShowDatePicker(false);
     if (event.type === 'set' && date) {
       setSelectedDate(date);
+    }
+  };
+
+  const handleAcceptRuleSuggestion = (categoryValue: string, type: 'FIXED' | 'VARIABLE') => {
+    setSuggestedRuleData({
+      id: 0,
+      category: categoryValue,
+      type: type,
+    });
+    suggestRuleModal.open();
+  };
+
+  const handleSaveSuggestedRule = async (categoryValue: string, type: 'FIXED' | 'VARIABLE') => {
+    setRuleSaving(true);
+    try {
+      const response = await ruleService.createCategoryRule({
+        category: categoryValue as ExpenseCategory,
+        type: type,
+      });
+      addRule(response);
+      suggestRuleModal.close();
+    } catch (e: any) {
+      console.error('Error detectado al guardar regla sugerida:', e);
+      throw e;
+    } finally {
+      setRuleSaving(false);
     }
   };
 
@@ -469,6 +549,7 @@ const AddMovementScreen = () => {
           {movementType === 'EXPENSE' && (
             <>
               <Text style={styles.label}>Tipo de gasto *</Text>
+              <InferredRuleBanner isVisible={showInferredNotice} />
               <View style={styles.typeContainer}>
                 <TouchableOpacity
                   style={[
@@ -477,7 +558,10 @@ const AddMovementScreen = () => {
                       ? styles.typeButtonActive
                       : styles.typeButtonInactive,
                   ]}
-                  onPress={() => setSelectedExpenseType('FIXED')}
+                  onPress={() => {
+                    setSelectedExpenseType('FIXED');
+                    setShowInferredNotice(false);
+                  }}
                 >
                   <Text
                     style={[
@@ -497,7 +581,10 @@ const AddMovementScreen = () => {
                       ? styles.typeButtonActive
                       : styles.typeButtonInactive,
                   ]}
-                  onPress={() => setSelectedExpenseType('VARIABLE')}
+                  onPress={() => {
+                    setSelectedExpenseType('VARIABLE');
+                    setShowInferredNotice(false);
+                  }}
                 >
                   <Text
                     style={[
@@ -511,6 +598,13 @@ const AddMovementScreen = () => {
                   </Text>
                 </TouchableOpacity>
               </View>
+
+              <CategoryRuleSuggestion
+                movementType={movementType}
+                selectedCategory={selectedCategory}
+                selectedExpenseType={selectedExpenseType}
+                onAcceptSuggestion={handleAcceptRuleSuggestion}
+              />
             </>
           )}
 
@@ -617,6 +711,16 @@ const AddMovementScreen = () => {
         onClose={() => setCameraVisible(false)}
         onCapture={onImageCaptured}
       />
+
+      <CategoryRuleModal
+        visible={suggestRuleModal.visible}
+        scale={suggestRuleModal.scale}
+        opacity={suggestRuleModal.opacity}
+        onClose={suggestRuleModal.close}
+        rule={suggestedRuleData}
+        onSave={handleSaveSuggestedRule}
+        saving={ruleSaving}
+      />
     </>
   );
 };
@@ -670,6 +774,24 @@ const localStyles = StyleSheet.create({
   },
   tabTextInactive: {
     color: '#A8C8E0',
+  },
+  inferredBannerContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#E6F4FA',
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 8,
+    marginTop: 4,
+    marginBottom: 8,
+    borderWidth: 1,
+    borderColor: '#d0e9f5',
+    alignSelf: 'flex-start',
+  },
+  inferredBannerText: {
+    fontSize: 12,
+    color: '#013366',
+    fontWeight: '500',
   },
 });
 

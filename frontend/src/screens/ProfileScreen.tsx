@@ -3,6 +3,7 @@ import { StyleSheet, Dimensions, ScrollView, View } from 'react-native';
 import { Layout } from '@ui-kitten/components';
 import { authService } from '../services/authService';
 import { useUser } from '../context/user';
+import { useRules } from '../context/rules';
 import { router } from 'expo-router';
 import ProfileMenuItem from '../components/Profile/ProfileMenuItem';
 import PersonalInfoSheet from '../components/Profile/PersonalInfoSheet';
@@ -25,10 +26,12 @@ const vh = screenHeight / 100;
 
 const ProfileScreen: React.FC = () => {
   const { user, setUser, getCreatedMonth, getCreatedYear } = useUser();
+  const { setRules } = useRules();
 
   const handleLogout = async () => {
     await authService.removeToken();
     setUser(null);
+    setRules([]);
     router.replace('/login');
   };
 
@@ -157,6 +160,17 @@ const ProfileScreen: React.FC = () => {
                 onPress={notificationFrequencySheet.open}
               />
             </View>
+          </ProfileSection>
+
+          <ProfileSection title="Reglas">
+            <ProfileMenuItem
+              title="Reglas por categoría"
+              subtitle="Definí si los gastos de cada categoría son fijos o variables"
+              icon="options-outline"
+              iconColor="#8A4FFF"
+              iconBackground="rgba(138, 79, 255, 0.12)"
+              onPress={() => router.push('/category-rules')}
+            />
           </ProfileSection>
 
           <ProfileSection title="Seguridad">

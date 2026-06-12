@@ -13,13 +13,25 @@ import { Button, Layout, Text, Input, Icon, IconProps } from '@ui-kitten/compone
 import { router } from 'expo-router';
 import { authService, BiometricUser } from '../services/authService';
 import { userService } from '../services/userService';
+import { ruleService } from '../services/ruleService';
 import { validateEmail, validatePassword } from '../utils/validation';
 import { loginStyles as styles } from '../styles/loginStyles';
 import { AuthError } from '../types/errors';
 import { useUser } from '../context/user';
+import { useRules } from '../context/rules';
+
+const tryLoadingRules = async (setRules: (rules: any) => void) => {
+  try {
+    const rulesData = await ruleService.getCategoryRules();
+    setRules(rulesData);
+  } catch (rulesErr) {
+    console.warn('Error cargando reglas en segundo plano durante el login:', rulesErr);
+  }
+};
 
 const LoginScreen = () => {
   const { setUser } = useUser();
+  const { setRules } = useRules();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -51,6 +63,7 @@ const LoginScreen = () => {
       await authService.login(credentials.email, credentials.password);
       const profile = await userService.getProfile();
       setUser(profile);
+      tryLoadingRules(setRules);
       if (profile.onboardingCompleted) {
         router.replace({ pathname: '/home', params: { email: credentials.email } });
       } else {
@@ -104,6 +117,7 @@ const LoginScreen = () => {
       await authService.login(email, password);
 
       const profile = await userService.getProfile();
+      tryLoadingRules(setRules);
 
       const biometricHardwareAvailable = await authService.isBiometricAvailable();
       const existingUsers = await authService.getBiometricUsers();
