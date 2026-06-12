@@ -16,6 +16,22 @@ export interface CategoryRuleResponse {
   type: ExpenseType;
 }
 
+const handleServiceError = (error: unknown, fallbackMessage: string): Error => {
+  if (error instanceof Error) {
+    const msg = error.message.toLowerCase();
+
+    if (
+      msg.includes('network request failed') ||
+      msg.includes('failed to fetch') ||
+      msg.includes('aborted')
+    ) {
+      return new Error('No se pudo conectar al servidor. Intentá nuevamente.');
+    }
+    return error;
+  }
+  return new Error(fallbackMessage);
+};
+
 const getCategoryRules = async (): Promise<CategoryRuleResponse[]> => {
   const token = await authService.getToken();
 
@@ -30,13 +46,14 @@ const getCategoryRules = async (): Promise<CategoryRuleResponse[]> => {
     const data = await response.json().catch(() => null);
 
     if (!response.ok) {
+      if (response.status === 401)
+        throw new Error('Sesión expirada. Por favor, volvé a iniciar sesión.');
       throw new Error(data?.message || 'Error al obtener las reglas de categoría');
     }
 
     return data;
   } catch (error) {
-    if (error instanceof Error) throw error;
-    throw new Error(handleServiceError(error));
+    throw handleServiceError(error, 'Error al obtener las reglas de categoría');
   }
 };
 
@@ -56,14 +73,14 @@ const createCategoryRule = async (request: CategoryRuleRequest): Promise<Categor
     const data = await response.json().catch(() => null);
 
     if (!response.ok) {
-      const exactErrorMessage = data?.message || 'Error al crear la regla de categoría';
-      throw new Error(exactErrorMessage);
+      if (response.status === 401)
+        throw new Error('Sesión expirada. Por favor, volvé a iniciar sesión.');
+      throw new Error(data?.message || 'Error al crear la regla de categoría');
     }
 
     return data;
   } catch (error) {
-    if (error instanceof Error) throw error;
-    throw new Error(handleServiceError(error));
+    throw handleServiceError(error, 'Error al crear la regla de categoría');
   }
 };
 
@@ -86,14 +103,14 @@ const updateCategoryRule = async (
     const data = await response.json().catch(() => null);
 
     if (!response.ok) {
-      const exactErrorMessage = data?.message || 'Error al actualizar la regla de categoría';
-      throw new Error(exactErrorMessage);
+      if (response.status === 401)
+        throw new Error('Sesión expirada. Por favor, volvé a iniciar sesión.');
+      throw new Error(data?.message || 'Error al actualizar la regla de categoría');
     }
 
     return data;
   } catch (error) {
-    if (error instanceof Error) throw error;
-    throw new Error(handleServiceError(error));
+    throw handleServiceError(error, 'Error al actualizar la regla de categoría');
   }
 };
 
@@ -111,25 +128,15 @@ const deleteCategoryRule = async (id: number): Promise<{ message: string }> => {
     const data = await response.json().catch(() => null);
 
     if (!response.ok) {
-      const exactErrorMessage = data?.message || 'Error al eliminar la regla de categoría';
-      throw new Error(exactErrorMessage);
+      if (response.status === 401)
+        throw new Error('Sesión expirada. Por favor, volvé a iniciar sesión.');
+      throw new Error(data?.message || 'Error al eliminar la regla de categoría');
     }
 
     return data;
   } catch (error) {
-    if (error instanceof Error) throw error;
-    throw new Error(handleServiceError(error));
+    throw handleServiceError(error, 'Error al eliminar la regla de categoría');
   }
-};
-
-const handleServiceError = (error: unknown): string => {
-  if (error instanceof Error) {
-    if (error.message === 'Network request failed') {
-      return 'No se pudo conectar al servidor. Intentá nuevamente';
-    }
-    return error.message;
-  }
-  return 'Error de conexión. Intentá nuevamente';
 };
 
 export const ruleService = {
