@@ -45,7 +45,7 @@ class RuleControllerTests {
     @Test
     @WithMockUser(username = "test@example.com")
     void getUserRules_ShouldReturnRulesList() throws Exception {
-        CategoryRuleResponse rule1 = new CategoryRuleResponse(1L, ExpenseCategory.FOOD, ExpenseType.VARIABLE);
+        CategoryRuleResponse rule1 = new CategoryRuleResponse(1L, ExpenseCategory.RESTAURANT, ExpenseType.VARIABLE);
         CategoryRuleResponse rule2 = new CategoryRuleResponse(2L, ExpenseCategory.RENT, ExpenseType.FIXED);
         List<CategoryRuleResponse> mockRules = List.of(rule1, rule2);
 
@@ -55,7 +55,7 @@ class RuleControllerTests {
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].id").value(1))
-                .andExpect(jsonPath("$[0].category").value("FOOD"))
+                .andExpect(jsonPath("$[0].category").value("RESTAURANT"))
                 .andExpect(jsonPath("$[0].type").value("VARIABLE"))
                 .andExpect(jsonPath("$[1].id").value(2))
                 .andExpect(jsonPath("$[1].category").value("RENT"))
@@ -67,8 +67,8 @@ class RuleControllerTests {
     @Test
     @WithMockUser(username = "test@example.com")
     void createCategoryRule_ShouldReturnCreatedRule_WhenSuccess() throws Exception {
-        CategoryRuleRequest request = new CategoryRuleRequest(ExpenseCategory.FOOD, ExpenseType.VARIABLE);
-        CategoryRuleResponse response = new CategoryRuleResponse(100L, ExpenseCategory.FOOD, ExpenseType.VARIABLE);
+        CategoryRuleRequest request = new CategoryRuleRequest(ExpenseCategory.RESTAURANT, ExpenseType.VARIABLE);
+        CategoryRuleResponse response = new CategoryRuleResponse(100L, ExpenseCategory.RESTAURANT, ExpenseType.VARIABLE);
 
         when(categoryRuleService.createRule(any(Principal.class), any(CategoryRuleRequest.class)))
                 .thenReturn(response);
@@ -78,7 +78,7 @@ class RuleControllerTests {
                 .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(100))
-                .andExpect(jsonPath("$.category").value("FOOD"))
+                .andExpect(jsonPath("$.category").value("RESTAURANT"))
                 .andExpect(jsonPath("$.type").value("VARIABLE"));
 
         verify(categoryRuleService, times(1)).createRule(any(Principal.class), any(CategoryRuleRequest.class));
@@ -87,9 +87,9 @@ class RuleControllerTests {
     @Test
     @WithMockUser(username = "test@example.com")
     void createCategoryRule_ShouldReturnBadRequest_WhenAuthExceptionThrown() throws Exception {
-        CategoryRuleRequest request = new CategoryRuleRequest(ExpenseCategory.FOOD, ExpenseType.VARIABLE);
+        CategoryRuleRequest request = new CategoryRuleRequest(ExpenseCategory.RESTAURANT, ExpenseType.VARIABLE);
 
-        AuthException mockException = new AuthException("Usuario no autorizado para esta acción", ErrorCode.UNAUTHORIZED_ACTION);
+        AuthException mockException = new AuthException(ErrorCode.CATEGORY_RULE_INVALID_CATEGORY, "No se puede crear una regla para esta categoría indefinida.");
 
         when(categoryRuleService.createRule(any(Principal.class), any(CategoryRuleRequest.class)))
                 .thenThrow(mockException);
@@ -98,8 +98,8 @@ class RuleControllerTests {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.message").value("Usuario no autorizado para esta acción"))
-                .andExpect(jsonPath("$.code").value("UNAUTHORIZED_ACTION"));
+                .andExpect(jsonPath("$.message").value("No se puede crear una regla para esta categoría indefinida."))
+                .andExpect(jsonPath("$.code").value("CATEGORY_RULE_INVALID_CATEGORY"));
 
         verify(categoryRuleService, times(1)).createRule(any(Principal.class), any(CategoryRuleRequest.class));
     }
@@ -126,7 +126,7 @@ class RuleControllerTests {
     void updateCategoryRule_ShouldReturnBadRequest_WhenAuthExceptionThrown() throws Exception {
         Long ruleId = 1L;
         UpdateCategoryRuleRequest request = new UpdateCategoryRuleRequest(ExpenseType.FIXED);
-        AuthException mockException = new AuthException("Regla inexistente o ajena", ErrorCode.RULE_NOT_FOUND);
+        AuthException mockException = new AuthException(ErrorCode.CATEGORY_RULE_NOT_FOUND, "Regla no encontrada.");
 
         doThrow(mockException).when(categoryRuleService).updateRule(any(Principal.class), eq(ruleId), any(UpdateCategoryRuleRequest.class));
 
@@ -134,8 +134,8 @@ class RuleControllerTests {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.message").value("Regla inexistente o ajena"))
-                .andExpect(jsonPath("$.code").value("RULE_NOT_FOUND"));
+                .andExpect(jsonPath("$.message").value("Regla no encontrada."))
+                .andExpect(jsonPath("$.code").value("CATEGORY_RULE_NOT_FOUND"));
 
         verify(categoryRuleService, times(1)).updateRule(any(Principal.class), eq(ruleId), any(UpdateCategoryRuleRequest.class));
     }
@@ -159,15 +159,15 @@ class RuleControllerTests {
     @WithMockUser(username = "test@example.com")
     void deleteCategoryRule_ShouldReturnBadRequest_WhenAuthExceptionThrown() throws Exception {
         Long ruleId = 5L;
-        AuthException mockException = new AuthException("No se pudo eliminar la regla", ErrorCode.CANNOT_DELETE_RULE);
+        AuthException mockException = new AuthException(ErrorCode.CATEGORY_RULE_NOT_FOUND, "Regla no encontrada.");
 
         doThrow(mockException).when(categoryRuleService).deleteRule(any(Principal.class), eq(ruleId));
 
         mockMvc.perform(delete("/api/rules/categories/{id}", ruleId)
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.message").value("No se pudo eliminar la regla"))
-                .andExpect(jsonPath("$.code").value("CANNOT_DELETE_RULE"));
+                .andExpect(jsonPath("$.message").value("Regla no encontrada."))
+                .andExpect(jsonPath("$.code").value("CATEGORY_RULE_NOT_FOUND"));
 
         verify(categoryRuleService, times(1)).deleteRule(any(Principal.class), eq(ruleId));
     }

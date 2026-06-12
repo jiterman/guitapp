@@ -53,7 +53,6 @@ class CategoryRuleServiceTests {
         testUser.setEmail(testEmail);
         testUser.setFirstName("John");
 
-        // Configuración por defecto para el Principal simulado
         lenient().when(mockPrincipal.getName()).thenReturn(testEmail);
     }
 
@@ -63,11 +62,10 @@ class CategoryRuleServiceTests {
 
     @Test
     void getUserRules_ShouldReturnRulesList_WhenUserExists() {
-        // Arrange
         CategoryRule rule1 = new CategoryRule();
         rule1.setId(1L);
         rule1.setUser(testUser);
-        rule1.setCategory(ExpenseCategory.FOOD);
+        rule1.setCategory(ExpenseCategory.RESTAURANT);
         rule1.setType(ExpenseType.VARIABLE);
 
         CategoryRule rule2 = new CategoryRule();
@@ -79,14 +77,12 @@ class CategoryRuleServiceTests {
         when(userRepository.findByEmail(testEmail)).thenReturn(Optional.of(testUser));
         when(categoryRuleRepository.findByUser(testUser)).thenReturn(List.of(rule1, rule2));
 
-        // Act
         List<CategoryRuleResponse> response = categoryRuleService.getUserRules(mockPrincipal);
 
-        // Assert
         assertNotNull(response);
         assertEquals(2, response.size());
         assertEquals(1L, response.get(0).id());
-        assertEquals(ExpenseCategory.FOOD, response.get(0).category());
+        assertEquals(ExpenseCategory.RESTAURANT, response.get(0).category());
         assertEquals(ExpenseType.VARIABLE, response.get(0).type());
         verify(userRepository, times(1)).findByEmail(testEmail);
         verify(categoryRuleRepository, times(1)).findByUser(testUser);
@@ -94,10 +90,8 @@ class CategoryRuleServiceTests {
 
     @Test
     void getUserRules_ShouldThrowAuthException_WhenUserNotFound() {
-        // Arrange
         when(userRepository.findByEmail(testEmail)).thenReturn(Optional.empty());
 
-        // Act & Assert
         AuthException exception = assertThrows(AuthException.class, () -> {
             categoryRuleService.getUserRules(mockPrincipal);
         });
@@ -113,24 +107,20 @@ class CategoryRuleServiceTests {
 
     @Test
     void createRule_ShouldCreateRule_WithValidData() {
-        // Arrange
-        CategoryRuleRequest request = new CategoryRuleRequest(ExpenseCategory.FOOD, ExpenseType.VARIABLE);
+        CategoryRuleRequest request = new CategoryRuleRequest(ExpenseCategory.RESTAURANT, ExpenseType.VARIABLE);
 
         when(userRepository.findByEmail(testEmail)).thenReturn(Optional.of(testUser));
-        // Simulamos que el repositorio asigna un ID al salvar mediante un answer o mock directo
         when(categoryRuleRepository.save(any(CategoryRule.class))).thenAnswer(invocation -> {
             CategoryRule r = invocation.getArgument(0);
             r.setId(100L);
             return r;
         });
 
-        // Act
         CategoryRuleResponse response = categoryRuleService.createRule(mockPrincipal, request);
 
-        // Assert
         assertNotNull(response);
         assertEquals(100L, response.id());
-        assertEquals(ExpenseCategory.FOOD, response.category());
+        assertEquals(ExpenseCategory.RESTAURANT, response.category());
         assertEquals(ExpenseType.VARIABLE, response.type());
         verify(categoryRuleRepository, times(1)).save(any(CategoryRule.class));
         verify(categoryRuleRepository, times(1)).flush();
@@ -138,10 +128,8 @@ class CategoryRuleServiceTests {
 
     @Test
     void createRule_ShouldThrowAuthException_WhenCategoryIsOther() {
-        // Arrange
         CategoryRuleRequest request = new CategoryRuleRequest(ExpenseCategory.OTHER, ExpenseType.VARIABLE);
 
-        // Act & Assert
         AuthException exception = assertThrows(AuthException.class, () -> {
             categoryRuleService.createRule(mockPrincipal, request);
         });
@@ -154,13 +142,11 @@ class CategoryRuleServiceTests {
 
     @Test
     void createRule_ShouldThrowAuthException_WhenDuplicatedCategory() {
-        // Arrange
-        CategoryRuleRequest request = new CategoryRuleRequest(ExpenseCategory.FOOD, ExpenseType.VARIABLE);
+        CategoryRuleRequest request = new CategoryRuleRequest(ExpenseCategory.RESTAURANT, ExpenseType.VARIABLE);
 
         when(userRepository.findByEmail(testEmail)).thenReturn(Optional.of(testUser));
         when(categoryRuleRepository.save(any(CategoryRule.class))).thenThrow(new DataIntegrityViolationException("Duplicate key"));
 
-        // Act & Assert
         AuthException exception = assertThrows(AuthException.class, () -> {
             categoryRuleService.createRule(mockPrincipal, request);
         });
@@ -177,44 +163,39 @@ class CategoryRuleServiceTests {
 
     @Test
     void updateRule_ShouldUpdateType_WhenRuleExistsAndBelongsToUser() {
-        // Arrange
         Long ruleId = 1L;
         UpdateCategoryRuleRequest request = new UpdateCategoryRuleRequest(ExpenseType.FIXED);
 
         CategoryRule existingRule = new CategoryRule();
         existingRule.setId(ruleId);
         existingRule.setUser(testUser);
-        existingRule.setCategory(ExpenseCategory.FOOD);
+        existingRule.setCategory(ExpenseCategory.RESTAURANT);
         existingRule.setType(ExpenseType.VARIABLE);
 
         when(userRepository.findByEmail(testEmail)).thenReturn(Optional.of(testUser));
         when(categoryRuleRepository.findById(ruleId)).thenReturn(Optional.of(existingRule));
 
-        // Act
         categoryRuleService.updateRule(mockPrincipal, ruleId, request);
 
-        // Assert
         assertEquals(ExpenseType.FIXED, existingRule.getType());
         verify(categoryRuleRepository, times(1)).save(existingRule);
     }
 
     @Test
     void updateRule_ShouldThrowAuthException_WhenRuleDoesNotBelongToUser() {
-        // Arrange
         Long ruleId = 1L;
         UpdateCategoryRuleRequest request = new UpdateCategoryRuleRequest(ExpenseType.FIXED);
 
         User anotherUser = new User();
-        anotherUser.setId(UUID.randomUUID()); // ID diferente a testUser
+        anotherUser.setId(UUID.randomUUID());
 
         CategoryRule existingRule = new CategoryRule();
         existingRule.setId(ruleId);
-        existingRule.setUser(anotherUser); // Pertenece a otro usuario
+        existingRule.setUser(anotherUser);
 
         when(userRepository.findByEmail(testEmail)).thenReturn(Optional.of(testUser));
         when(categoryRuleRepository.findById(ruleId)).thenReturn(Optional.of(existingRule));
 
-        // Act & Assert
         AuthException exception = assertThrows(AuthException.class, () -> {
             categoryRuleService.updateRule(mockPrincipal, ruleId, request);
         });
@@ -230,7 +211,6 @@ class CategoryRuleServiceTests {
 
     @Test
     void deleteRule_ShouldDelete_WhenRuleExistsAndBelongsToUser() {
-        // Arrange
         Long ruleId = 1L;
         CategoryRule existingRule = new CategoryRule();
         existingRule.setId(ruleId);
@@ -239,21 +219,17 @@ class CategoryRuleServiceTests {
         when(userRepository.findByEmail(testEmail)).thenReturn(Optional.of(testUser));
         when(categoryRuleRepository.findById(ruleId)).thenReturn(Optional.of(existingRule));
 
-        // Act
         categoryRuleService.deleteRule(mockPrincipal, ruleId);
 
-        // Assert
         verify(categoryRuleRepository, times(1)).delete(existingRule);
     }
 
     @Test
     void deleteRule_ShouldThrowAuthException_WhenRuleNotFoundInDatabase() {
-        // Arrange
         Long ruleId = 999L;
         when(userRepository.findByEmail(testEmail)).thenReturn(Optional.of(testUser));
         when(categoryRuleRepository.findById(ruleId)).thenReturn(Optional.empty());
 
-        // Act & Assert
         AuthException exception = assertThrows(AuthException.class, () -> {
             categoryRuleService.deleteRule(mockPrincipal, ruleId);
         });
