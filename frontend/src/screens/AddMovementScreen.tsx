@@ -25,7 +25,7 @@ import { incomeService } from '../services/incomeService';
 import { ruleService } from '../services/ruleService';
 import { useModal } from '../hooks/Profile/useModal';
 import { CategoryRuleModal } from '../components/Rules/CategoryRule/Modal/CategoryRuleModal';
-import { CategoryRuleSuggestion } from '../components/Rules/CategoryRule/Suggestion/CategoryRuleSuggestion';
+import { CategoryRuleSuggestion } from '../components/Rules/CategoryRule/Banners/CategoryRuleSuggestion';
 import { useRules } from '../context/rules';
 import {
   recurringIncomeService,
