@@ -15,7 +15,7 @@ export const RulesProvider: React.FC<RulesProviderProps> = ({ children }) => {
 
   const updateRuleInState = (id: number, updatedType: 'FIXED' | 'VARIABLE') => {
     setRules(prevRules =>
-      prevRules.map(rule => (rule.id === id ? { ...rule, expenseType: updatedType } : rule))
+      prevRules.map(rule => (rule.id === id ? { ...rule, type: updatedType } : rule))
     );
   };
 
