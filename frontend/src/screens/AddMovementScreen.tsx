@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import {
   View,
   Alert,
@@ -44,6 +44,24 @@ import { useCurrencyInput } from '../hooks/useCurrencyInput';
 import { formatDate, toLocalDateString } from '../utils/dateFormatter';
 
 const vh = Dimensions.get('window').height / 100;
+interface InferredRuleBannerProps {
+  isVisible: boolean;
+}
+
+const InferredRuleBanner: React.FC<InferredRuleBannerProps> = ({ isVisible }) => {
+  if (!isVisible) return null;
+  return (
+    <View style={styles.inferredBannerContainer}>
+      <Ionicons
+        name="information-circle-outline"
+        size={16}
+        color="#07a3e4"
+        style={{ marginRight: 6 }}
+      />
+      <Text style={styles.inferredBannerText}>Tipo de gasto inferido por regla existente</Text>
+    </View>
+  );
+};
 
 const AddMovementScreen = () => {
   const scrollViewRef = useRef<ScrollView>(null);
@@ -89,7 +107,25 @@ const AddMovementScreen = () => {
   const suggestRuleModal = useModal();
   const [suggestedRuleData, setSuggestedRuleData] = useState<any | null>(null);
   const [ruleSaving, setRuleSaving] = useState(false);
-  const { addRule } = useRules();
+
+  // Aviso de regla inferida
+  const { rules, addRule } = useRules();
+  const [showInferredNotice, setShowInferredNotice] = useState(false);
+
+  useEffect(() => {
+    if (movementType === 'EXPENSE' && selectedCategory?.value) {
+      const matchingRule = rules.find(r => r.category === selectedCategory.value);
+
+      if (matchingRule) {
+        setSelectedExpenseType(matchingRule.type as ExpenseType);
+        setShowInferredNotice(true);
+      } else {
+        setShowInferredNotice(false);
+      }
+    } else {
+      setShowInferredNotice(false);
+    }
+  }, [selectedCategory, movementType, rules]);
 
   const onScanReceipt = () => setCameraVisible(true);
 
@@ -115,6 +151,8 @@ const AddMovementScreen = () => {
           setSelectedCategory(cat);
           setSelectedExpenseType(cat.defaultType);
           setCategoryError(null);
+          const ruleMatch = rules.find(r => r.category === cat.value);
+          setSelectedExpenseType(ruleMatch ? (ruleMatch.type as ExpenseType) : cat.defaultType);
         }
       }
       if (analysis.date) {
@@ -135,7 +173,12 @@ const AddMovementScreen = () => {
   const onSelectCategory = (cat: ExpenseCategoryOption | IncomeCategoryOption) => {
     setSelectedCategory(cat);
     if (movementType === 'EXPENSE') {
-      setSelectedExpenseType((cat as ExpenseCategoryOption).defaultType);
+      const matchingRule = rules.find(r => r.category === cat.value);
+      setSelectedExpenseType(
+        matchingRule
+          ? (matchingRule.type as ExpenseType)
+          : (cat as ExpenseCategoryOption).defaultType
+      );
     }
     setCategoryError(null);
     setModalVisible(false);
@@ -165,7 +208,7 @@ const AddMovementScreen = () => {
         category: categoryValue as ExpenseCategory,
         type: type,
       });
-      addRule(response); // Agregamos al contexto para que se oculte el banner dinámicamente
+      addRule(response);
       suggestRuleModal.close();
     } catch (e: any) {
       console.error('Error detectado al guardar regla sugerida:', e);
@@ -506,6 +549,7 @@ const AddMovementScreen = () => {
           {movementType === 'EXPENSE' && (
             <>
               <Text style={styles.label}>Tipo de gasto *</Text>
+              <InferredRuleBanner isVisible={showInferredNotice} />
               <View style={styles.typeContainer}>
                 <TouchableOpacity
                   style={[
@@ -514,7 +558,10 @@ const AddMovementScreen = () => {
                       ? styles.typeButtonActive
                       : styles.typeButtonInactive,
                   ]}
-                  onPress={() => setSelectedExpenseType('FIXED')}
+                  onPress={() => {
+                    setSelectedExpenseType('FIXED');
+                    setShowInferredNotice(false);
+                  }}
                 >
                   <Text
                     style={[
@@ -534,7 +581,10 @@ const AddMovementScreen = () => {
                       ? styles.typeButtonActive
                       : styles.typeButtonInactive,
                   ]}
-                  onPress={() => setSelectedExpenseType('VARIABLE')}
+                  onPress={() => {
+                    setSelectedExpenseType('VARIABLE');
+                    setShowInferredNotice(false);
+                  }}
                 >
                   <Text
                     style={[
@@ -724,6 +774,24 @@ const localStyles = StyleSheet.create({
   },
   tabTextInactive: {
     color: '#A8C8E0',
+  },
+  inferredBannerContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#E6F4FA',
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 8,
+    marginTop: 4,
+    marginBottom: 8,
+    borderWidth: 1,
+    borderColor: '#d0e9f5',
+    alignSelf: 'flex-start',
+  },
+  inferredBannerText: {
+    fontSize: 12,
+    color: '#013366',
+    fontWeight: '500',
   },
 });
 
