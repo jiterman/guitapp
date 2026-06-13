@@ -136,6 +136,14 @@ const ProfileScreen: React.FC = () => {
               iconBackground="rgba(26,158,92,0.12)"
               onPress={() => router.push('/recurring-incomes')}
             />
+            <ProfileMenuItem
+              title="Gastos recurrentes"
+              subtitle="Configurá gastos que se registran automáticamente, como suscripciones o alquiler"
+              icon="repeat-outline"
+              iconColor="#c0392b"
+              iconBackground="rgba(192,57,43,0.12)"
+              onPress={() => router.push('/recurring-expenses')}
+            />
           </ProfileSection>
 
           <ProfileSection title="Notificaciones">

@@ -4,13 +4,13 @@ import { Layout, Text } from '@ui-kitten/components';
 import { Ionicons } from '@expo/vector-icons';
 import { router, useFocusEffect } from 'expo-router';
 import {
-  recurringIncomeService,
-  RecurringIncomeResponse,
-  RecurrenceFrequency,
-} from '../services/recurringIncomeService';
+  recurringExpenseService,
+  RecurringExpenseResponse,
+} from '../services/recurringExpenseService';
+import type { RecurrenceFrequency } from '../services/recurringIncomeService';
 import { getCategoryIcon, getCategoryLabel } from '../constants/categories';
 import { detailScreenStyles } from '../styles/detailScreenStyles';
-import { recurringIncomeStyles as styles } from '../styles/recurringIncomeStyles';
+import { recurringExpenseStyles as styles } from '../styles/recurringExpenseStyles';
 import { formatDate } from '../utils/dateFormatter';
 
 const formatMoney = (amount: number) => new Intl.NumberFormat('es-AR').format(Number(amount));
@@ -18,22 +18,25 @@ const formatMoney = (amount: number) => new Intl.NumberFormat('es-AR').format(Nu
 const frequencyLabel = (frequency: RecurrenceFrequency): string =>
   frequency === 'WEEKLY' ? 'Semanal' : 'Mensual';
 
-const displayTitle = (item: RecurringIncomeResponse): string => {
+const expenseTypeLabel = (type: RecurringExpenseResponse['type']): string =>
+  type === 'FIXED' ? 'Fijo' : 'Variable';
+
+const displayTitle = (item: RecurringExpenseResponse): string => {
   if (item.title?.trim()) return item.title.trim();
   if (item.description?.trim()) return item.description.trim();
-  return getCategoryLabel(item.category, 'INCOME');
+  return getCategoryLabel(item.category, 'EXPENSE');
 };
 
-const RecurringIncomesScreen = () => {
-  const [items, setItems] = useState<RecurringIncomeResponse[]>([]);
+const RecurringExpensesScreen = () => {
+  const [items, setItems] = useState<RecurringExpenseResponse[]>([]);
   const [loading, setLoading] = useState(true);
 
   const loadItems = useCallback(async () => {
     try {
-      const data = await recurringIncomeService.getRecurringIncomes();
+      const data = await recurringExpenseService.getRecurringExpenses();
       setItems(data);
     } catch {
-      Alert.alert('Error', 'No se pudieron cargar los ingresos recurrentes.');
+      Alert.alert('Error', 'No se pudieron cargar los gastos recurrentes.');
     } finally {
       setLoading(false);
     }
@@ -46,19 +49,19 @@ const RecurringIncomesScreen = () => {
     }, [loadItems])
   );
 
-  const handleToggleActive = async (item: RecurringIncomeResponse) => {
+  const handleToggleActive = async (item: RecurringExpenseResponse) => {
     try {
-      await recurringIncomeService.updateRecurringIncome(item.id, { active: !item.active });
+      await recurringExpenseService.updateRecurringExpense(item.id, { active: !item.active });
       loadItems();
     } catch {
-      Alert.alert('Error', 'No se pudo actualizar el ingreso recurrente.');
+      Alert.alert('Error', 'No se pudo actualizar el gasto recurrente.');
     }
   };
 
-  const handleDelete = (item: RecurringIncomeResponse) => {
+  const handleDelete = (item: RecurringExpenseResponse) => {
     Alert.alert(
-      'Eliminar ingreso recurrente',
-      '¿Seguro que querés eliminar este ingreso recurrente? No se borrarán los ingresos ya generados.',
+      'Eliminar gasto recurrente',
+      '¿Seguro que querés eliminar este gasto recurrente? No se borrarán los gastos ya generados.',
       [
         { text: 'Cancelar', style: 'cancel' },
         {
@@ -66,10 +69,10 @@ const RecurringIncomesScreen = () => {
           style: 'destructive',
           onPress: async () => {
             try {
-              await recurringIncomeService.deleteRecurringIncome(item.id);
+              await recurringExpenseService.deleteRecurringExpense(item.id);
               loadItems();
             } catch {
-              Alert.alert('Error', 'No se pudo eliminar el ingreso recurrente.');
+              Alert.alert('Error', 'No se pudo eliminar el gasto recurrente.');
             }
           },
         },
@@ -85,13 +88,13 @@ const RecurringIncomesScreen = () => {
       </TouchableOpacity>
 
       <View style={styles.headerRow}>
-        <Text style={styles.title}>Ingresos recurrentes</Text>
+        <Text style={styles.title}>Gastos recurrentes</Text>
         <TouchableOpacity
           style={styles.addButton}
           onPress={() =>
             router.push({
               pathname: '/add-movement',
-              params: { type: 'INCOME', recurring: 'true' },
+              params: { type: 'EXPENSE', recurring: 'true' },
             })
           }
         >
@@ -108,7 +111,7 @@ const RecurringIncomesScreen = () => {
         <View style={styles.emptyContainer}>
           <Ionicons name="repeat-outline" size={48} color="#90A4AE" />
           <Text style={styles.emptyText}>
-            Todavía no tenés ingresos recurrentes. Agregá uno para que se registre automáticamente.
+            Todavía no tenés gastos recurrentes. Agregá uno para que se registre automáticamente.
           </Text>
         </View>
       ) : (
@@ -120,7 +123,7 @@ const RecurringIncomesScreen = () => {
                   <Ionicons
                     name={getCategoryIcon(item.category) as keyof typeof Ionicons.glyphMap}
                     size={22}
-                    color="#1a9e5c"
+                    color="#c0392b"
                   />
                 </View>
                 <View style={styles.cardTitleContainer}>
@@ -133,12 +136,17 @@ const RecurringIncomesScreen = () => {
               </View>
 
               <View style={styles.metaRow}>
+                <Text style={styles.metaLabel}>Tipo</Text>
+                <Text style={styles.metaValue}>{expenseTypeLabel(item.type)}</Text>
+              </View>
+
+              <View style={styles.metaRow}>
                 <Text style={styles.metaLabel}>Frecuencia</Text>
                 <Text style={styles.metaValue}>{frequencyLabel(item.frequency)}</Text>
               </View>
 
               <View style={styles.metaRow}>
-                <Text style={styles.metaLabel}>Próximo ingreso</Text>
+                <Text style={styles.metaLabel}>Próximo gasto</Text>
                 <Text style={styles.metaValue}>{formatDate(item.nextOccurrence)}</Text>
               </View>
 
@@ -167,4 +175,4 @@ const RecurringIncomesScreen = () => {
   );
 };
 
-export default RecurringIncomesScreen;
+export default RecurringExpensesScreen;

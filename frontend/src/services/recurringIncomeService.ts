@@ -5,6 +5,7 @@ export type RecurrenceFrequency = 'WEEKLY' | 'MONTHLY';
 
 export interface AddRecurringIncomeRequest {
   amount: number;
+  title?: string;
   description?: string;
   category: IncomeCategory;
   frequency: RecurrenceFrequency;
@@ -14,6 +15,7 @@ export interface AddRecurringIncomeRequest {
 
 export interface UpdateRecurringIncomeRequest {
   amount?: number;
+  title?: string;
   description?: string;
   category?: IncomeCategory;
   frequency?: RecurrenceFrequency;
@@ -25,6 +27,7 @@ export interface UpdateRecurringIncomeRequest {
 export interface RecurringIncomeResponse {
   id: string;
   amount: number;
+  title?: string;
   description?: string;
   category: IncomeCategory;
   frequency: RecurrenceFrequency;
