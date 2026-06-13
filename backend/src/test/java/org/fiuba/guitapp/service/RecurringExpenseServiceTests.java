@@ -174,6 +174,42 @@ class RecurringExpenseServiceTests {
     }
 
     @Test
+    void updateRecurringExpense_ShouldUpdateType_WithoutChangingSchedule() {
+        UUID id = UUID.randomUUID();
+        RecurringExpense template = buildTemplate(id);
+        LocalDate originalNextOccurrence = template.getNextOccurrence();
+        UpdateRecurringExpenseRequest request = new UpdateRecurringExpenseRequest(
+                null, null, null, null, ExpenseType.VARIABLE, null, null, null, null);
+
+        when(userRepository.findByEmail(testEmail)).thenReturn(Optional.of(testUser));
+        when(recurringExpenseRepository.findById(id)).thenReturn(Optional.of(template));
+        when(recurringExpenseRepository.save(any(RecurringExpense.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        RecurringExpenseResponse response = recurringExpenseService.updateRecurringExpense(testEmail, id, request);
+
+        assertEquals(ExpenseType.VARIABLE, response.type());
+        assertEquals(originalNextOccurrence, response.nextOccurrence());
+    }
+
+    @Test
+    void updateRecurringExpense_ShouldUpdateDescription_WithoutChangingSchedule() {
+        UUID id = UUID.randomUUID();
+        RecurringExpense template = buildTemplate(id);
+        LocalDate originalNextOccurrence = template.getNextOccurrence();
+        UpdateRecurringExpenseRequest request = new UpdateRecurringExpenseRequest(
+                null, null, "Updated notes", null, null, null, null, null, null);
+
+        when(userRepository.findByEmail(testEmail)).thenReturn(Optional.of(testUser));
+        when(recurringExpenseRepository.findById(id)).thenReturn(Optional.of(template));
+        when(recurringExpenseRepository.save(any(RecurringExpense.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        RecurringExpenseResponse response = recurringExpenseService.updateRecurringExpense(testEmail, id, request);
+
+        assertEquals("Updated notes", response.description());
+        assertEquals(originalNextOccurrence, response.nextOccurrence());
+    }
+
+    @Test
     void updateRecurringExpense_ShouldUpdateCategory_WithoutChangingSchedule() {
         UUID id = UUID.randomUUID();
         RecurringExpense template = buildTemplate(id);

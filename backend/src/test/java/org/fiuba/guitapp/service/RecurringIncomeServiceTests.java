@@ -58,6 +58,7 @@ class RecurringIncomeServiceTests {
         RecurringIncome template = new RecurringIncome();
         template.setId(id);
         template.setAmount(new BigDecimal("500000.00"));
+        template.setTitle("Salary");
         template.setDescription("Salary");
         template.setCategory(IncomeCategory.SALARY);
         template.setFrequency(RecurrenceFrequency.MONTHLY);
@@ -170,6 +171,24 @@ class RecurringIncomeServiceTests {
     }
 
     @Test
+    void updateRecurringIncome_ShouldUpdateTitle_WithoutChangingSchedule() {
+        UUID id = UUID.randomUUID();
+        RecurringIncome template = buildTemplate(id);
+        LocalDate originalNextOccurrence = template.getNextOccurrence();
+        UpdateRecurringIncomeRequest request = new UpdateRecurringIncomeRequest(
+                null, "New title", null, null, null, null, null, null);
+
+        when(userRepository.findByEmail(testEmail)).thenReturn(Optional.of(testUser));
+        when(recurringIncomeRepository.findById(id)).thenReturn(Optional.of(template));
+        when(recurringIncomeRepository.save(any(RecurringIncome.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        RecurringIncomeResponse response = recurringIncomeService.updateRecurringIncome(testEmail, id, request);
+
+        assertEquals("New title", response.title());
+        assertEquals(originalNextOccurrence, response.nextOccurrence());
+    }
+
+    @Test
     void updateRecurringIncome_ShouldUpdateCategory_WithoutChangingSchedule() {
         UUID id = UUID.randomUUID();
         RecurringIncome template = buildTemplate(id);
@@ -252,6 +271,7 @@ class RecurringIncomeServiceTests {
         RecurringIncomeResponse response = recurringIncomeService.getRecurringIncomeById(testEmail, id);
 
         assertEquals(id, response.id());
+        assertEquals("Salary", response.title());
         assertEquals("Salary", response.description());
     }
 
