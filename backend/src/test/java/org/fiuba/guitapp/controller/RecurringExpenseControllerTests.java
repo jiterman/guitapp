@@ -10,12 +10,13 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 
-import org.fiuba.guitapp.dto.AddRecurringIncomeRequest;
-import org.fiuba.guitapp.dto.RecurringIncomeResponse;
-import org.fiuba.guitapp.dto.UpdateRecurringIncomeRequest;
-import org.fiuba.guitapp.model.IncomeCategory;
+import org.fiuba.guitapp.dto.AddRecurringExpenseRequest;
+import org.fiuba.guitapp.dto.RecurringExpenseResponse;
+import org.fiuba.guitapp.dto.UpdateRecurringExpenseRequest;
+import org.fiuba.guitapp.model.ExpenseCategory;
+import org.fiuba.guitapp.model.ExpenseType;
 import org.fiuba.guitapp.model.RecurrenceFrequency;
-import org.fiuba.guitapp.service.RecurringIncomeService;
+import org.fiuba.guitapp.service.RecurringExpenseService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -32,7 +33,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
 @SuppressWarnings("null")
-class RecurringIncomeControllerTests {
+class RecurringExpenseControllerTests {
 
     @Autowired
     private MockMvc mockMvc;
@@ -41,15 +42,16 @@ class RecurringIncomeControllerTests {
     private ObjectMapper objectMapper;
 
     @MockBean
-    private RecurringIncomeService recurringIncomeService;
+    private RecurringExpenseService recurringExpenseService;
 
-    private RecurringIncomeResponse sampleResponse(UUID id) {
-        return new RecurringIncomeResponse(
+    private RecurringExpenseResponse sampleResponse(UUID id) {
+        return new RecurringExpenseResponse(
                 id,
                 new BigDecimal("500000.00"),
-                "Salary",
-                null,
-                IncomeCategory.SALARY,
+                "Rent",
+                "Monthly rent",
+                ExpenseCategory.RENT,
+                ExpenseType.FIXED,
                 RecurrenceFrequency.MONTHLY,
                 LocalDate.of(2026, 6, 1),
                 null,
@@ -59,16 +61,16 @@ class RecurringIncomeControllerTests {
 
     @Test
     @WithMockUser(username = "test@example.com")
-    void addRecurringIncome_ShouldReturnResponse_WhenRequestIsValid() throws Exception {
+    void addRecurringExpense_ShouldReturnResponse_WhenRequestIsValid() throws Exception {
         UUID id = UUID.randomUUID();
-        AddRecurringIncomeRequest request = new AddRecurringIncomeRequest(
-                new BigDecimal("500000.00"), "Salary", null, IncomeCategory.SALARY,
-                RecurrenceFrequency.MONTHLY, LocalDate.of(2026, 6, 1), null);
+        AddRecurringExpenseRequest request = new AddRecurringExpenseRequest(
+                new BigDecimal("500000.00"), "Rent", "Monthly rent", ExpenseCategory.RENT,
+                ExpenseType.FIXED, RecurrenceFrequency.MONTHLY, LocalDate.of(2026, 6, 1), null);
 
-        when(recurringIncomeService.addRecurringIncome(eq("test@example.com"), any()))
+        when(recurringExpenseService.addRecurringExpense(eq("test@example.com"), any()))
                 .thenReturn(sampleResponse(id));
 
-        mockMvc.perform(post("/api/incomes/recurring")
+        mockMvc.perform(post("/api/expenses/recurring")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
@@ -76,75 +78,75 @@ class RecurringIncomeControllerTests {
                 .andExpect(jsonPath("$.frequency").value("MONTHLY"))
                 .andExpect(jsonPath("$.active").value(true));
 
-        verify(recurringIncomeService, times(1)).addRecurringIncome(eq("test@example.com"), any());
+        verify(recurringExpenseService, times(1)).addRecurringExpense(eq("test@example.com"), any());
     }
 
     @Test
     @WithMockUser(username = "test@example.com")
-    void addRecurringIncome_ShouldReturnBadRequest_WhenFrequencyIsMissing() throws Exception {
-        String body = "{\"amount\": 1000, \"category\": \"SALARY\", \"startDate\": \"2026-06-01\"}";
+    void addRecurringExpense_ShouldReturnBadRequest_WhenFrequencyIsMissing() throws Exception {
+        String body = "{\"amount\": 1000, \"category\": \"RENT\", \"type\": \"FIXED\", \"startDate\": \"2026-06-01\"}";
 
-        mockMvc.perform(post("/api/incomes/recurring")
+        mockMvc.perform(post("/api/expenses/recurring")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(body))
                 .andExpect(status().isBadRequest());
 
-        verify(recurringIncomeService, never()).addRecurringIncome(anyString(), any());
+        verify(recurringExpenseService, never()).addRecurringExpense(anyString(), any());
     }
 
     @Test
     @WithMockUser(username = "test@example.com")
-    void getRecurringIncomes_ShouldReturnList() throws Exception {
+    void getRecurringExpenses_ShouldReturnList() throws Exception {
         UUID id = UUID.randomUUID();
-        when(recurringIncomeService.getRecurringIncomes("test@example.com"))
+        when(recurringExpenseService.getRecurringExpenses("test@example.com"))
                 .thenReturn(List.of(sampleResponse(id)));
 
-        mockMvc.perform(get("/api/incomes/recurring"))
+        mockMvc.perform(get("/api/expenses/recurring"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].id").value(id.toString()));
 
-        verify(recurringIncomeService, times(1)).getRecurringIncomes("test@example.com");
+        verify(recurringExpenseService, times(1)).getRecurringExpenses("test@example.com");
     }
 
     @Test
     @WithMockUser(username = "test@example.com")
-    void getRecurringIncomeById_ShouldReturnResponse() throws Exception {
+    void getRecurringExpenseById_ShouldReturnResponse() throws Exception {
         UUID id = UUID.randomUUID();
-        when(recurringIncomeService.getRecurringIncomeById("test@example.com", id))
+        when(recurringExpenseService.getRecurringExpenseById("test@example.com", id))
                 .thenReturn(sampleResponse(id));
 
-        mockMvc.perform(get("/api/incomes/recurring/" + id))
+        mockMvc.perform(get("/api/expenses/recurring/" + id))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(id.toString()));
     }
 
     @Test
     @WithMockUser(username = "test@example.com")
-    void updateRecurringIncome_ShouldReturnResponse() throws Exception {
+    void updateRecurringExpense_ShouldReturnResponse() throws Exception {
         UUID id = UUID.randomUUID();
-        UpdateRecurringIncomeRequest request = new UpdateRecurringIncomeRequest(
-                new BigDecimal("600000.00"), null, null, null, null, null, null, false);
+        UpdateRecurringExpenseRequest request = new UpdateRecurringExpenseRequest(
+                new BigDecimal("600000.00"), null, null, null, null, null, null, null, false);
 
-        when(recurringIncomeService.updateRecurringIncome(eq("test@example.com"), eq(id), any()))
+        when(recurringExpenseService.updateRecurringExpense(eq("test@example.com"), eq(id), any()))
                 .thenReturn(sampleResponse(id));
 
-        mockMvc.perform(patch("/api/incomes/recurring/" + id)
+        mockMvc.perform(patch("/api/expenses/recurring/" + id)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(id.toString()));
 
-        verify(recurringIncomeService, times(1)).updateRecurringIncome(eq("test@example.com"), eq(id), any());
+        verify(recurringExpenseService, times(1)).updateRecurringExpense(eq("test@example.com"), eq(id), any());
     }
 
     @Test
     @WithMockUser(username = "test@example.com")
-    void deleteRecurringIncome_ShouldReturnNoContent() throws Exception {
+    void deleteRecurringExpense_ShouldReturnNoContent() throws Exception {
         UUID id = UUID.randomUUID();
 
-        mockMvc.perform(delete("/api/incomes/recurring/" + id))
+        mockMvc.perform(delete("/api/expenses/recurring/" + id))
                 .andExpect(status().isNoContent());
 
-        verify(recurringIncomeService, times(1)).deleteRecurringIncome("test@example.com", id);
+        verify(recurringExpenseService, times(1)).deleteRecurringExpense("test@example.com", id);
     }
 }

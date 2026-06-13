@@ -31,7 +31,8 @@ public class SecurityConfig {
                                 "/api/summary/monthly/notify",
                                 "/api/notifications/daily/notify",
                                 "/api/notifications/weekly/notify",
-                                "/api/incomes/recurring/run")
+                                "/api/incomes/recurring/run",
+                                "/api/expenses/recurring/run")
                         .permitAll()
                         .anyRequest()
                         .authenticated())

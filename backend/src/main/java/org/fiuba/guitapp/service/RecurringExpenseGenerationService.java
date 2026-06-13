@@ -3,10 +3,10 @@ package org.fiuba.guitapp.service;
 import java.time.LocalDate;
 import java.util.List;
 
-import org.fiuba.guitapp.model.Income;
-import org.fiuba.guitapp.model.RecurringIncome;
-import org.fiuba.guitapp.repository.IncomeRepository;
-import org.fiuba.guitapp.repository.RecurringIncomeRepository;
+import org.fiuba.guitapp.model.Expense;
+import org.fiuba.guitapp.model.RecurringExpense;
+import org.fiuba.guitapp.repository.ExpenseRepository;
+import org.fiuba.guitapp.repository.RecurringExpenseRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -16,35 +16,35 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class RecurringIncomeGenerationService {
+public class RecurringExpenseGenerationService {
 
-    private final RecurringIncomeRepository recurringIncomeRepository;
-    private final IncomeRepository incomeRepository;
+    private final RecurringExpenseRepository recurringExpenseRepository;
+    private final ExpenseRepository expenseRepository;
 
     @Transactional
-    public int generateDueIncomes() {
+    public int generateDueExpenses() {
         LocalDate today = LocalDate.now();
-        List<RecurringIncome> dueTemplates = recurringIncomeRepository
+        List<RecurringExpense> dueTemplates = recurringExpenseRepository
                 .findAllByActiveTrueAndNextOccurrenceLessThanEqual(today);
 
         int totalGenerated = 0;
-        for (RecurringIncome template : dueTemplates) {
+        for (RecurringExpense template : dueTemplates) {
             totalGenerated += processTemplate(template, today);
         }
 
-        log.info("Recurring income generation finished: {} income(s) created from {} template(s)",
+        log.info("Recurring expense generation finished: {} expense(s) created from {} template(s)",
                 totalGenerated, dueTemplates.size());
         return totalGenerated;
     }
 
-    private int processTemplate(RecurringIncome template, LocalDate today) {
+    private int processTemplate(RecurringExpense template, LocalDate today) {
         int anchorDayOfMonth = template.getStartDate().getDayOfMonth();
         LocalDate occurrence = template.getNextOccurrence();
         int generated = 0;
 
         while (!occurrence.isAfter(today)
                 && (template.getEndDate() == null || !occurrence.isAfter(template.getEndDate()))) {
-            createIncome(template, occurrence);
+            createExpense(template, occurrence);
             generated++;
             occurrence = RecurrenceCalculator.next(occurrence, template.getFrequency(), anchorDayOfMonth);
         }
@@ -53,19 +53,20 @@ public class RecurringIncomeGenerationService {
         if (template.getEndDate() != null && occurrence.isAfter(template.getEndDate())) {
             template.setActive(false);
         }
-        recurringIncomeRepository.save(template);
+        recurringExpenseRepository.save(template);
 
         return generated;
     }
 
-    private void createIncome(RecurringIncome template, LocalDate date) {
-        Income income = new Income();
-        income.setAmount(template.getAmount());
-        income.setTitle(template.getTitle());
-        income.setDescription(template.getDescription());
-        income.setCategory(template.getCategory());
-        income.setDate(date);
-        income.setUser(template.getUser());
-        incomeRepository.save(income);
+    private void createExpense(RecurringExpense template, LocalDate date) {
+        Expense expense = new Expense();
+        expense.setAmount(template.getAmount());
+        expense.setTitle(template.getTitle());
+        expense.setDescription(template.getDescription());
+        expense.setCategory(template.getCategory());
+        expense.setType(template.getType());
+        expense.setDate(date);
+        expense.setUser(template.getUser());
+        expenseRepository.save(expense);
     }
 }

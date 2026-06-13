@@ -72,7 +72,7 @@ class RecurringIncomeServiceTests {
     void addRecurringIncome_ShouldPersistTemplate_WithFutureStartDateAsNextOccurrence() {
         LocalDate futureStart = LocalDate.now().plusDays(10);
         AddRecurringIncomeRequest request = new AddRecurringIncomeRequest(
-                new BigDecimal("500000.00"), "Salary", IncomeCategory.SALARY,
+                new BigDecimal("500000.00"), "Salary", "Salary", IncomeCategory.SALARY,
                 RecurrenceFrequency.MONTHLY, futureStart, null);
 
         when(userRepository.findByEmail(testEmail)).thenReturn(Optional.of(testUser));
@@ -86,6 +86,7 @@ class RecurringIncomeServiceTests {
 
         assertNotNull(response);
         assertEquals(new BigDecimal("500000.00"), response.amount());
+        assertEquals("Salary", response.title());
         assertEquals(IncomeCategory.SALARY, response.category());
         assertEquals(RecurrenceFrequency.MONTHLY, response.frequency());
         assertEquals(futureStart, response.startDate());
@@ -97,7 +98,7 @@ class RecurringIncomeServiceTests {
     @Test
     void addRecurringIncome_ShouldThrowAuthException_WhenUserNotFound() {
         AddRecurringIncomeRequest request = new AddRecurringIncomeRequest(
-                new BigDecimal("100.00"), null, IncomeCategory.SALARY,
+                new BigDecimal("100.00"), null, null, IncomeCategory.SALARY,
                 RecurrenceFrequency.WEEKLY, LocalDate.now(), null);
 
         when(userRepository.findByEmail(testEmail)).thenReturn(Optional.empty());
@@ -153,7 +154,7 @@ class RecurringIncomeServiceTests {
         LocalDate startDate = LocalDate.now().plusDays(3);
         LocalDate endDate = startDate.plusMonths(6);
         AddRecurringIncomeRequest request = new AddRecurringIncomeRequest(
-                new BigDecimal("100.00"), null, IncomeCategory.FREELANCE,
+                new BigDecimal("100.00"), null, null, IncomeCategory.FREELANCE,
                 RecurrenceFrequency.WEEKLY, startDate, endDate);
 
         when(userRepository.findByEmail(testEmail)).thenReturn(Optional.of(testUser));
@@ -174,7 +175,7 @@ class RecurringIncomeServiceTests {
         RecurringIncome template = buildTemplate(id);
         LocalDate originalNextOccurrence = template.getNextOccurrence();
         UpdateRecurringIncomeRequest request = new UpdateRecurringIncomeRequest(
-                null, null, IncomeCategory.FREELANCE, null, null, null, null);
+                null, null, null, IncomeCategory.FREELANCE, null, null, null, null);
 
         when(userRepository.findByEmail(testEmail)).thenReturn(Optional.of(testUser));
         when(recurringIncomeRepository.findById(id)).thenReturn(Optional.of(template));
@@ -193,7 +194,7 @@ class RecurringIncomeServiceTests {
         LocalDate originalNextOccurrence = template.getNextOccurrence();
         LocalDate endDate = LocalDate.now().plusMonths(12);
         UpdateRecurringIncomeRequest request = new UpdateRecurringIncomeRequest(
-                null, null, null, null, null, endDate, null);
+                null, null, null, null, null, null, endDate, null);
 
         when(userRepository.findByEmail(testEmail)).thenReturn(Optional.of(testUser));
         when(recurringIncomeRepository.findById(id)).thenReturn(Optional.of(template));
@@ -214,7 +215,7 @@ class RecurringIncomeServiceTests {
         template.setFrequency(RecurrenceFrequency.MONTHLY);
         template.setNextOccurrence(startDate);
         UpdateRecurringIncomeRequest request = new UpdateRecurringIncomeRequest(
-                null, null, null, RecurrenceFrequency.WEEKLY, null, null, null);
+                null, null, null, null, RecurrenceFrequency.WEEKLY, null, null, null);
 
         when(userRepository.findByEmail(testEmail)).thenReturn(Optional.of(testUser));
         when(recurringIncomeRepository.findById(id)).thenReturn(Optional.of(template));
@@ -287,7 +288,7 @@ class RecurringIncomeServiceTests {
         RecurringIncome template = buildTemplate(id);
         LocalDate newStart = LocalDate.now().plusDays(20);
         UpdateRecurringIncomeRequest request = new UpdateRecurringIncomeRequest(
-                new BigDecimal("600000.00"), "New salary", null,
+                new BigDecimal("600000.00"), null, "New salary", null,
                 RecurrenceFrequency.WEEKLY, newStart, null, null);
 
         when(userRepository.findByEmail(testEmail)).thenReturn(Optional.of(testUser));
@@ -308,7 +309,7 @@ class RecurringIncomeServiceTests {
         UUID id = UUID.randomUUID();
         RecurringIncome template = buildTemplate(id);
         UpdateRecurringIncomeRequest request = new UpdateRecurringIncomeRequest(
-                null, null, null, null, null, null, false);
+                null, null, null, null, null, null, null, false);
 
         when(userRepository.findByEmail(testEmail)).thenReturn(Optional.of(testUser));
         when(recurringIncomeRepository.findById(id)).thenReturn(Optional.of(template));
