@@ -4,15 +4,17 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.UUID;
 
-import org.fiuba.guitapp.model.IncomeCategory;
+import org.fiuba.guitapp.model.ExpenseCategory;
+import org.fiuba.guitapp.model.ExpenseType;
 import org.fiuba.guitapp.model.RecurrenceFrequency;
 
-public record RecurringIncomeResponse(
+public record RecurringExpenseResponse(
         UUID id,
         BigDecimal amount,
         String title,
         String description,
-        IncomeCategory category,
+        ExpenseCategory category,
+        ExpenseType type,
         RecurrenceFrequency frequency,
         LocalDate startDate,
         LocalDate endDate,

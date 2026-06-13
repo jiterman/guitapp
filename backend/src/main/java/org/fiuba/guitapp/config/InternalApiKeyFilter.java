@@ -21,7 +21,8 @@ public class InternalApiKeyFilter extends OncePerRequestFilter {
             "/api/summary/monthly/notify",
             "/api/notifications/daily/notify",
             "/api/notifications/weekly/notify",
-            "/api/incomes/recurring/run");
+            "/api/incomes/recurring/run",
+            "/api/expenses/recurring/run");
     private static final String HEADER = "X-Internal-Key";
 
     @Value("${internal.api.key}")

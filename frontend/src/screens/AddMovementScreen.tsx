@@ -31,6 +31,7 @@ import {
   recurringIncomeService,
   type RecurrenceFrequency,
 } from '../services/recurringIncomeService';
+import { recurringExpenseService } from '../services/recurringExpenseService';
 import type { ExpenseType, IncomeCategory, ExpenseCategory } from '../constants/categories';
 import {
   EXPENSE_CATEGORIES,
@@ -237,17 +238,30 @@ const AddMovementScreen = () => {
     try {
       const dateString = toLocalDateString(selectedDate);
       if (movementType === 'EXPENSE') {
-        await expenseService.addExpense({
-          amount: parseFloat(amount),
-          title: title.trim() || undefined,
-          description: description.trim() || undefined,
-          category: selectedCategory!.value,
-          type: selectedExpenseType!,
-          date: dateString,
-        });
+        if (isRecurring) {
+          await recurringExpenseService.addRecurringExpense({
+            amount: parseFloat(amount),
+            title: title.trim() || undefined,
+            description: description.trim() || undefined,
+            category: selectedCategory!.value as ExpenseCategory,
+            type: selectedExpenseType!,
+            frequency,
+            startDate: dateString,
+          });
+        } else {
+          await expenseService.addExpense({
+            amount: parseFloat(amount),
+            title: title.trim() || undefined,
+            description: description.trim() || undefined,
+            category: selectedCategory!.value,
+            type: selectedExpenseType!,
+            date: dateString,
+          });
+        }
       } else if (isRecurring) {
         await recurringIncomeService.addRecurringIncome({
           amount: parseFloat(amount),
+          title: title.trim() || undefined,
           description: description.trim() || undefined,
           category: selectedCategory!.value as unknown as IncomeCategory,
           frequency,
@@ -341,7 +355,7 @@ const AddMovementScreen = () => {
             {movementType === 'EXPENSE' ? 'Agregar gasto' : 'Agregar ingreso'}
           </Text>
           <View style={styles.subHeaderActions}>
-            {movementType === 'EXPENSE' && (
+            {movementType === 'EXPENSE' && !isRecurring && (
               <TouchableOpacity
                 onPress={onScanReceipt}
                 style={styles.scanButton}
@@ -400,24 +414,22 @@ const AddMovementScreen = () => {
           </View>
           {amountError && <Text style={styles.errorText}>{amountError}</Text>}
 
-          {!(movementType === 'INCOME' && isRecurring) && (
-            <>
-              <Text style={styles.label}>Título</Text>
-              <View style={styles.inputWithIcon}>
-                <View style={styles.inputIconContainer}>
-                  <Ionicons name="text-outline" size={18} color="#90A4AE" />
-                </View>
-                <TextInput
-                  value={title}
-                  onChangeText={text => setTitle(text.slice(0, 20))}
-                  placeholder="Ej. Compra del mes (opcional)"
-                  style={styles.textInput}
-                  placeholderTextColor="#B0BEC5"
-                  maxLength={20}
-                />
+          <>
+            <Text style={styles.label}>Título</Text>
+            <View style={styles.inputWithIcon}>
+              <View style={styles.inputIconContainer}>
+                <Ionicons name="text-outline" size={18} color="#90A4AE" />
               </View>
-            </>
-          )}
+              <TextInput
+                value={title}
+                onChangeText={text => setTitle(text.slice(0, 20))}
+                placeholder="Ej. Compra del mes (opcional)"
+                style={styles.textInput}
+                placeholderTextColor="#B0BEC5"
+                maxLength={20}
+              />
+            </View>
+          </>
 
           <Text style={styles.label}>Categoría *</Text>
           <TouchableOpacity
@@ -447,97 +459,87 @@ const AddMovementScreen = () => {
           </TouchableOpacity>
           {categoryError && <Text style={styles.errorText}>{categoryError}</Text>}
 
-          {movementType === 'INCOME' && (
+          <Text style={styles.label}>Periodicidad</Text>
+          <View style={styles.typeContainer}>
+            <TouchableOpacity
+              style={[
+                styles.typeButton,
+                !isRecurring ? styles.typeButtonActive : styles.typeButtonInactive,
+              ]}
+              onPress={() => setIsRecurring(false)}
+            >
+              <Text
+                style={[
+                  styles.typeButtonText,
+                  !isRecurring ? styles.typeButtonTextActive : styles.typeButtonTextInactive,
+                ]}
+              >
+                Único
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[
+                styles.typeButton,
+                isRecurring ? styles.typeButtonActive : styles.typeButtonInactive,
+              ]}
+              onPress={() => setIsRecurring(true)}
+            >
+              <Text
+                style={[
+                  styles.typeButtonText,
+                  isRecurring ? styles.typeButtonTextActive : styles.typeButtonTextInactive,
+                ]}
+              >
+                Recurrente
+              </Text>
+            </TouchableOpacity>
+          </View>
+
+          {isRecurring && (
             <>
-              <Text style={styles.label}>Tipo de ingreso</Text>
+              <Text style={styles.label}>Frecuencia</Text>
               <View style={styles.typeContainer}>
                 <TouchableOpacity
                   style={[
                     styles.typeButton,
-                    !isRecurring ? styles.typeButtonActive : styles.typeButtonInactive,
+                    frequency === 'WEEKLY' ? styles.typeButtonActive : styles.typeButtonInactive,
                   ]}
-                  onPress={() => setIsRecurring(false)}
+                  onPress={() => setFrequency('WEEKLY')}
                 >
                   <Text
                     style={[
                       styles.typeButtonText,
-                      !isRecurring ? styles.typeButtonTextActive : styles.typeButtonTextInactive,
+                      frequency === 'WEEKLY'
+                        ? styles.typeButtonTextActive
+                        : styles.typeButtonTextInactive,
                     ]}
                   >
-                    Único
+                    Semanal
                   </Text>
                 </TouchableOpacity>
                 <TouchableOpacity
                   style={[
                     styles.typeButton,
-                    isRecurring ? styles.typeButtonActive : styles.typeButtonInactive,
+                    frequency === 'MONTHLY' ? styles.typeButtonActive : styles.typeButtonInactive,
                   ]}
-                  onPress={() => setIsRecurring(true)}
+                  onPress={() => setFrequency('MONTHLY')}
                 >
                   <Text
                     style={[
                       styles.typeButtonText,
-                      isRecurring ? styles.typeButtonTextActive : styles.typeButtonTextInactive,
+                      frequency === 'MONTHLY'
+                        ? styles.typeButtonTextActive
+                        : styles.typeButtonTextInactive,
                     ]}
                   >
-                    Recurrente
+                    Mensual
                   </Text>
                 </TouchableOpacity>
               </View>
-
-              {isRecurring && (
-                <>
-                  <Text style={styles.label}>Frecuencia</Text>
-                  <View style={styles.typeContainer}>
-                    <TouchableOpacity
-                      style={[
-                        styles.typeButton,
-                        frequency === 'WEEKLY'
-                          ? styles.typeButtonActive
-                          : styles.typeButtonInactive,
-                      ]}
-                      onPress={() => setFrequency('WEEKLY')}
-                    >
-                      <Text
-                        style={[
-                          styles.typeButtonText,
-                          frequency === 'WEEKLY'
-                            ? styles.typeButtonTextActive
-                            : styles.typeButtonTextInactive,
-                        ]}
-                      >
-                        Semanal
-                      </Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                      style={[
-                        styles.typeButton,
-                        frequency === 'MONTHLY'
-                          ? styles.typeButtonActive
-                          : styles.typeButtonInactive,
-                      ]}
-                      onPress={() => setFrequency('MONTHLY')}
-                    >
-                      <Text
-                        style={[
-                          styles.typeButtonText,
-                          frequency === 'MONTHLY'
-                            ? styles.typeButtonTextActive
-                            : styles.typeButtonTextInactive,
-                        ]}
-                      >
-                        Mensual
-                      </Text>
-                    </TouchableOpacity>
-                  </View>
-                </>
-              )}
             </>
           )}
 
-          <Text style={styles.label}>
-            {movementType === 'INCOME' && isRecurring ? 'Fecha de inicio *' : 'Fecha *'}
-          </Text>
+          <Text style={styles.label}>{isRecurring ? 'Fecha de inicio *' : 'Fecha *'}</Text>
           <TouchableOpacity style={styles.dateButton} onPress={() => setShowDatePicker(true)}>
             <View style={styles.dropdownIconContainer}>
               <Ionicons name="calendar-outline" size={18} color="#07a3e4" />
@@ -702,7 +704,7 @@ const AddMovementScreen = () => {
           value={selectedDate}
           display="default"
           onChange={onDateChange}
-          maximumDate={movementType === 'INCOME' && isRecurring ? undefined : new Date()}
+          maximumDate={isRecurring ? undefined : new Date()}
         />
       )}
 

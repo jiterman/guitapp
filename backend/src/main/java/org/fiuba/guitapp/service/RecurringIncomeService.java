@@ -51,6 +51,7 @@ public class RecurringIncomeService {
 
         RecurringIncome recurringIncome = new RecurringIncome();
         recurringIncome.setAmount(request.amount());
+        recurringIncome.setTitle(request.title());
         recurringIncome.setDescription(request.description());
         recurringIncome.setCategory(request.category());
         recurringIncome.setFrequency(request.frequency());
@@ -89,6 +90,9 @@ public class RecurringIncomeService {
 
         if (request.amount() != null) {
             recurringIncome.setAmount(request.amount());
+        }
+        if (request.title() != null) {
+            recurringIncome.setTitle(request.title());
         }
         if (request.description() != null) {
             recurringIncome.setDescription(request.description());
@@ -130,6 +134,7 @@ public class RecurringIncomeService {
         return new RecurringIncomeResponse(
                 recurringIncome.getId(),
                 recurringIncome.getAmount(),
+                recurringIncome.getTitle(),
                 recurringIncome.getDescription(),
                 recurringIncome.getCategory(),
                 recurringIncome.getFrequency(),

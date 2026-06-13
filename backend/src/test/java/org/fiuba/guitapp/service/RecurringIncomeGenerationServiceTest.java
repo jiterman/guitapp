@@ -51,6 +51,7 @@ class RecurringIncomeGenerationServiceTest {
         RecurringIncome template = new RecurringIncome();
         template.setId(UUID.randomUUID());
         template.setAmount(new BigDecimal("1000.00"));
+        template.setTitle("Monthly salary");
         template.setDescription("Salary");
         template.setCategory(IncomeCategory.SALARY);
         template.setFrequency(frequency);
@@ -121,6 +122,7 @@ class RecurringIncomeGenerationServiceTest {
         verify(incomeRepository).save(captor.capture());
         Income created = captor.getValue();
         assertEquals(new BigDecimal("1000.00"), created.getAmount());
+        assertEquals("Monthly salary", created.getTitle());
         assertEquals("Salary", created.getDescription());
         assertEquals(IncomeCategory.SALARY, created.getCategory());
         assertEquals(today, created.getDate());

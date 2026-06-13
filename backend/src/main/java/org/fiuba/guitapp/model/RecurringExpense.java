@@ -23,8 +23,8 @@ import lombok.Setter;
 @Getter
 @Setter
 @Entity
-@Table(name = "recurring_incomes")
-public class RecurringIncome {
+@Table(name = "recurring_expenses")
+public class RecurringExpense {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
@@ -45,7 +45,12 @@ public class RecurringIncome {
     @NotNull
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private IncomeCategory category;
+    private ExpenseCategory category;
+
+    @NotNull
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private ExpenseType type;
 
     @NotNull
     @Enumerated(EnumType.STRING)
