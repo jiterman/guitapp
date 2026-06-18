@@ -1,6 +1,6 @@
 <h1>
   GuitApp
-  <img src="./frontend/assets/splash-icon.svg" width="38" align="middle" style="margin-left: -6px;" />
+  <img src="./frontend/assets/splash-icon.svg" width="38" />
 </h1>
 
 <p>
