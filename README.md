@@ -1,15 +1,5 @@
 <h1>
-  GuitApp
-  <img
-    src="./frontend/assets/readme-splash-icon.png"
-    width="38"
-    style="
-      vertical-align: middle;
-      position: relative;
-      top: -3px;
-      margin-left: -4px;
-    "
-  />
+  GuitApp <img src="./frontend/assets/readme-splash-icon.png" width="38" />
 </h1>
 
 <p>
