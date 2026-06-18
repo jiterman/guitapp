@@ -1,9 +1,6 @@
-<table>
-  <tr>
-    <td><h1>GuitApp</h1></td>
-    <td><img src="./frontend/assets/splash-icon.png" width="38" /></td>
-  </tr>
-</table>
+<h1>
+  GuitApp&nbsp;<img src="./frontend/assets/splash-icon.png" width="38" align="center" />
+</h1>
 
 <p>
 
