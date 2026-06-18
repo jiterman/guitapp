@@ -1,5 +1,5 @@
 <h1>
-  GuitApp <sup style="vertical-align: middle;"><img src="./frontend/assets/splash-icon.png" width="38" /></sup>
+  GuitApp <img src="./frontend/assets/readme-splash-icon.png" width="38" />
 </h1>
 
 <p>
