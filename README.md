@@ -1,16 +1,9 @@
-<h1>
-  GuitApp
-  <img
-    src="./frontend/assets/splash-icon.png"
-    width="38"
-    style="
-      vertical-align: middle;
-      position: relative;
-      top: -3px;
-      margin-left: -4px;
-    "
-  />
-</h1>
+<table>
+  <tr>
+    <td><h1>GuitApp</h1></td>
+    <td><img src="./frontend/assets/splash-icon.png" width="38" /></td>
+  </tr>
+</table>
 
 <p>
 
