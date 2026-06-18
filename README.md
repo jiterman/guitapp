@@ -1,4 +1,24 @@
-# GuitApp
+<h1>
+  GuitApp
+  <img
+    src="./frontend/assets/splash-icon.png"
+    width="38"
+    style="
+      vertical-align: middle;
+      position: relative;
+      top: -3px;
+      margin-left: -4px;
+    "
+  />
+</h1>
+
+<p>
+
+Aplicación de gestión de gastos desarrollada como trabajo práctico de la materia <b>Gestión del Desarrollo de Sistemas Informáticos</b>.
+
+</p>
+
+---
 
 ## Tabla de Contenido
 
@@ -20,9 +40,11 @@
 
 ## Introducción
 
-GuitApp es una aplicación de gestión de gastos desarrollada como Trabajo Práctico de la facultad.
+GuitApp es una aplicación orientada al seguimiento de finanzas personales que busca reducir el esfuerzo manual de registrar movimientos y brindar mayor visibilidad sobre los hábitos de consumo.
 
-El proyecto está compuesto por una aplicación móvil desarrollada con React Native y Expo, junto con una API REST implementada en Spring Boot. La persistencia de datos se realiza mediante PostgreSQL y el despliegue se encuentra preparado para Render.
+La plataforma permite registrar ingresos y gastos, configurar movimientos recurrentes, organizar gastos por categorías y visualizar información mediante gráficos e informes periódicos.
+
+Además, incorpora funcionalidades de análisis y acompañamiento financiero como detección de patrones de consumo, alertas sobre desvíos respecto de objetivos definidos por el usuario, proyección de saldo y notificaciones configurables.
 
 ---
 
