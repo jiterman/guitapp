@@ -1,6 +1,30 @@
 # GuitApp
 
-Aplicación de gestión de gastos para el Trabajo Práctico de la facultad.
+## Tabla de Contenido
+
+* [Introducción](#introducción)
+* [Tecnologías](#tecnologías)
+* [Estructura del Proyecto](#estructura-del-proyecto)
+* [Pre-requisitos](#pre-requisitos)
+* [Configuración Local](#configuración-local)
+
+  * [Configuración Inicial](#configuración-inicial)
+  * [Backend](#backend)
+  * [Frontend](#frontend)
+* [Builds Mobile (EAS)](#builds-mobile-eas)
+* [Migraciones de Base de Datos](#migraciones-de-base-de-datos)
+
+  * [Llenar título a partir de la descripción](#llenar-título-a-partir-de-la-descripción)
+
+---
+
+## Introducción
+
+GuitApp es una aplicación de gestión de gastos desarrollada como Trabajo Práctico de la facultad.
+
+El proyecto está compuesto por una aplicación móvil desarrollada con React Native y Expo, junto con una API REST implementada en Spring Boot. La persistencia de datos se realiza mediante PostgreSQL y el despliegue se encuentra preparado para Render.
+
+---
 
 ## Tecnologías
 
@@ -9,47 +33,68 @@ Aplicación de gestión de gastos para el Trabajo Práctico de la facultad.
 - **Base de Datos**: PostgreSQL.
 - **Despliegue**: Render.
 
+---
+
 ## Estructura del Proyecto
 
 - `frontend/`: Aplicación móvil Expo.
 - `backend/`: API REST construida con Spring Boot.
 
-## Requisitos
+---
+
+## Pre-requisitos
+
+Para ejecutar el proyecto es necesario contar con las siguientes herramientas instaladas:
 
 - Node.js (v18+)
 - Java 21
 - Gradle
 - Expo CLI
 
+---
+
 ## Configuración Local
 
 ### Configuración Inicial
+
 1. Configurar Git hooks (formatea código automáticamente antes de commits):
    ```bash
    git config core.hooksPath .githooks
    ```
 
+---
+
 ### Backend
+
 1. Ir a la carpeta `backend`.
 2. Levantar la base de datos local: `make db-up`.
 3. Levantar redis: `make redis-up`.
 4. Compilar: `./gradlew clean build -x test`.
 5. Ejecutar: `./gradlew bootRun`.
 
+---
+
 ### Frontend
+
 1. Ir a la carpeta `frontend`.
 2. Instalar dependencias: `npm install`.
 3. Iniciar Expo: `npx expo start`.
 
-### Builds (EAS)
+---
 
-Requiere cuenta en [expo.dev](https://expo.dev) y EAS CLI:
+## Builds Mobile (EAS)
+
+La generación de builds móviles requiere contar con una cuenta en [expo.dev](https://expo.dev) y tener instalada la herramienta EAS CLI.
+
+### Instalación y configuración
 
 ```bash
 npm install -g eas-cli
 eas login
 eas init  # solo la primera vez, vincula el proyecto a tu cuenta
 ```
+
+### Perfiles disponibles
 
 | Perfil | Comando | Para qué sirve |
 |--------|---------|---------------|
@@ -58,6 +103,8 @@ eas init  # solo la primera vez, vincula el proyecto a tu cuenta
 | `production` | `eas build --profile production --platform android` | Build final (AAB) para publicar |
 
 > **Nota:** En Expo Go el splash screen y los íconos no se ven como en la build final. Usar `preview` o `development` build para verlos correctamente.
+
+---
 
 ## Migraciones de Base de Datos
 
