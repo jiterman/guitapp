@@ -17,6 +17,8 @@ Aplicación de gestión de gastos desarrollada como trabajo práctico de la mate
 * [Tecnologías](#tecnologías)
 * [Estructura del Proyecto](#estructura-del-proyecto)
 * [Pre-requisitos](#pre-requisitos)
+* [Variables de Entorno](#variables-de-entorno)
+* [Endpoints Públicos](#endpoints-públicos)
 * [Configuración Local](#configuración-local)
 
   * [Configuración Inicial](#configuración-inicial)
@@ -63,6 +65,53 @@ Para ejecutar el proyecto es necesario contar con las siguientes herramientas in
 - Java 21
 - Gradle
 - Expo CLI
+
+---
+
+## Variables de Entorno
+
+Para que la aplicación levante correctamente, es necesario configurar las siguientes variables de entorno en el sistema (las cuales son mapeadas directamente en el archivo `/backend/src/main/resources/application.properties`):
+
+| Variable | Descripción |
+| :--- | :--- |
+| `INTERNAL_API_KEY` | Clave secreta para la validación de acceso a los [endpoints públicos](#endpoints-públicos) de la aplicación. |
+| `DB_HOST` | Host de la base de datos PostgreSQL. |
+| `DB_PORT` | Puerto de la base de datos PostgreSQL. |
+| `DB_NAME` | Nombre de la base de datos del sistema. |
+| `DB_USER` | Usuario administrador de PostgreSQL. |
+| `DB_PASSWORD` | Contraseña del usuario de la base de datos. |
+| `MAIL_HOST` | Servidor SMTP para el envío de correos. |
+| `MAIL_PORT` | Puerto del servidor SMTP. |
+| `MAIL_USERNAME` | Dirección de correo electrónico emisor. |
+| `MAIL_PASSWORD` | Contraseña o token de aplicación del servicio de correo. |
+| `CLOUDINARY_CLOUD_NAME`| Nombre del cloud de Cloudinary (almacenamiento de imágenes de perfil de usuarios). |
+| `CLOUDINARY_API_KEY` | API Key de autenticación para Cloudinary. |
+| `CLOUDINARY_API_SECRET`| API Secret confidencial para la firma de subidas. |
+| `FIREBASE_CONFIG_PATH` | Ruta absoluta local al archivo JSON de credenciales de Firebase. |
+| `GEMINI_API_KEY` | API Key para las peticiones la IA Google Gemini. |
+
+---
+
+## Endpoints Públicos
+
+La aplicación expone ciertos endpoints que no requieren token de autenticación de usuario (`JWT`). Están destinados al procesamiento de rutinas y notificaciones periódicas, siendo ideales para ser invocados mediante tareas programadas externas (*cronjobs*) o automatizaciones del sistema. 
+
+> ⚠️ **Nota de seguridad:** Para consumir estos endpoints, es necesario incluir la `INTERNAL_API_KEY` configurada en las variables de entorno dentro de las cabeceras (*headers*) de la petición.
+
+| Endpoint | Descripción |
+| :--- | :--- |
+| `/api/summary/monthly/notify` | Disparador automático para el envío de resúmenes mensuales. |
+| `/api/notifications/daily/notify` | Disparador automático para alertas y notificaciones diarias. |
+| `/api/notifications/weekly/notify` | Disparador automático para alertas y notificaciones semanales. |
+| `/api/incomes/recurring/run` | Disparador para el registro automático de ingresos recurrentes. |
+| `/api/expenses/recurring/run` | Disparador para el registro automático de gastos recurrentes. |
+
+#### Ejemplo de ejecución con `curl`:
+
+```bash
+curl -X POST http://<APP_HOST>:<APP_PORT>/api/notifications/daily/notify \
+  -H "X-Internal-Key: <INTERNAL_API_KEY>"
+```
 
 ---
 
