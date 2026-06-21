@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import {
   View,
+  TextInput,
   TouchableOpacity,
   StyleSheet,
   Dimensions,
@@ -15,12 +16,16 @@ import { Ionicons } from '@expo/vector-icons';
 import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import { SvgXml } from 'react-native-svg';
 import FILTER_ICON from '../../../assets/icons/filterIcon';
+import { EXPENSE_CATEGORIES, INCOME_CATEGORIES } from '../../constants/categories';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 const vh = screenHeight / 100;
 
 export type FilterKind = 'day' | 'month' | 'year' | 'all';
 export type MovementTypeFilter = 'all' | 'income' | 'expense';
+export type ExpenseTypeFilter = 'all' | 'FIXED' | 'VARIABLE';
+
+type DropdownKey = 'filter' | 'month' | 'year' | 'category' | 'expenseType' | null;
 
 export interface FilterState {
   kind: FilterKind;
@@ -28,6 +33,10 @@ export interface FilterState {
   month: number;
   year: number;
   movementType: MovementTypeFilter;
+  // Selected category values. Empty array means "all categories".
+  categories?: string[];
+  expenseType?: ExpenseTypeFilter;
+  search?: string;
 }
 
 interface MovementFilterProps {
@@ -38,6 +47,9 @@ interface MovementFilterProps {
   initialYear?: number;
   initialMovementType?: MovementTypeFilter;
   hideMovementTypeFilter?: boolean;
+  // Enables the search bar plus the category and expense-type filters. Off by
+  // default so existing consumers (summary, charts) keep their simpler layout.
+  showAdvancedFilters?: boolean;
   externalModalVisible?: boolean;
   onExternalModalClose?: () => void;
 }
@@ -64,6 +76,24 @@ const MONTH_LABELS = [
   'Diciembre',
 ];
 
+// Combined, de-duplicated category list (income + expense share some values
+// like OTHER). Used by the multi-select category filter dropdown.
+const CATEGORY_OPTIONS: { key: string; label: string }[] = (() => {
+  const seen = new Map<string, string>();
+  [...EXPENSE_CATEGORIES, ...INCOME_CATEGORIES].forEach(category => {
+    if (!seen.has(category.value)) {
+      seen.set(category.value, category.label);
+    }
+  });
+  return Array.from(seen, ([key, label]) => ({ key, label }));
+})();
+
+const EXPENSE_TYPE_OPTIONS: { key: ExpenseTypeFilter; label: string }[] = [
+  { key: 'all', label: 'Todos' },
+  { key: 'FIXED', label: 'Fijo' },
+  { key: 'VARIABLE', label: 'Variable' },
+];
+
 interface InlineDropdownProps {
   options: { key: string; label: string }[];
   selectedKey: string;
@@ -88,7 +118,9 @@ const InlineDropdown: React.FC<InlineDropdownProps> = ({
   return (
     <View style={styles.dropdownContainer}>
       <TouchableOpacity style={styles.dropdownTrigger} onPress={onToggle} activeOpacity={0.8}>
-        <Text style={styles.dropdownTriggerText}>{selected?.label ?? ''}</Text>
+        <Text numberOfLines={1} style={styles.dropdownTriggerText}>
+          {selected?.label ?? ''}
+        </Text>
         <Ionicons name={isOpen ? 'chevron-up' : 'chevron-down'} size={18} color="#6b8aa1" />
       </TouchableOpacity>
 
@@ -108,6 +140,73 @@ const InlineDropdown: React.FC<InlineDropdownProps> = ({
                   onPress={() => onSelect(option.key)}
                 >
                   <Text
+                    numberOfLines={1}
+                    style={[styles.dropdownItemText, isSelected && styles.dropdownItemTextActive]}
+                  >
+                    {option.label}
+                  </Text>
+                  {isSelected && <Ionicons name="checkmark-circle" size={18} color="#07a3e4" />}
+                </TouchableOpacity>
+              );
+            })}
+          </ScrollView>
+        </View>
+      )}
+    </View>
+  );
+};
+
+interface MultiSelectDropdownProps {
+  options: { key: string; label: string }[];
+  selectedKeys: string[];
+  onToggleKey: (key: string) => void;
+  isOpen: boolean;
+  onToggle: () => void;
+  allLabel: string;
+}
+
+// Multi-select variant of InlineDropdown: items toggle on tap (the list stays
+// open) and the trigger summarizes the current selection.
+const MultiSelectDropdown: React.FC<MultiSelectDropdownProps> = ({
+  options,
+  selectedKeys,
+  onToggleKey,
+  isOpen,
+  onToggle,
+  allLabel,
+}) => {
+  const triggerLabel = (() => {
+    if (selectedKeys.length === 0) return allLabel;
+    if (selectedKeys.length === 1) {
+      return options.find(option => option.key === selectedKeys[0])?.label ?? allLabel;
+    }
+    return `${selectedKeys.length} seleccionadas`;
+  })();
+
+  return (
+    <View style={styles.dropdownContainer}>
+      <TouchableOpacity style={styles.dropdownTrigger} onPress={onToggle} activeOpacity={0.8}>
+        <Text style={styles.dropdownTriggerText}>{triggerLabel}</Text>
+        <Ionicons name={isOpen ? 'chevron-up' : 'chevron-down'} size={18} color="#6b8aa1" />
+      </TouchableOpacity>
+
+      {isOpen && (
+        <View style={styles.dropdownList}>
+          <ScrollView
+            showsVerticalScrollIndicator
+            nestedScrollEnabled
+            style={styles.dropdownScroll}
+          >
+            {options.map(option => {
+              const isSelected = selectedKeys.includes(option.key);
+              return (
+                <TouchableOpacity
+                  key={option.key}
+                  style={[styles.dropdownItem, isSelected && styles.dropdownItemActive]}
+                  onPress={() => onToggleKey(option.key)}
+                >
+                  <Text
+                    numberOfLines={1}
                     style={[styles.dropdownItemText, isSelected && styles.dropdownItemTextActive]}
                   >
                     {option.label}
@@ -131,6 +230,7 @@ const MovementFilter: React.FC<MovementFilterProps> = ({
   initialYear,
   initialMovementType = 'all',
   hideMovementTypeFilter = false,
+  showAdvancedFilters = false,
   externalModalVisible,
   onExternalModalClose,
 }) => {
@@ -145,6 +245,9 @@ const MovementFilter: React.FC<MovementFilterProps> = ({
   const [selectedDay, setSelectedDay] = useState<Date>(initialDay);
   const [selectedYear, setSelectedYear] = useState<number>(initialYear ?? now.getFullYear());
   const [selectedMonth, setSelectedMonth] = useState<number>(initialMonth ?? now.getMonth() + 1);
+  const [categories, setCategories] = useState<string[]>([]);
+  const [expenseType, setExpenseType] = useState<ExpenseTypeFilter>('all');
+  const [search, setSearch] = useState('');
   const [isDayPickerVisible, setIsDayPickerVisible] = useState(false);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [sheetAnim] = useState(() => new Animated.Value(0));
@@ -152,7 +255,9 @@ const MovementFilter: React.FC<MovementFilterProps> = ({
   const [draftDay, setDraftDay] = useState(selectedDay);
   const [draftMonth, setDraftMonth] = useState(selectedMonth);
   const [draftYear, setDraftYear] = useState(selectedYear);
-  const [openDropdown, setOpenDropdown] = useState<'filter' | 'month' | 'year' | null>(null);
+  const [draftCategories, setDraftCategories] = useState<string[]>(categories);
+  const [draftExpenseType, setDraftExpenseType] = useState(expenseType);
+  const [openDropdown, setOpenDropdown] = useState<DropdownKey>(null);
 
   const years = useMemo(() => {
     const currentYear = now.getFullYear();
@@ -160,7 +265,8 @@ const MovementFilter: React.FC<MovementFilterProps> = ({
   }, [now]);
 
   const monthOptions = useMemo(
-    () => MONTH_LABELS.map((label, index) => ({ key: String(index + 1), label })),
+    () =>
+      MONTH_LABELS.map((label, index) => ({ key: String(index + 1), label: label.slice(0, 3) })),
     []
   );
   const yearOptions = useMemo(
@@ -175,10 +281,23 @@ const MovementFilter: React.FC<MovementFilterProps> = ({
       month: selectedMonth,
       year: selectedYear,
       movementType,
+      categories,
+      expenseType,
+      search: search.trim(),
     });
-  }, [filterIndex, selectedDay, selectedMonth, selectedYear, movementType, onChange]);
+  }, [
+    filterIndex,
+    selectedDay,
+    selectedMonth,
+    selectedYear,
+    movementType,
+    categories,
+    expenseType,
+    search,
+    onChange,
+  ]);
 
-  const toggleDropdown = (dropdown: 'filter' | 'month' | 'year') => {
+  const toggleDropdown = (dropdown: Exclude<DropdownKey, null>) => {
     setOpenDropdown(prev => (prev === dropdown ? null : dropdown));
   };
 
@@ -202,6 +321,17 @@ const MovementFilter: React.FC<MovementFilterProps> = ({
     setOpenDropdown(null);
   };
 
+  const toggleDraftCategory = (key: string) => {
+    setDraftCategories(prev =>
+      prev.includes(key) ? prev.filter(value => value !== key) : [...prev, key]
+    );
+  };
+
+  const handleExpenseTypeSelect = (key: string) => {
+    setDraftExpenseType(key as ExpenseTypeFilter);
+    setOpenDropdown(null);
+  };
+
   const draftKind = FILTER_OPTIONS[draftFilterIndex].key;
 
   const openModal = () => {
@@ -209,6 +339,8 @@ const MovementFilter: React.FC<MovementFilterProps> = ({
     setDraftDay(selectedDay);
     setDraftMonth(selectedMonth);
     setDraftYear(selectedYear);
+    setDraftCategories(categories);
+    setDraftExpenseType(expenseType);
     setOpenDropdown(null);
     setIsModalVisible(true);
   };
@@ -233,6 +365,8 @@ const MovementFilter: React.FC<MovementFilterProps> = ({
     setSelectedDay(draftDay);
     setSelectedMonth(draftMonth);
     setSelectedYear(draftYear);
+    setCategories(draftCategories);
+    setExpenseType(draftExpenseType);
     setOpenDropdown(null);
     Animated.timing(sheetAnim, {
       toValue: 0,
@@ -242,6 +376,23 @@ const MovementFilter: React.FC<MovementFilterProps> = ({
       setIsModalVisible(false);
       setIsDayPickerVisible(false);
     });
+  };
+
+  // Resets the draft state inside the modal back to defaults (no committed
+  // change until the user taps "Guardar").
+  const resetDraftFilters = () => {
+    setDraftFilterIndex(
+      Math.max(
+        FILTER_OPTIONS.findIndex(option => option.key === initialKind),
+        0
+      )
+    );
+    setDraftDay(initialDay);
+    setDraftMonth(initialMonth ?? now.getMonth() + 1);
+    setDraftYear(initialYear ?? now.getFullYear());
+    setDraftCategories([]);
+    setDraftExpenseType('all');
+    setOpenDropdown(null);
   };
 
   const onDraftDayChange = (event: DateTimePickerEvent, date?: Date) => {
@@ -257,6 +408,19 @@ const MovementFilter: React.FC<MovementFilterProps> = ({
   const toggleMovementType = (next: MovementTypeFilter) => {
     setMovementType(prev => (prev === next ? 'all' : next));
   };
+
+  // Whether any filter differs from its default. Used to highlight the
+  // "Filtros" button instead of rendering a chips row. The period (kind) is
+  // considered active whenever it differs from the screen's initial kind.
+  const hasActiveFilters = useMemo(
+    () =>
+      FILTER_OPTIONS[filterIndex].key !== initialKind ||
+      movementType !== 'all' ||
+      categories.length > 0 ||
+      expenseType !== 'all' ||
+      search.trim().length > 0,
+    [filterIndex, initialKind, movementType, categories, expenseType, search]
+  );
 
   useEffect(() => {
     if (externalModalVisible !== undefined) {
@@ -282,6 +446,25 @@ const MovementFilter: React.FC<MovementFilterProps> = ({
 
   return (
     <View style={styles.filterContainer}>
+      {!isExternallyControlled && showAdvancedFilters && (
+        <View style={styles.searchBar}>
+          <Ionicons name="search" size={18} color="#6b8aa1" />
+          <TextInput
+            value={search}
+            onChangeText={setSearch}
+            placeholder="Buscar por título..."
+            placeholderTextColor="#9bb0c1"
+            style={styles.searchInput}
+            returnKeyType="search"
+          />
+          {search.length > 0 && (
+            <TouchableOpacity onPress={() => setSearch('')} hitSlop={8}>
+              <Ionicons name="close-circle" size={18} color="#9bb0c1" />
+            </TouchableOpacity>
+          )}
+        </View>
+      )}
+
       {!isExternallyControlled && (
         <View style={styles.actionsRow}>
           {!hideMovementTypeFilter && (
@@ -306,9 +489,17 @@ const MovementFilter: React.FC<MovementFilterProps> = ({
               </TouchableOpacity>
             </>
           )}
-          <TouchableOpacity onPress={openModal} style={styles.filterButton}>
+          <TouchableOpacity
+            onPress={openModal}
+            style={[styles.filterButton, hasActiveFilters && styles.filterButtonActive]}
+          >
             <SvgXml xml={FILTER_ICON} width={18} height={18} />
-            <Text style={styles.filterButtonText}>Filtros</Text>
+            <Text
+              style={[styles.filterButtonText, hasActiveFilters && styles.filterButtonTextActive]}
+            >
+              Filtros
+            </Text>
+            {hasActiveFilters && <View style={styles.filterActiveDot} />}
           </TouchableOpacity>
         </View>
       )}
@@ -338,77 +529,111 @@ const MovementFilter: React.FC<MovementFilterProps> = ({
               </TouchableOpacity>
             </View>
 
-            <View style={styles.modalRow}>
-              <Text style={styles.modalLabel}>Ver por</Text>
-              <InlineDropdown
-                options={FILTER_OPTIONS}
-                selectedKey={draftKind}
-                onSelect={handleFilterSelect}
-                isOpen={openDropdown === 'filter'}
-                onToggle={() => toggleDropdown('filter')}
-              />
-            </View>
-
-            <View style={styles.modalRow}>
-              {draftKind === 'day' && (
-                <>
-                  <Text style={styles.modalLabel}>Día</Text>
-                  <TouchableOpacity
-                    onPress={() => setIsDayPickerVisible(true)}
-                    style={styles.modalPickerButton}
+            <ScrollView
+              style={styles.modalScroll}
+              keyboardShouldPersistTaps="handled"
+              showsVerticalScrollIndicator={false}
+            >
+              <View style={styles.modalRow}>
+                <Text style={styles.modalLabel}>Ver por</Text>
+                <View style={styles.periodControls}>
+                  <View
+                    style={
+                      draftKind === 'all' || draftKind === 'month'
+                        ? styles.periodFlex
+                        : styles.periodKind
+                    }
                   >
-                    <Text>{draftDay.toLocaleDateString('es-AR')}</Text>
-                  </TouchableOpacity>
-                </>
-              )}
+                    <InlineDropdown
+                      options={FILTER_OPTIONS}
+                      selectedKey={draftKind}
+                      onSelect={handleFilterSelect}
+                      isOpen={openDropdown === 'filter'}
+                      onToggle={() => toggleDropdown('filter')}
+                    />
+                  </View>
 
-              {draftKind === 'month' && (
+                  {draftKind === 'day' && (
+                    <TouchableOpacity
+                      onPress={() => setIsDayPickerVisible(true)}
+                      style={styles.periodPickerButton}
+                    >
+                      <Text>{draftDay.toLocaleDateString('es-AR')}</Text>
+                    </TouchableOpacity>
+                  )}
+
+                  {draftKind === 'month' && (
+                    <>
+                      <View style={styles.periodFlex}>
+                        <InlineDropdown
+                          options={monthOptions}
+                          selectedKey={String(draftMonth)}
+                          onSelect={handleMonthSelect}
+                          isOpen={openDropdown === 'month'}
+                          onToggle={() => toggleDropdown('month')}
+                        />
+                      </View>
+                      <View style={styles.periodFlex}>
+                        <InlineDropdown
+                          options={yearOptions}
+                          selectedKey={String(draftYear)}
+                          onSelect={handleYearSelect}
+                          isOpen={openDropdown === 'year'}
+                          onToggle={() => toggleDropdown('year')}
+                        />
+                      </View>
+                    </>
+                  )}
+
+                  {draftKind === 'year' && (
+                    <View style={styles.periodFlex}>
+                      <InlineDropdown
+                        options={yearOptions}
+                        selectedKey={String(draftYear)}
+                        onSelect={handleYearSelect}
+                        isOpen={openDropdown === 'year'}
+                        onToggle={() => toggleDropdown('year')}
+                      />
+                    </View>
+                  )}
+                </View>
+              </View>
+
+              {showAdvancedFilters && (
                 <>
-                  <Text style={styles.modalLabel}>Mes</Text>
-                  <InlineDropdown
-                    options={monthOptions}
-                    selectedKey={String(draftMonth)}
-                    onSelect={handleMonthSelect}
-                    isOpen={openDropdown === 'month'}
-                    onToggle={() => toggleDropdown('month')}
-                  />
+                  <View style={styles.modalDivider} />
+
+                  <View style={styles.modalRow}>
+                    <Text style={styles.modalLabel}>Categoría</Text>
+                    <MultiSelectDropdown
+                      options={CATEGORY_OPTIONS}
+                      selectedKeys={draftCategories}
+                      onToggleKey={toggleDraftCategory}
+                      isOpen={openDropdown === 'category'}
+                      onToggle={() => toggleDropdown('category')}
+                      allLabel="Todas"
+                    />
+                  </View>
+
+                  <View style={styles.modalRow}>
+                    <Text style={styles.modalLabel}>Tipo</Text>
+                    <InlineDropdown
+                      options={EXPENSE_TYPE_OPTIONS}
+                      selectedKey={draftExpenseType}
+                      onSelect={handleExpenseTypeSelect}
+                      isOpen={openDropdown === 'expenseType'}
+                      onToggle={() => toggleDropdown('expenseType')}
+                    />
+                  </View>
                 </>
               )}
-
-              {draftKind === 'year' && (
-                <>
-                  <Text style={styles.modalLabel}>Año</Text>
-                  <InlineDropdown
-                    options={yearOptions}
-                    selectedKey={String(draftYear)}
-                    onSelect={handleYearSelect}
-                    isOpen={openDropdown === 'year'}
-                    onToggle={() => toggleDropdown('year')}
-                  />
-                </>
-              )}
-
-              {draftKind === 'all' && <View style={styles.modalPlaceholder} />}
-            </View>
-
-            <View style={styles.modalRow}>
-              {draftKind === 'month' && (
-                <>
-                  <Text style={styles.modalLabel}>Año</Text>
-                  <InlineDropdown
-                    options={yearOptions}
-                    selectedKey={String(draftYear)}
-                    onSelect={handleYearSelect}
-                    isOpen={openDropdown === 'year'}
-                    onToggle={() => toggleDropdown('year')}
-                  />
-                </>
-              )}
-
-              {draftKind !== 'month' && <View style={styles.modalPlaceholder} />}
-            </View>
+            </ScrollView>
 
             <View style={styles.modalFooter}>
+              <TouchableOpacity onPress={resetDraftFilters} style={styles.resetButton}>
+                <Ionicons name="refresh" size={16} color="#07a3e4" />
+                <Text style={styles.resetButtonText}>Restablecer</Text>
+              </TouchableOpacity>
               <TouchableOpacity onPress={saveModal} style={styles.saveButton}>
                 <Text style={styles.saveButtonText}>Guardar</Text>
               </TouchableOpacity>
@@ -432,6 +657,24 @@ const MovementFilter: React.FC<MovementFilterProps> = ({
 const styles = StyleSheet.create({
   filterContainer: {
     marginBottom: vh * 2,
+  },
+  searchBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: '#fff',
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: '#D8E6F1',
+    paddingHorizontal: 12,
+    minHeight: vh * 5.2,
+    marginBottom: vh * 1.2,
+  },
+  searchInput: {
+    flex: 1,
+    color: '#003366',
+    fontSize: 14,
+    paddingVertical: 0,
   },
   actionsRow: {
     flexDirection: 'row',
@@ -481,10 +724,26 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#D8E6F1',
   },
+  filterButtonActive: {
+    backgroundColor: '#E6F4FA',
+    borderColor: '#07a3e4',
+  },
   filterButtonText: {
     color: '#003366',
     fontWeight: '700',
     fontSize: 14,
+  },
+  filterButtonTextActive: {
+    color: '#07a3e4',
+  },
+  filterActiveDot: {
+    position: 'absolute',
+    top: 6,
+    right: 6,
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#07a3e4',
   },
   modalOverlay: {
     flex: 1,
@@ -498,6 +757,15 @@ const styles = StyleSheet.create({
     paddingHorizontal: screenWidth * 0.05,
     paddingTop: vh * 2,
     paddingBottom: vh * 3,
+    maxHeight: vh * 85,
+  },
+  modalScroll: {
+    flexGrow: 0,
+  },
+  modalDivider: {
+    height: 1,
+    backgroundColor: '#EEF6FB',
+    marginBottom: vh * 1.6,
   },
   modalHeader: {
     flexDirection: 'row',
@@ -542,6 +810,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
   },
   dropdownTriggerText: {
+    flexShrink: 1,
     color: '#003366',
     fontSize: 14,
   },
@@ -569,6 +838,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#E6F4FA',
   },
   dropdownItemText: {
+    flexShrink: 1,
     color: '#003366',
     fontSize: 14,
   },
@@ -576,7 +846,22 @@ const styles = StyleSheet.create({
     color: '#07a3e4',
     fontWeight: '700',
   },
-  modalPickerButton: {
+  periodControls: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: screenWidth * 0.02,
+  },
+  // Narrower "Ver por" dropdown (vs. flex:1) when a single dependent selector
+  // sits beside it in day/year mode. Flex-based to avoid a fixed width getting
+  // stuck in Yoga when the style switches back to periodFlex in month mode.
+  periodKind: {
+    flex: 0.7,
+  },
+  periodFlex: {
+    flex: 1,
+  },
+  periodPickerButton: {
     flex: 1,
     height: vh * 5.2,
     backgroundColor: '#F5F8FA',
@@ -584,14 +869,23 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  modalPlaceholder: {
-    flex: 1,
-    height: vh * 5.2,
-  },
   modalFooter: {
     flexDirection: 'row',
-    justifyContent: 'flex-end',
+    alignItems: 'center',
+    justifyContent: 'space-between',
     marginTop: vh,
+  },
+  resetButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingVertical: vh * 1.2,
+    paddingHorizontal: screenWidth * 0.02,
+  },
+  resetButtonText: {
+    color: '#07a3e4',
+    fontWeight: '700',
+    fontSize: 14,
   },
   saveButton: {
     backgroundColor: '#1a9e5c',

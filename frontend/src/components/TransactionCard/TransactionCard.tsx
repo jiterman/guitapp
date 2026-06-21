@@ -49,13 +49,13 @@ const TransactionCard: React.FC<Props> = ({ movement, onPress }) => {
       </View>
       <View style={styles.right}>
         {movement.type === 'EXPENSE' && movement.expenseType === 'FIXED' && (
-          <View style={styles.badge}>
-            <Text style={styles.badgeText}>FIJO</Text>
+          <View style={[styles.badge, styles.badgeFixed]}>
+            <Text style={[styles.badgeText, styles.badgeTextFixed]}>FIJO</Text>
           </View>
         )}
         {movement.type === 'EXPENSE' && movement.expenseType === 'VARIABLE' && (
-          <View style={styles.badgeVariable}>
-            <Text style={styles.badgeText}>VAR.</Text>
+          <View style={[styles.badge, styles.badgeVariable]}>
+            <Text style={[styles.badgeText, styles.badgeTextVariable]}>VAR.</Text>
           </View>
         )}
         <Text style={movement.type === 'INCOME' ? styles.incomeAmount : styles.expenseAmount}>
@@ -90,21 +90,28 @@ const styles = StyleSheet.create({
   badge: {
     marginBottom: 4,
     paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 12,
-    backgroundColor: '#c0392b',
+    paddingVertical: 3,
+    borderRadius: 10,
+    borderWidth: 1,
+  },
+  badgeFixed: {
+    backgroundColor: 'rgba(192,57,43,0.10)',
+    borderColor: 'rgba(192,57,43,0.25)',
   },
   badgeVariable: {
-    marginBottom: 4,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 12,
-    backgroundColor: '#c0392b',
+    backgroundColor: 'rgba(245,166,35,0.14)',
+    borderColor: 'rgba(245,166,35,0.35)',
   },
   badgeText: {
-    color: '#fff',
     fontWeight: '700',
     fontSize: 11,
+    letterSpacing: 0.3,
+  },
+  badgeTextFixed: {
+    color: '#c0392b',
+  },
+  badgeTextVariable: {
+    color: '#b8860b',
   },
   incomeAmount: { color: '#1a9e5c', fontWeight: '700' },
   expenseAmount: { color: '#c0392b', fontWeight: '700' },

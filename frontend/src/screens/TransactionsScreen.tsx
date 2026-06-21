@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { View, FlatList, StyleSheet, Dimensions } from 'react-native';
 import { Layout, Text } from '@ui-kitten/components';
+import { Ionicons } from '@expo/vector-icons';
 import { movementService, MovementResponse } from '../services/movementService';
 import TransactionCard from '../components/TransactionCard/TransactionCard';
 import MovementFilter, { FilterState } from '../components/MovementFilter/MovementFilter';
@@ -18,17 +19,27 @@ const buildInitialFilter = (): FilterState => {
     month: now.getMonth() + 1,
     year: now.getFullYear(),
     movementType: 'all',
+    categories: [],
+    expenseType: 'all',
+    search: '',
   };
 };
 
-const applyTypeFilter = (data: MovementResponse[], movementType: FilterState['movementType']) => {
-  if (movementType === 'income') {
-    return data.filter(movement => movement.type === 'INCOME');
-  }
-  if (movementType === 'expense') {
-    return data.filter(movement => movement.type === 'EXPENSE');
-  }
-  return data;
+const applyClientFilters = (data: MovementResponse[], filter: FilterState) => {
+  const { movementType, categories, expenseType, search } = filter;
+  const normalizedSearch = search?.trim().toLowerCase() ?? '';
+
+  return data.filter(movement => {
+    if (movementType === 'income' && movement.type !== 'INCOME') return false;
+    if (movementType === 'expense' && movement.type !== 'EXPENSE') return false;
+    const hasCategoryFilter = !!categories && categories.length > 0;
+    if (hasCategoryFilter && !(movement.category && categories.includes(movement.category))) {
+      return false;
+    }
+    if (expenseType && expenseType !== 'all' && movement.expenseType !== expenseType) return false;
+    if (normalizedSearch && !movement.title?.toLowerCase().includes(normalizedSearch)) return false;
+    return true;
+  });
 };
 
 const TransactionsScreen: React.FC = () => {
@@ -41,7 +52,7 @@ const TransactionsScreen: React.FC = () => {
     let mounted = true;
     (async () => {
       try {
-        const { kind, day, month, year, movementType } = filterState;
+        const { kind, day, month, year } = filterState;
         let data: MovementResponse[] = [];
 
         if (kind === 'all') {
@@ -55,7 +66,7 @@ const TransactionsScreen: React.FC = () => {
           data = await movementService.getMovementsByYear(year);
         }
 
-        if (mounted) setMovements(applyTypeFilter(data, movementType));
+        if (mounted) setMovements(applyClientFilters(data, filterState));
       } catch {
         if (mounted) setMovements([]);
       }
@@ -80,21 +91,41 @@ const TransactionsScreen: React.FC = () => {
 
   return (
     <Layout style={styles.container}>
-      <Text style={styles.title}>Últimos movimientos</Text>
-
-      <MovementFilter onChange={setFilterState} initialKind="all" />
-
-      <FlatList
-        data={movements}
-        keyExtractor={i => i.id}
-        renderItem={renderItem}
-        ItemSeparatorComponent={() => <View style={styles.separator} />}
-        ListEmptyComponent={
-          <View style={styles.emptyContainer}>
-            <Text appearance="hint">No hay movimientos para este filtro.</Text>
+      <View style={styles.header}>
+        <Text style={styles.title}>Movimientos</Text>
+        {movements.length > 0 && (
+          <View style={styles.countBadge}>
+            <Text style={styles.countText}>{movements.length}</Text>
           </View>
-        }
-      />
+        )}
+      </View>
+
+      <MovementFilter onChange={setFilterState} initialKind="all" showAdvancedFilters />
+
+      {movements.length === 0 ? (
+        <View style={styles.emptyCard}>
+          <View style={styles.emptyIconContainer}>
+            <Ionicons name="receipt-outline" size={36} color="#07a3e4" />
+          </View>
+          <View style={styles.emptyTextContainer}>
+            <Text style={styles.emptyTitle}>No hay movimientos</Text>
+            <Text style={styles.emptySubText}>
+              No encontramos movimientos para este filtro. Probá con otro período.
+            </Text>
+          </View>
+        </View>
+      ) : (
+        <View style={styles.listCard}>
+          <FlatList
+            data={movements}
+            keyExtractor={i => i.id}
+            renderItem={renderItem}
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={styles.listContent}
+            ItemSeparatorComponent={() => <View style={styles.separator} />}
+          />
+        </View>
+      )}
     </Layout>
   );
 };
@@ -103,21 +134,85 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: screenWidth * 0.05,
+    paddingTop: vh * 3,
     backgroundColor: '#E6F2FC',
   },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    marginBottom: vh * 1.5,
+  },
   title: {
-    marginBottom: vh * 1.2,
     color: '#003366',
     fontWeight: '700',
     fontSize: 22,
+  },
+  countBadge: {
+    minWidth: 26,
+    height: 26,
+    paddingHorizontal: 8,
+    borderRadius: 13,
+    backgroundColor: '#07a3e4',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  countText: {
+    color: '#fff',
+    fontWeight: '700',
+    fontSize: 13,
+  },
+  listCard: {
+    flex: 1,
+    backgroundColor: '#fff',
+    borderRadius: 14,
+    paddingHorizontal: screenWidth * 0.04,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 6,
+    elevation: 3,
+  },
+  listContent: {
+    paddingVertical: vh * 0.5,
   },
   separator: {
     height: 1,
     backgroundColor: '#EEF6FB',
   },
-  emptyContainer: {
-    paddingVertical: vh * 2,
+  emptyCard: {
+    backgroundColor: '#fff',
+    borderRadius: 14,
+    padding: vh * 2,
+    flexDirection: 'row',
     alignItems: 'center',
+    gap: 14,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 6,
+    elevation: 3,
+  },
+  emptyIconContainer: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: '#E6F2FC',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  emptyTextContainer: {
+    flex: 1,
+  },
+  emptyTitle: {
+    color: '#003366',
+    fontSize: 15,
+    fontWeight: '700',
+    marginBottom: 4,
+  },
+  emptySubText: {
+    color: '#006699',
+    fontSize: 13,
   },
 });
 
