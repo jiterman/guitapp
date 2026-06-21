@@ -29,7 +29,7 @@ export const EXPENSE_CATEGORIES: ExpenseCategoryOption[] = [
     icon: 'bus-outline',
     defaultType: 'VARIABLE',
   },
-  { label: 'Combustible', value: 'FUEL', icon: 'water-outline', defaultType: 'VARIABLE' },
+  { label: 'Combustible', value: 'FUEL', icon: 'flame-outline', defaultType: 'VARIABLE' },
   { label: 'Taxi/Uber', value: 'TAXI', icon: 'car-outline', defaultType: 'VARIABLE' },
   { label: 'Servicios', value: 'UTILITIES', icon: 'flash-outline', defaultType: 'FIXED' },
   { label: 'Alquiler', value: 'RENT', icon: 'home-outline', defaultType: 'FIXED' },
@@ -46,7 +46,7 @@ export const EXPENSE_CATEGORIES: ExpenseCategoryOption[] = [
   {
     label: 'Suscripciones',
     value: 'SUBSCRIPTIONS',
-    icon: 'logo-youtube',
+    icon: 'play-circle-outline',
     defaultType: 'FIXED',
   },
   { label: 'Salidas', value: 'OUTINGS', icon: 'wine-outline', defaultType: 'VARIABLE' },
