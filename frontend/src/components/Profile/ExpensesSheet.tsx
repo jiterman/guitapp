@@ -13,6 +13,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { Text } from '@ui-kitten/components';
 import ExpensesEditor from './ExpensesEditor';
 import { profileModalStyles, profileSharedStyles } from '../../styles/profileStyles';
+import { useDialog } from '../../context/dialog';
 
 type Props = {
   visible: boolean;
@@ -35,11 +36,16 @@ const ExpensesSheet: React.FC<Props> = ({
   error,
   onInputChange,
 }) => {
+  const { alert } = useDialog();
+
   const handleSave = async (f: number, v: number, income: number) => {
     const result = await onSave(f, v, income);
     if (result) {
       onClose();
-      alert('Estructura de gastos actualizada correctamente');
+      await alert({
+        title: 'Listo',
+        message: 'Estructura de gastos actualizada correctamente',
+      });
     }
   };
 

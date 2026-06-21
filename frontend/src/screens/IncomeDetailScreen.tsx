@@ -1,9 +1,10 @@
 import React, { useCallback, useMemo, useState } from 'react';
-import { Alert, ScrollView, TouchableOpacity, View } from 'react-native';
+import { ScrollView, TouchableOpacity, View } from 'react-native';
 import { Layout, Text } from '@ui-kitten/components';
 import { Ionicons, Feather } from '@expo/vector-icons';
 import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import ExpandableField from '../components/ExpandableField/ExpandableField';
+import { useDialog } from '../context/dialog';
 import type { IncomeResponse } from '../services/incomeService';
 import { incomeService } from '../services/incomeService';
 import { getCategoryLabel, getCategoryIcon } from '../constants/categories';
@@ -17,6 +18,7 @@ const IncomeDetailScreen: React.FC = () => {
   const [income, setIncome] = useState<IncomeResponse | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isDeleting, setIsDeleting] = useState<boolean>(false);
+  const { alert, confirm } = useDialog();
 
   useFocusEffect(
     useCallback(() => {
@@ -50,26 +52,25 @@ const IncomeDetailScreen: React.FC = () => {
     return getCategoryLabel(income.category, 'INCOME');
   }, [isLoading, income]);
 
-  const onDeletePress = () => {
+  const onDeletePress = async () => {
     if (!incomeId) return;
-    Alert.alert('Eliminar ingreso', '¿Seguro que querés eliminar este ingreso?', [
-      { text: 'Cancelar', style: 'cancel' },
-      {
-        text: 'Eliminar',
-        style: 'destructive',
-        onPress: async () => {
-          try {
-            setIsDeleting(true);
-            await incomeService.deleteIncome(incomeId);
-            router.back();
-          } catch {
-            Alert.alert('Error', 'No se pudo eliminar el ingreso.');
-          } finally {
-            setIsDeleting(false);
-          }
-        },
-      },
-    ]);
+    const confirmed = await confirm({
+      title: 'Eliminar ingreso',
+      message: '¿Seguro que querés eliminar este ingreso?',
+      confirmText: 'Eliminar',
+      cancelText: 'Cancelar',
+      variant: 'destructive',
+    });
+    if (!confirmed) return;
+    try {
+      setIsDeleting(true);
+      await incomeService.deleteIncome(incomeId);
+      router.back();
+    } catch {
+      await alert({ title: 'Error', message: 'No se pudo eliminar el ingreso.' });
+    } finally {
+      setIsDeleting(false);
+    }
   };
 
   const onEditPress = () => {

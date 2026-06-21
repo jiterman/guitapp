@@ -1,7 +1,8 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { View, TextInput, TouchableOpacity, StyleSheet, Alert } from 'react-native';
+import { View, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
 import { Text } from '@ui-kitten/components';
 import { Ionicons } from '@expo/vector-icons';
+import { useDialog } from '../../context/dialog';
 
 type PersonalInfoEditorProps = {
   firstName: string;
@@ -28,6 +29,8 @@ const PersonalInfoEditor: React.FC<PersonalInfoEditorProps> = ({
 
   const [nameError, setNameError] = useState<string | null>(null);
   const [emailError, setEmailError] = useState<string | null>(null);
+
+  const { confirm } = useDialog();
 
   useEffect(() => setDraftFirstName(firstName), [firstName]);
   useEffect(() => setDraftLastName(lastName), [lastName]);
@@ -66,17 +69,15 @@ const PersonalInfoEditor: React.FC<PersonalInfoEditorProps> = ({
       return;
     }
 
-    Alert.alert(
-      'Cambiar correo electrónico',
-      'Si cambias tu correo, deberás verificar el nuevo mail...',
-      [
-        { text: 'Cancelar', style: 'cancel' },
-        {
-          text: 'Continuar',
-          onPress: () => confirmEmailChange(),
-        },
-      ]
-    );
+    const confirmed = await confirm({
+      title: 'Cambiar correo electrónico',
+      message: 'Te enviaremos un enlace de verificación al nuevo correo para confirmar el cambio.',
+      confirmText: 'Continuar',
+      cancelText: 'Cancelar',
+    });
+    if (confirmed) {
+      await confirmEmailChange();
+    }
   };
 
   const confirmEmailChange = async () => {

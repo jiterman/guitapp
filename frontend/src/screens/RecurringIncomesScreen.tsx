@@ -1,5 +1,5 @@
 import React, { useCallback, useState } from 'react';
-import { View, ScrollView, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
+import { View, ScrollView, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { Layout, Text } from '@ui-kitten/components';
 import { Ionicons } from '@expo/vector-icons';
 import { router, useFocusEffect } from 'expo-router';
@@ -12,6 +12,7 @@ import { getCategoryIcon, getCategoryLabel } from '../constants/categories';
 import { detailScreenStyles } from '../styles/detailScreenStyles';
 import { recurringIncomeStyles as styles } from '../styles/recurringIncomeStyles';
 import { formatDate } from '../utils/dateFormatter';
+import { useDialog } from '../context/dialog';
 
 const formatMoney = (amount: number) => new Intl.NumberFormat('es-AR').format(Number(amount));
 
@@ -25,6 +26,7 @@ const displayTitle = (item: RecurringIncomeResponse): string => {
 };
 
 const RecurringIncomesScreen = () => {
+  const { alert, confirm } = useDialog();
   const [items, setItems] = useState<RecurringIncomeResponse[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -33,11 +35,11 @@ const RecurringIncomesScreen = () => {
       const data = await recurringIncomeService.getRecurringIncomes();
       setItems(data);
     } catch {
-      Alert.alert('Error', 'No se pudieron cargar los ingresos recurrentes.');
+      await alert({ title: 'Error', message: 'No se pudieron cargar los ingresos recurrentes.' });
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [alert]);
 
   useFocusEffect(
     useCallback(() => {
@@ -51,30 +53,27 @@ const RecurringIncomesScreen = () => {
       await recurringIncomeService.updateRecurringIncome(item.id, { active: !item.active });
       loadItems();
     } catch {
-      Alert.alert('Error', 'No se pudo actualizar el ingreso recurrente.');
+      await alert({ title: 'Error', message: 'No se pudo actualizar el ingreso recurrente.' });
     }
   };
 
-  const handleDelete = (item: RecurringIncomeResponse) => {
-    Alert.alert(
-      'Eliminar ingreso recurrente',
-      '¿Seguro que querés eliminar este ingreso recurrente? No se borrarán los ingresos ya generados.',
-      [
-        { text: 'Cancelar', style: 'cancel' },
-        {
-          text: 'Eliminar',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              await recurringIncomeService.deleteRecurringIncome(item.id);
-              loadItems();
-            } catch {
-              Alert.alert('Error', 'No se pudo eliminar el ingreso recurrente.');
-            }
-          },
-        },
-      ]
-    );
+  const handleDelete = async (item: RecurringIncomeResponse) => {
+    const confirmed = await confirm({
+      title: 'Eliminar ingreso recurrente',
+      message:
+        '¿Seguro que querés eliminar este ingreso recurrente? No se borrarán los ingresos ya generados.',
+      confirmText: 'Eliminar',
+      cancelText: 'Cancelar',
+      variant: 'destructive',
+    });
+    if (!confirmed) return;
+
+    try {
+      await recurringIncomeService.deleteRecurringIncome(item.id);
+      loadItems();
+    } catch {
+      await alert({ title: 'Error', message: 'No se pudo eliminar el ingreso recurrente.' });
+    }
   };
 
   return (

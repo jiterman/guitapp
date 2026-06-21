@@ -6,13 +6,13 @@ import {
   StyleSheet,
   Dimensions,
   ActivityIndicator,
-  Alert,
 } from 'react-native';
 import { Text } from '@ui-kitten/components';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import * as ImagePicker from 'expo-image-picker';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useDialog } from '../../context/dialog';
 
 const { width: screenWidth } = Dimensions.get('window');
 
@@ -26,6 +26,7 @@ const CameraModal: React.FC<CameraModalProps> = ({ visible, onClose, onCapture }
   const cameraRef = useRef<CameraView>(null);
   const [permission, requestPermission] = useCameraPermissions();
   const [capturing, setCapturing] = useState(false);
+  const { alert } = useDialog();
 
   const handleCapture = async () => {
     if (!cameraRef.current || capturing) return;
@@ -36,7 +37,7 @@ const CameraModal: React.FC<CameraModalProps> = ({ visible, onClose, onCapture }
         onCapture(photo.uri);
       }
     } catch {
-      Alert.alert('Error', 'No se pudo tomar la foto. Intentá de nuevo.');
+      await alert({ title: 'Error', message: 'No se pudo tomar la foto. Intentá de nuevo.' });
     } finally {
       setCapturing(false);
     }
@@ -55,7 +56,10 @@ const CameraModal: React.FC<CameraModalProps> = ({ visible, onClose, onCapture }
   const handleRequestPermission = async () => {
     const result = await requestPermission();
     if (!result.granted) {
-      Alert.alert('Permiso requerido', 'Necesitamos acceso a la cámara para escanear el ticket.');
+      await alert({
+        title: 'Permiso requerido',
+        message: 'Necesitamos acceso a la cámara para escanear el ticket.',
+      });
     }
   };
 

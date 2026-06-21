@@ -7,7 +7,6 @@ import {
   ScrollView,
   TouchableOpacity,
   KeyboardAvoidingView,
-  Alert,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Text } from '@ui-kitten/components';
@@ -15,6 +14,7 @@ import { Text } from '@ui-kitten/components';
 import NotificationFrequencyEditor from './NotificationFrequencyEditor';
 import type { NotificationFrequency, UserProfile } from '../../context/user';
 import { profileModalStyles, profileSharedStyles } from '../../styles/profileStyles';
+import { useDialog } from '../../context/dialog';
 
 type Props = {
   visible: boolean;
@@ -39,11 +39,16 @@ const NotificationFrequencySheet: React.FC<Props> = ({
   onSave,
   onChange,
 }) => {
+  const { alert } = useDialog();
+
   const handleSave = async (frequency: NotificationFrequency) => {
     const result = await onSave(frequency);
     if (result) {
       onClose();
-      Alert.alert('Listo', 'Frecuencia de notificaciones actualizada correctamente');
+      await alert({
+        title: 'Listo',
+        message: 'Frecuencia de notificaciones actualizada correctamente',
+      });
     }
   };
 

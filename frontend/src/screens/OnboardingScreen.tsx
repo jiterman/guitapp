@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Alert } from 'react-native';
+import { View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Layout, Text, Input, Button } from '@ui-kitten/components';
 import { router } from 'expo-router';
@@ -10,8 +10,10 @@ import { loginStyles as styles } from '../styles/loginStyles';
 import { OnboardingError } from '../types/errors';
 
 import { authService } from '../services/authService';
+import { useDialog } from '../context/dialog';
 
 const OnboardingScreen = () => {
+  const { alert } = useDialog();
   const { user, setUser } = useUser();
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
@@ -71,7 +73,10 @@ const OnboardingScreen = () => {
       router.replace('/home');
     } catch (err) {
       const error = err as OnboardingError;
-      Alert.alert('Error', error.message || 'Ocurrió un error al guardar los datos.');
+      await alert({
+        title: 'Error',
+        message: error.message || 'Ocurrió un error al guardar los datos.',
+      });
     } finally {
       setLoading(false);
     }

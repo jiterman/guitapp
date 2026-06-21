@@ -1,7 +1,6 @@
 import React, { useRef, useState, useEffect } from 'react';
 import {
   View,
-  Alert,
   TouchableOpacity,
   Modal,
   FlatList,
@@ -27,6 +26,7 @@ import { useModal } from '../hooks/Profile/useModal';
 import { CategoryRuleModal } from '../components/Rules/CategoryRule/Modal/CategoryRuleModal';
 import { CategoryRuleSuggestion } from '../components/Rules/CategoryRule/Banners/CategoryRuleSuggestion';
 import { useRules } from '../context/rules';
+import { useDialog } from '../context/dialog';
 import {
   recurringIncomeService,
   type RecurrenceFrequency,
@@ -111,6 +111,7 @@ const AddMovementScreen = () => {
 
   // Aviso de regla inferida
   const { rules, addRule } = useRules();
+  const { alert } = useDialog();
   const [showInferredNotice, setShowInferredNotice] = useState(false);
 
   useEffect(() => {
@@ -160,7 +161,7 @@ const AddMovementScreen = () => {
         setSelectedDate(new Date(analysis.date));
       }
     } catch {
-      Alert.alert('Error', 'No se pudo analizar el ticket. Intentá de nuevo.');
+      await alert({ title: 'Error', message: 'No se pudo analizar el ticket. Intentá de nuevo.' });
     } finally {
       setScanningReceipt(false);
     }
@@ -283,10 +284,10 @@ const AddMovementScreen = () => {
         router.back();
       }
     } catch {
-      Alert.alert(
-        'Error',
-        `No se pudo registrar el ${movementType === 'EXPENSE' ? 'gasto' : 'ingreso'}. Intentá de nuevo.`
-      );
+      await alert({
+        title: 'Error',
+        message: `No se pudo registrar el ${movementType === 'EXPENSE' ? 'gasto' : 'ingreso'}. Intentá de nuevo.`,
+      });
     } finally {
       setSubmitting(false);
     }

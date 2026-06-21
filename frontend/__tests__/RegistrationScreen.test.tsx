@@ -4,6 +4,7 @@ import { ApplicationProvider, IconRegistry } from '@ui-kitten/components';
 import { EvaIconsPack } from '@ui-kitten/eva-icons';
 import * as eva from '@eva-design/eva';
 import RegistrationScreen from '../src/screens/RegistrationScreen';
+import { DialogProvider } from '../src/context/dialog';
 
 jest.mock('expo-router', () => ({
   router: {
@@ -16,7 +17,7 @@ const renderWithKitten = (component: React.ReactElement) => {
     <>
       <IconRegistry icons={EvaIconsPack} />
       <ApplicationProvider {...eva} theme={eva.light}>
-        {component}
+        <DialogProvider>{component}</DialogProvider>
       </ApplicationProvider>
     </>
   );

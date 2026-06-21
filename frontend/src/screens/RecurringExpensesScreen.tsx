@@ -1,5 +1,5 @@
 import React, { useCallback, useState } from 'react';
-import { View, ScrollView, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
+import { View, ScrollView, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { Layout, Text } from '@ui-kitten/components';
 import { Ionicons } from '@expo/vector-icons';
 import { router, useFocusEffect } from 'expo-router';
@@ -12,6 +12,7 @@ import { getCategoryIcon, getCategoryLabel } from '../constants/categories';
 import { detailScreenStyles } from '../styles/detailScreenStyles';
 import { recurringExpenseStyles as styles } from '../styles/recurringExpenseStyles';
 import { formatDate } from '../utils/dateFormatter';
+import { useDialog } from '../context/dialog';
 
 const formatMoney = (amount: number) => new Intl.NumberFormat('es-AR').format(Number(amount));
 
@@ -28,6 +29,7 @@ const displayTitle = (item: RecurringExpenseResponse): string => {
 };
 
 const RecurringExpensesScreen = () => {
+  const { alert, confirm } = useDialog();
   const [items, setItems] = useState<RecurringExpenseResponse[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -36,11 +38,11 @@ const RecurringExpensesScreen = () => {
       const data = await recurringExpenseService.getRecurringExpenses();
       setItems(data);
     } catch {
-      Alert.alert('Error', 'No se pudieron cargar los gastos recurrentes.');
+      await alert({ title: 'Error', message: 'No se pudieron cargar los gastos recurrentes.' });
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [alert]);
 
   useFocusEffect(
     useCallback(() => {
@@ -54,30 +56,27 @@ const RecurringExpensesScreen = () => {
       await recurringExpenseService.updateRecurringExpense(item.id, { active: !item.active });
       loadItems();
     } catch {
-      Alert.alert('Error', 'No se pudo actualizar el gasto recurrente.');
+      await alert({ title: 'Error', message: 'No se pudo actualizar el gasto recurrente.' });
     }
   };
 
-  const handleDelete = (item: RecurringExpenseResponse) => {
-    Alert.alert(
-      'Eliminar gasto recurrente',
-      '¿Seguro que querés eliminar este gasto recurrente? No se borrarán los gastos ya generados.',
-      [
-        { text: 'Cancelar', style: 'cancel' },
-        {
-          text: 'Eliminar',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              await recurringExpenseService.deleteRecurringExpense(item.id);
-              loadItems();
-            } catch {
-              Alert.alert('Error', 'No se pudo eliminar el gasto recurrente.');
-            }
-          },
-        },
-      ]
-    );
+  const handleDelete = async (item: RecurringExpenseResponse) => {
+    const confirmed = await confirm({
+      title: 'Eliminar gasto recurrente',
+      message:
+        '¿Seguro que querés eliminar este gasto recurrente? No se borrarán los gastos ya generados.',
+      confirmText: 'Eliminar',
+      cancelText: 'Cancelar',
+      variant: 'destructive',
+    });
+    if (!confirmed) return;
+
+    try {
+      await recurringExpenseService.deleteRecurringExpense(item.id);
+      loadItems();
+    } catch {
+      await alert({ title: 'Error', message: 'No se pudo eliminar el gasto recurrente.' });
+    }
   };
 
   return (

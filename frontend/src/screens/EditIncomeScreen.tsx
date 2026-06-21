@@ -1,7 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import {
   View,
-  Alert,
   TouchableOpacity,
   Modal,
   FlatList,
@@ -25,8 +24,10 @@ import {
 } from '../styles/transactionFormStyles';
 import { formatDate, toLocalDateString, parseLocalDate } from '../utils/dateFormatter';
 import ExpandableTextInput from '../components/ExpandableTextInput/ExpandableTextInput';
+import { useDialog } from '../context/dialog';
 
 const EditIncomeScreen = () => {
+  const { alert } = useDialog();
   const scrollViewRef = useRef<ScrollView>(null);
   const { incomeId } = useLocalSearchParams<{ incomeId?: string }>();
   const { displayValue, amount, handleAmountChange, setAmount } = useCurrencyInput();
@@ -61,7 +62,7 @@ const EditIncomeScreen = () => {
         }
       } catch {
         if (mounted) {
-          Alert.alert('Error', 'No se pudo cargar el ingreso.');
+          void alert({ title: 'Error', message: 'No se pudo cargar el ingreso.' });
           router.back();
         }
       } finally {
@@ -121,7 +122,10 @@ const EditIncomeScreen = () => {
       });
       router.back();
     } catch {
-      Alert.alert('Error', 'No se pudo actualizar el ingreso. Intentá de nuevo.');
+      await alert({
+        title: 'Error',
+        message: 'No se pudo actualizar el ingreso. Intentá de nuevo.',
+      });
     } finally {
       setSubmitting(false);
     }

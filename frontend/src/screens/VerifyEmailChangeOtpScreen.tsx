@@ -1,5 +1,5 @@
 import React from 'react';
-import { Alert, View, Image, KeyboardAvoidingView } from 'react-native';
+import { View, Image, KeyboardAvoidingView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button, Layout, Text, Input, Spinner } from '@ui-kitten/components';
 import { router, useLocalSearchParams } from 'expo-router';
@@ -7,8 +7,10 @@ import { userService } from '../services/userService';
 import { authService } from '../services/authService';
 import { useUser } from '../context/user';
 import { loginStyles as styles } from '../styles/loginStyles';
+import { useDialog } from '../context/dialog';
 
 const VerifyEmailChangeOtpScreen = () => {
+  const { alert } = useDialog();
   const { email } = useLocalSearchParams<{ email: string }>();
   const [otp, setOtp] = React.useState('');
   const [loading, setLoading] = React.useState(false);
@@ -49,7 +51,7 @@ const VerifyEmailChangeOtpScreen = () => {
       if (err instanceof Error) {
         errorMessage = err.message;
       }
-      Alert.alert('Error', errorMessage);
+      await alert({ title: 'Error', message: errorMessage });
     } finally {
       setLoading(false);
       setShowLoadingPopup(false);

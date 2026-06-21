@@ -1,7 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import {
   View,
-  Alert,
   TouchableOpacity,
   Modal,
   FlatList,
@@ -25,8 +24,10 @@ import {
 } from '../styles/transactionFormStyles';
 import { formatDate, toLocalDateString, parseLocalDate } from '../utils/dateFormatter';
 import ExpandableTextInput from '../components/ExpandableTextInput/ExpandableTextInput';
+import { useDialog } from '../context/dialog';
 
 const EditExpenseScreen = () => {
+  const { alert } = useDialog();
   const scrollViewRef = useRef<ScrollView>(null);
   const scrollYRef = useRef(0);
   const { expenseId } = useLocalSearchParams<{ expenseId?: string }>();
@@ -65,7 +66,7 @@ const EditExpenseScreen = () => {
         }
       } catch {
         if (mounted) {
-          Alert.alert('Error', 'No se pudo cargar el gasto.');
+          void alert({ title: 'Error', message: 'No se pudo cargar el gasto.' });
           router.back();
         }
       } finally {
@@ -138,7 +139,7 @@ const EditExpenseScreen = () => {
       });
       router.back();
     } catch {
-      Alert.alert('Error', 'No se pudo actualizar el gasto. Intentá de nuevo.');
+      await alert({ title: 'Error', message: 'No se pudo actualizar el gasto. Intentá de nuevo.' });
     } finally {
       setSubmitting(false);
     }
