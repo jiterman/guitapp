@@ -526,15 +526,18 @@ const MovementFilter: React.FC<MovementFilterProps> = ({
               },
             ]}
           >
+            <View style={styles.grabber} />
+
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>Filtros</Text>
-              <TouchableOpacity onPress={closeModal}>
-                <Text style={styles.modalClose}>✕</Text>
+              <TouchableOpacity onPress={closeModal} hitSlop={8} style={styles.modalCloseButton}>
+                <Ionicons name="close" size={20} color="#6b8aa1" />
               </TouchableOpacity>
             </View>
 
             <ScrollView
               style={styles.modalScroll}
+              contentContainerStyle={styles.modalScrollContent}
               keyboardShouldPersistTaps="handled"
               showsVerticalScrollIndicator={false}
             >
@@ -773,15 +776,27 @@ const styles = StyleSheet.create({
   },
   modalSheet: {
     backgroundColor: '#fff',
-    borderTopLeftRadius: 18,
-    borderTopRightRadius: 18,
+    borderTopLeftRadius: 22,
+    borderTopRightRadius: 22,
     paddingHorizontal: screenWidth * 0.05,
-    paddingTop: vh * 2,
+    paddingTop: vh * 1.2,
     paddingBottom: vh * 3,
     maxHeight: vh * 85,
   },
+  grabber: {
+    alignSelf: 'center',
+    width: 40,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: '#D8E6F1',
+    marginBottom: vh * 1.6,
+  },
   modalScroll: {
     flexGrow: 0,
+    marginHorizontal: -8,
+  },
+  modalScrollContent: {
+    paddingHorizontal: 8,
   },
   modalDivider: {
     height: 1,
@@ -792,30 +807,34 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: vh * 2,
+    marginBottom: vh * 2.4,
   },
   modalTitle: {
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: '700',
     color: '#003366',
   },
-  modalClose: {
-    fontSize: 20,
-    color: '#003366',
+  modalCloseButton: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: '#F5F8FA',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   modalRow: {
     flexDirection: 'row',
     alignItems: 'flex-start',
     gap: screenWidth * 0.03,
-    marginBottom: vh * 1.6,
+    marginBottom: vh * 1.8,
   },
   modalLabel: {
-    width: screenWidth * 0.2,
-    height: vh * 5.2,
+    width: screenWidth * 0.22,
+    height: vh * 5.4,
     textAlignVertical: 'center',
-    lineHeight: vh * 5.2,
+    lineHeight: vh * 5.4,
     color: '#003366',
-    fontWeight: '600',
+    fontWeight: '700',
     fontSize: 14,
   },
   dropdownContainer: {
@@ -824,11 +843,13 @@ const styles = StyleSheet.create({
   segmentedControl: {
     flex: 1,
     flexDirection: 'row',
-    minHeight: vh * 5.2,
+    height: vh * 5.4,
     backgroundColor: '#F5F8FA',
-    borderRadius: 8,
-    padding: 3,
-    gap: 3,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: '#D8E6F1',
+    padding: 4,
+    gap: 4,
   },
   segmentedButton: {
     flex: 1,
@@ -848,13 +869,17 @@ const styles = StyleSheet.create({
     color: '#fff',
   },
   dropdownTrigger: {
-    minHeight: vh * 5.2,
-    backgroundColor: '#F5F8FA',
-    borderRadius: 8,
+    height: vh * 5.4,
+    backgroundColor: '#fff',
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: '#D8E6F1',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 12,
+    paddingLeft: 12,
+    paddingRight: 8,
+    gap: 2,
   },
   dropdownTriggerText: {
     flexShrink: 1,
@@ -862,12 +887,17 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   dropdownList: {
-    marginTop: 4,
+    marginTop: 6,
     borderWidth: 1,
-    borderColor: '#e4e9f2',
-    borderRadius: 8,
+    borderColor: '#D8E6F1',
+    borderRadius: 10,
     backgroundColor: '#fff',
     overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 4,
   },
   dropdownScroll: {
     maxHeight: vh * 24,
@@ -910,9 +940,11 @@ const styles = StyleSheet.create({
   },
   periodPickerButton: {
     flex: 1,
-    height: vh * 5.2,
-    backgroundColor: '#F5F8FA',
-    borderRadius: 8,
+    height: vh * 5.4,
+    backgroundColor: '#fff',
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: '#D8E6F1',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -920,7 +952,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginTop: vh,
+    marginTop: vh * 1.2,
+    paddingTop: vh * 1.6,
+    borderTopWidth: 1,
+    borderTopColor: '#EEF6FB',
   },
   resetButton: {
     flexDirection: 'row',
@@ -936,13 +971,19 @@ const styles = StyleSheet.create({
   },
   saveButton: {
     backgroundColor: '#f5a623',
-    paddingHorizontal: screenWidth * 0.08,
-    paddingVertical: vh * 1.2,
-    borderRadius: 10,
+    paddingHorizontal: screenWidth * 0.1,
+    paddingVertical: vh * 1.3,
+    borderRadius: 12,
+    shadowColor: '#f5a623',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.35,
+    shadowRadius: 6,
+    elevation: 3,
   },
   saveButtonText: {
     color: '#fff',
     fontWeight: '700',
+    fontSize: 15,
   },
 });
 
