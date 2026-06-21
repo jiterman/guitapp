@@ -8,8 +8,10 @@ import {
   Modal,
   Animated,
   Pressable,
+  ScrollView,
 } from 'react-native';
-import { Text, Select, SelectItem, IndexPath } from '@ui-kitten/components';
+import { Text } from '@ui-kitten/components';
+import { Ionicons } from '@expo/vector-icons';
 import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import { SvgXml } from 'react-native-svg';
 import FILTER_ICON from '../../../assets/icons/filterIcon';
@@ -62,6 +64,65 @@ const MONTH_LABELS = [
   'Diciembre',
 ];
 
+interface InlineDropdownProps {
+  options: { key: string; label: string }[];
+  selectedKey: string;
+  onSelect: (key: string) => void;
+  isOpen: boolean;
+  onToggle: () => void;
+}
+
+// Inline expandable dropdown used instead of UI Kitten's Select, which dispatches
+// a synchronous setState while measuring its Popover when rendered inside a Modal
+// (triggering "Cannot update during an existing state transition"). This mirrors
+// the dropdown pattern already used in CategoryRuleModal.
+const InlineDropdown: React.FC<InlineDropdownProps> = ({
+  options,
+  selectedKey,
+  onSelect,
+  isOpen,
+  onToggle,
+}) => {
+  const selected = options.find(option => option.key === selectedKey);
+
+  return (
+    <View style={styles.dropdownContainer}>
+      <TouchableOpacity style={styles.dropdownTrigger} onPress={onToggle} activeOpacity={0.8}>
+        <Text style={styles.dropdownTriggerText}>{selected?.label ?? ''}</Text>
+        <Ionicons name={isOpen ? 'chevron-up' : 'chevron-down'} size={18} color="#6b8aa1" />
+      </TouchableOpacity>
+
+      {isOpen && (
+        <View style={styles.dropdownList}>
+          <ScrollView
+            showsVerticalScrollIndicator
+            nestedScrollEnabled
+            style={styles.dropdownScroll}
+          >
+            {options.map(option => {
+              const isSelected = option.key === selectedKey;
+              return (
+                <TouchableOpacity
+                  key={option.key}
+                  style={[styles.dropdownItem, isSelected && styles.dropdownItemActive]}
+                  onPress={() => onSelect(option.key)}
+                >
+                  <Text
+                    style={[styles.dropdownItemText, isSelected && styles.dropdownItemTextActive]}
+                  >
+                    {option.label}
+                  </Text>
+                  {isSelected && <Ionicons name="checkmark-circle" size={18} color="#07a3e4" />}
+                </TouchableOpacity>
+              );
+            })}
+          </ScrollView>
+        </View>
+      )}
+    </View>
+  );
+};
+
 const MovementFilter: React.FC<MovementFilterProps> = ({
   onChange,
   initialKind = 'month',
@@ -91,18 +152,21 @@ const MovementFilter: React.FC<MovementFilterProps> = ({
   const [draftDay, setDraftDay] = useState(selectedDay);
   const [draftMonth, setDraftMonth] = useState(selectedMonth);
   const [draftYear, setDraftYear] = useState(selectedYear);
+  const [openDropdown, setOpenDropdown] = useState<'filter' | 'month' | 'year' | null>(null);
 
   const years = useMemo(() => {
     const currentYear = now.getFullYear();
     return Array.from({ length: 10 }, (_, i) => currentYear - i);
   }, [now]);
 
-  const draftFilterIndexPath = useMemo(() => new IndexPath(draftFilterIndex), [draftFilterIndex]);
-  const draftMonthIndex = useMemo(() => new IndexPath(draftMonth - 1), [draftMonth]);
-  const draftYearIndex = useMemo(() => {
-    const idx = Math.max(years.indexOf(draftYear), 0);
-    return new IndexPath(idx);
-  }, [draftYear, years]);
+  const monthOptions = useMemo(
+    () => MONTH_LABELS.map((label, index) => ({ key: String(index + 1), label })),
+    []
+  );
+  const yearOptions = useMemo(
+    () => years.map(year => ({ key: String(year), label: String(year) })),
+    [years]
+  );
 
   useEffect(() => {
     onChange({
@@ -114,19 +178,28 @@ const MovementFilter: React.FC<MovementFilterProps> = ({
     });
   }, [filterIndex, selectedDay, selectedMonth, selectedYear, movementType, onChange]);
 
-  const handleFilterSelect = (index: IndexPath | IndexPath[]) => {
-    const idx = Array.isArray(index) ? index[0].row : index.row;
-    setTimeout(() => setDraftFilterIndex(idx), 0);
+  const toggleDropdown = (dropdown: 'filter' | 'month' | 'year') => {
+    setOpenDropdown(prev => (prev === dropdown ? null : dropdown));
   };
 
-  const handleMonthSelect = (index: IndexPath | IndexPath[]) => {
-    const idx = Array.isArray(index) ? index[0].row : index.row;
-    setTimeout(() => setDraftMonth(idx + 1), 0);
+  const handleFilterSelect = (key: string) => {
+    setDraftFilterIndex(
+      Math.max(
+        FILTER_OPTIONS.findIndex(option => option.key === key),
+        0
+      )
+    );
+    setOpenDropdown(null);
   };
 
-  const handleYearSelect = (index: IndexPath | IndexPath[]) => {
-    const idx = Array.isArray(index) ? index[0].row : index.row;
-    setTimeout(() => setDraftYear(years[idx]), 0);
+  const handleMonthSelect = (key: string) => {
+    setDraftMonth(Number(key));
+    setOpenDropdown(null);
+  };
+
+  const handleYearSelect = (key: string) => {
+    setDraftYear(Number(key));
+    setOpenDropdown(null);
   };
 
   const draftKind = FILTER_OPTIONS[draftFilterIndex].key;
@@ -136,10 +209,12 @@ const MovementFilter: React.FC<MovementFilterProps> = ({
     setDraftDay(selectedDay);
     setDraftMonth(selectedMonth);
     setDraftYear(selectedYear);
+    setOpenDropdown(null);
     setIsModalVisible(true);
   };
 
   const closeModal = () => {
+    setOpenDropdown(null);
     Animated.timing(sheetAnim, {
       toValue: 0,
       duration: 200,
@@ -158,6 +233,7 @@ const MovementFilter: React.FC<MovementFilterProps> = ({
     setSelectedDay(draftDay);
     setSelectedMonth(draftMonth);
     setSelectedYear(draftYear);
+    setOpenDropdown(null);
     Animated.timing(sheetAnim, {
       toValue: 0,
       duration: 200,
@@ -264,16 +340,13 @@ const MovementFilter: React.FC<MovementFilterProps> = ({
 
             <View style={styles.modalRow}>
               <Text style={styles.modalLabel}>Ver por</Text>
-              <Select
-                value={FILTER_OPTIONS[draftFilterIndex].label}
-                selectedIndex={draftFilterIndexPath}
+              <InlineDropdown
+                options={FILTER_OPTIONS}
+                selectedKey={draftKind}
                 onSelect={handleFilterSelect}
-                style={styles.modalSelect}
-              >
-                {FILTER_OPTIONS.map(option => (
-                  <SelectItem key={option.key} title={option.label} />
-                ))}
-              </Select>
+                isOpen={openDropdown === 'filter'}
+                onToggle={() => toggleDropdown('filter')}
+              />
             </View>
 
             <View style={styles.modalRow}>
@@ -292,32 +365,26 @@ const MovementFilter: React.FC<MovementFilterProps> = ({
               {draftKind === 'month' && (
                 <>
                   <Text style={styles.modalLabel}>Mes</Text>
-                  <Select
-                    value={MONTH_LABELS[draftMonth - 1]}
-                    selectedIndex={draftMonthIndex}
+                  <InlineDropdown
+                    options={monthOptions}
+                    selectedKey={String(draftMonth)}
                     onSelect={handleMonthSelect}
-                    style={styles.modalSelect}
-                  >
-                    {MONTH_LABELS.map(label => (
-                      <SelectItem key={label} title={label} />
-                    ))}
-                  </Select>
+                    isOpen={openDropdown === 'month'}
+                    onToggle={() => toggleDropdown('month')}
+                  />
                 </>
               )}
 
               {draftKind === 'year' && (
                 <>
                   <Text style={styles.modalLabel}>Año</Text>
-                  <Select
-                    value={String(draftYear)}
-                    selectedIndex={draftYearIndex}
+                  <InlineDropdown
+                    options={yearOptions}
+                    selectedKey={String(draftYear)}
                     onSelect={handleYearSelect}
-                    style={styles.modalSelect}
-                  >
-                    {years.map(year => (
-                      <SelectItem key={year} title={String(year)} />
-                    ))}
-                  </Select>
+                    isOpen={openDropdown === 'year'}
+                    onToggle={() => toggleDropdown('year')}
+                  />
                 </>
               )}
 
@@ -328,16 +395,13 @@ const MovementFilter: React.FC<MovementFilterProps> = ({
               {draftKind === 'month' && (
                 <>
                   <Text style={styles.modalLabel}>Año</Text>
-                  <Select
-                    value={String(draftYear)}
-                    selectedIndex={draftYearIndex}
+                  <InlineDropdown
+                    options={yearOptions}
+                    selectedKey={String(draftYear)}
                     onSelect={handleYearSelect}
-                    style={styles.modalSelect}
-                  >
-                    {years.map(year => (
-                      <SelectItem key={year} title={String(year)} />
-                    ))}
-                  </Select>
+                    isOpen={openDropdown === 'year'}
+                    onToggle={() => toggleDropdown('year')}
+                  />
                 </>
               )}
 
@@ -452,22 +516,65 @@ const styles = StyleSheet.create({
   },
   modalRow: {
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     gap: screenWidth * 0.03,
     marginBottom: vh * 1.6,
   },
   modalLabel: {
     width: screenWidth * 0.2,
+    height: vh * 5.2,
+    textAlignVertical: 'center',
+    lineHeight: vh * 5.2,
     color: '#003366',
     fontWeight: '600',
     fontSize: 14,
   },
-  modalSelect: {
+  dropdownContainer: {
     flex: 1,
-    height: vh * 5.2,
+  },
+  dropdownTrigger: {
+    minHeight: vh * 5.2,
     backgroundColor: '#F5F8FA',
     borderRadius: 8,
-    borderColor: 'transparent',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 12,
+  },
+  dropdownTriggerText: {
+    color: '#003366',
+    fontSize: 14,
+  },
+  dropdownList: {
+    marginTop: 4,
+    borderWidth: 1,
+    borderColor: '#e4e9f2',
+    borderRadius: 8,
+    backgroundColor: '#fff',
+    overflow: 'hidden',
+  },
+  dropdownScroll: {
+    maxHeight: vh * 24,
+  },
+  dropdownItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 12,
+    paddingHorizontal: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f0f4f8',
+  },
+  dropdownItemActive: {
+    backgroundColor: '#E6F4FA',
+  },
+  dropdownItemText: {
+    color: '#003366',
+    fontSize: 14,
+  },
+  dropdownItemTextActive: {
+    color: '#07a3e4',
+    fontWeight: '700',
   },
   modalPickerButton: {
     flex: 1,
