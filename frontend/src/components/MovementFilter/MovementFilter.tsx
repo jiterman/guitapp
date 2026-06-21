@@ -375,6 +375,9 @@ const MovementFilter: React.FC<MovementFilterProps> = ({
     }).start(() => {
       setIsModalVisible(false);
       setIsDayPickerVisible(false);
+      if (onExternalModalClose) {
+        onExternalModalClose();
+      }
     });
   };
 
@@ -412,14 +415,15 @@ const MovementFilter: React.FC<MovementFilterProps> = ({
   // Whether any filter differs from its default. Used to highlight the
   // "Filtros" button instead of rendering a chips row. The period (kind) is
   // considered active whenever it differs from the screen's initial kind.
+  // Only highlight the Filters button for filters that live inside the modal
+  // (period, category, expense type). The Income/Expense toggle and the search
+  // bar are not part of the modal, so they must not flag the button as active.
   const hasActiveFilters = useMemo(
     () =>
       FILTER_OPTIONS[filterIndex].key !== initialKind ||
-      movementType !== 'all' ||
       categories.length > 0 ||
-      expenseType !== 'all' ||
-      search.trim().length > 0,
-    [filterIndex, initialKind, movementType, categories, expenseType, search]
+      expenseType !== 'all',
+    [filterIndex, initialKind, categories, expenseType]
   );
 
   useEffect(() => {
@@ -452,7 +456,7 @@ const MovementFilter: React.FC<MovementFilterProps> = ({
           <TextInput
             value={search}
             onChangeText={setSearch}
-            placeholder="Buscar por título..."
+            placeholder="Buscar..."
             placeholderTextColor="#9bb0c1"
             style={styles.searchInput}
             returnKeyType="search"
@@ -617,13 +621,30 @@ const MovementFilter: React.FC<MovementFilterProps> = ({
 
                   <View style={styles.modalRow}>
                     <Text style={styles.modalLabel}>Tipo</Text>
-                    <InlineDropdown
-                      options={EXPENSE_TYPE_OPTIONS}
-                      selectedKey={draftExpenseType}
-                      onSelect={handleExpenseTypeSelect}
-                      isOpen={openDropdown === 'expenseType'}
-                      onToggle={() => toggleDropdown('expenseType')}
-                    />
+                    <View style={styles.segmentedControl}>
+                      {EXPENSE_TYPE_OPTIONS.map(option => {
+                        const isActive = draftExpenseType === option.key;
+                        return (
+                          <TouchableOpacity
+                            key={option.key}
+                            onPress={() => handleExpenseTypeSelect(option.key)}
+                            style={[
+                              styles.segmentedButton,
+                              isActive && styles.segmentedButtonActive,
+                            ]}
+                          >
+                            <Text
+                              style={[
+                                styles.segmentedButtonText,
+                                isActive && styles.segmentedButtonTextActive,
+                              ]}
+                            >
+                              {option.label}
+                            </Text>
+                          </TouchableOpacity>
+                        );
+                      })}
+                    </View>
                   </View>
                 </>
               )}
@@ -635,7 +656,7 @@ const MovementFilter: React.FC<MovementFilterProps> = ({
                 <Text style={styles.resetButtonText}>Restablecer</Text>
               </TouchableOpacity>
               <TouchableOpacity onPress={saveModal} style={styles.saveButton}>
-                <Text style={styles.saveButtonText}>Guardar</Text>
+                <Text style={styles.saveButtonText}>Aceptar</Text>
               </TouchableOpacity>
             </View>
           </Animated.View>
@@ -800,6 +821,32 @@ const styles = StyleSheet.create({
   dropdownContainer: {
     flex: 1,
   },
+  segmentedControl: {
+    flex: 1,
+    flexDirection: 'row',
+    minHeight: vh * 5.2,
+    backgroundColor: '#F5F8FA',
+    borderRadius: 8,
+    padding: 3,
+    gap: 3,
+  },
+  segmentedButton: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 6,
+  },
+  segmentedButtonActive: {
+    backgroundColor: '#07a3e4',
+  },
+  segmentedButtonText: {
+    color: '#6b8aa1',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  segmentedButtonTextActive: {
+    color: '#fff',
+  },
   dropdownTrigger: {
     minHeight: vh * 5.2,
     backgroundColor: '#F5F8FA',
@@ -888,7 +935,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   saveButton: {
-    backgroundColor: '#1a9e5c',
+    backgroundColor: '#f5a623',
     paddingHorizontal: screenWidth * 0.08,
     paddingVertical: vh * 1.2,
     borderRadius: 10,

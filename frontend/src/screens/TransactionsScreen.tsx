@@ -5,6 +5,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { movementService, MovementResponse } from '../services/movementService';
 import TransactionCard from '../components/TransactionCard/TransactionCard';
 import MovementFilter, { FilterState } from '../components/MovementFilter/MovementFilter';
+import { getCategoryLabel } from '../constants/categories';
 import { router } from 'expo-router';
 import { useIsFocused } from '@react-navigation/native';
 
@@ -25,9 +26,11 @@ const buildInitialFilter = (): FilterState => {
   };
 };
 
+const stripAccents = (value: string) => value.normalize('NFD').replace(/[̀-ͯ]/g, '');
+
 const applyClientFilters = (data: MovementResponse[], filter: FilterState) => {
   const { movementType, categories, expenseType, search } = filter;
-  const normalizedSearch = search?.trim().toLowerCase() ?? '';
+  const normalizedSearch = stripAccents(search?.trim().toLowerCase() ?? '');
 
   return data.filter(movement => {
     if (movementType === 'income' && movement.type !== 'INCOME') return false;
@@ -37,7 +40,15 @@ const applyClientFilters = (data: MovementResponse[], filter: FilterState) => {
       return false;
     }
     if (expenseType && expenseType !== 'all' && movement.expenseType !== expenseType) return false;
-    if (normalizedSearch && !movement.title?.toLowerCase().includes(normalizedSearch)) return false;
+    if (normalizedSearch) {
+      // Match the same text the card shows: the title, or the category label
+      // when there is no title.
+      const categoryLabel = movement.category
+        ? getCategoryLabel(movement.category, movement.type)
+        : '';
+      const haystack = stripAccents(`${movement.title ?? ''} ${categoryLabel}`.toLowerCase());
+      if (!haystack.includes(normalizedSearch)) return false;
+    }
     return true;
   });
 };
