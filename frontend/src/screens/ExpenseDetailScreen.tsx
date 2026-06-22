@@ -182,7 +182,7 @@ const ExpenseDetailScreen: React.FC = () => {
                 ]}
               >
                 <Ionicons
-                  name={expense.type === 'FIXED' ? 'repeat-outline' : 'stats-chart-outline'}
+                  name={expense.type === 'FIXED' ? 'pin-outline' : 'trending-up'}
                   size={24}
                   color={expense.type === 'FIXED' ? '#8e44ad' : '#27ae60'}
                 />
