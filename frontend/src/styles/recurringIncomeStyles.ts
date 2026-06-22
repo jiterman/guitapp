@@ -84,6 +84,15 @@ export const recurringIncomeStyles = StyleSheet.create({
     color: '#1a9e5c',
     marginTop: 2,
   },
+  editButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#e6f4fb',
+    marginRight: 8,
+  },
   deleteButton: {
     width: 36,
     height: 36,

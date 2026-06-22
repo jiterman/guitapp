@@ -133,6 +133,17 @@ const RecurringExpensesScreen = () => {
                     <Text style={styles.cardTitle}>{displayTitle(item)}</Text>
                     <Text style={styles.cardAmount}>${formatMoney(item.amount)}</Text>
                   </View>
+                  <TouchableOpacity
+                    style={styles.editButton}
+                    onPress={() =>
+                      router.push({
+                        pathname: '/recurring-expense/[recurringExpenseId]/edit',
+                        params: { recurringExpenseId: item.id },
+                      })
+                    }
+                  >
+                    <Ionicons name="pencil-outline" size={18} color="#07a3e4" />
+                  </TouchableOpacity>
                   <TouchableOpacity style={styles.deleteButton} onPress={() => handleDelete(item)}>
                     <Ionicons name="trash-outline" size={18} color="#c0392b" />
                   </TouchableOpacity>
