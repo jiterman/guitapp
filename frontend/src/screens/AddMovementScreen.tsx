@@ -11,7 +11,7 @@ import {
   Dimensions,
   Switch,
 } from 'react-native';
-import { transactionFormStyles as tStyles, ICON_COLORS } from '../styles/transactionFormStyles';
+import { transactionFormStyles as tStyles } from '../styles/transactionFormStyles';
 import { Layout, Text } from '@ui-kitten/components';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -320,56 +320,53 @@ const AddMovementScreen = () => {
   return (
     <>
       <Layout style={styles.container}>
-        <View style={styles.tabContainer}>
-          <TouchableOpacity
-            style={[
-              styles.tab,
-              movementType === 'EXPENSE' ? styles.tabActiveExpense : styles.tabInactive,
-            ]}
-            onPress={() => toggleType('EXPENSE')}
-          >
-            <Ionicons
-              name="trending-down"
-              size={18}
-              color={movementType === 'EXPENSE' ? '#FF4D4D' : '#A8C8E0'}
-            />
-            <Text
+        <View style={styles.topRow}>
+          <View style={styles.tabContainer}>
+            <TouchableOpacity
               style={[
-                styles.tabText,
-                movementType === 'EXPENSE' ? styles.tabTextActiveExpense : styles.tabTextInactive,
+                styles.tab,
+                movementType === 'EXPENSE' ? styles.tabActiveExpense : styles.tabInactive,
               ]}
+              onPress={() => toggleType('EXPENSE')}
             >
-              Gasto
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[
-              styles.tab,
-              movementType === 'INCOME' ? styles.tabActiveIncome : styles.tabInactive,
-            ]}
-            onPress={() => toggleType('INCOME')}
-          >
-            <Ionicons
-              name="trending-up"
-              size={18}
-              color={movementType === 'INCOME' ? '#2ECC71' : '#A8C8E0'}
-            />
-            <Text
+              <Ionicons
+                name="trending-down"
+                size={18}
+                color={movementType === 'EXPENSE' ? '#FF4D4D' : '#A8C8E0'}
+              />
+              <Text
+                style={[
+                  styles.tabText,
+                  movementType === 'EXPENSE' ? styles.tabTextActiveExpense : styles.tabTextInactive,
+                ]}
+              >
+                Gasto
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
               style={[
-                styles.tabText,
-                movementType === 'INCOME' ? styles.tabTextActiveIncome : styles.tabTextInactive,
+                styles.tab,
+                movementType === 'INCOME' ? styles.tabActiveIncome : styles.tabInactive,
               ]}
+              onPress={() => toggleType('INCOME')}
             >
-              Ingreso
-            </Text>
-          </TouchableOpacity>
-        </View>
-
-        <View style={styles.subHeader}>
-          <Text category="h4" style={styles.title}>
-            {movementType === 'EXPENSE' ? 'Agregar gasto' : 'Agregar ingreso'}
-          </Text>
+              <Ionicons
+                name="trending-up"
+                size={18}
+                color={movementType === 'INCOME' ? '#2ECC71' : '#A8C8E0'}
+              />
+              <Text
+                style={[
+                  styles.tabText,
+                  movementType === 'INCOME' ? styles.tabTextActiveIncome : styles.tabTextInactive,
+                ]}
+              >
+                Ingreso
+              </Text>
+            </TouchableOpacity>
+          </View>
           <TouchableOpacity
+            style={styles.topRowClose}
             onPress={() => {
               if (params.fromShareIntent === 'true') {
                 router.replace('/(app)/home');
@@ -381,17 +378,6 @@ const AddMovementScreen = () => {
             <Ionicons name="close" size={28} color="#003366" />
           </TouchableOpacity>
         </View>
-
-        {movementType === 'EXPENSE' && !isRecurring && (
-          <TouchableOpacity
-            onPress={onScanReceipt}
-            style={styles.scanBanner}
-            disabled={scanningReceipt}
-          >
-            <Ionicons name="camera-outline" size={18} color={ICON_COLORS.primary} />
-            <Text style={styles.scanButtonText}>Escanear ticket</Text>
-          </TouchableOpacity>
-        )}
 
         {scanningReceipt && (
           <View style={styles.scanOverlay}>
@@ -426,6 +412,15 @@ const AddMovementScreen = () => {
               style={styles.amountInput}
               placeholderTextColor="#FFC947"
             />
+            {movementType === 'EXPENSE' && !isRecurring && (
+              <TouchableOpacity
+                onPress={onScanReceipt}
+                style={styles.amountScanButton}
+                disabled={scanningReceipt}
+              >
+                <Ionicons name="camera" size={20} color="#fff" />
+              </TouchableOpacity>
+            )}
           </View>
           {amountError && <Text style={styles.errorText}>{amountError}</Text>}
 
@@ -803,12 +798,21 @@ const AddMovementScreen = () => {
 };
 
 const localStyles = StyleSheet.create({
+  topRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    marginBottom: vh * 2,
+  },
+  topRowClose: {
+    padding: 4,
+  },
   tabContainer: {
+    flex: 1,
     flexDirection: 'row',
     backgroundColor: '#fff',
     borderRadius: 14,
     padding: 4,
-    marginBottom: vh * 2,
     borderWidth: 1,
     borderColor: '#E0E0E0',
     shadowColor: '#000',

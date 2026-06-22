@@ -36,39 +36,6 @@ export const transactionFormStyles = StyleSheet.create({
     justifyContent: 'space-between',
     marginBottom: vh * 1.5,
   },
-  subHeaderActions: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-  },
-  scanButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    paddingVertical: 7,
-    paddingHorizontal: 12,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: '#C8DCF0',
-    backgroundColor: '#F8FBFF',
-  },
-  scanButtonText: {
-    fontSize: 13,
-    fontWeight: '500',
-    color: '#0796d2',
-  },
-  scanBanner: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    paddingVertical: vh * 1.3,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#C8DCF0',
-    backgroundColor: '#F8FBFF',
-    marginBottom: vh * 0.5,
-  },
   scanOverlay: {
     position: 'absolute',
     top: 0,
@@ -154,6 +121,17 @@ export const transactionFormStyles = StyleSheet.create({
     fontSize: 24,
     fontWeight: '600',
     color: '#F2A900',
+  },
+  // Compact "scan receipt" camera button living inside the amount field, on the right.
+  // Filled gold circle (inverted from the $ icon) so it reads as a tappable action.
+  amountScanButton: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#F2A900',
+    marginLeft: 8,
   },
   amountInput: {
     flex: 1,
