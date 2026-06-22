@@ -99,8 +99,8 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(192,57,43,0.25)',
   },
   badgeVariable: {
-    backgroundColor: 'rgba(245,166,35,0.14)',
-    borderColor: 'rgba(245,166,35,0.35)',
+    backgroundColor: 'rgba(192,57,43,0.10)',
+    borderColor: 'rgba(192,57,43,0.25)',
   },
   badgeText: {
     fontWeight: '700',
@@ -111,7 +111,7 @@ const styles = StyleSheet.create({
     color: '#c0392b',
   },
   badgeTextVariable: {
-    color: '#b8860b',
+    color: '#c0392b',
   },
   incomeAmount: { color: '#1a9e5c', fontWeight: '700' },
   expenseAmount: { color: '#c0392b', fontWeight: '700' },

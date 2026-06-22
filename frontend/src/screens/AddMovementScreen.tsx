@@ -23,8 +23,6 @@ import DatePickerModal from '../components/DatePickerModal/DatePickerModal';
 import { expenseService } from '../services/expenseService';
 import { incomeService } from '../services/incomeService';
 import { ruleService } from '../services/ruleService';
-import { useModal } from '../hooks/Profile/useModal';
-import { CategoryRuleModal } from '../components/Rules/CategoryRule/Modal/CategoryRuleModal';
 import { CategoryRuleSuggestion } from '../components/Rules/CategoryRule/Banners/CategoryRuleSuggestion';
 import { useRules } from '../context/rules';
 import { useDialog } from '../context/dialog';
@@ -108,13 +106,10 @@ const AddMovementScreen = () => {
   const [scanningReceipt, setScanningReceipt] = useState(false);
   const [cameraVisible, setCameraVisible] = useState(false);
 
-  // Estados para el flujo de la regla sugerida
-  const suggestRuleModal = useModal();
-  const [suggestedRuleData, setSuggestedRuleData] = useState<any | null>(null);
-  const [ruleSaving, setRuleSaving] = useState(false);
-
   // Aviso de regla inferida
   const { rules, addRule } = useRules();
+  // The rule is only created when the expense is saved, not when the box is ticked.
+  const [wantsRule, setWantsRule] = useState(false);
   const { alert } = useDialog();
   const [showInferredNotice, setShowInferredNotice] = useState(false);
 
@@ -132,6 +127,11 @@ const AddMovementScreen = () => {
       setShowInferredNotice(false);
     }
   }, [selectedCategory, movementType, rules]);
+
+  // Reset the "create rule" intent whenever the suggestion target changes.
+  useEffect(() => {
+    setWantsRule(false);
+  }, [selectedCategory, selectedExpenseType]);
 
   const onScanReceipt = () => setCameraVisible(true);
 
@@ -210,32 +210,6 @@ const AddMovementScreen = () => {
   const isYesterday = isSameDay(selectedDate, yesterday);
   const isCustomDate = !isToday && !isYesterday;
 
-  const handleAcceptRuleSuggestion = (categoryValue: string, type: 'FIXED' | 'VARIABLE') => {
-    setSuggestedRuleData({
-      id: 0,
-      category: categoryValue,
-      type: type,
-    });
-    suggestRuleModal.open();
-  };
-
-  const handleSaveSuggestedRule = async (categoryValue: string, type: 'FIXED' | 'VARIABLE') => {
-    setRuleSaving(true);
-    try {
-      const response = await ruleService.createCategoryRule({
-        category: categoryValue as ExpenseCategory,
-        type: type,
-      });
-      addRule(response);
-      suggestRuleModal.close();
-    } catch (e: any) {
-      console.error('Error detectado al guardar regla sugerida:', e);
-      throw e;
-    } finally {
-      setRuleSaving(false);
-    }
-  };
-
   const onSubmit = async () => {
     setAmountError(null);
     setCategoryError(null);
@@ -292,6 +266,27 @@ const AddMovementScreen = () => {
           category: selectedCategory!.value as unknown as IncomeCategory,
           date: dateString,
         });
+      }
+
+      // Create the category rule only after the expense was saved successfully.
+      // A rule failure must not block the (already saved) expense, so it is
+      // swallowed here on purpose.
+      if (
+        wantsRule &&
+        movementType === 'EXPENSE' &&
+        selectedCategory &&
+        selectedExpenseType &&
+        !rules.some(r => r.category === selectedCategory.value)
+      ) {
+        try {
+          const response = await ruleService.createCategoryRule({
+            category: selectedCategory.value as ExpenseCategory,
+            type: selectedExpenseType,
+          });
+          addRule(response);
+        } catch {
+          // Ignore: the expense is saved; the rule is a best-effort extra.
+        }
       }
 
       if (params.fromShareIntent === 'true') {
@@ -560,7 +555,8 @@ const AddMovementScreen = () => {
                 movementType={movementType}
                 selectedCategory={selectedCategory}
                 selectedExpenseType={selectedExpenseType}
-                onAcceptSuggestion={handleAcceptRuleSuggestion}
+                checked={wantsRule}
+                onToggle={() => setWantsRule(prev => !prev)}
               />
             </>
           )}
@@ -784,16 +780,6 @@ const AddMovementScreen = () => {
         visible={cameraVisible}
         onClose={() => setCameraVisible(false)}
         onCapture={onImageCaptured}
-      />
-
-      <CategoryRuleModal
-        visible={suggestRuleModal.visible}
-        scale={suggestRuleModal.scale}
-        opacity={suggestRuleModal.opacity}
-        onClose={suggestRuleModal.close}
-        rule={suggestedRuleData}
-        onSave={handleSaveSuggestedRule}
-        saving={ruleSaving}
       />
     </>
   );
