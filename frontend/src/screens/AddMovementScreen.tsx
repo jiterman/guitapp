@@ -469,87 +469,96 @@ const AddMovementScreen = () => {
             </TouchableOpacity>
           )}
 
-          <Text style={styles.label}>Categoría *</Text>
-          <TouchableOpacity
-            style={[styles.dropdownButton, categoryError ? styles.dropdownButtonError : null]}
-            onPress={() => setModalVisible(true)}
+          <Text style={styles.label}>
+            {movementType === 'EXPENSE' ? 'Categoría y tipo *' : 'Categoría *'}
+          </Text>
+          <View
+            style={[styles.categoryTypeCard, categoryError ? styles.categoryTypeCardError : null]}
           >
-            <View style={styles.dropdownContent}>
-              <View style={styles.dropdownIconContainer}>
-                <Ionicons
-                  name={
-                    (selectedCategory?.icon ||
-                      (movementType === 'EXPENSE'
-                        ? 'cart-outline'
-                        : 'cash-outline')) as keyof typeof Ionicons.glyphMap
-                  }
-                  size={18}
-                  color="#07a3e4"
-                />
+            <TouchableOpacity style={styles.categorySelector} onPress={() => setModalVisible(true)}>
+              <View style={styles.dropdownContent}>
+                <View style={styles.dropdownIconContainer}>
+                  <Ionicons
+                    name={
+                      (selectedCategory?.icon ||
+                        (movementType === 'EXPENSE'
+                          ? 'cart-outline'
+                          : 'cash-outline')) as keyof typeof Ionicons.glyphMap
+                    }
+                    size={18}
+                    color="#07a3e4"
+                  />
+                </View>
+                <Text
+                  style={selectedCategory ? styles.dropdownButtonText : styles.dropdownPlaceholder}
+                >
+                  {selectedCategory ? selectedCategory.label : 'Seleccioná una categoría'}
+                </Text>
               </View>
-              <Text
-                style={selectedCategory ? styles.dropdownButtonText : styles.dropdownPlaceholder}
-              >
-                {selectedCategory ? selectedCategory.label : 'Seleccioná una categoría'}
-              </Text>
-            </View>
-            <Ionicons name="chevron-down" size={20} color="#07a3e4" />
-          </TouchableOpacity>
+              <Ionicons name="chevron-down" size={20} color="#07a3e4" />
+            </TouchableOpacity>
+
+            {movementType === 'EXPENSE' && (
+              <>
+                <View style={styles.categoryTypeDivider} />
+                <View style={styles.typeRow}>
+                  <TouchableOpacity
+                    style={[
+                      styles.typeChip,
+                      selectedExpenseType === 'FIXED' && styles.typeChipActive,
+                    ]}
+                    onPress={() => {
+                      setSelectedExpenseType('FIXED');
+                      setShowInferredNotice(false);
+                    }}
+                  >
+                    <Ionicons
+                      name="pin-outline"
+                      size={14}
+                      color={selectedExpenseType === 'FIXED' ? '#07a3e4' : '#6B8299'}
+                    />
+                    <Text
+                      style={[
+                        styles.typeChipText,
+                        selectedExpenseType === 'FIXED' && styles.typeChipTextActive,
+                      ]}
+                    >
+                      Fijo
+                    </Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={[
+                      styles.typeChip,
+                      selectedExpenseType === 'VARIABLE' && styles.typeChipActive,
+                    ]}
+                    onPress={() => {
+                      setSelectedExpenseType('VARIABLE');
+                      setShowInferredNotice(false);
+                    }}
+                  >
+                    <Ionicons
+                      name="trending-up"
+                      size={14}
+                      color={selectedExpenseType === 'VARIABLE' ? '#07a3e4' : '#6B8299'}
+                    />
+                    <Text
+                      style={[
+                        styles.typeChipText,
+                        selectedExpenseType === 'VARIABLE' && styles.typeChipTextActive,
+                      ]}
+                    >
+                      Variable
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+              </>
+            )}
+          </View>
           {categoryError && <Text style={styles.errorText}>{categoryError}</Text>}
 
           {movementType === 'EXPENSE' && (
             <>
-              <Text style={styles.label}>Tipo de gasto *</Text>
               <InferredRuleBanner isVisible={showInferredNotice} />
-              <View style={styles.typeContainer}>
-                <TouchableOpacity
-                  style={[
-                    styles.typeButton,
-                    selectedExpenseType === 'FIXED'
-                      ? styles.typeButtonActive
-                      : styles.typeButtonInactive,
-                  ]}
-                  onPress={() => {
-                    setSelectedExpenseType('FIXED');
-                    setShowInferredNotice(false);
-                  }}
-                >
-                  <Text
-                    style={[
-                      styles.typeButtonText,
-                      selectedExpenseType === 'FIXED'
-                        ? styles.typeButtonTextActive
-                        : styles.typeButtonTextInactive,
-                    ]}
-                  >
-                    Fijo
-                  </Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={[
-                    styles.typeButton,
-                    selectedExpenseType === 'VARIABLE'
-                      ? styles.typeButtonActive
-                      : styles.typeButtonInactive,
-                  ]}
-                  onPress={() => {
-                    setSelectedExpenseType('VARIABLE');
-                    setShowInferredNotice(false);
-                  }}
-                >
-                  <Text
-                    style={[
-                      styles.typeButtonText,
-                      selectedExpenseType === 'VARIABLE'
-                        ? styles.typeButtonTextActive
-                        : styles.typeButtonTextInactive,
-                    ]}
-                  >
-                    Variable
-                  </Text>
-                </TouchableOpacity>
-              </View>
-
               <CategoryRuleSuggestion
                 movementType={movementType}
                 selectedCategory={selectedCategory}
@@ -608,8 +617,8 @@ const AddMovementScreen = () => {
             <Switch
               value={isRecurring}
               onValueChange={setIsRecurring}
-              trackColor={{ false: '#D7E2EC', true: '#9BD7F2' }}
-              thumbColor={isRecurring ? '#07a3e4' : '#f4f4f4'}
+              trackColor={{ false: '#D7E2EC', true: '#07a3e4' }}
+              thumbColor="#ffffff"
               ios_backgroundColor="#D7E2EC"
             />
           </View>
@@ -877,15 +886,13 @@ const localStyles = StyleSheet.create({
   recurringSwitchRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
+    gap: 10,
     marginTop: vh * 1.5,
   },
   recurringSwitchLabel: {
-    flex: 1,
     fontSize: 14,
     fontWeight: 'bold',
     color: '#003366',
-    marginRight: 12,
   },
   recurringSubPanel: {
     marginTop: vh * 1,

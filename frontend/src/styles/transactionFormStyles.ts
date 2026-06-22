@@ -295,6 +295,67 @@ export const transactionFormStyles = StyleSheet.create({
   typeButtonTextInactive: {
     color: '#546E7A',
   },
+  // Unified Category + Type card: a single bordered card holding the category
+  // selector on top and the Fijo/Variable toggle below, split by a divider.
+  categoryTypeCard: {
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
+    shadowColor: '#506E96',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.06,
+    shadowRadius: 14,
+    elevation: 2,
+  },
+  categoryTypeCardError: {
+    borderColor: '#FF3333',
+  },
+  categorySelector: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 12,
+    paddingVertical: vh * 1,
+  },
+  categoryTypeDivider: {
+    height: 1,
+    backgroundColor: '#EEF2F6',
+    marginHorizontal: 12,
+  },
+  // Type row inside the unified card: two compact chips (Fijo / Variable).
+  typeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    paddingHorizontal: 12,
+    paddingVertical: vh * 0.9,
+  },
+  typeChip: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
+    backgroundColor: '#fff',
+  },
+  typeChipActive: {
+    borderColor: '#07a3e4',
+    backgroundColor: '#EAF6FC',
+  },
+  typeChipText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#6B8299',
+  },
+  typeChipTextActive: {
+    color: '#07a3e4',
+  },
   saveButton: {
     flexDirection: 'row',
     alignItems: 'center',

@@ -244,68 +244,75 @@ const EditExpenseScreen = () => {
             </TouchableOpacity>
           )}
 
-          <Text style={styles.label}>Categoría *</Text>
-          <TouchableOpacity
-            style={[styles.dropdownButton, categoryError ? styles.dropdownButtonError : null]}
-            onPress={() => setModalVisible(true)}
+          <Text style={styles.label}>Categoría y tipo *</Text>
+          <View
+            style={[styles.categoryTypeCard, categoryError ? styles.categoryTypeCardError : null]}
           >
-            <View style={styles.dropdownContent}>
-              <View style={styles.dropdownIconContainer}>
-                <Ionicons
-                  name={
-                    (selectedCategory?.icon || 'cart-outline') as keyof typeof Ionicons.glyphMap
-                  }
-                  size={ICON_SIZES.small}
-                  color={ICON_COLORS.primary}
-                />
-              </View>
-              <Text
-                style={selectedCategory ? styles.dropdownButtonText : styles.dropdownPlaceholder}
-              >
-                {selectedCategory ? selectedCategory.label : 'Seleccioná una categoría'}
-              </Text>
-            </View>
-            <Ionicons name="chevron-down" size={ICON_SIZES.medium} color={ICON_COLORS.secondary} />
-          </TouchableOpacity>
-          {categoryError && <Text style={styles.categoryErrorText}>{categoryError}</Text>}
-
-          <Text style={styles.typeLabel}>Tipo de gasto *</Text>
-          <View style={styles.typeContainer}>
-            <TouchableOpacity
-              style={[
-                styles.typeButton,
-                selectedType === 'FIXED' ? styles.typeButtonActive : styles.typeButtonInactive,
-              ]}
-              onPress={() => onSelectType('FIXED')}
-            >
-              <Text
-                style={[
-                  styles.typeButtonText,
-                  selectedType === 'FIXED'
-                    ? styles.typeButtonTextActive
-                    : styles.typeButtonTextInactive,
-                ]}
-              >
-                Fijo
-              </Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[
-                styles.typeButton,
-                selectedType === 'VARIABLE' ? styles.typeButtonActive : styles.typeButtonInactive,
-              ]}
-              onPress={() => onSelectType('VARIABLE')}
-            >
-              {selectedType === 'VARIABLE' ? (
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                  <Ionicons name="trending-up" size={16} color="#2383F2" />
-                  <Text style={[styles.typeButtonText, styles.typeButtonTextActive]}>Variable</Text>
+            <TouchableOpacity style={styles.categorySelector} onPress={() => setModalVisible(true)}>
+              <View style={styles.dropdownContent}>
+                <View style={styles.dropdownIconContainer}>
+                  <Ionicons
+                    name={
+                      (selectedCategory?.icon || 'cart-outline') as keyof typeof Ionicons.glyphMap
+                    }
+                    size={ICON_SIZES.small}
+                    color={ICON_COLORS.primary}
+                  />
                 </View>
-              ) : (
-                <Text style={[styles.typeButtonText, styles.typeButtonTextInactive]}>Variable</Text>
-              )}
+                <Text
+                  style={selectedCategory ? styles.dropdownButtonText : styles.dropdownPlaceholder}
+                >
+                  {selectedCategory ? selectedCategory.label : 'Seleccioná una categoría'}
+                </Text>
+              </View>
+              <Ionicons
+                name="chevron-down"
+                size={ICON_SIZES.medium}
+                color={ICON_COLORS.secondary}
+              />
             </TouchableOpacity>
+
+            <View style={styles.categoryTypeDivider} />
+            <View style={styles.typeRow}>
+              <TouchableOpacity
+                style={[styles.typeChip, selectedType === 'FIXED' && styles.typeChipActive]}
+                onPress={() => onSelectType('FIXED')}
+              >
+                <Ionicons
+                  name="pin-outline"
+                  size={14}
+                  color={selectedType === 'FIXED' ? '#07a3e4' : '#6B8299'}
+                />
+                <Text
+                  style={[
+                    styles.typeChipText,
+                    selectedType === 'FIXED' && styles.typeChipTextActive,
+                  ]}
+                >
+                  Fijo
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.typeChip, selectedType === 'VARIABLE' && styles.typeChipActive]}
+                onPress={() => onSelectType('VARIABLE')}
+              >
+                <Ionicons
+                  name="trending-up"
+                  size={14}
+                  color={selectedType === 'VARIABLE' ? '#07a3e4' : '#6B8299'}
+                />
+                <Text
+                  style={[
+                    styles.typeChipText,
+                    selectedType === 'VARIABLE' && styles.typeChipTextActive,
+                  ]}
+                >
+                  Variable
+                </Text>
+              </TouchableOpacity>
+            </View>
           </View>
+          {categoryError && <Text style={styles.categoryErrorText}>{categoryError}</Text>}
           {typeError && <Text style={styles.typeErrorText}>{typeError}</Text>}
 
           <Text style={styles.label}>Fecha *</Text>
