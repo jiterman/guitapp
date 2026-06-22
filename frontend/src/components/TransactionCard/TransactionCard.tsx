@@ -5,6 +5,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { MovementResponse } from '../../services/movementService';
 import { getCategoryLabel, getCategoryOption } from '../../constants/categories';
 import { formatDate } from '../../utils/dateFormatter';
+import { formatMoney } from '../../utils/currencyFormatter';
 
 interface Props {
   movement: MovementResponse;
@@ -59,8 +60,7 @@ const TransactionCard: React.FC<Props> = ({ movement, onPress }) => {
           </View>
         )}
         <Text style={movement.type === 'INCOME' ? styles.incomeAmount : styles.expenseAmount}>
-          {movement.type === 'INCOME' ? '+' : '-'}$
-          {new Intl.NumberFormat('es-AR').format(Number(movement.amount))}
+          {movement.type === 'INCOME' ? '+' : '-'}${formatMoney(Number(movement.amount))}
         </Text>
       </View>
     </Container>

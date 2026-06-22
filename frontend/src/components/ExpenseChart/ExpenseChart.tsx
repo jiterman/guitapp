@@ -6,11 +6,10 @@ import { ExpenseCategoryStatistics } from '../../services/expenseStatisticsServi
 import { EXPENSE_CATEGORY_COLORS } from '../../constants/expenseCategories';
 import { getCategoryLabel, getCategoryIcon } from '../../constants/categories';
 import CategoryLegend from '../CategoryLegend/CategoryLegend';
+import { formatMoney as formatCurrency } from '../../utils/currencyFormatter';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 const vh = screenHeight / 100;
-
-const formatCurrency = (value: number) => new Intl.NumberFormat('es-AR').format(value);
 
 interface ExpenseChartProps {
   data: ExpenseCategoryStatistics[];

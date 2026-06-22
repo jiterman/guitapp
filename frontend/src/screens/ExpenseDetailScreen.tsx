@@ -10,8 +10,7 @@ import { expenseService } from '../services/expenseService';
 import { getCategoryLabel, getCategoryIcon } from '../constants/categories';
 import { detailScreenStyles as styles } from '../styles/detailScreenStyles';
 import { formatDate } from '../utils/dateFormatter';
-
-const formatMoney = (amount: number) => new Intl.NumberFormat('es-AR').format(Number(amount));
+import { formatMoney } from '../utils/currencyFormatter';
 
 const typeLabelEs = (type: ExpenseResponse['type']) =>
   type === 'FIXED' ? 'Gasto fijo' : 'Gasto variable';

@@ -12,9 +12,8 @@ import { getCategoryIcon, getCategoryLabel } from '../constants/categories';
 import { detailScreenStyles } from '../styles/detailScreenStyles';
 import { recurringIncomeStyles as styles } from '../styles/recurringIncomeStyles';
 import { formatDate } from '../utils/dateFormatter';
+import { formatMoney } from '../utils/currencyFormatter';
 import { useDialog } from '../context/dialog';
-
-const formatMoney = (amount: number) => new Intl.NumberFormat('es-AR').format(Number(amount));
 
 const frequencyLabel = (frequency: RecurrenceFrequency): string =>
   frequency === 'WEEKLY' ? 'Semanal' : 'Mensual';

@@ -212,8 +212,8 @@ const styles = StyleSheet.create({
   editBlockHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 10,
-    marginBottom: 12,
+    gap: 8,
+    marginBottom: 10,
   },
   editBlockTitle: {
     fontSize: 15,
@@ -222,13 +222,13 @@ const styles = StyleSheet.create({
   },
   inputRow: {
     gap: 4,
-    marginBottom: 8,
+    marginBottom: 11,
   },
   inputLabel: {
     fontSize: 12,
     color: '#6b8aa1',
     fontWeight: '600',
-    marginBottom: 4,
+    marginBottom: 5,
   },
   optional: {
     fontSize: 12,
@@ -243,7 +243,7 @@ const styles = StyleSheet.create({
     borderWidth: 1.5,
     borderColor: '#c8dff0',
     paddingHorizontal: 12,
-    paddingVertical: 10,
+    paddingVertical: 12,
     gap: 8,
   },
   input: {
@@ -251,6 +251,7 @@ const styles = StyleSheet.create({
     fontSize: 15,
     color: '#003366',
     fontWeight: '500',
+    paddingVertical: 0,
   },
   inputDivider: {
     height: 1,
@@ -270,9 +271,9 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   menuIconCircle: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
+    width: 34,
+    height: 34,
+    borderRadius: 17,
     justifyContent: 'center',
     alignItems: 'center',
   },

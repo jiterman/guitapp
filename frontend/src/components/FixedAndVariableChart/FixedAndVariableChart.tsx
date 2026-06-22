@@ -7,6 +7,7 @@ import { FixedAndVariableStatisticsResponse } from '../../services/expenseStatis
 import FIXED_ICON from '../../../assets/icons/fixedIcon';
 import VARIABLE_ICON from '../../../assets/icons/variableIcon';
 import SAVINGS_ICON from '../../../assets/icons/savingsIcon';
+import { formatMoney as formatCurrency } from '../../utils/currencyFormatter';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 const vh = screenHeight / 100;
@@ -14,8 +15,6 @@ const vh = screenHeight / 100;
 const FIXED_COLOR = '#FFBB00';
 const VARIABLE_COLOR = '#07a3e4';
 const SAVINGS_COLOR = '#1a9e5c';
-
-const formatCurrency = (value: number) => new Intl.NumberFormat('es-AR').format(value);
 
 interface TargetValues {
   fixed: number;

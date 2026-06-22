@@ -10,8 +10,7 @@ import { incomeService } from '../services/incomeService';
 import { getCategoryLabel, getCategoryIcon } from '../constants/categories';
 import { detailScreenStyles as styles } from '../styles/detailScreenStyles';
 import { formatDate } from '../utils/dateFormatter';
-
-const formatMoney = (amount: number) => new Intl.NumberFormat('es-AR').format(Number(amount));
+import { formatMoney } from '../utils/currencyFormatter';
 
 const IncomeDetailScreen: React.FC = () => {
   const { incomeId } = useLocalSearchParams<{ incomeId?: string }>();
