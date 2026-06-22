@@ -43,7 +43,7 @@ import {
   getIncomeCategory,
 } from '../constants/categories';
 import { useCurrencyInput } from '../hooks/useCurrencyInput';
-import { formatDate, toLocalDateString } from '../utils/dateFormatter';
+import { formatDate, toLocalDateString, parseLocalDate } from '../utils/dateFormatter';
 
 const vh = Dimensions.get('window').height / 100;
 // Shared width so the date pill matches the Frequency segmented control.
@@ -75,7 +75,7 @@ const AddMovementScreen = () => {
     params.type === 'INCOME' ? 'INCOME' : 'EXPENSE'
   );
 
-  const { displayValue, amount, handleAmountChange } = useCurrencyInput(
+  const { displayValue, amount, handleAmountChange, setAmount } = useCurrencyInput(
     (params.amount as string) || ''
   );
   const [title, setTitle] = useState((params.title as string) || '');
@@ -85,7 +85,7 @@ const AddMovementScreen = () => {
       ? getExpenseCategory(params.category as string) || null
       : getIncomeCategory(params.category as string) || null;
 
-  const initialDate = params.date ? new Date(params.date as string) : new Date();
+  const initialDate = params.date ? parseLocalDate(params.date as string) : new Date();
 
   const [selectedCategory, setSelectedCategory] = useState<
     ExpenseCategoryOption | IncomeCategoryOption | null
@@ -146,7 +146,9 @@ const AddMovementScreen = () => {
       );
       const analysis = await expenseService.analyzeReceipt(manipulated.uri);
       if (analysis.amount && analysis.amount > 0) {
-        handleAmountChange(analysis.amount.toString());
+        // setAmount expects the raw value with a dot decimal separator; toFixed(2)
+        // keeps the two decimals so a "24300,00" receipt loads as "24.300,00".
+        setAmount(analysis.amount.toFixed(2));
       }
       if (analysis.title) {
         setTitle(analysis.title.slice(0, 20));
@@ -162,7 +164,7 @@ const AddMovementScreen = () => {
         }
       }
       if (analysis.date) {
-        setSelectedDate(new Date(analysis.date));
+        setSelectedDate(parseLocalDate(analysis.date));
       }
     } catch {
       await alert({ title: 'Error', message: 'No se pudo analizar el ticket. Intentá de nuevo.' });
