@@ -180,7 +180,8 @@ const EditExpenseScreen = () => {
         <ScrollView
           ref={scrollViewRef}
           showsVerticalScrollIndicator={false}
-          contentContainerStyle={{ paddingBottom: 100 }}
+          style={styles.scroll}
+          contentContainerStyle={styles.scrollContent}
           onScroll={e => {
             scrollYRef.current = e.nativeEvent.contentOffset.y;
           }}
@@ -340,18 +341,22 @@ const EditExpenseScreen = () => {
               </Text>
             </TouchableOpacity>
           </View>
+
+          <TouchableOpacity
+            style={[styles.saveButton, submitting && styles.saveButtonDisabled]}
+            onPress={onSubmit}
+            disabled={submitting}
+          >
+            {submitting ? (
+              <ActivityIndicator size="small" color="#fff" />
+            ) : (
+              <>
+                <Ionicons name="save-outline" size={20} color="#fff" />
+                <Text style={styles.saveButtonText}>Guardar</Text>
+              </>
+            )}
+          </TouchableOpacity>
         </ScrollView>
-        <TouchableOpacity
-          style={[styles.saveButton, submitting && styles.saveButtonDisabled]}
-          onPress={onSubmit}
-          disabled={submitting}
-        >
-          {submitting ? (
-            <ActivityIndicator size="small" color="#fff" />
-          ) : (
-            <Ionicons name="checkmark" size={24} color="#fff" />
-          )}
-        </TouchableOpacity>
       </Layout>
 
       <Modal

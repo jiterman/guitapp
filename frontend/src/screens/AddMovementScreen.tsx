@@ -369,30 +369,29 @@ const AddMovementScreen = () => {
           <Text category="h4" style={styles.title}>
             {movementType === 'EXPENSE' ? 'Agregar gasto' : 'Agregar ingreso'}
           </Text>
-          <View style={styles.subHeaderActions}>
-            {movementType === 'EXPENSE' && !isRecurring && (
-              <TouchableOpacity
-                onPress={onScanReceipt}
-                style={styles.scanButton}
-                disabled={scanningReceipt}
-              >
-                <Ionicons name="camera-outline" size={16} color={ICON_COLORS.primary} />
-                <Text style={styles.scanButtonText}>Escanear ticket</Text>
-              </TouchableOpacity>
-            )}
-            <TouchableOpacity
-              onPress={() => {
-                if (params.fromShareIntent === 'true') {
-                  router.replace('/(app)/home');
-                } else {
-                  router.back();
-                }
-              }}
-            >
-              <Ionicons name="close" size={28} color="#003366" />
-            </TouchableOpacity>
-          </View>
+          <TouchableOpacity
+            onPress={() => {
+              if (params.fromShareIntent === 'true') {
+                router.replace('/(app)/home');
+              } else {
+                router.back();
+              }
+            }}
+          >
+            <Ionicons name="close" size={28} color="#003366" />
+          </TouchableOpacity>
         </View>
+
+        {movementType === 'EXPENSE' && !isRecurring && (
+          <TouchableOpacity
+            onPress={onScanReceipt}
+            style={styles.scanBanner}
+            disabled={scanningReceipt}
+          >
+            <Ionicons name="camera-outline" size={18} color={ICON_COLORS.primary} />
+            <Text style={styles.scanButtonText}>Escanear ticket</Text>
+          </TouchableOpacity>
+        )}
 
         {scanningReceipt && (
           <View style={styles.scanOverlay}>
@@ -404,7 +403,8 @@ const AddMovementScreen = () => {
         <ScrollView
           ref={scrollViewRef}
           showsVerticalScrollIndicator={false}
-          contentContainerStyle={{ paddingBottom: 100 }}
+          style={styles.scroll}
+          contentContainerStyle={styles.scrollContent}
           onScroll={e => {
             scrollYRef.current = e.nativeEvent.contentOffset.y;
           }}
@@ -684,19 +684,21 @@ const AddMovementScreen = () => {
               </TouchableOpacity>
             </View>
           )}
+          <TouchableOpacity
+            style={[styles.saveButton, submitting && styles.saveButtonDisabled]}
+            onPress={onSubmit}
+            disabled={submitting}
+          >
+            {submitting ? (
+              <ActivityIndicator size="small" color="#fff" />
+            ) : (
+              <>
+                <Ionicons name="save-outline" size={20} color="#fff" />
+                <Text style={styles.saveButtonText}>Guardar</Text>
+              </>
+            )}
+          </TouchableOpacity>
         </ScrollView>
-
-        <TouchableOpacity
-          style={[styles.saveButton, submitting && styles.saveButtonDisabled]}
-          onPress={onSubmit}
-          disabled={submitting}
-        >
-          {submitting ? (
-            <ActivityIndicator size="small" color="#fff" />
-          ) : (
-            <Ionicons name="checkmark" size={24} color="#fff" />
-          )}
-        </TouchableOpacity>
       </Layout>
 
       <Modal
