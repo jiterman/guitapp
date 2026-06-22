@@ -11,7 +11,6 @@ import { ScrollView } from 'react-native';
 import { Layout, Text } from '@ui-kitten/components';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import { router, useLocalSearchParams } from 'expo-router';
 import type { IncomeCategory } from '../constants/categories';
 import { incomeService } from '../services/incomeService';
@@ -24,6 +23,7 @@ import {
 } from '../styles/transactionFormStyles';
 import { formatDate, toLocalDateString, parseLocalDate } from '../utils/dateFormatter';
 import ExpandableTextInput from '../components/ExpandableTextInput/ExpandableTextInput';
+import DatePickerModal from '../components/DatePickerModal/DatePickerModal';
 import { useDialog } from '../context/dialog';
 
 const EditIncomeScreen = () => {
@@ -36,6 +36,7 @@ const EditIncomeScreen = () => {
   const [selectedCategory, setSelectedCategory] = useState<IncomeCategoryOption | null>(null);
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [showDatePicker, setShowDatePicker] = useState(false);
+  const [showDescription, setShowDescription] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [loading, setLoading] = useState(true);
   const [modalVisible, setModalVisible] = useState(false);
@@ -56,6 +57,7 @@ const EditIncomeScreen = () => {
           setAmount(String(income.amount));
           setTitle(income.title ?? '');
           setDescription(income.description ?? '');
+          if (income.description?.trim()) setShowDescription(true);
           const selected = INCOME_CATEGORIES.find(c => c.value === income.category) ?? null;
           setSelectedCategory(selected);
           setSelectedDate(parseLocalDate(income.date));
@@ -86,12 +88,22 @@ const EditIncomeScreen = () => {
     setSearch('');
   };
 
-  const onDateChange = (event: DateTimePickerEvent, date?: Date) => {
-    setShowDatePicker(false);
-    if (event.type === 'set' && date) {
-      setSelectedDate(date);
-    }
+  const onDateSelect = (date: Date) => {
+    setSelectedDate(date);
   };
+
+  const isSameDay = (a: Date, b: Date) =>
+    a.getDate() === b.getDate() &&
+    a.getMonth() === b.getMonth() &&
+    a.getFullYear() === b.getFullYear();
+
+  const startOfDay = (date: Date) => new Date(date.getFullYear(), date.getMonth(), date.getDate());
+
+  const today = startOfDay(new Date());
+  const yesterday = new Date(today.getTime() - 24 * 60 * 60 * 1000);
+  const isToday = isSameDay(selectedDate, today);
+  const isYesterday = isSameDay(selectedDate, yesterday);
+  const isCustomDate = !isToday && !isYesterday;
 
   const onSubmit = async () => {
     if (!incomeId) return;
@@ -190,6 +202,28 @@ const EditIncomeScreen = () => {
             />
           </View>
 
+          {showDescription ? (
+            <ExpandableTextInput
+              label="Descripción"
+              value={description}
+              onChangeText={text => setDescription(text.slice(0, 255))}
+              placeholder="Información adicional (opcional)"
+              scrollViewRef={scrollViewRef}
+              onRemove={() => {
+                setDescription('');
+                setShowDescription(false);
+              }}
+            />
+          ) : (
+            <TouchableOpacity
+              style={styles.addDescriptionLink}
+              onPress={() => setShowDescription(true)}
+            >
+              <Ionicons name="add-circle-outline" size={18} color="#07a3e4" />
+              <Text style={styles.addDescriptionText}>Agregar descripción</Text>
+            </TouchableOpacity>
+          )}
+
           <Text style={styles.label}>Categoría *</Text>
           <TouchableOpacity
             style={[styles.dropdownButton, categoryError ? styles.dropdownButtonError : null]}
@@ -216,29 +250,38 @@ const EditIncomeScreen = () => {
           {categoryError && <Text style={styles.categoryErrorText}>{categoryError}</Text>}
 
           <Text style={styles.label}>Fecha *</Text>
-          <TouchableOpacity style={styles.dateButton} onPress={() => setShowDatePicker(true)}>
-            <View style={styles.dropdownIconContainer}>
+          <View style={styles.dateChipsRow}>
+            <TouchableOpacity
+              style={[styles.dateChip, isToday && styles.dateChipActive]}
+              onPress={() => setSelectedDate(today)}
+            >
+              <Text style={[styles.dateChipText, isToday && styles.dateChipTextActive]}>Hoy</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.dateChip, isYesterday && styles.dateChipActive]}
+              onPress={() => setSelectedDate(yesterday)}
+            >
+              <Text style={[styles.dateChipText, isYesterday && styles.dateChipTextActive]}>
+                Ayer
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.dateChipCustom, isCustomDate && styles.dateChipActive]}
+              onPress={() => setShowDatePicker(true)}
+            >
               <Ionicons
                 name="calendar-outline"
-                size={ICON_SIZES.small}
-                color={ICON_COLORS.primary}
+                size={16}
+                color={isCustomDate ? '#07a3e4' : '#6B8299'}
               />
-            </View>
-            <Text style={styles.dropdownButtonText}>{formatDate(selectedDate)}</Text>
-            <Ionicons
-              name="chevron-forward"
-              size={ICON_SIZES.medium}
-              color={ICON_COLORS.secondary}
-            />
-          </TouchableOpacity>
-
-          <ExpandableTextInput
-            label="Descripción"
-            value={description}
-            onChangeText={text => setDescription(text.slice(0, 255))}
-            placeholder="Información adicional (opcional)"
-            scrollViewRef={scrollViewRef}
-          />
+              <Text
+                style={[styles.dateChipText, isCustomDate && styles.dateChipTextActive]}
+                numberOfLines={1}
+              >
+                {isCustomDate ? formatDate(selectedDate) : 'Otra'}
+              </Text>
+            </TouchableOpacity>
+          </View>
         </ScrollView>
         <TouchableOpacity
           style={[styles.saveButton, submitting && styles.saveButtonDisabled]}
@@ -318,15 +361,13 @@ const EditIncomeScreen = () => {
         </SafeAreaView>
       </Modal>
 
-      {showDatePicker && (
-        <DateTimePicker
-          mode="date"
-          value={selectedDate}
-          display="default"
-          onChange={onDateChange}
-          maximumDate={new Date()}
-        />
-      )}
+      <DatePickerModal
+        visible={showDatePicker}
+        date={selectedDate}
+        max={new Date()}
+        onSelect={onDateSelect}
+        onClose={() => setShowDatePicker(false)}
+      />
     </>
   );
 };

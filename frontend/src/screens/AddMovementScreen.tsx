@@ -872,47 +872,11 @@ const localStyles = StyleSheet.create({
     fontWeight: '600',
     color: '#07a3e4',
   },
-  dateChipsRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  dateChip: {
-    paddingVertical: 9,
-    paddingHorizontal: 18,
-    borderRadius: 12,
-    backgroundColor: '#fff',
-    borderWidth: 1,
-    borderColor: '#D7E2EC',
-  },
-  dateChipCustom: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    paddingVertical: 9,
-    paddingHorizontal: 14,
-    borderRadius: 12,
-    backgroundColor: '#fff',
-    borderWidth: 1,
-    borderColor: '#D7E2EC',
-  },
-  dateChipActive: {
-    backgroundColor: '#EAF4FF',
-    borderColor: '#8EC2FF',
-  },
-  dateChipText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#6B8299',
-  },
-  dateChipTextActive: {
-    color: '#07a3e4',
-  },
   recurringSwitchRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginTop: vh * 1,
+    marginTop: vh * 1.5,
   },
   recurringSwitchLabel: {
     flex: 1,
