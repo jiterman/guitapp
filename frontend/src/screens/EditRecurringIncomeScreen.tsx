@@ -6,15 +6,17 @@ import {
   FlatList,
   TextInput,
   ActivityIndicator,
+  StyleSheet,
+  Dimensions,
 } from 'react-native';
 import { ScrollView } from 'react-native';
 import { Layout, Text } from '@ui-kitten/components';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { router, useLocalSearchParams } from 'expo-router';
-import { expenseService } from '../services/expenseService';
-import type { ExpenseType, ExpenseCategory } from '../constants/categories';
-import { EXPENSE_CATEGORIES, ExpenseCategoryOption } from '../constants/categories';
+import { recurringIncomeService, RecurrenceFrequency } from '../services/recurringIncomeService';
+import type { IncomeCategory } from '../constants/categories';
+import { INCOME_CATEGORIES, IncomeCategoryOption } from '../constants/categories';
 import { useCurrencyInput } from '../hooks/useCurrencyInput';
 import {
   transactionFormStyles as styles,
@@ -26,17 +28,19 @@ import ExpandableTextInput from '../components/ExpandableTextInput/ExpandableTex
 import DatePickerModal from '../components/DatePickerModal/DatePickerModal';
 import { useDialog } from '../context/dialog';
 
-const EditExpenseScreen = () => {
+const vh = Dimensions.get('window').height / 100;
+
+const EditRecurringIncomeScreen = () => {
   const { alert } = useDialog();
   const scrollViewRef = useRef<ScrollView>(null);
   const scrollYRef = useRef(0);
-  const { expenseId } = useLocalSearchParams<{ expenseId?: string }>();
+  const { recurringIncomeId } = useLocalSearchParams<{ recurringIncomeId?: string }>();
   const { displayValue, amount, handleAmountChange, setAmount } = useCurrencyInput();
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState<ExpenseCategoryOption | null>(null);
-  const [selectedType, setSelectedType] = useState<ExpenseType | null>(null);
-  const [selectedDate, setSelectedDate] = useState(new Date());
+  const [selectedCategory, setSelectedCategory] = useState<IncomeCategoryOption | null>(null);
+  const [frequency, setFrequency] = useState<RecurrenceFrequency>('MONTHLY');
+  const [startDate, setStartDate] = useState(new Date());
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showDescription, setShowDescription] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -45,30 +49,29 @@ const EditExpenseScreen = () => {
   const [search, setSearch] = useState('');
   const [amountError, setAmountError] = useState<string | null>(null);
   const [categoryError, setCategoryError] = useState<string | null>(null);
-  const [typeError, setTypeError] = useState<string | null>(null);
 
   useEffect(() => {
     let mounted = true;
     (async () => {
       try {
-        if (!expenseId) {
+        if (!recurringIncomeId) {
           if (mounted) router.back();
           return;
         }
-        const expense = await expenseService.getExpenseById(expenseId);
+        const item = await recurringIncomeService.getRecurringIncomeById(recurringIncomeId);
         if (mounted) {
-          setAmount(String(expense.amount));
-          setTitle(expense.title ?? '');
-          setDescription(expense.description ?? '');
-          if (expense.description?.trim()) setShowDescription(true);
-          const selected = EXPENSE_CATEGORIES.find(c => c.value === expense.category) ?? null;
+          setAmount(String(item.amount));
+          setTitle(item.title ?? '');
+          setDescription(item.description ?? '');
+          if (item.description?.trim()) setShowDescription(true);
+          const selected = INCOME_CATEGORIES.find(c => c.value === item.category) ?? null;
           setSelectedCategory(selected);
-          setSelectedType(expense.type);
-          setSelectedDate(parseLocalDate(expense.date));
+          setFrequency(item.frequency);
+          setStartDate(parseLocalDate(item.startDate));
         }
       } catch {
         if (mounted) {
-          void alert({ title: 'Error', message: 'No se pudo cargar el gasto.' });
+          void alert({ title: 'Error', message: 'No se pudo cargar el ingreso recurrente.' });
           router.back();
         }
       } finally {
@@ -79,49 +82,24 @@ const EditExpenseScreen = () => {
       mounted = false;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [expenseId]);
+  }, [recurringIncomeId]);
 
-  const filteredCategories = EXPENSE_CATEGORIES.filter(cat =>
+  const filteredCategories = INCOME_CATEGORIES.filter(cat =>
     cat.label.toLowerCase().includes(search.toLowerCase())
   );
 
-  const onSelectCategory = (cat: ExpenseCategoryOption) => {
+  const onSelectCategory = (cat: IncomeCategoryOption) => {
     setSelectedCategory(cat);
-    setSelectedType(cat.defaultType);
     setCategoryError(null);
-    setTypeError(null);
     setModalVisible(false);
     setSearch('');
   };
 
-  const onSelectType = (type: ExpenseType) => {
-    setSelectedType(type);
-    setTypeError(null);
-  };
-
-  const onDateSelect = (date: Date) => {
-    setSelectedDate(date);
-  };
-
-  const isSameDay = (a: Date, b: Date) =>
-    a.getDate() === b.getDate() &&
-    a.getMonth() === b.getMonth() &&
-    a.getFullYear() === b.getFullYear();
-
-  const startOfDay = (date: Date) => new Date(date.getFullYear(), date.getMonth(), date.getDate());
-
-  const today = startOfDay(new Date());
-  const yesterday = new Date(today.getTime() - 24 * 60 * 60 * 1000);
-  const isToday = isSameDay(selectedDate, today);
-  const isYesterday = isSameDay(selectedDate, yesterday);
-  const isCustomDate = !isToday && !isYesterday;
-
   const onSubmit = async () => {
-    if (!expenseId) return;
+    if (!recurringIncomeId) return;
 
     setAmountError(null);
     setCategoryError(null);
-    setTypeError(null);
     let hasError = false;
 
     if (!amount || isNaN(parseFloat(amount)) || parseFloat(amount) <= 0) {
@@ -132,26 +110,24 @@ const EditExpenseScreen = () => {
       setCategoryError('Seleccioná una categoría.');
       hasError = true;
     }
-    if (!selectedType) {
-      setTypeError('Seleccioná si es un gasto fijo o variable.');
-      hasError = true;
-    }
     if (hasError) return;
 
     setSubmitting(true);
     try {
-      const dateString = toLocalDateString(selectedDate);
-      await expenseService.updateExpense(expenseId, {
+      await recurringIncomeService.updateRecurringIncome(recurringIncomeId, {
         amount: parseFloat(amount),
         title: title.trim() || undefined,
         description: description.trim() || undefined,
-        category: selectedCategory!.value as ExpenseCategory,
-        type: selectedType!,
-        date: dateString,
+        category: selectedCategory!.value as IncomeCategory,
+        frequency,
+        startDate: toLocalDateString(startDate),
       });
       router.back();
     } catch {
-      await alert({ title: 'Error', message: 'No se pudo actualizar el gasto. Intentá de nuevo.' });
+      await alert({
+        title: 'Error',
+        message: 'No se pudo actualizar el ingreso recurrente. Intentá de nuevo.',
+      });
     } finally {
       setSubmitting(false);
     }
@@ -170,7 +146,7 @@ const EditExpenseScreen = () => {
       <Layout style={styles.container}>
         <View style={styles.subHeader}>
           <Text category="h4" style={styles.title}>
-            Editar gasto
+            Editar ingreso recurrente
           </Text>
           <TouchableOpacity onPress={() => router.back()}>
             <Text style={styles.closeButton}>✕</Text>
@@ -214,7 +190,7 @@ const EditExpenseScreen = () => {
             <TextInput
               value={title}
               onChangeText={text => setTitle(text.slice(0, 20))}
-              placeholder="Ej. Compra del mes (opcional)"
+              placeholder="Ej. Sueldo (opcional)"
               style={styles.textInput}
               placeholderTextColor="#B0BEC5"
               maxLength={20}
@@ -244,7 +220,7 @@ const EditExpenseScreen = () => {
             </TouchableOpacity>
           )}
 
-          <Text style={styles.label}>Categoría y tipo *</Text>
+          <Text style={styles.label}>Categoría *</Text>
           <View
             style={[styles.categoryTypeCard, categoryError ? styles.categoryTypeCardError : null]}
           >
@@ -253,7 +229,7 @@ const EditExpenseScreen = () => {
                 <View style={styles.dropdownIconContainer}>
                   <Ionicons
                     name={
-                      (selectedCategory?.icon || 'cart-outline') as keyof typeof Ionicons.glyphMap
+                      (selectedCategory?.icon || 'cash-outline') as keyof typeof Ionicons.glyphMap
                     }
                     size={ICON_SIZES.small}
                     color={ICON_COLORS.primary}
@@ -271,81 +247,66 @@ const EditExpenseScreen = () => {
                 color={ICON_COLORS.secondary}
               />
             </TouchableOpacity>
-
-            <View style={styles.categoryTypeDivider} />
-            <View style={styles.typeRow}>
-              <TouchableOpacity
-                style={[styles.typeChip, selectedType === 'FIXED' && styles.typeChipActive]}
-                onPress={() => onSelectType('FIXED')}
-              >
-                <Ionicons
-                  name="pin-outline"
-                  size={14}
-                  color={selectedType === 'FIXED' ? '#07a3e4' : '#6B8299'}
-                />
-                <Text
-                  style={[
-                    styles.typeChipText,
-                    selectedType === 'FIXED' && styles.typeChipTextActive,
-                  ]}
-                >
-                  Fijo
-                </Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.typeChip, selectedType === 'VARIABLE' && styles.typeChipActive]}
-                onPress={() => onSelectType('VARIABLE')}
-              >
-                <Ionicons
-                  name="trending-up"
-                  size={14}
-                  color={selectedType === 'VARIABLE' ? '#07a3e4' : '#6B8299'}
-                />
-                <Text
-                  style={[
-                    styles.typeChipText,
-                    selectedType === 'VARIABLE' && styles.typeChipTextActive,
-                  ]}
-                >
-                  Variable
-                </Text>
-              </TouchableOpacity>
-            </View>
           </View>
           {categoryError && <Text style={styles.categoryErrorText}>{categoryError}</Text>}
-          {typeError && <Text style={styles.typeErrorText}>{typeError}</Text>}
 
-          <Text style={styles.label}>Fecha *</Text>
-          <View style={styles.dateChipsRow}>
-            <TouchableOpacity
-              style={[styles.dateChip, isToday && styles.dateChipActive]}
-              onPress={() => setSelectedDate(today)}
-            >
-              <Text style={[styles.dateChipText, isToday && styles.dateChipTextActive]}>Hoy</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.dateChip, isYesterday && styles.dateChipActive]}
-              onPress={() => setSelectedDate(yesterday)}
-            >
-              <Text style={[styles.dateChipText, isYesterday && styles.dateChipTextActive]}>
-                Ayer
-              </Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.dateChipCustom, isCustomDate && styles.dateChipActive]}
-              onPress={() => setShowDatePicker(true)}
-            >
+          <Text style={styles.label}>Recurrencia</Text>
+          <View style={localStyles.recurringSubPanel}>
+            <View style={localStyles.subRow}>
+              <Ionicons
+                name="sync-outline"
+                size={18}
+                color="#37618A"
+                style={localStyles.subRowIcon}
+              />
+              <Text style={localStyles.subRowLabel}>Frecuencia</Text>
+              <View style={localStyles.segmented}>
+                <TouchableOpacity
+                  style={[localStyles.segment, frequency === 'WEEKLY' && localStyles.segmentActive]}
+                  onPress={() => setFrequency('WEEKLY')}
+                >
+                  <Text
+                    style={[
+                      localStyles.segmentText,
+                      frequency === 'WEEKLY' && localStyles.segmentTextActive,
+                    ]}
+                  >
+                    Semanal
+                  </Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[
+                    localStyles.segment,
+                    frequency === 'MONTHLY' && localStyles.segmentActive,
+                  ]}
+                  onPress={() => setFrequency('MONTHLY')}
+                >
+                  <Text
+                    style={[
+                      localStyles.segmentText,
+                      frequency === 'MONTHLY' && localStyles.segmentTextActive,
+                    ]}
+                  >
+                    Mensual
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+
+            <View style={localStyles.subRowDivider} />
+
+            <TouchableOpacity style={localStyles.subRow} onPress={() => setShowDatePicker(true)}>
               <Ionicons
                 name="calendar-outline"
-                size={16}
-                color={isCustomDate ? '#07a3e4' : '#6B8299'}
+                size={18}
+                color="#37618A"
+                style={localStyles.subRowIcon}
               />
-              <Text
-                style={[styles.dateChipText, isCustomDate && styles.dateChipTextActive]}
-                numberOfLines={1}
-              >
-                {isCustomDate ? formatDate(selectedDate) : 'Otra'}
-              </Text>
+              <Text style={localStyles.subRowLabel}>Inicia</Text>
+              <View style={localStyles.datePill}>
+                <Text style={localStyles.datePillText}>{formatDate(startDate)}</Text>
+                <Ionicons name="chevron-down" size={16} color="#07a3e4" />
+              </View>
             </TouchableOpacity>
           </View>
 
@@ -433,13 +394,94 @@ const EditExpenseScreen = () => {
 
       <DatePickerModal
         visible={showDatePicker}
-        date={selectedDate}
-        max={new Date()}
-        onSelect={onDateSelect}
+        date={startDate}
+        onSelect={setStartDate}
         onClose={() => setShowDatePicker(false)}
       />
     </>
   );
 };
 
-export default EditExpenseScreen;
+const RECURRENCE_CONTROL_WIDTH = 168;
+
+const localStyles = StyleSheet.create({
+  recurringSubPanel: {
+    marginTop: vh * 1,
+    backgroundColor: '#F4FAFE',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#D7EAF7',
+    borderLeftWidth: 3,
+    borderLeftColor: '#07a3e4',
+    paddingHorizontal: 12,
+    paddingVertical: vh * 0.6,
+  },
+  subRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: vh * 1,
+  },
+  subRowIcon: {
+    marginRight: 10,
+  },
+  subRowLabel: {
+    flex: 1,
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#37618A',
+  },
+  subRowDivider: {
+    height: 1,
+    backgroundColor: '#E1ECF5',
+  },
+  segmented: {
+    flexDirection: 'row',
+    width: RECURRENCE_CONTROL_WIDTH,
+    backgroundColor: '#E4EEF6',
+    borderRadius: 9,
+    padding: 3,
+  },
+  segment: {
+    flex: 1,
+    paddingVertical: 7,
+    paddingHorizontal: 8,
+    borderRadius: 7,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  segmentActive: {
+    backgroundColor: '#fff',
+    shadowColor: '#506E96',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.12,
+    shadowRadius: 3,
+    elevation: 2,
+  },
+  segmentText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#6B8299',
+  },
+  segmentTextActive: {
+    color: '#07a3e4',
+  },
+  datePill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    width: RECURRENCE_CONTROL_WIDTH,
+    paddingVertical: 7,
+    paddingHorizontal: 12,
+    borderRadius: 9,
+    backgroundColor: '#fff',
+    borderWidth: 1,
+    borderColor: '#D7EAF7',
+  },
+  datePillText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#003366',
+  },
+});
+
+export default EditRecurringIncomeScreen;

@@ -1,13 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import {
-  Alert,
-  View,
-  TouchableOpacity,
-  Image,
-  KeyboardAvoidingView,
-  Modal,
-  FlatList,
-} from 'react-native';
+import { View, TouchableOpacity, Image, KeyboardAvoidingView, Modal, FlatList } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button, Layout, Text, Input, Icon, IconProps } from '@ui-kitten/components';
 import { router } from 'expo-router';
@@ -19,6 +11,7 @@ import { loginStyles as styles } from '../styles/loginStyles';
 import { AuthError } from '../types/errors';
 import { useUser } from '../context/user';
 import { useRules } from '../context/rules';
+import { useDialog } from '../context/dialog';
 
 const tryLoadingRules = async (setRules: (rules: any) => void) => {
   try {
@@ -30,6 +23,7 @@ const tryLoadingRules = async (setRules: (rules: any) => void) => {
 };
 
 const LoginScreen = () => {
+  const { alert } = useDialog();
   const { setUser } = useUser();
   const { setRules } = useRules();
   const [email, setEmail] = useState('');
@@ -70,7 +64,10 @@ const LoginScreen = () => {
         router.replace('/onboarding');
       }
     } catch {
-      Alert.alert('Error', 'No se pudo ingresar. Intentá con usuario y contraseña.');
+      await alert({
+        title: 'Error',
+        message: 'No se pudo ingresar. Intentá con usuario y contraseña.',
+      });
     } finally {
       setLoading(false);
     }
@@ -150,7 +147,7 @@ const LoginScreen = () => {
       } else if (error.message && error.message !== 'Login failed') {
         errorMessage = error.message;
       }
-      Alert.alert('Error de Inicio de Sesión', errorMessage);
+      await alert({ title: 'Error de Inicio de Sesión', message: errorMessage });
     } finally {
       setLoading(false);
     }

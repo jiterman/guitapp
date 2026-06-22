@@ -1,13 +1,15 @@
 import React from 'react';
-import { Alert, View, Image, TouchableOpacity, KeyboardAvoidingView } from 'react-native';
+import { View, Image, TouchableOpacity, KeyboardAvoidingView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button, Layout, Text, Input, Icon, Spinner, IconProps } from '@ui-kitten/components';
 import { router } from 'expo-router';
 import { authService } from '../services/authService';
 import { loginStyles as styles } from '../styles/loginStyles';
 import { AuthError } from '../types/errors';
+import { useDialog } from '../context/dialog';
 
 const RegistrationScreen = () => {
+  const { alert } = useDialog();
   const [email, setEmail] = React.useState('');
   const [password, setPassword] = React.useState('');
   const [confirmPassword, setConfirmPassword] = React.useState('');
@@ -79,30 +81,21 @@ const RegistrationScreen = () => {
       const response = await authService.register(email, password);
       if (response && response.code === 'OTP_RESENT') {
         // Check for code instead of message string
-        Alert.alert(
-          'OTP Reenviado',
-          'El usuario ya existe y estaba pendiente de verificación. Se ha enviado un nuevo código OTP a tu email.',
-          [
-            {
-              text: 'OK',
-              onPress: () => router.push({ pathname: '/verify-otp', params: { email } }),
-            },
-          ]
-        );
+        await alert({
+          title: 'OTP Reenviado',
+          message:
+            'El usuario ya existe y estaba pendiente de verificación. Se ha enviado un nuevo código OTP a tu email.',
+        });
+        router.push({ pathname: '/verify-otp', params: { email } });
       } else if (response && response.code === 'REGISTRATION_SUCCESS') {
         router.push({ pathname: '/verify-otp', params: { email } });
       } else {
         // Fallback for unexpected successful response structures
-        Alert.alert(
-          'Registro Exitoso',
-          'Tu cuenta ha sido registrada. Por favor, verifica tu email para el código OTP.',
-          [
-            {
-              text: 'OK',
-              onPress: () => router.push({ pathname: '/verify-otp', params: { email } }),
-            },
-          ]
-        );
+        await alert({
+          title: 'Registro Exitoso',
+          message: 'Tu cuenta ha sido registrada. Por favor, verifica tu email para el código OTP.',
+        });
+        router.push({ pathname: '/verify-otp', params: { email } });
       }
     } catch (err) {
       const error = err as AuthError;
@@ -142,7 +135,7 @@ const RegistrationScreen = () => {
         errorMessage = error.message;
       }
 
-      Alert.alert(errorTitle, errorMessage);
+      await alert({ title: errorTitle, message: errorMessage });
     } finally {
       setLoading(false);
       setShowLoadingPopup(false); // Hide loading popup

@@ -2,6 +2,7 @@ import React from 'react';
 import { Dimensions, StyleSheet, View } from 'react-native';
 import { Text } from '@ui-kitten/components';
 import { Ionicons } from '@expo/vector-icons';
+import { formatMoney } from '../../utils/currencyFormatter';
 
 const { width: screenWidth } = Dimensions.get('window');
 
@@ -11,8 +12,7 @@ interface StatsCardProps {
   variant?: 'default' | 'monthly';
 }
 
-const formatCurrency = (value: number) =>
-  `$${new Intl.NumberFormat('es-AR').format(Math.round(value))}`;
+const formatCurrency = (value: number) => `$${formatMoney(value)}`;
 
 const StatsCard: React.FC<StatsCardProps> = ({ income, expense, variant = 'default' }) => {
   const balance = income - expense;

@@ -1,13 +1,15 @@
 import React, { useState } from 'react';
-import { Alert, View, Image, KeyboardAvoidingView } from 'react-native';
+import { View, Image, KeyboardAvoidingView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button, Layout, Text, Input, Icon, IconProps } from '@ui-kitten/components';
 import { router, useLocalSearchParams } from 'expo-router';
 import { authService } from '../services/authService';
 import { validatePassword } from '../utils/validation';
 import { loginStyles as styles } from '../styles/loginStyles';
+import { useDialog } from '../context/dialog';
 
 const ResetPasswordScreen = () => {
+  const { alert } = useDialog();
   const { email, otp } = useLocalSearchParams<{ email: string; otp: string }>();
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -55,7 +57,10 @@ const ResetPasswordScreen = () => {
       });
     } catch (err) {
       console.error(err);
-      Alert.alert('Error', 'No se pudo restablecer la contraseña. Intentá de nuevo.');
+      await alert({
+        title: 'Error',
+        message: 'No se pudo restablecer la contraseña. Intentá de nuevo.',
+      });
     } finally {
       setLoading(false);
     }

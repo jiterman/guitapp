@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { View, StyleSheet, TouchableOpacity } from 'react-native';
 import { Text } from '@ui-kitten/components';
 import { Ionicons } from '@expo/vector-icons';
@@ -9,23 +9,20 @@ interface CategoryRuleSuggestionProps {
   movementType: 'EXPENSE' | 'INCOME';
   selectedCategory: ExpenseCategoryOption | any | null;
   selectedExpenseType: 'FIXED' | 'VARIABLE' | null;
-  onAcceptSuggestion: (categoryValue: string, type: 'FIXED' | 'VARIABLE') => void;
+  checked: boolean;
+  onToggle: () => void;
 }
 
 export const CategoryRuleSuggestion: React.FC<CategoryRuleSuggestionProps> = ({
   movementType,
   selectedCategory,
   selectedExpenseType,
-  onAcceptSuggestion,
+  checked,
+  onToggle,
 }) => {
   const { rules } = useRules();
-  const [isVisible, setIsVisible] = useState(true);
 
-  useEffect(() => {
-    setIsVisible(true);
-  }, [selectedCategory, selectedExpenseType]);
-
-  if (!isVisible || movementType !== 'EXPENSE' || !selectedCategory || !selectedExpenseType) {
+  if (movementType !== 'EXPENSE' || !selectedCategory || !selectedExpenseType) {
     return null;
   }
 
@@ -35,51 +32,33 @@ export const CategoryRuleSuggestion: React.FC<CategoryRuleSuggestionProps> = ({
 
   if (isOtherCategory) return null;
 
-  // Si ya existe en el contexto global de reglas, el aviso se oculta solo automáticamente
+  // Hide the suggestion if a rule already exists for this category.
   const alreadyHasRule = rules.some(rule => rule.category === selectedCategory.value);
   if (alreadyHasRule) return null;
 
+  // Only suggest when the chosen type differs from the category default.
   const isDifferentFromDefault = selectedExpenseType !== selectedCategory.defaultType;
   if (!isDifferentFromDefault) return null;
 
   return (
-    <View style={styles.container}>
-      <View style={styles.leftContent}>
-        <View style={styles.iconBackground}>
-          <Ionicons name="bulb-outline" size={16} color="#07a3e4" />
-        </View>
-        <Text style={styles.suggestionText}>
-          ¿Querés configurar una <Text style={styles.boldText}>regla</Text> para que{' '}
-          <Text style={styles.boldText}>{selectedCategory.label.toLowerCase()}</Text> se asigne
-          automáticamente como gasto{' '}
-          <Text style={styles.boldText}>
-            {selectedExpenseType === 'FIXED' ? 'fijo' : 'variable'}{' '}
-          </Text>
-          la próxima vez?
-        </Text>
+    <TouchableOpacity style={styles.container} onPress={onToggle} activeOpacity={0.8}>
+      <View style={[styles.checkbox, checked && styles.checkboxChecked]}>
+        {checked && <Ionicons name="checkmark" size={16} color="#fff" />}
       </View>
 
-      <View style={styles.actionsContainer}>
-        <TouchableOpacity
-          style={styles.saveButton}
-          onPress={() => onAcceptSuggestion(selectedCategory.value, selectedExpenseType)}
-          activeOpacity={0.7}
-        >
-          <Ionicons name="settings-sharp" size={15} color="#fff" />
-        </TouchableOpacity>
-
-        <TouchableOpacity style={styles.closeButton} onPress={() => setIsVisible(false)}>
-          <Ionicons name="close" size={16} color="#90A4AE" />
-        </TouchableOpacity>
-      </View>
-    </View>
+      <Text style={styles.suggestionText}>
+        Crear una <Text style={styles.boldText}>regla</Text> para asignar{' '}
+        <Text style={styles.boldText}>{selectedCategory.label}</Text> como gasto{' '}
+        <Text style={styles.boldText}>{selectedExpenseType === 'FIXED' ? 'fijo' : 'variable'}</Text>{' '}
+        automáticamente.
+      </Text>
+    </TouchableOpacity>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
     backgroundColor: '#F0F9FF',
     borderRadius: 12,
@@ -88,21 +67,20 @@ const styles = StyleSheet.create({
     marginTop: 12,
     borderWidth: 1,
     borderColor: '#B9E6FE',
+    gap: 10,
   },
-  leftContent: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    marginRight: 8,
-  },
-  iconBackground: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    backgroundColor: '#E0F2FE',
+  checkbox: {
+    width: 22,
+    height: 22,
+    borderRadius: 6,
+    borderWidth: 1.5,
+    borderColor: '#07a3e4',
+    backgroundColor: '#fff',
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  checkboxChecked: {
+    backgroundColor: '#07a3e4',
   },
   suggestionText: {
     fontSize: 13,
@@ -111,29 +89,9 @@ const styles = StyleSheet.create({
     lineHeight: 18,
   },
   boldText: {
+    fontSize: 13,
+    lineHeight: 18,
     fontWeight: '700',
     color: '#0369A1',
-  },
-  actionsContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-  },
-  saveButton: {
-    backgroundColor: '#07a3e4',
-    width: 26,
-    height: 26,
-    borderRadius: 6,
-    justifyContent: 'center',
-    alignItems: 'center',
-    shadowColor: '#07a3e4',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.2,
-    shadowRadius: 1.41,
-    elevation: 2,
-  },
-  closeButton: {
-    justifyContent: 'center',
-    alignItems: 'center',
   },
 });

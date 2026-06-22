@@ -58,6 +58,25 @@ const getRecurringExpenses = async (): Promise<RecurringExpenseResponse[]> => {
   return response.json();
 };
 
+const getRecurringExpenseById = async (
+  recurringExpenseId: string
+): Promise<RecurringExpenseResponse> => {
+  const token = await authService.getToken();
+  const response = await fetch(`${BASE_URL}/${encodeURIComponent(recurringExpenseId)}`, {
+    method: 'GET',
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({}));
+    throw { code: error.code, message: error.message ?? 'Get recurring expense failed' };
+  }
+
+  return response.json();
+};
+
 const addRecurringExpense = async (
   request: AddRecurringExpenseRequest
 ): Promise<RecurringExpenseResponse> => {
@@ -118,6 +137,7 @@ const deleteRecurringExpense = async (recurringExpenseId: string): Promise<void>
 
 export const recurringExpenseService = {
   getRecurringExpenses,
+  getRecurringExpenseById,
   addRecurringExpense,
   updateRecurringExpense,
   deleteRecurringExpense,

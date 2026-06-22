@@ -4,12 +4,12 @@ import { Text } from '@ui-kitten/components';
 import { Ionicons } from '@expo/vector-icons';
 import { getCategoryLabel, getCategoryIcon } from '../../constants/categories';
 import { EXPENSE_CATEGORY_COLORS } from '../../constants/expenseCategories';
+import { formatMoney } from '../../utils/currencyFormatter';
 
 const { height: screenHeight } = Dimensions.get('window');
 const vh = screenHeight / 100;
 
-const formatCurrency = (value: number) =>
-  `$${new Intl.NumberFormat('es-AR').format(Math.round(value))}`;
+const formatCurrency = (value: number) => `$${formatMoney(value)}`;
 
 const MAX_CATEGORIES = 5;
 

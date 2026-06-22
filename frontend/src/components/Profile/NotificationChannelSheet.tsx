@@ -7,7 +7,6 @@ import {
   ScrollView,
   TouchableOpacity,
   KeyboardAvoidingView,
-  Alert,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Text } from '@ui-kitten/components';
@@ -15,6 +14,7 @@ import { Text } from '@ui-kitten/components';
 import NotificationChannelEditor from './NotificationChannelEditor';
 import type { NotificationChannel, UserProfile } from '../../context/user';
 import { profileModalStyles, profileSharedStyles } from '../../styles/profileStyles';
+import { useDialog } from '../../context/dialog';
 
 type Props = {
   visible: boolean;
@@ -39,11 +39,13 @@ const NotificationChannelSheet: React.FC<Props> = ({
   onSave,
   onChange,
 }) => {
+  const { alert } = useDialog();
+
   const handleSave = async (channel: NotificationChannel) => {
     const result = await onSave(channel);
     if (result) {
       onClose();
-      Alert.alert('Listo', 'Medio de aviso actualizado correctamente');
+      await alert({ title: 'Listo', message: 'Medio de aviso actualizado correctamente' });
     }
   };
 

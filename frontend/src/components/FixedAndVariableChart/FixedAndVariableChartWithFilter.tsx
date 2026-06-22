@@ -6,7 +6,6 @@ import {
   FixedAndVariableStatisticsResponse,
 } from '../../services/expenseStatisticsService';
 import FixedAndVariableChart from './FixedAndVariableChart';
-import { incomeService } from '../../services/incomeService';
 import { useUser } from '../../context/user';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
@@ -31,14 +30,13 @@ const FixedAndVariableChartWithFilter: React.FC<FixedAndVariableChartWithFilterP
     try {
       setLoading(true);
       setError(null);
-      const [expenseStats, incomeStats] = await Promise.all([
-        expenseStatisticsService.getFixedAndVariableStatistics(params),
-        incomeService.getIncomeStatistics(params),
-      ]);
+      const expenseStats = await expenseStatisticsService.getFixedAndVariableStatistics(params);
 
+      // Use the user's estimated monthly income (the budget reference) instead
+      // of the actual income recorded for the month.
       setData({
         expenses: expenseStats,
-        earningsAmount: Number(incomeStats.totalAmount ?? 0),
+        earningsAmount: Number(user?.estimatedMonthlyIncome ?? 0),
       });
     } catch (err) {
       const error = err as { message?: string };
@@ -46,7 +44,7 @@ const FixedAndVariableChartWithFilter: React.FC<FixedAndVariableChartWithFilterP
     } finally {
       setLoading(false);
     }
-  }, [params]);
+  }, [params, user?.estimatedMonthlyIncome]);
 
   useEffect(() => {
     loadData();

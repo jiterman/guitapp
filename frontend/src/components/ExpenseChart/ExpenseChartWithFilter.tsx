@@ -80,10 +80,21 @@ const getFilterButtonLabel = (filterState: FilterState): string => {
   }
 };
 
-type ChartType = 'categories' | 'fixed-variable';
+export type ChartType = 'categories' | 'fixed-variable';
 
-const ExpenseChartWithFilter: React.FC = () => {
-  const [selectedChart, setSelectedChart] = useState<ChartType>('categories');
+interface ExpenseChartWithFilterProps {
+  initialChart?: ChartType;
+}
+
+const ExpenseChartWithFilter: React.FC<ExpenseChartWithFilterProps> = ({ initialChart }) => {
+  const [selectedChart, setSelectedChart] = useState<ChartType>(initialChart ?? 'categories');
+
+  // Follow deep links (e.g. tapping a notification) that target a specific chart.
+  useEffect(() => {
+    if (initialChart) {
+      setSelectedChart(initialChart);
+    }
+  }, [initialChart]);
   const [isFilterVisible, setIsFilterVisible] = useState(false);
   const [filterState, setFilterState] = useState<FilterState>({
     kind: 'month',

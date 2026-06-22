@@ -1,13 +1,15 @@
 import React, { useState } from 'react';
-import { Alert, View, Image, KeyboardAvoidingView } from 'react-native';
+import { View, Image, KeyboardAvoidingView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button, Layout, Text, Input, Spinner } from '@ui-kitten/components';
 import { router, useLocalSearchParams } from 'expo-router';
 import { authService } from '../services/authService';
 import { loginStyles as styles } from '../styles/loginStyles';
 import { AuthError } from '../types/errors';
+import { useDialog } from '../context/dialog';
 
 const VerifyResetOtpScreen = () => {
+  const { alert } = useDialog();
   const { email } = useLocalSearchParams<{ email: string }>();
   const [otp, setOtp] = useState('');
   const [loading, setLoading] = useState(false);
@@ -34,7 +36,7 @@ const VerifyResetOtpScreen = () => {
         errorMessage = 'El código ingresado es incorrecto.';
       }
 
-      Alert.alert('Error de verificación', errorMessage);
+      await alert({ title: 'Error de verificación', message: errorMessage });
     } finally {
       setLoading(false);
     }

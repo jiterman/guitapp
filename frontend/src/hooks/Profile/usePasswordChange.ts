@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { router } from 'expo-router';
 import { userService } from '../../services/userService';
 import { authService } from '../../services/authService';
+import { useDialog } from '../../context/dialog';
 
 interface UsePasswordChangeParams {
   onSuccess: () => void;
@@ -14,6 +15,7 @@ export const usePasswordChange = ({ onSuccess, setUser }: UsePasswordChangeParam
   const [confirmLoading, setConfirmLoading] = useState(false);
   const [confirmError, setConfirmError] = useState<string | null>(null);
   const [passwordError, setPasswordError] = useState<string | null>(null);
+  const { alert } = useDialog();
 
   const handleSavePassword = async (currentPassword: string, newPassword: string) => {
     if (saving) return;
@@ -48,8 +50,8 @@ export const usePasswordChange = ({ onSuccess, setUser }: UsePasswordChangeParam
 
         await authService.removeToken();
         setUser(null);
+        await alert({ title: 'Listo', message: 'Contraseña cambiada con éxito' });
         router.replace('/login');
-        alert('Contraseña cambiada con éxito');
       } else {
         setConfirmVisible(false);
       }

@@ -6,6 +6,7 @@ import OnboardingScreen from '../src/screens/OnboardingScreen';
 import { userService } from '../src/services/userService';
 import { router } from 'expo-router';
 import { UserProvider } from '../src/context/user';
+import { DialogProvider } from '../src/context/dialog';
 
 // Mock router
 jest.mock('expo-router', () => ({
@@ -24,7 +25,9 @@ jest.mock('../src/services/userService', () => ({
 
 const Wrapper = ({ children }: { children: React.ReactNode }) => (
   <ApplicationProvider {...eva} theme={eva.light}>
-    <UserProvider>{children}</UserProvider>
+    <UserProvider>
+      <DialogProvider>{children}</DialogProvider>
+    </UserProvider>
   </ApplicationProvider>
 );
 
