@@ -54,6 +54,15 @@ export default function AppLayout() {
         ({ alertType }: { alertType: string }) => {
           if (alertType === 'MONTHLY_SUMMARY') {
             router.push({ pathname: '/summary', params: { tab: 'monthly' } });
+          } else if (alertType === 'CATEGORY_OVERSPENDING') {
+            router.push({ pathname: '/statistics', params: { chart: 'categories' } });
+          } else if (
+            alertType === 'SAVINGS_GOAL_AT_RISK' ||
+            alertType === 'FIXED_EXPENSE_THRESHOLD_EXCEEDED' ||
+            alertType === 'VARIABLE_EXPENSE_THRESHOLD_EXCEEDED' ||
+            alertType === 'NEGATIVE_BALANCE_RISK'
+          ) {
+            router.push({ pathname: '/statistics', params: { chart: 'fixed-variable' } });
           }
         }
       );

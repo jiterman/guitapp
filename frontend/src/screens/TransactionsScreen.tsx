@@ -3,11 +3,15 @@ import { View, FlatList, StyleSheet, Dimensions } from 'react-native';
 import { Layout, Text } from '@ui-kitten/components';
 import { Ionicons } from '@expo/vector-icons';
 import { movementService, MovementResponse } from '../services/movementService';
+import { expenseService } from '../services/expenseService';
+import { incomeService } from '../services/incomeService';
 import TransactionCard from '../components/TransactionCard/TransactionCard';
+import SwipeToDelete from '../components/SwipeToDelete/SwipeToDelete';
 import MovementFilter, { FilterState } from '../components/MovementFilter/MovementFilter';
 import { applyClientFilters } from '../utils/movementFilters';
 import { router } from 'expo-router';
 import { useIsFocused } from '@react-navigation/native';
+import { useDialog } from '../context/dialog';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 const vh = screenHeight / 100;
@@ -30,6 +34,32 @@ const TransactionsScreen: React.FC = () => {
   const [movements, setMovements] = useState<MovementResponse[]>([]);
   const [filterState, setFilterState] = useState<FilterState>(() => buildInitialFilter());
   const isFocused = useIsFocused();
+  const { confirm, alert } = useDialog();
+
+  const handleDeleteMovement = async (movement: MovementResponse) => {
+    const isIncome = movement.type === 'INCOME';
+    const confirmed = await confirm({
+      title: isIncome ? 'Eliminar ingreso' : 'Eliminar gasto',
+      message: `¿Seguro que querés eliminar este ${isIncome ? 'ingreso' : 'gasto'}?`,
+      confirmText: 'Eliminar',
+      cancelText: 'Cancelar',
+      variant: 'destructive',
+    });
+    if (!confirmed) return;
+    try {
+      if (isIncome) {
+        await incomeService.deleteIncome(movement.id);
+      } else {
+        await expenseService.deleteExpense(movement.id);
+      }
+      setMovements(prev => prev.filter(m => m.id !== movement.id));
+    } catch {
+      await alert({
+        title: 'Error',
+        message: `No se pudo eliminar el ${isIncome ? 'ingreso' : 'gasto'}.`,
+      });
+    }
+  };
 
   useEffect(() => {
     if (!isFocused) return;
@@ -61,16 +91,18 @@ const TransactionsScreen: React.FC = () => {
   }, [filterState, isFocused]);
 
   const renderItem = ({ item }: { item: MovementResponse }) => (
-    <TransactionCard
-      movement={item}
-      onPress={movement => {
-        if (movement.type === 'INCOME') {
-          router.push({ pathname: '/income/[incomeId]', params: { incomeId: movement.id } });
-        } else if (movement.type === 'EXPENSE') {
-          router.push({ pathname: '/expense/[expenseId]', params: { expenseId: movement.id } });
-        }
-      }}
-    />
+    <SwipeToDelete onDelete={() => handleDeleteMovement(item)}>
+      <TransactionCard
+        movement={item}
+        onPress={movement => {
+          if (movement.type === 'INCOME') {
+            router.push({ pathname: '/income/[incomeId]', params: { incomeId: movement.id } });
+          } else if (movement.type === 'EXPENSE') {
+            router.push({ pathname: '/expense/[expenseId]', params: { expenseId: movement.id } });
+          }
+        }}
+      />
+    </SwipeToDelete>
   );
 
   return (

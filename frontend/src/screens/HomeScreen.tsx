@@ -4,9 +4,13 @@ import { Layout, Text } from '@ui-kitten/components';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { movementService, MovementResponse } from '../services/movementService';
+import { expenseService } from '../services/expenseService';
+import { incomeService } from '../services/incomeService';
 import TransactionCard from '../components/TransactionCard/TransactionCard';
+import SwipeToDelete from '../components/SwipeToDelete/SwipeToDelete';
 import BalanceCard from '../components/BalanceCard/BalanceCard';
 import { useIsFocused } from '@react-navigation/native';
+import { useDialog } from '../context/dialog';
 import { parseLocalDate } from '../utils/dateFormatter';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
@@ -17,6 +21,32 @@ const HomeScreen = () => {
   const [incomeSum, setIncomeSum] = useState<number>(0);
   const [expenseSum, setExpenseSum] = useState<number>(0);
   const isFocused = useIsFocused();
+  const { confirm, alert } = useDialog();
+
+  const handleDeleteMovement = async (movement: MovementResponse) => {
+    const isIncome = movement.type === 'INCOME';
+    const confirmed = await confirm({
+      title: isIncome ? 'Eliminar ingreso' : 'Eliminar gasto',
+      message: `¿Seguro que querés eliminar este ${isIncome ? 'ingreso' : 'gasto'}?`,
+      confirmText: 'Eliminar',
+      cancelText: 'Cancelar',
+      variant: 'destructive',
+    });
+    if (!confirmed) return;
+    try {
+      if (isIncome) {
+        await incomeService.deleteIncome(movement.id);
+      } else {
+        await expenseService.deleteExpense(movement.id);
+      }
+      setMovements(prev => prev.filter(m => m.id !== movement.id));
+    } catch {
+      await alert({
+        title: 'Error',
+        message: `No se pudo eliminar el ${isIncome ? 'ingreso' : 'gasto'}.`,
+      });
+    }
+  };
 
   useEffect(() => {
     if (!isFocused) return;
@@ -90,22 +120,24 @@ const HomeScreen = () => {
           <ScrollView style={styles.movementsList} nestedScrollEnabled>
             {movements.map(m => (
               <View key={m.id}>
-                <TransactionCard
-                  movement={m}
-                  onPress={movement => {
-                    if (movement.type === 'INCOME') {
-                      router.push({
-                        pathname: '/income/[incomeId]',
-                        params: { incomeId: movement.id },
-                      });
-                    } else if (movement.type === 'EXPENSE') {
-                      router.push({
-                        pathname: '/expense/[expenseId]',
-                        params: { expenseId: movement.id },
-                      });
-                    }
-                  }}
-                />
+                <SwipeToDelete onDelete={() => handleDeleteMovement(m)}>
+                  <TransactionCard
+                    movement={m}
+                    onPress={movement => {
+                      if (movement.type === 'INCOME') {
+                        router.push({
+                          pathname: '/income/[incomeId]',
+                          params: { incomeId: movement.id },
+                        });
+                      } else if (movement.type === 'EXPENSE') {
+                        router.push({
+                          pathname: '/expense/[expenseId]',
+                          params: { expenseId: movement.id },
+                        });
+                      }
+                    }}
+                  />
+                </SwipeToDelete>
                 <View style={{ height: 1, backgroundColor: '#EEF6FB' }} />
               </View>
             ))}
