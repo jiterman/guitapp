@@ -9,6 +9,7 @@ import {
   ActivityIndicator,
   StyleSheet,
   Dimensions,
+  Switch,
 } from 'react-native';
 import { transactionFormStyles as tStyles, ICON_COLORS } from '../styles/transactionFormStyles';
 import { Layout, Text } from '@ui-kitten/components';
@@ -45,6 +46,8 @@ import { useCurrencyInput } from '../hooks/useCurrencyInput';
 import { formatDate, toLocalDateString } from '../utils/dateFormatter';
 
 const vh = Dimensions.get('window').height / 100;
+// Shared width so the date pill matches the Frequency segmented control.
+const RECURRENCE_CONTROL_WIDTH = 168;
 interface InferredRuleBannerProps {
   isVisible: boolean;
 }
@@ -460,94 +463,18 @@ const AddMovementScreen = () => {
           </TouchableOpacity>
           {categoryError && <Text style={styles.errorText}>{categoryError}</Text>}
 
-          <Text style={styles.label}>Periodicidad</Text>
-          <View style={styles.typeContainer}>
-            <TouchableOpacity
-              style={[
-                styles.typeButton,
-                !isRecurring ? styles.typeButtonActive : styles.typeButtonInactive,
-              ]}
-              onPress={() => setIsRecurring(false)}
-            >
-              <Text
-                style={[
-                  styles.typeButtonText,
-                  !isRecurring ? styles.typeButtonTextActive : styles.typeButtonTextInactive,
-                ]}
-              >
-                Único
-              </Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[
-                styles.typeButton,
-                isRecurring ? styles.typeButtonActive : styles.typeButtonInactive,
-              ]}
-              onPress={() => setIsRecurring(true)}
-            >
-              <Text
-                style={[
-                  styles.typeButtonText,
-                  isRecurring ? styles.typeButtonTextActive : styles.typeButtonTextInactive,
-                ]}
-              >
-                Recurrente
-              </Text>
-            </TouchableOpacity>
-          </View>
-
-          {isRecurring && (
+          {!isRecurring && (
             <>
-              <Text style={styles.label}>Frecuencia</Text>
-              <View style={styles.typeContainer}>
-                <TouchableOpacity
-                  style={[
-                    styles.typeButton,
-                    frequency === 'WEEKLY' ? styles.typeButtonActive : styles.typeButtonInactive,
-                  ]}
-                  onPress={() => setFrequency('WEEKLY')}
-                >
-                  <Text
-                    style={[
-                      styles.typeButtonText,
-                      frequency === 'WEEKLY'
-                        ? styles.typeButtonTextActive
-                        : styles.typeButtonTextInactive,
-                    ]}
-                  >
-                    Semanal
-                  </Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={[
-                    styles.typeButton,
-                    frequency === 'MONTHLY' ? styles.typeButtonActive : styles.typeButtonInactive,
-                  ]}
-                  onPress={() => setFrequency('MONTHLY')}
-                >
-                  <Text
-                    style={[
-                      styles.typeButtonText,
-                      frequency === 'MONTHLY'
-                        ? styles.typeButtonTextActive
-                        : styles.typeButtonTextInactive,
-                    ]}
-                  >
-                    Mensual
-                  </Text>
-                </TouchableOpacity>
-              </View>
+              <Text style={styles.label}>Fecha *</Text>
+              <TouchableOpacity style={styles.dateButton} onPress={() => setShowDatePicker(true)}>
+                <View style={styles.dropdownIconContainer}>
+                  <Ionicons name="calendar-outline" size={18} color="#07a3e4" />
+                </View>
+                <Text style={styles.dropdownButtonText}>{formatDate(selectedDate)}</Text>
+                <Ionicons name="chevron-forward" size={20} color="#07a3e4" />
+              </TouchableOpacity>
             </>
           )}
-
-          <Text style={styles.label}>{isRecurring ? 'Fecha de inicio *' : 'Fecha *'}</Text>
-          <TouchableOpacity style={styles.dateButton} onPress={() => setShowDatePicker(true)}>
-            <View style={styles.dropdownIconContainer}>
-              <Ionicons name="calendar-outline" size={18} color="#07a3e4" />
-            </View>
-            <Text style={styles.dropdownButtonText}>{formatDate(selectedDate)}</Text>
-            <Ionicons name="chevron-forward" size={20} color="#07a3e4" />
-          </TouchableOpacity>
 
           {movementType === 'EXPENSE' && (
             <>
@@ -619,6 +546,92 @@ const AddMovementScreen = () => {
             scrollViewRef={scrollViewRef}
             scrollYRef={scrollYRef}
           />
+
+          <View style={styles.recurringSwitchRow}>
+            <Text style={styles.recurringSwitchLabel}>
+              {movementType === 'EXPENSE'
+                ? '¿Es un gasto recurrente?'
+                : '¿Es un ingreso recurrente?'}
+            </Text>
+            <Switch
+              value={isRecurring}
+              onValueChange={setIsRecurring}
+              trackColor={{ false: '#D7E2EC', true: '#9BD7F2' }}
+              thumbColor={isRecurring ? '#07a3e4' : '#f4f4f4'}
+              ios_backgroundColor="#D7E2EC"
+            />
+          </View>
+
+          {isRecurring && (
+            <View style={styles.recurringSubPanel}>
+              <View style={styles.subPanelHeader}>
+                <Ionicons name="repeat" size={16} color="#07a3e4" />
+                <Text style={styles.subPanelHeaderText}>Recurrente</Text>
+                <TouchableOpacity
+                  style={styles.subPanelInfoButton}
+                  hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                  onPress={() =>
+                    alert({
+                      title: 'Movimiento recurrente',
+                      message:
+                        'Se va a registrar automáticamente a partir de la fecha de inicio (inclusive), con la frecuencia que elijas.',
+                    })
+                  }
+                >
+                  <Ionicons name="information-circle-outline" size={16} color="#07a3e4" />
+                </TouchableOpacity>
+              </View>
+
+              <View style={styles.subRow}>
+                <Ionicons name="sync-outline" size={18} color="#37618A" style={styles.subRowIcon} />
+                <Text style={styles.subRowLabel}>Frecuencia</Text>
+                <View style={styles.segmented}>
+                  <TouchableOpacity
+                    style={[styles.segment, frequency === 'WEEKLY' && styles.segmentActive]}
+                    onPress={() => setFrequency('WEEKLY')}
+                  >
+                    <Text
+                      style={[
+                        styles.segmentText,
+                        frequency === 'WEEKLY' && styles.segmentTextActive,
+                      ]}
+                    >
+                      Semanal
+                    </Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={[styles.segment, frequency === 'MONTHLY' && styles.segmentActive]}
+                    onPress={() => setFrequency('MONTHLY')}
+                  >
+                    <Text
+                      style={[
+                        styles.segmentText,
+                        frequency === 'MONTHLY' && styles.segmentTextActive,
+                      ]}
+                    >
+                      Mensual
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+
+              <View style={styles.subRowDivider} />
+
+              <TouchableOpacity style={styles.subRow} onPress={() => setShowDatePicker(true)}>
+                <Ionicons
+                  name="calendar-outline"
+                  size={18}
+                  color="#37618A"
+                  style={styles.subRowIcon}
+                />
+                <Text style={styles.subRowLabel}>Inicia</Text>
+                <View style={styles.datePill}>
+                  <Text style={styles.datePillText}>{formatDate(selectedDate)}</Text>
+                  <Ionicons name="chevron-down" size={16} color="#07a3e4" />
+                </View>
+              </TouchableOpacity>
+            </View>
+          )}
         </ScrollView>
 
         <TouchableOpacity
@@ -795,6 +808,112 @@ const localStyles = StyleSheet.create({
     fontSize: 12,
     color: '#013366',
     fontWeight: '500',
+  },
+  recurringSwitchRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginTop: vh * 2,
+  },
+  recurringSwitchLabel: {
+    flex: 1,
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: '#003366',
+    marginRight: 12,
+  },
+  recurringSubPanel: {
+    marginTop: vh * 1,
+    backgroundColor: '#F4FAFE',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#D7EAF7',
+    borderLeftWidth: 3,
+    borderLeftColor: '#07a3e4',
+    paddingHorizontal: 12,
+    paddingVertical: vh * 0.6,
+  },
+  subPanelHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingVertical: vh * 0.8,
+  },
+  subPanelHeaderText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#07a3e4',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  subPanelInfoButton: {
+    marginLeft: 2,
+  },
+  subRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: vh * 1,
+  },
+  subRowIcon: {
+    marginRight: 10,
+  },
+  subRowLabel: {
+    flex: 1,
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#37618A',
+  },
+  datePill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    width: RECURRENCE_CONTROL_WIDTH,
+    paddingVertical: 7,
+    paddingHorizontal: 12,
+    borderRadius: 9,
+    backgroundColor: '#fff',
+    borderWidth: 1,
+    borderColor: '#D7EAF7',
+  },
+  datePillText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#003366',
+  },
+  subRowDivider: {
+    height: 1,
+    backgroundColor: '#E1ECF5',
+  },
+  segmented: {
+    flexDirection: 'row',
+    width: RECURRENCE_CONTROL_WIDTH,
+    backgroundColor: '#E4EEF6',
+    borderRadius: 9,
+    padding: 3,
+  },
+  segment: {
+    flex: 1,
+    paddingVertical: 7,
+    paddingHorizontal: 8,
+    borderRadius: 7,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  segmentActive: {
+    backgroundColor: '#fff',
+    shadowColor: '#506E96',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.12,
+    shadowRadius: 3,
+    elevation: 2,
+  },
+  segmentText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#6B8299',
+  },
+  segmentTextActive: {
+    color: '#07a3e4',
   },
 });
 
