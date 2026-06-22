@@ -96,6 +96,7 @@ const AddMovementScreen = () => {
       : null
   );
   const [selectedDate, setSelectedDate] = useState(initialDate);
+  const [showDescription, setShowDescription] = useState(false);
   const [isRecurring, setIsRecurring] = useState(params.recurring === 'true');
   const [frequency, setFrequency] = useState<RecurrenceFrequency>('MONTHLY');
   const [showDatePicker, setShowDatePicker] = useState(false);
@@ -435,6 +436,29 @@ const AddMovementScreen = () => {
             </View>
           </>
 
+          {showDescription ? (
+            <ExpandableTextInput
+              label="Descripción"
+              value={description}
+              onChangeText={text => setDescription(text.slice(0, 255))}
+              placeholder="Información adicional (opcional)"
+              scrollViewRef={scrollViewRef}
+              scrollYRef={scrollYRef}
+              onRemove={() => {
+                setDescription('');
+                setShowDescription(false);
+              }}
+            />
+          ) : (
+            <TouchableOpacity
+              style={styles.addDescriptionLink}
+              onPress={() => setShowDescription(true)}
+            >
+              <Ionicons name="add-circle-outline" size={18} color="#07a3e4" />
+              <Text style={styles.addDescriptionText}>Agregar descripción</Text>
+            </TouchableOpacity>
+          )}
+
           <Text style={styles.label}>Categoría *</Text>
           <TouchableOpacity
             style={[styles.dropdownButton, categoryError ? styles.dropdownButtonError : null]}
@@ -537,15 +561,6 @@ const AddMovementScreen = () => {
               />
             </>
           )}
-
-          <ExpandableTextInput
-            label="Descripción"
-            value={description}
-            onChangeText={text => setDescription(text.slice(0, 255))}
-            placeholder="Información adicional (opcional)"
-            scrollViewRef={scrollViewRef}
-            scrollYRef={scrollYRef}
-          />
 
           <View style={styles.recurringSwitchRow}>
             <Text style={styles.recurringSwitchLabel}>
@@ -809,11 +824,24 @@ const localStyles = StyleSheet.create({
     color: '#013366',
     fontWeight: '500',
   },
+  addDescriptionLink: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    alignSelf: 'flex-start',
+    gap: 6,
+    marginTop: vh * 1.2,
+    paddingVertical: 4,
+  },
+  addDescriptionText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#07a3e4',
+  },
   recurringSwitchRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginTop: vh * 2,
+    marginTop: vh * 1,
   },
   recurringSwitchLabel: {
     flex: 1,

@@ -15,6 +15,7 @@ interface Props {
   label: string;
   scrollViewRef?: React.RefObject<ScrollView | null>;
   scrollYRef?: React.RefObject<number>;
+  onRemove?: () => void;
 }
 
 const ExpandableTextInput: React.FC<Props> = ({
@@ -24,6 +25,7 @@ const ExpandableTextInput: React.FC<Props> = ({
   label,
   scrollViewRef,
   scrollYRef: externalScrollYRef,
+  onRemove,
 }) => {
   const [expanded, setExpanded] = useState(false);
   const [keyboardHeight, setKeyboardHeight] = useState(0);
@@ -63,7 +65,16 @@ const ExpandableTextInput: React.FC<Props> = ({
 
   return (
     <>
-      <Text style={styles.label}>{label}</Text>
+      {onRemove ? (
+        <View style={styles.expandableLabelRow}>
+          <Text style={[styles.label, styles.expandableLabelText]}>{label}</Text>
+          <TouchableOpacity onPress={onRemove} hitSlop={8}>
+            <Ionicons name="close" size={18} color="#90A4AE" />
+          </TouchableOpacity>
+        </View>
+      ) : (
+        <Text style={styles.label}>{label}</Text>
+      )}
       <View
         ref={containerRef}
         style={[styles.inputWithIcon, expanded && { alignItems: 'flex-start' }]}

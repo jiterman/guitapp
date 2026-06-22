@@ -85,6 +85,17 @@ export const transactionFormStyles = StyleSheet.create({
     marginBottom: vh * 0.6,
     marginTop: vh * 1.2,
   },
+  expandableLabelRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginBottom: vh * 0.6,
+    marginTop: vh * 1.2,
+  },
+  expandableLabelText: {
+    marginTop: 0,
+    marginBottom: 0,
+  },
   typeLabel: {
     fontSize: 14,
     fontWeight: 'bold',
