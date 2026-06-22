@@ -15,11 +15,11 @@ import { transactionFormStyles as tStyles, ICON_COLORS } from '../styles/transac
 import { Layout, Text } from '@ui-kitten/components';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import { router, useLocalSearchParams } from 'expo-router';
 import * as ImageManipulator from 'expo-image-manipulator';
 import CameraModal from '../components/CameraModal/CameraModal';
 import ExpandableTextInput from '../components/ExpandableTextInput/ExpandableTextInput';
+import DatePickerModal from '../components/DatePickerModal/DatePickerModal';
 import { expenseService } from '../services/expenseService';
 import { incomeService } from '../services/incomeService';
 import { ruleService } from '../services/ruleService';
@@ -191,12 +191,22 @@ const AddMovementScreen = () => {
     setSearch('');
   };
 
-  const onDateChange = (event: DateTimePickerEvent, date?: Date) => {
-    setShowDatePicker(false);
-    if (event.type === 'set' && date) {
-      setSelectedDate(date);
-    }
+  const onDateSelect = (date: Date) => {
+    setSelectedDate(date);
   };
+
+  const isSameDay = (a: Date, b: Date) =>
+    a.getDate() === b.getDate() &&
+    a.getMonth() === b.getMonth() &&
+    a.getFullYear() === b.getFullYear();
+
+  const startOfDay = (date: Date) => new Date(date.getFullYear(), date.getMonth(), date.getDate());
+
+  const today = startOfDay(new Date());
+  const yesterday = new Date(today.getTime() - 24 * 60 * 60 * 1000);
+  const isToday = isSameDay(selectedDate, today);
+  const isYesterday = isSameDay(selectedDate, yesterday);
+  const isCustomDate = !isToday && !isYesterday;
 
   const handleAcceptRuleSuggestion = (categoryValue: string, type: 'FIXED' | 'VARIABLE') => {
     setSuggestedRuleData({
@@ -487,19 +497,6 @@ const AddMovementScreen = () => {
           </TouchableOpacity>
           {categoryError && <Text style={styles.errorText}>{categoryError}</Text>}
 
-          {!isRecurring && (
-            <>
-              <Text style={styles.label}>Fecha *</Text>
-              <TouchableOpacity style={styles.dateButton} onPress={() => setShowDatePicker(true)}>
-                <View style={styles.dropdownIconContainer}>
-                  <Ionicons name="calendar-outline" size={18} color="#07a3e4" />
-                </View>
-                <Text style={styles.dropdownButtonText}>{formatDate(selectedDate)}</Text>
-                <Ionicons name="chevron-forward" size={20} color="#07a3e4" />
-              </TouchableOpacity>
-            </>
-          )}
-
           {movementType === 'EXPENSE' && (
             <>
               <Text style={styles.label}>Tipo de gasto *</Text>
@@ -559,6 +556,46 @@ const AddMovementScreen = () => {
                 selectedExpenseType={selectedExpenseType}
                 onAcceptSuggestion={handleAcceptRuleSuggestion}
               />
+            </>
+          )}
+
+          {!isRecurring && (
+            <>
+              <Text style={styles.label}>Fecha *</Text>
+              <View style={styles.dateChipsRow}>
+                <TouchableOpacity
+                  style={[styles.dateChip, isToday && styles.dateChipActive]}
+                  onPress={() => setSelectedDate(today)}
+                >
+                  <Text style={[styles.dateChipText, isToday && styles.dateChipTextActive]}>
+                    Hoy
+                  </Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.dateChip, isYesterday && styles.dateChipActive]}
+                  onPress={() => setSelectedDate(yesterday)}
+                >
+                  <Text style={[styles.dateChipText, isYesterday && styles.dateChipTextActive]}>
+                    Ayer
+                  </Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.dateChipCustom, isCustomDate && styles.dateChipActive]}
+                  onPress={() => setShowDatePicker(true)}
+                >
+                  <Ionicons
+                    name="calendar-outline"
+                    size={16}
+                    color={isCustomDate ? '#07a3e4' : '#6B8299'}
+                  />
+                  <Text
+                    style={[styles.dateChipText, isCustomDate && styles.dateChipTextActive]}
+                    numberOfLines={1}
+                  >
+                    {isCustomDate ? formatDate(selectedDate) : 'Otra'}
+                  </Text>
+                </TouchableOpacity>
+              </View>
             </>
           )}
 
@@ -727,15 +764,13 @@ const AddMovementScreen = () => {
         </SafeAreaView>
       </Modal>
 
-      {showDatePicker && (
-        <DateTimePicker
-          mode="date"
-          value={selectedDate}
-          display="default"
-          onChange={onDateChange}
-          maximumDate={isRecurring ? undefined : new Date()}
-        />
-      )}
+      <DatePickerModal
+        visible={showDatePicker}
+        date={selectedDate}
+        max={isRecurring ? undefined : new Date()}
+        onSelect={onDateSelect}
+        onClose={() => setShowDatePicker(false)}
+      />
 
       <CameraModal
         visible={cameraVisible}
@@ -835,6 +870,42 @@ const localStyles = StyleSheet.create({
   addDescriptionText: {
     fontSize: 14,
     fontWeight: '600',
+    color: '#07a3e4',
+  },
+  dateChipsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  dateChip: {
+    paddingVertical: 9,
+    paddingHorizontal: 18,
+    borderRadius: 12,
+    backgroundColor: '#fff',
+    borderWidth: 1,
+    borderColor: '#D7E2EC',
+  },
+  dateChipCustom: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingVertical: 9,
+    paddingHorizontal: 14,
+    borderRadius: 12,
+    backgroundColor: '#fff',
+    borderWidth: 1,
+    borderColor: '#D7E2EC',
+  },
+  dateChipActive: {
+    backgroundColor: '#EAF4FF',
+    borderColor: '#8EC2FF',
+  },
+  dateChipText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#6B8299',
+  },
+  dateChipTextActive: {
     color: '#07a3e4',
   },
   recurringSwitchRow: {
