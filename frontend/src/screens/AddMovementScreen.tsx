@@ -104,6 +104,11 @@ const AddMovementScreen = () => {
   const [amountError, setAmountError] = useState<string | null>(null);
   const [categoryError, setCategoryError] = useState<string | null>(null);
   const [scanningReceipt, setScanningReceipt] = useState(false);
+  const [scanStatusMessage, setScanStatusMessage] = useState('Analizando ticket...');
+  const [scanSubTextMessage, setScanSubTextMessage] = useState(
+    'Estamos extrayendo el monto y los datos del comprobante.'
+  );
+  const [scanHasError, setScanHasError] = useState(false);
   const [cameraVisible, setCameraVisible] = useState(false);
 
   // Aviso de regla inferida
@@ -137,6 +142,9 @@ const AddMovementScreen = () => {
 
   const onImageCaptured = async (uri: string) => {
     setCameraVisible(false);
+    setScanStatusMessage('Optimizando imagen...');
+    setScanSubTextMessage('Estamos extrayendo el monto y los datos del comprobante.');
+    setScanHasError(false);
     setScanningReceipt(true);
     try {
       const manipulated = await ImageManipulator.manipulateAsync(
@@ -144,12 +152,22 @@ const AddMovementScreen = () => {
         [{ resize: { width: 800 } }],
         { compress: 0.7, format: ImageManipulator.SaveFormat.JPEG }
       );
+      setScanStatusMessage('Analizando imagen...');
       const analysis = await expenseService.analyzeReceipt(manipulated.uri);
-      if (analysis.amount && analysis.amount > 0) {
-        // setAmount expects the raw value with a dot decimal separator; toFixed(2)
-        // keeps the two decimals so a "24300,00" receipt loads as "24.300,00".
-        setAmount(analysis.amount.toFixed(2));
+      if (!analysis.amount || analysis.amount <= 0) {
+        setScanStatusMessage('Ha ocurrido un error al procesar la imagen.');
+        setScanSubTextMessage(
+          'No pudimos extraer el monto de la imagen. Por favor, intentá de nuevo con otra foto más clara.'
+        );
+        setScanHasError(true);
+        return;
       }
+
+      setScanStatusMessage('¡Datos extraídos con éxito!');
+
+      // setAmount expects the raw value with a dot decimal separator; toFixed(2)
+      // keeps the two decimals so a "24300,00" receipt loads as "24.300,00".
+      setAmount(analysis.amount.toFixed(2));
       if (analysis.title) {
         setTitle(analysis.title.slice(0, 20));
       }
@@ -166,10 +184,18 @@ const AddMovementScreen = () => {
       if (analysis.date) {
         setSelectedDate(parseLocalDate(analysis.date));
       }
-    } catch {
-      await alert({ title: 'Error', message: 'No se pudo analizar el ticket. Intentá de nuevo.' });
-    } finally {
-      setScanningReceipt(false);
+
+      // Delay closing a bit so they can read the success message
+      setTimeout(() => {
+        setScanningReceipt(false);
+      }, 500);
+    } catch (err) {
+      console.error('Error analyzing receipt:', err);
+      setScanStatusMessage('Ha ocurrido un error al procesar la imagen.');
+      setScanSubTextMessage(
+        'Podés volver atrás utilizando la cruz de arriba a la derecha para intentar nuevamente.'
+      );
+      setScanHasError(true);
     }
   };
 
@@ -377,9 +403,28 @@ const AddMovementScreen = () => {
         </View>
 
         {scanningReceipt && (
-          <View style={styles.scanOverlay}>
-            <ActivityIndicator size="large" color="#07a3e4" />
-            <Text style={styles.scanOverlayText}>Analizando ticket...</Text>
+          <View style={styles.scanOverlayContainer}>
+            <View style={styles.scanSubHeader}>
+              <Text style={styles.scanOverlayTitle}>Procesando Gasto</Text>
+              <TouchableOpacity
+                onPress={() => {
+                  setScanningReceipt(false);
+                  setScanHasError(false);
+                }}
+              >
+                <Text style={styles.scanCloseButton}>✕</Text>
+              </TouchableOpacity>
+            </View>
+
+            <View style={styles.scanLoadingContainer}>
+              {scanHasError ? (
+                <Ionicons name="alert-circle" size={64} color="#E53935" />
+              ) : (
+                <ActivityIndicator size="large" color="#07a3e4" />
+              )}
+              <Text style={styles.scanOverlayText}>{scanStatusMessage}</Text>
+              <Text style={styles.scanSubText}>{scanSubTextMessage}</Text>
+            </View>
           </View>
         )}
 
@@ -978,6 +1023,54 @@ const localStyles = StyleSheet.create({
   },
   segmentTextActive: {
     color: '#07a3e4',
+  },
+  scanOverlayContainer: {
+    position: 'absolute',
+    top: 0,
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: '#E6F2FC',
+    paddingHorizontal: 20,
+    paddingTop: 20,
+    zIndex: 99,
+  },
+  scanSubHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 40,
+  },
+  scanOverlayTitle: {
+    fontWeight: 'bold',
+    color: '#003366',
+    fontSize: 24,
+  },
+  scanCloseButton: {
+    fontSize: 24,
+    color: '#7f8c8d',
+    padding: 5,
+  },
+  scanLoadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingTop: 100,
+  },
+  scanOverlayText: {
+    marginTop: 20,
+    textAlign: 'center',
+    fontWeight: 'bold',
+    color: '#003366',
+    fontSize: 18,
+    paddingHorizontal: 20,
+  },
+  scanSubText: {
+    marginTop: 8,
+    textAlign: 'center',
+    color: '#006699',
+    paddingHorizontal: 20,
+    fontSize: 16,
   },
 });
 

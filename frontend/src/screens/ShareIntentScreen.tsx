@@ -5,11 +5,16 @@ import { router, useLocalSearchParams } from 'expo-router';
 import { useShareIntentContext } from 'expo-share-intent';
 import * as ImageManipulator from 'expo-image-manipulator';
 import { expenseService } from '../services/expenseService';
+import { Ionicons } from '@expo/vector-icons';
 
 const ShareIntentScreen = () => {
   const { resetShareIntent } = useShareIntentContext();
   const { sharedFilePath } = useLocalSearchParams<{ sharedFilePath: string }>();
   const [statusMessage, setStatusMessage] = useState('Analizando imagen del ticket...');
+  const [subTextMessage, setSubTextMessage] = useState(
+    'Estamos extrayendo el monto y los datos del comprobante.'
+  );
+  const [hasError, setHasError] = useState(false);
   const hasProcessed = useRef(false);
 
   useEffect(() => {
@@ -21,12 +26,15 @@ const ShareIntentScreen = () => {
         console.log('Archivo recibido desde los parámetros:', sharedFilePath);
 
         if (!sharedFilePath) {
-          setStatusMessage('No se recibió ninguna imagen válida.');
+          setStatusMessage('Ha ocurrido un error al procesar la imagen.');
+          setSubTextMessage('No se recibió ninguna imagen válida.');
+          setHasError(true);
           return;
         }
 
         // 1. Redimensionar y comprimir la imagen para optimizar el procesamiento
         setStatusMessage('Optimizando imagen...');
+        setSubTextMessage('Estamos extrayendo el monto y los datos del comprobante.');
         const manipulatedImage = await ImageManipulator.manipulateAsync(
           sharedFilePath,
           [{ resize: { width: 800 } }], // Redimensionar a 800px de ancho manteniendo el aspect ratio
@@ -37,6 +45,15 @@ const ShareIntentScreen = () => {
         setStatusMessage('Analizando imagen...');
         const analysisResponse = await expenseService.analyzeReceipt(manipulatedImage.uri);
 
+        if (!analysisResponse.amount || analysisResponse.amount <= 0) {
+          setStatusMessage('Ha ocurrido un error al procesar la imagen.');
+          setSubTextMessage(
+            'No pudimos extraer el monto de la imagen. Por favor, intentá de nuevo con otra foto más clara.'
+          );
+          setHasError(true);
+          return;
+        }
+
         setStatusMessage('¡Datos extraídos con éxito!');
 
         // 3. Viajamos a la pantalla de agregar movimiento con los datos extraídos
@@ -44,7 +61,7 @@ const ShareIntentScreen = () => {
           pathname: '/(app)/add-movement',
           params: {
             fromShareIntent: 'true',
-            amount: analysisResponse.amount?.toString() || '',
+            amount: analysisResponse.amount.toString(),
             title: analysisResponse.title || '',
             category: analysisResponse.category || 'OTHER',
             date: analysisResponse.date || new Date().toISOString().split('T')[0],
@@ -53,7 +70,11 @@ const ShareIntentScreen = () => {
         });
       } catch (error) {
         console.error('Error procesando la imagen:', error);
-        setStatusMessage('Error al procesar la imagen.');
+        setStatusMessage('Ha ocurrido un error al procesar la imagen.');
+        setSubTextMessage(
+          'Podés volver atrás utilizando la cruz de arriba a la derecha para intentar nuevamente.'
+        );
+        setHasError(true);
       } finally {
         resetShareIntent();
       }
@@ -71,8 +92,16 @@ const ShareIntentScreen = () => {
           </Text>
           <TouchableOpacity
             onPress={() => {
-              resetShareIntent();
-              router.back();
+              try {
+                resetShareIntent();
+              } catch (e) {
+                console.warn('resetShareIntent failed:', e);
+              }
+              if (router.canGoBack()) {
+                router.back();
+              } else {
+                router.replace('/(app)/home');
+              }
             }}
           >
             <Text style={styles.closeButton}>✕</Text>
@@ -81,12 +110,16 @@ const ShareIntentScreen = () => {
 
         {/* CONTENIDO DE CARGA */}
         <View style={styles.loadingContainer}>
-          <Spinner size="large" status="primary" />
+          {hasError ? (
+            <Ionicons name="alert-circle" size={64} color="#E53935" />
+          ) : (
+            <Spinner size="large" status="primary" />
+          )}
           <Text category="s1" style={styles.statusText}>
             {statusMessage}
           </Text>
           <Text category="p2" style={styles.subText}>
-            Estamos extrayendo el monto y los datos del comprobante.
+            {subTextMessage}
           </Text>
         </View>
       </ScrollView>

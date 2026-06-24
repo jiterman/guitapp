@@ -1,9 +1,19 @@
 import React, { useRef, useState, useEffect } from 'react';
-import { View, Pressable, PanResponder, Text, ActivityIndicator, StyleSheet } from 'react-native';
+import {
+  View,
+  Pressable,
+  PanResponder,
+  Text,
+  ActivityIndicator,
+  StyleSheet,
+  Modal,
+  Vibration,
+} from 'react-native';
 import { useRouter, usePathname } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { SvgXml } from 'react-native-svg';
 import { useAudioRecorder, AudioModule } from 'expo-audio';
+import { Ionicons } from '@expo/vector-icons';
 
 import HOME_ICON from '../../../assets/icons/homeIcon';
 import LIST_ICON from '../../../assets/icons/listIcon';
@@ -26,7 +36,12 @@ const BottomNavBar: React.FC = () => {
   const currentIndex = useRef<number>(0);
   const [currentPath, setCurrentPath] = useState('/home');
 
+  const [isRecordingState, setIsRecordingState] = useState(false);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  const preparePromiseRef = useRef<Promise<void> | null>(null);
+  const shouldRecordRef = useRef(false);
 
   const audioRecorder = useAudioRecorder({
     extension: '.wav',
@@ -51,10 +66,9 @@ const BottomNavBar: React.FC = () => {
     web: {},
   });
 
-  const isRecording = audioRecorder.isRecording;
-
-  const startRecording = async () => {
-    try {
+  const handlePressIn = () => {
+    shouldRecordRef.current = false;
+    preparePromiseRef.current = (async () => {
       const permission = await AudioModule.requestRecordingPermissionsAsync();
       if (!permission.granted) {
         console.warn('Microphone permission not granted');
@@ -73,18 +87,38 @@ const BottomNavBar: React.FC = () => {
           throw err;
         }
       }
+    })();
+  };
 
+  const startRecording = async () => {
+    try {
+      shouldRecordRef.current = true;
+      if (preparePromiseRef.current) {
+        await preparePromiseRef.current;
+      }
+
+      // Check if user is still holding the button
+      if (!shouldRecordRef.current) return;
+
+      Vibration.vibrate(100);
       audioRecorder.record();
+      setIsRecordingState(true);
     } catch (err) {
       console.error('Failed to start recording', err);
     }
   };
 
   const stopRecording = async () => {
-    if (!audioRecorder.isRecording) return;
+    shouldRecordRef.current = false;
+    if (!audioRecorder.isRecording && !isRecordingState) return;
 
     try {
-      await audioRecorder.stop();
+      setIsRecordingState(false);
+
+      if (audioRecorder.isRecording) {
+        await audioRecorder.stop();
+      }
+
       await AudioModule.setAudioModeAsync({
         allowsRecordingIOS: false,
       });
@@ -94,10 +128,17 @@ const BottomNavBar: React.FC = () => {
         setIsAnalyzing(true);
         const analysisResponse = await expenseService.analyzeVoice(uri);
 
+        if (!analysisResponse.amount) {
+          setErrorMessage(
+            'Perdón! No pudimos extraer el monto de tu audio, por favor volvé a intentar especificando el valor.'
+          );
+          return;
+        }
+
         router.navigate({
           pathname: '/add-movement',
           params: {
-            amount: analysisResponse.amount?.toString() || '',
+            amount: analysisResponse.amount.toString(),
             title: analysisResponse.title || '',
             category: analysisResponse.category || 'OTHER',
             date: analysisResponse.date || new Date().toISOString().split('T')[0],
@@ -106,6 +147,9 @@ const BottomNavBar: React.FC = () => {
       }
     } catch (err) {
       console.error('Failed to stop recording or analyze voice', err);
+      setErrorMessage(
+        'Perdón! En este momento no pudimos procesar el audio, por favor volvé a intentar en unos segundos'
+      );
     } finally {
       setIsAnalyzing(false);
     }
@@ -187,17 +231,18 @@ const BottomNavBar: React.FC = () => {
 
         <View style={styles.fabContainer}>
           <Pressable
-            style={[styles.fabButton, isRecording && { backgroundColor: '#E53935' }]}
+            style={[styles.fabButton, isRecordingState && { backgroundColor: '#E53935' }]}
+            onPressIn={handlePressIn}
             onPress={() => {
               if (pathname !== '/add-movement') router.navigate('/add-movement');
             }}
             onLongPress={startRecording}
-            delayLongPress={1000}
+            delayLongPress={800}
             onPressOut={stopRecording}
             accessibilityRole="button"
             accessibilityLabel="Agregar movimiento"
           >
-            {isRecording ? (
+            {isRecordingState ? (
               <Text style={{ fontSize: 24 }}>🎙️</Text>
             ) : (
               <SvgXml xml={PLUS_ICON.replace('currentColor', '#fff')} width={30} height={30} />
@@ -209,82 +254,114 @@ const BottomNavBar: React.FC = () => {
         <NavButton path="/summary" icon={SUMMARY_ICON} label="Resumen" index={3} />
       </View>
 
-      {isRecording && (
-        <View style={localStyles.recordingOverlay} pointerEvents="none">
-          <View style={localStyles.recordingCard}>
-            <View style={localStyles.redDot} />
-            <Text style={localStyles.overlayText}>Grabando audio...</Text>
-            <Text style={localStyles.subOverlayText}>Mantené y hablá. Soltá para enviar.</Text>
+      <Modal transparent visible={isRecordingState} animationType="fade">
+        <View style={localStyles.overlayContainer}>
+          <View style={localStyles.popupCard}>
+            <View style={localStyles.micCircle}>
+              <Ionicons name="mic" size={48} color="#07a3e4" />
+            </View>
+            <Text style={localStyles.titleText}>Grabando audio...</Text>
+            <Text style={localStyles.subtitleText}>Hablá para registrar el movimiento</Text>
           </View>
         </View>
-      )}
+      </Modal>
 
-      {isAnalyzing && (
-        <View style={localStyles.analyzingOverlay}>
-          <ActivityIndicator size="large" color="#07a3e4" />
-          <Text style={localStyles.analyzingText}>Procesando audio con IA...</Text>
+      <Modal transparent visible={isAnalyzing} animationType="fade">
+        <View style={localStyles.overlayContainer}>
+          <View style={localStyles.popupCard}>
+            <ActivityIndicator size="large" color="#07a3e4" />
+            <Text style={[localStyles.titleText, { marginTop: 20 }]}>Analizando audio...</Text>
+          </View>
         </View>
-      )}
+      </Modal>
+
+      <Modal transparent visible={errorMessage !== null} animationType="fade">
+        <View style={localStyles.overlayContainer}>
+          <View style={localStyles.popupCard}>
+            <View style={localStyles.errorCircle}>
+              <Ionicons name="alert-circle" size={48} color="#E53935" />
+            </View>
+            <Text style={localStyles.titleText}>Ocurrió un error</Text>
+            <Text style={localStyles.subtitleText}>{errorMessage}</Text>
+            <Pressable style={localStyles.closeButton} onPress={() => setErrorMessage(null)}>
+              <Text style={localStyles.closeButtonText}>Entendido</Text>
+            </Pressable>
+          </View>
+        </View>
+      </Modal>
     </>
   );
 };
 
 const localStyles = StyleSheet.create({
-  recordingOverlay: {
-    position: 'absolute',
-    top: -200,
-    left: 0,
-    right: 0,
-    alignItems: 'center',
+  overlayContainer: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 51, 102, 0.5)',
     justifyContent: 'center',
-    zIndex: 99,
-  },
-  recordingCard: {
-    backgroundColor: 'rgba(0, 0, 0, 0.85)',
-    borderRadius: 20,
-    paddingVertical: 12,
-    paddingHorizontal: 20,
     alignItems: 'center',
-    flexDirection: 'row',
+  },
+  popupCard: {
+    width: '80%',
+    backgroundColor: '#ffffff',
+    borderRadius: 20,
+    padding: 30,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.25,
+    shadowRadius: 15,
+    elevation: 10,
+  },
+  micCircle: {
+    width: 90,
+    height: 90,
+    borderRadius: 45,
+    backgroundColor: '#f0f8ff',
+    justifyContent: 'center',
+    alignItems: 'center',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 6,
-    elevation: 8,
+    shadowOpacity: 0.1,
+    shadowRadius: 5,
+    elevation: 2,
+    marginBottom: 10,
   },
-  redDot: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-    backgroundColor: '#E53935',
-    marginRight: 10,
-  },
-  overlayText: {
-    color: '#fff',
-    fontWeight: 'bold',
-    fontSize: 14,
-  },
-  subOverlayText: {
-    color: '#ccc',
-    fontSize: 11,
-    marginLeft: 8,
-  },
-  analyzingOverlay: {
-    position: 'absolute',
-    top: -1000,
-    bottom: 0,
-    left: 0,
-    right: 0,
-    backgroundColor: 'rgba(255, 255, 255, 0.9)',
-    alignItems: 'center',
+  errorCircle: {
+    width: 90,
+    height: 90,
+    borderRadius: 45,
+    backgroundColor: '#FFEBEE',
     justifyContent: 'center',
-    zIndex: 999,
+    alignItems: 'center',
+    marginBottom: 10,
   },
-  analyzingText: {
-    marginTop: 15,
+  closeButton: {
+    backgroundColor: '#07a3e4',
+    paddingVertical: 12,
+    paddingHorizontal: 30,
+    borderRadius: 10,
+    marginTop: 25,
+    width: '100%',
+    alignItems: 'center',
+  },
+  closeButtonText: {
+    color: '#ffffff',
     fontSize: 16,
     fontWeight: 'bold',
-    color: '#333',
+  },
+  titleText: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#003366',
+    marginTop: 15,
+    textAlign: 'center',
+  },
+  subtitleText: {
+    fontSize: 14,
+    color: '#003366',
+    marginTop: 8,
+    opacity: 0.8,
+    textAlign: 'center',
   },
 });
 
