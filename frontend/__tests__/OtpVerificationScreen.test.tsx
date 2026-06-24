@@ -4,6 +4,7 @@ import { ApplicationProvider, IconRegistry } from '@ui-kitten/components';
 import { EvaIconsPack } from '@ui-kitten/eva-icons';
 import * as eva from '@eva-design/eva';
 import OtpVerificationScreen from '../src/screens/OtpVerificationScreen';
+import { DialogProvider } from '../src/context/dialog';
 import { authService } from '../src/services/authService';
 import { router } from 'expo-router';
 
@@ -25,7 +26,7 @@ const renderWithKitten = (component: React.ReactElement) => {
     <>
       <IconRegistry icons={EvaIconsPack} />
       <ApplicationProvider {...eva} theme={eva.light}>
-        {component}
+        <DialogProvider>{component}</DialogProvider>
       </ApplicationProvider>
     </>
   );

@@ -7,6 +7,7 @@ import VerifyEmailChangeOtpScreen from '../src/screens/VerifyEmailChangeOtpScree
 import { userService } from '../src/services/userService';
 import { authService } from '../src/services/authService';
 import { useUser } from '../src/context/user';
+import { DialogProvider } from '../src/context/dialog';
 import { router } from 'expo-router';
 
 jest.mock('expo-router', () => ({
@@ -38,7 +39,7 @@ const renderWithKitten = (component: React.ReactElement) => {
     <>
       <IconRegistry icons={EvaIconsPack} />
       <ApplicationProvider {...eva} theme={eva.light}>
-        {component}
+        <DialogProvider>{component}</DialogProvider>
       </ApplicationProvider>
     </>
   );

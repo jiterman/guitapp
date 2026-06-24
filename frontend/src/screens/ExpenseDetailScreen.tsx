@@ -1,16 +1,16 @@
 import React, { useCallback, useMemo, useState } from 'react';
-import { Alert, ScrollView, TouchableOpacity, View } from 'react-native';
+import { ScrollView, TouchableOpacity, View } from 'react-native';
 import { Layout, Text } from '@ui-kitten/components';
 import { Ionicons, Feather } from '@expo/vector-icons';
 import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import ExpandableField from '../components/ExpandableField/ExpandableField';
+import { useDialog } from '../context/dialog';
 import type { ExpenseResponse } from '../services/expenseService';
 import { expenseService } from '../services/expenseService';
 import { getCategoryLabel, getCategoryIcon } from '../constants/categories';
 import { detailScreenStyles as styles } from '../styles/detailScreenStyles';
 import { formatDate } from '../utils/dateFormatter';
-
-const formatMoney = (amount: number) => new Intl.NumberFormat('es-AR').format(Number(amount));
+import { formatMoney } from '../utils/currencyFormatter';
 
 const typeLabelEs = (type: ExpenseResponse['type']) =>
   type === 'FIXED' ? 'Gasto fijo' : 'Gasto variable';
@@ -20,6 +20,7 @@ const ExpenseDetailScreen: React.FC = () => {
   const [expense, setExpense] = useState<ExpenseResponse | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isDeleting, setIsDeleting] = useState<boolean>(false);
+  const { alert, confirm } = useDialog();
 
   useFocusEffect(
     useCallback(() => {
@@ -53,26 +54,25 @@ const ExpenseDetailScreen: React.FC = () => {
     return getCategoryLabel(expense.category, 'EXPENSE');
   }, [isLoading, expense]);
 
-  const onDeletePress = () => {
+  const onDeletePress = async () => {
     if (!expenseId) return;
-    Alert.alert('Eliminar gasto', '¿Seguro que querés eliminar este gasto?', [
-      { text: 'Cancelar', style: 'cancel' },
-      {
-        text: 'Eliminar',
-        style: 'destructive',
-        onPress: async () => {
-          try {
-            setIsDeleting(true);
-            await expenseService.deleteExpense(expenseId);
-            router.back();
-          } catch {
-            Alert.alert('Error', 'No se pudo eliminar el gasto.');
-          } finally {
-            setIsDeleting(false);
-          }
-        },
-      },
-    ]);
+    const confirmed = await confirm({
+      title: 'Eliminar gasto',
+      message: '¿Seguro que querés eliminar este gasto?',
+      confirmText: 'Eliminar',
+      cancelText: 'Cancelar',
+      variant: 'destructive',
+    });
+    if (!confirmed) return;
+    try {
+      setIsDeleting(true);
+      await expenseService.deleteExpense(expenseId);
+      router.back();
+    } catch {
+      await alert({ title: 'Error', message: 'No se pudo eliminar el gasto.' });
+    } finally {
+      setIsDeleting(false);
+    }
   };
 
   const onEditPress = () => {
@@ -181,7 +181,7 @@ const ExpenseDetailScreen: React.FC = () => {
                 ]}
               >
                 <Ionicons
-                  name={expense.type === 'FIXED' ? 'repeat-outline' : 'stats-chart-outline'}
+                  name={expense.type === 'FIXED' ? 'pin-outline' : 'trending-up'}
                   size={24}
                   color={expense.type === 'FIXED' ? '#8e44ad' : '#27ae60'}
                 />

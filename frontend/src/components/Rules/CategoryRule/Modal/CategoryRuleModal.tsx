@@ -52,6 +52,10 @@ export const CategoryRuleModal: React.FC<CategoryRuleModalProps> = ({
     }
   }, [visible, rule, initialCategory, initialType]);
 
+  // "OTHER" (Otros) is not a valid target for a rule: the backend rejects it,
+  // so we exclude it from the selectable categories.
+  const selectableCategories = EXPENSE_CATEGORIES.filter(c => c.value !== 'OTHER');
+
   // Buscamos la configuración de la categoría seleccionada actualmente para su renderizado
   const activeCategoryConfig = EXPENSE_CATEGORIES.find(c => c.value === selectedCategory);
 
@@ -156,7 +160,7 @@ export const CategoryRuleModal: React.FC<CategoryRuleModalProps> = ({
                     nestedScrollEnabled={true}
                     style={{ maxHeight: 180 }}
                   >
-                    {EXPENSE_CATEGORIES.map(cat => {
+                    {selectableCategories.map(cat => {
                       const isSelected = selectedCategory === cat.value;
                       return (
                         <TouchableOpacity

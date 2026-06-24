@@ -4,14 +4,28 @@ const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 const vh = screenHeight / 100;
 
 export const recurringIncomeStyles = StyleSheet.create({
+  screen: {
+    flex: 1,
+    paddingHorizontal: screenWidth * 0.05,
+    paddingTop: vh * 1,
+  },
+  backButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    alignSelf: 'flex-start',
+    paddingVertical: 4,
+    marginBottom: vh * 0.25,
+  },
   headerRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: vh * 1.5,
+    marginBottom: vh * 2,
   },
   title: {
-    fontSize: 20,
+    flex: 1,
+    fontSize: 22,
     fontWeight: 'bold',
     color: '#003366',
   },
@@ -70,6 +84,15 @@ export const recurringIncomeStyles = StyleSheet.create({
     color: '#1a9e5c',
     marginTop: 2,
   },
+  editButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#e6f4fb',
+    marginRight: 8,
+  },
   deleteButton: {
     width: 36,
     height: 36,
@@ -114,13 +137,24 @@ export const recurringIncomeStyles = StyleSheet.create({
   badgeTextPaused: {
     color: '#607d8b',
   },
-  toggleLink: {
-    marginTop: vh * 1.5,
-    alignSelf: 'flex-start',
+  cardDivider: {
+    height: 1,
+    backgroundColor: '#eef3f7',
+    marginTop: vh * 2,
   },
-  toggleLinkText: {
+  toggleButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    marginTop: vh * 1.5,
+    paddingVertical: 10,
+    borderRadius: 12,
+    backgroundColor: '#e6f4fb',
+  },
+  toggleButtonText: {
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: '700',
     color: '#07a3e4',
   },
   emptyContainer: {

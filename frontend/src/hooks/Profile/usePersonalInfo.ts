@@ -3,7 +3,7 @@ import { router } from 'expo-router';
 import { userService } from '../../services/userService';
 import { authService } from '../../services/authService';
 import type { UserProfile } from '../../context/user';
-import { Alert } from 'react-native';
+import { useDialog } from '../../context/dialog';
 
 interface UsePersonalInfoParams {
   user: UserProfile | null;
@@ -13,6 +13,7 @@ interface UsePersonalInfoParams {
 
 export const usePersonalInfo = ({ user, setUser, onSuccess }: UsePersonalInfoParams) => {
   const [saving, setSaving] = useState(false);
+  const { alert } = useDialog();
 
   const handleSaveName = async (newFirst: string, newLast: string) => {
     if (saving || !user) return;
@@ -33,7 +34,10 @@ export const usePersonalInfo = ({ user, setUser, onSuccess }: UsePersonalInfoPar
         onboardingCompleted: true,
       });
 
-      Alert.alert('Perfil actualizado', 'Tu nombre fue actualizado correctamente');
+      await alert({
+        title: 'Perfil actualizado',
+        message: 'Tu nombre fue actualizado correctamente',
+      });
 
       onSuccess();
     } catch (e) {

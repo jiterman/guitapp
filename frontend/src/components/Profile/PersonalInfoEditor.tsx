@@ -1,7 +1,8 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { View, TextInput, TouchableOpacity, StyleSheet, Alert } from 'react-native';
+import { View, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
 import { Text } from '@ui-kitten/components';
 import { Ionicons } from '@expo/vector-icons';
+import { useDialog } from '../../context/dialog';
 
 type PersonalInfoEditorProps = {
   firstName: string;
@@ -28,6 +29,8 @@ const PersonalInfoEditor: React.FC<PersonalInfoEditorProps> = ({
 
   const [nameError, setNameError] = useState<string | null>(null);
   const [emailError, setEmailError] = useState<string | null>(null);
+
+  const { confirm } = useDialog();
 
   useEffect(() => setDraftFirstName(firstName), [firstName]);
   useEffect(() => setDraftLastName(lastName), [lastName]);
@@ -66,17 +69,15 @@ const PersonalInfoEditor: React.FC<PersonalInfoEditorProps> = ({
       return;
     }
 
-    Alert.alert(
-      'Cambiar correo electrónico',
-      'Si cambias tu correo, deberás verificar el nuevo mail...',
-      [
-        { text: 'Cancelar', style: 'cancel' },
-        {
-          text: 'Continuar',
-          onPress: () => confirmEmailChange(),
-        },
-      ]
-    );
+    const confirmed = await confirm({
+      title: 'Cambiar correo electrónico',
+      message: 'Te enviaremos un enlace de verificación al nuevo correo para confirmar el cambio.',
+      confirmText: 'Continuar',
+      cancelText: 'Cancelar',
+    });
+    if (confirmed) {
+      await confirmEmailChange();
+    }
   };
 
   const confirmEmailChange = async () => {
@@ -211,8 +212,8 @@ const styles = StyleSheet.create({
   editBlockHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 10,
-    marginBottom: 12,
+    gap: 8,
+    marginBottom: 10,
   },
   editBlockTitle: {
     fontSize: 15,
@@ -221,13 +222,13 @@ const styles = StyleSheet.create({
   },
   inputRow: {
     gap: 4,
-    marginBottom: 8,
+    marginBottom: 11,
   },
   inputLabel: {
     fontSize: 12,
     color: '#6b8aa1',
     fontWeight: '600',
-    marginBottom: 4,
+    marginBottom: 5,
   },
   optional: {
     fontSize: 12,
@@ -242,7 +243,7 @@ const styles = StyleSheet.create({
     borderWidth: 1.5,
     borderColor: '#c8dff0',
     paddingHorizontal: 12,
-    paddingVertical: 10,
+    paddingVertical: 12,
     gap: 8,
   },
   input: {
@@ -250,6 +251,7 @@ const styles = StyleSheet.create({
     fontSize: 15,
     color: '#003366',
     fontWeight: '500',
+    paddingVertical: 0,
   },
   inputDivider: {
     height: 1,
@@ -269,9 +271,9 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   menuIconCircle: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
+    width: 34,
+    height: 34,
+    borderRadius: 17,
     justifyContent: 'center',
     alignItems: 'center',
   },

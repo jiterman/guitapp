@@ -117,14 +117,13 @@ const ExpensesEditor: React.FC<Props> = ({
             placeholderTextColor="#a0b8c8"
             style={styles.input}
           />
-          <Ionicons name="pencil-outline" size={16} color="#07a3e4" />
         </View>
       </View>
 
       <View style={styles.divider} />
 
       {/* GASTOS */}
-      <View style={[styles.header, { marginTop: 14 }]}>
+      <View style={[styles.header, { marginTop: 8 }]}>
         <View style={[styles.iconCircle, { backgroundColor: '#E6F2FC' }]}>
           <Ionicons name="pie-chart-outline" size={18} color="#07a3e4" />
         </View>
@@ -143,7 +142,6 @@ const ExpensesEditor: React.FC<Props> = ({
             placeholderTextColor="#a0b8c8"
             style={styles.input}
           />
-          <Ionicons name="pencil-outline" size={16} color="#07a3e4" />
         </View>
       </View>
 
@@ -159,7 +157,6 @@ const ExpensesEditor: React.FC<Props> = ({
             placeholderTextColor="#a0b8c8"
             style={styles.input}
           />
-          <Ionicons name="pencil-outline" size={16} color="#07a3e4" />
         </View>
       </View>
 
@@ -173,8 +170,11 @@ const ExpensesEditor: React.FC<Props> = ({
             selectTextOnFocus={false}
             style={styles.input}
           />
-          <Ionicons name="lock-closed-outline" size={16} color="#6b8aa1" />
+          <Ionicons name="information-circle-outline" size={16} color="#6b8aa1" />
         </View>
+        <Text style={styles.helperText}>
+          Autocalculado: 100 − {fixedNum} (fijos) − {variableNum} (variables) = {savings} %
+        </Text>
       </View>
 
       {/* ERROR */}
@@ -200,13 +200,13 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 10,
-    marginBottom: 14,
+    gap: 8,
+    marginBottom: 10,
   },
   iconCircle: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
+    width: 34,
+    height: 34,
+    borderRadius: 17,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -218,16 +218,16 @@ const styles = StyleSheet.create({
   divider: {
     height: 1,
     backgroundColor: '#e0edf6',
-    marginBottom: 14,
+    marginBottom: 10,
   },
   inputGroup: {
-    marginBottom: 12,
+    marginBottom: 11,
   },
   label: {
     fontSize: 12,
     fontWeight: '600',
     color: '#6b8aa1',
-    marginBottom: 6,
+    marginBottom: 5,
   },
   inputWrapper: {
     flexDirection: 'row',
@@ -237,19 +237,25 @@ const styles = StyleSheet.create({
     borderWidth: 1.5,
     borderColor: '#c8dff0',
     paddingHorizontal: 12,
-    paddingVertical: 10,
+    paddingVertical: 12,
   },
   input: {
     flex: 1,
     fontSize: 15,
     color: '#003366',
     fontWeight: '500',
+    paddingVertical: 0,
   },
   currencySymbol: {
     fontSize: 15,
     fontWeight: '600',
     color: '#6b8aa1',
     marginRight: 6,
+  },
+  helperText: {
+    fontSize: 11,
+    color: '#6b8aa1',
+    marginTop: 6,
   },
   error: {
     color: '#FF3B30',

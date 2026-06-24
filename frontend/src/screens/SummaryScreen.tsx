@@ -11,6 +11,7 @@ import { Layout, Text } from '@ui-kitten/components';
 import { Ionicons } from '@expo/vector-icons';
 import { movementService, MovementResponse } from '../services/movementService';
 import MovementFilter, { FilterState } from '../components/MovementFilter/MovementFilter';
+import { applyClientFilters } from '../utils/movementFilters';
 import TransactionCard from '../components/TransactionCard/TransactionCard';
 import StatsCard from '../components/StatsCard/StatsCard';
 import MonthlySummaryScreen from './MonthlySummaryScreen';
@@ -30,22 +31,15 @@ const buildInitialFilter = (): FilterState => {
     month: now.getMonth() + 1,
     year: now.getFullYear(),
     movementType: 'all',
+    categories: [],
+    expenseType: 'all',
+    search: '',
   };
-};
-
-const applyTypeFilter = (data: MovementResponse[], movementType: FilterState['movementType']) => {
-  if (movementType === 'income') {
-    return data.filter(movement => movement.type === 'INCOME');
-  }
-  if (movementType === 'expense') {
-    return data.filter(movement => movement.type === 'EXPENSE');
-  }
-  return data;
 };
 
 const SummaryScreen: React.FC = () => {
   const { tab } = useLocalSearchParams<{ tab?: string }>();
-  const [activeTab, setActiveTab] = useState<Tab>(tab === 'monthly' ? 'monthly' : 'movements');
+  const [activeTab, setActiveTab] = useState<Tab>(tab === 'movements' ? 'movements' : 'monthly');
   const [movements, setMovements] = useState<MovementResponse[]>([]);
   const [periodMovements, setPeriodMovements] = useState<MovementResponse[]>([]);
   const [filterState, setFilterState] = useState<FilterState>(() => buildInitialFilter());
@@ -56,7 +50,7 @@ const SummaryScreen: React.FC = () => {
     let mounted = true;
     (async () => {
       try {
-        const { kind, day, month, year, movementType } = filterState;
+        const { kind, day, month, year } = filterState;
         let data: MovementResponse[] = [];
 
         if (kind === 'all') {
@@ -72,7 +66,7 @@ const SummaryScreen: React.FC = () => {
 
         if (mounted) {
           setPeriodMovements(data);
-          setMovements(applyTypeFilter(data, movementType));
+          setMovements(applyClientFilters(data, filterState));
         }
       } catch {
         if (mounted) {
@@ -102,19 +96,6 @@ const SummaryScreen: React.FC = () => {
       <Text style={styles.title}>Resumen</Text>
 
       <View style={styles.chartTabs}>
-        <TouchableOpacity style={styles.chartTabWrapper} onPress={() => setActiveTab('movements')}>
-          {activeTab === 'movements' ? (
-            <View style={[styles.chartTab, styles.chartTabActive]}>
-              <Ionicons name="list-outline" size={18} color="#FFBB00" />
-              <RNText style={styles.chartTabTextActive}>Movimientos</RNText>
-            </View>
-          ) : (
-            <View style={[styles.chartTab, styles.chartTabInactive]}>
-              <Ionicons name="list-outline" size={18} color="#6b8aa1" />
-              <RNText style={styles.chartTabText}>Movimientos</RNText>
-            </View>
-          )}
-        </TouchableOpacity>
         <TouchableOpacity style={styles.chartTabWrapper} onPress={() => setActiveTab('monthly')}>
           {activeTab === 'monthly' ? (
             <View style={[styles.chartTab, styles.chartTabActive]}>
@@ -128,13 +109,26 @@ const SummaryScreen: React.FC = () => {
             </View>
           )}
         </TouchableOpacity>
+        <TouchableOpacity style={styles.chartTabWrapper} onPress={() => setActiveTab('movements')}>
+          {activeTab === 'movements' ? (
+            <View style={[styles.chartTab, styles.chartTabActive]}>
+              <Ionicons name="list-outline" size={18} color="#FFBB00" />
+              <RNText style={styles.chartTabTextActive}>Movimientos</RNText>
+            </View>
+          ) : (
+            <View style={[styles.chartTab, styles.chartTabInactive]}>
+              <Ionicons name="list-outline" size={18} color="#6b8aa1" />
+              <RNText style={styles.chartTabText}>Movimientos</RNText>
+            </View>
+          )}
+        </TouchableOpacity>
       </View>
 
       {activeTab === 'monthly' ? (
         <MonthlySummaryScreen />
       ) : (
         <>
-          <MovementFilter onChange={setFilterState} initialKind="month" />
+          <MovementFilter onChange={setFilterState} initialKind="month" showAdvancedFilters />
 
           <StatsCard income={totals.income} expense={totals.expense} />
 

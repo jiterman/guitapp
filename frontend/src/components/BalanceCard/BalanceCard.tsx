@@ -2,6 +2,7 @@ import React from 'react';
 import { View, StyleSheet, Dimensions } from 'react-native';
 import { Text } from '@ui-kitten/components';
 import { Ionicons } from '@expo/vector-icons';
+import { formatMoney as formatCurrency } from '../../utils/currencyFormatter';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 const vh = screenHeight / 100;
@@ -11,8 +12,6 @@ interface BalanceCardProps {
   income: number;
   expense: number;
 }
-
-const formatCurrency = (value: number) => new Intl.NumberFormat('es-AR').format(value);
 
 const BalanceCard: React.FC<BalanceCardProps> = ({ title, income, expense }) => {
   const total = income - expense;

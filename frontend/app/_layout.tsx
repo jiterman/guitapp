@@ -11,6 +11,7 @@ import { UserProvider } from '../src/context/user';
 import { ShareIntentProvider, useShareIntentContext } from 'expo-share-intent';
 import { useUser } from '../src/context/user';
 import { RulesProvider } from '../src/context/rules';
+import { DialogProvider } from '../src/context/dialog';
 
 SplashScreen.preventAutoHideAsync().catch(err => {
   console.warn('Error previniendo auth hide:', err);
@@ -35,7 +36,9 @@ export default function RootLayout() {
         <ShareIntentProvider>
           <UserProvider>
             <RulesProvider>
-              <RootLayoutNav />
+              <DialogProvider>
+                <RootLayoutNav />
+              </DialogProvider>
             </RulesProvider>
           </UserProvider>
         </ShareIntentProvider>

@@ -1,7 +1,6 @@
 import React, { useRef, useState, useEffect } from 'react';
 import {
   View,
-  Alert,
   TouchableOpacity,
   Modal,
   FlatList,
@@ -10,23 +9,23 @@ import {
   ActivityIndicator,
   StyleSheet,
   Dimensions,
+  Switch,
 } from 'react-native';
-import { transactionFormStyles as tStyles, ICON_COLORS } from '../styles/transactionFormStyles';
+import { transactionFormStyles as tStyles } from '../styles/transactionFormStyles';
 import { Layout, Text } from '@ui-kitten/components';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import { router, useLocalSearchParams } from 'expo-router';
 import * as ImageManipulator from 'expo-image-manipulator';
 import CameraModal from '../components/CameraModal/CameraModal';
 import ExpandableTextInput from '../components/ExpandableTextInput/ExpandableTextInput';
+import DatePickerModal from '../components/DatePickerModal/DatePickerModal';
 import { expenseService } from '../services/expenseService';
 import { incomeService } from '../services/incomeService';
 import { ruleService } from '../services/ruleService';
-import { useModal } from '../hooks/Profile/useModal';
-import { CategoryRuleModal } from '../components/Rules/CategoryRule/Modal/CategoryRuleModal';
 import { CategoryRuleSuggestion } from '../components/Rules/CategoryRule/Banners/CategoryRuleSuggestion';
 import { useRules } from '../context/rules';
+import { useDialog } from '../context/dialog';
 import {
   recurringIncomeService,
   type RecurrenceFrequency,
@@ -42,9 +41,11 @@ import {
   getIncomeCategory,
 } from '../constants/categories';
 import { useCurrencyInput } from '../hooks/useCurrencyInput';
-import { formatDate, toLocalDateString } from '../utils/dateFormatter';
+import { formatDate, toLocalDateString, parseLocalDate } from '../utils/dateFormatter';
 
 const vh = Dimensions.get('window').height / 100;
+// Shared width so the date pill matches the Frequency segmented control.
+const RECURRENCE_CONTROL_WIDTH = 168;
 interface InferredRuleBannerProps {
   isVisible: boolean;
 }
@@ -72,7 +73,7 @@ const AddMovementScreen = () => {
     params.type === 'INCOME' ? 'INCOME' : 'EXPENSE'
   );
 
-  const { displayValue, amount, handleAmountChange } = useCurrencyInput(
+  const { displayValue, amount, handleAmountChange, setAmount } = useCurrencyInput(
     (params.amount as string) || ''
   );
   const [title, setTitle] = useState((params.title as string) || '');
@@ -82,7 +83,7 @@ const AddMovementScreen = () => {
       ? getExpenseCategory(params.category as string) || null
       : getIncomeCategory(params.category as string) || null;
 
-  const initialDate = params.date ? new Date(params.date as string) : new Date();
+  const initialDate = params.date ? parseLocalDate(params.date as string) : new Date();
 
   const [selectedCategory, setSelectedCategory] = useState<
     ExpenseCategoryOption | IncomeCategoryOption | null
@@ -93,6 +94,7 @@ const AddMovementScreen = () => {
       : null
   );
   const [selectedDate, setSelectedDate] = useState(initialDate);
+  const [showDescription, setShowDescription] = useState(false);
   const [isRecurring, setIsRecurring] = useState(params.recurring === 'true');
   const [frequency, setFrequency] = useState<RecurrenceFrequency>('MONTHLY');
   const [showDatePicker, setShowDatePicker] = useState(false);
@@ -104,13 +106,11 @@ const AddMovementScreen = () => {
   const [scanningReceipt, setScanningReceipt] = useState(false);
   const [cameraVisible, setCameraVisible] = useState(false);
 
-  // Estados para el flujo de la regla sugerida
-  const suggestRuleModal = useModal();
-  const [suggestedRuleData, setSuggestedRuleData] = useState<any | null>(null);
-  const [ruleSaving, setRuleSaving] = useState(false);
-
   // Aviso de regla inferida
   const { rules, addRule } = useRules();
+  // The rule is only created when the expense is saved, not when the box is ticked.
+  const [wantsRule, setWantsRule] = useState(false);
+  const { alert } = useDialog();
   const [showInferredNotice, setShowInferredNotice] = useState(false);
 
   useEffect(() => {
@@ -128,6 +128,11 @@ const AddMovementScreen = () => {
     }
   }, [selectedCategory, movementType, rules]);
 
+  // Reset the "create rule" intent whenever the suggestion target changes.
+  useEffect(() => {
+    setWantsRule(false);
+  }, [selectedCategory, selectedExpenseType]);
+
   const onScanReceipt = () => setCameraVisible(true);
 
   const onImageCaptured = async (uri: string) => {
@@ -141,7 +146,9 @@ const AddMovementScreen = () => {
       );
       const analysis = await expenseService.analyzeReceipt(manipulated.uri);
       if (analysis.amount && analysis.amount > 0) {
-        handleAmountChange(analysis.amount.toString());
+        // setAmount expects the raw value with a dot decimal separator; toFixed(2)
+        // keeps the two decimals so a "24300,00" receipt loads as "24.300,00".
+        setAmount(analysis.amount.toFixed(2));
       }
       if (analysis.title) {
         setTitle(analysis.title.slice(0, 20));
@@ -157,10 +164,10 @@ const AddMovementScreen = () => {
         }
       }
       if (analysis.date) {
-        setSelectedDate(new Date(analysis.date));
+        setSelectedDate(parseLocalDate(analysis.date));
       }
     } catch {
-      Alert.alert('Error', 'No se pudo analizar el ticket. Intentá de nuevo.');
+      await alert({ title: 'Error', message: 'No se pudo analizar el ticket. Intentá de nuevo.' });
     } finally {
       setScanningReceipt(false);
     }
@@ -186,38 +193,22 @@ const AddMovementScreen = () => {
     setSearch('');
   };
 
-  const onDateChange = (event: DateTimePickerEvent, date?: Date) => {
-    setShowDatePicker(false);
-    if (event.type === 'set' && date) {
-      setSelectedDate(date);
-    }
+  const onDateSelect = (date: Date) => {
+    setSelectedDate(date);
   };
 
-  const handleAcceptRuleSuggestion = (categoryValue: string, type: 'FIXED' | 'VARIABLE') => {
-    setSuggestedRuleData({
-      id: 0,
-      category: categoryValue,
-      type: type,
-    });
-    suggestRuleModal.open();
-  };
+  const isSameDay = (a: Date, b: Date) =>
+    a.getDate() === b.getDate() &&
+    a.getMonth() === b.getMonth() &&
+    a.getFullYear() === b.getFullYear();
 
-  const handleSaveSuggestedRule = async (categoryValue: string, type: 'FIXED' | 'VARIABLE') => {
-    setRuleSaving(true);
-    try {
-      const response = await ruleService.createCategoryRule({
-        category: categoryValue as ExpenseCategory,
-        type: type,
-      });
-      addRule(response);
-      suggestRuleModal.close();
-    } catch (e: any) {
-      console.error('Error detectado al guardar regla sugerida:', e);
-      throw e;
-    } finally {
-      setRuleSaving(false);
-    }
-  };
+  const startOfDay = (date: Date) => new Date(date.getFullYear(), date.getMonth(), date.getDate());
+
+  const today = startOfDay(new Date());
+  const yesterday = new Date(today.getTime() - 24 * 60 * 60 * 1000);
+  const isToday = isSameDay(selectedDate, today);
+  const isYesterday = isSameDay(selectedDate, yesterday);
+  const isCustomDate = !isToday && !isYesterday;
 
   const onSubmit = async () => {
     setAmountError(null);
@@ -277,16 +268,37 @@ const AddMovementScreen = () => {
         });
       }
 
+      // Create the category rule only after the expense was saved successfully.
+      // A rule failure must not block the (already saved) expense, so it is
+      // swallowed here on purpose.
+      if (
+        wantsRule &&
+        movementType === 'EXPENSE' &&
+        selectedCategory &&
+        selectedExpenseType &&
+        !rules.some(r => r.category === selectedCategory.value)
+      ) {
+        try {
+          const response = await ruleService.createCategoryRule({
+            category: selectedCategory.value as ExpenseCategory,
+            type: selectedExpenseType,
+          });
+          addRule(response);
+        } catch {
+          // Ignore: the expense is saved; the rule is a best-effort extra.
+        }
+      }
+
       if (params.fromShareIntent === 'true') {
         router.replace('/(app)/home');
       } else {
         router.back();
       }
     } catch {
-      Alert.alert(
-        'Error',
-        `No se pudo registrar el ${movementType === 'EXPENSE' ? 'gasto' : 'ingreso'}. Intentá de nuevo.`
-      );
+      await alert({
+        title: 'Error',
+        message: `No se pudo registrar el ${movementType === 'EXPENSE' ? 'gasto' : 'ingreso'}. Intentá de nuevo.`,
+      });
     } finally {
       setSubmitting(false);
     }
@@ -305,78 +317,63 @@ const AddMovementScreen = () => {
   return (
     <>
       <Layout style={styles.container}>
-        <View style={styles.tabContainer}>
-          <TouchableOpacity
-            style={[
-              styles.tab,
-              movementType === 'EXPENSE' ? styles.tabActiveExpense : styles.tabInactive,
-            ]}
-            onPress={() => toggleType('EXPENSE')}
-          >
-            <Ionicons
-              name="trending-down"
-              size={18}
-              color={movementType === 'EXPENSE' ? '#FF4D4D' : '#A8C8E0'}
-            />
-            <Text
-              style={[
-                styles.tabText,
-                movementType === 'EXPENSE' ? styles.tabTextActiveExpense : styles.tabTextInactive,
-              ]}
-            >
-              Gasto
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[
-              styles.tab,
-              movementType === 'INCOME' ? styles.tabActiveIncome : styles.tabInactive,
-            ]}
-            onPress={() => toggleType('INCOME')}
-          >
-            <Ionicons
-              name="trending-up"
-              size={18}
-              color={movementType === 'INCOME' ? '#2ECC71' : '#A8C8E0'}
-            />
-            <Text
-              style={[
-                styles.tabText,
-                movementType === 'INCOME' ? styles.tabTextActiveIncome : styles.tabTextInactive,
-              ]}
-            >
-              Ingreso
-            </Text>
-          </TouchableOpacity>
-        </View>
-
-        <View style={styles.subHeader}>
-          <Text category="h4" style={styles.title}>
-            {movementType === 'EXPENSE' ? 'Agregar gasto' : 'Agregar ingreso'}
-          </Text>
-          <View style={styles.subHeaderActions}>
-            {movementType === 'EXPENSE' && !isRecurring && (
-              <TouchableOpacity
-                onPress={onScanReceipt}
-                style={styles.scanButton}
-                disabled={scanningReceipt}
-              >
-                <Ionicons name="camera-outline" size={16} color={ICON_COLORS.primary} />
-                <Text style={styles.scanButtonText}>Escanear ticket</Text>
-              </TouchableOpacity>
-            )}
+        <View style={styles.topRow}>
+          <View style={styles.tabContainer}>
             <TouchableOpacity
-              onPress={() => {
-                if (params.fromShareIntent === 'true') {
-                  router.replace('/(app)/home');
-                } else {
-                  router.back();
-                }
-              }}
+              style={[
+                styles.tab,
+                movementType === 'EXPENSE' ? styles.tabActiveExpense : styles.tabInactive,
+              ]}
+              onPress={() => toggleType('EXPENSE')}
             >
-              <Ionicons name="close" size={28} color="#003366" />
+              <Ionicons
+                name="trending-down"
+                size={18}
+                color={movementType === 'EXPENSE' ? '#FF4D4D' : '#A8C8E0'}
+              />
+              <Text
+                style={[
+                  styles.tabText,
+                  movementType === 'EXPENSE' ? styles.tabTextActiveExpense : styles.tabTextInactive,
+                ]}
+              >
+                Gasto
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[
+                styles.tab,
+                movementType === 'INCOME' ? styles.tabActiveIncome : styles.tabInactive,
+              ]}
+              onPress={() => toggleType('INCOME')}
+            >
+              <Ionicons
+                name="trending-up"
+                size={18}
+                color={movementType === 'INCOME' ? '#2ECC71' : '#A8C8E0'}
+              />
+              <Text
+                style={[
+                  styles.tabText,
+                  movementType === 'INCOME' ? styles.tabTextActiveIncome : styles.tabTextInactive,
+                ]}
+              >
+                Ingreso
+              </Text>
             </TouchableOpacity>
           </View>
+          <TouchableOpacity
+            style={styles.topRowClose}
+            onPress={() => {
+              if (params.fromShareIntent === 'true') {
+                router.replace('/(app)/home');
+              } else {
+                router.back();
+              }
+            }}
+          >
+            <Ionicons name="close" size={28} color="#003366" />
+          </TouchableOpacity>
         </View>
 
         {scanningReceipt && (
@@ -389,7 +386,8 @@ const AddMovementScreen = () => {
         <ScrollView
           ref={scrollViewRef}
           showsVerticalScrollIndicator={false}
-          contentContainerStyle={{ paddingBottom: 100 }}
+          style={styles.scroll}
+          contentContainerStyle={styles.scrollContent}
           onScroll={e => {
             scrollYRef.current = e.nativeEvent.contentOffset.y;
           }}
@@ -411,6 +409,15 @@ const AddMovementScreen = () => {
               style={styles.amountInput}
               placeholderTextColor="#FFC947"
             />
+            {movementType === 'EXPENSE' && !isRecurring && (
+              <TouchableOpacity
+                onPress={onScanReceipt}
+                style={styles.amountScanButton}
+                disabled={scanningReceipt}
+              >
+                <Ionicons name="camera" size={20} color="#fff" />
+              </TouchableOpacity>
+            )}
           </View>
           {amountError && <Text style={styles.errorText}>{amountError}</Text>}
 
@@ -431,206 +438,269 @@ const AddMovementScreen = () => {
             </View>
           </>
 
-          <Text style={styles.label}>Categoría *</Text>
-          <TouchableOpacity
-            style={[styles.dropdownButton, categoryError ? styles.dropdownButtonError : null]}
-            onPress={() => setModalVisible(true)}
-          >
-            <View style={styles.dropdownContent}>
-              <View style={styles.dropdownIconContainer}>
-                <Ionicons
-                  name={
-                    (selectedCategory?.icon ||
-                      (movementType === 'EXPENSE'
-                        ? 'cart-outline'
-                        : 'cash-outline')) as keyof typeof Ionicons.glyphMap
-                  }
-                  size={18}
-                  color="#07a3e4"
-                />
-              </View>
-              <Text
-                style={selectedCategory ? styles.dropdownButtonText : styles.dropdownPlaceholder}
-              >
-                {selectedCategory ? selectedCategory.label : 'Seleccioná una categoría'}
-              </Text>
-            </View>
-            <Ionicons name="chevron-down" size={20} color="#07a3e4" />
-          </TouchableOpacity>
-          {categoryError && <Text style={styles.errorText}>{categoryError}</Text>}
-
-          <Text style={styles.label}>Periodicidad</Text>
-          <View style={styles.typeContainer}>
+          {showDescription ? (
+            <ExpandableTextInput
+              label="Descripción"
+              value={description}
+              onChangeText={text => setDescription(text.slice(0, 255))}
+              placeholder="Información adicional (opcional)"
+              scrollViewRef={scrollViewRef}
+              scrollYRef={scrollYRef}
+              onRemove={() => {
+                setDescription('');
+                setShowDescription(false);
+              }}
+            />
+          ) : (
             <TouchableOpacity
-              style={[
-                styles.typeButton,
-                !isRecurring ? styles.typeButtonActive : styles.typeButtonInactive,
-              ]}
-              onPress={() => setIsRecurring(false)}
+              style={styles.addDescriptionLink}
+              onPress={() => setShowDescription(true)}
             >
-              <Text
-                style={[
-                  styles.typeButtonText,
-                  !isRecurring ? styles.typeButtonTextActive : styles.typeButtonTextInactive,
-                ]}
-              >
-                Único
-              </Text>
+              <Ionicons name="add-circle-outline" size={18} color="#07a3e4" />
+              <Text style={styles.addDescriptionText}>Agregar descripción</Text>
             </TouchableOpacity>
-            <TouchableOpacity
-              style={[
-                styles.typeButton,
-                isRecurring ? styles.typeButtonActive : styles.typeButtonInactive,
-              ]}
-              onPress={() => setIsRecurring(true)}
-            >
-              <Text
-                style={[
-                  styles.typeButtonText,
-                  isRecurring ? styles.typeButtonTextActive : styles.typeButtonTextInactive,
-                ]}
-              >
-                Recurrente
-              </Text>
-            </TouchableOpacity>
-          </View>
-
-          {isRecurring && (
-            <>
-              <Text style={styles.label}>Frecuencia</Text>
-              <View style={styles.typeContainer}>
-                <TouchableOpacity
-                  style={[
-                    styles.typeButton,
-                    frequency === 'WEEKLY' ? styles.typeButtonActive : styles.typeButtonInactive,
-                  ]}
-                  onPress={() => setFrequency('WEEKLY')}
-                >
-                  <Text
-                    style={[
-                      styles.typeButtonText,
-                      frequency === 'WEEKLY'
-                        ? styles.typeButtonTextActive
-                        : styles.typeButtonTextInactive,
-                    ]}
-                  >
-                    Semanal
-                  </Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={[
-                    styles.typeButton,
-                    frequency === 'MONTHLY' ? styles.typeButtonActive : styles.typeButtonInactive,
-                  ]}
-                  onPress={() => setFrequency('MONTHLY')}
-                >
-                  <Text
-                    style={[
-                      styles.typeButtonText,
-                      frequency === 'MONTHLY'
-                        ? styles.typeButtonTextActive
-                        : styles.typeButtonTextInactive,
-                    ]}
-                  >
-                    Mensual
-                  </Text>
-                </TouchableOpacity>
-              </View>
-            </>
           )}
 
-          <Text style={styles.label}>{isRecurring ? 'Fecha de inicio *' : 'Fecha *'}</Text>
-          <TouchableOpacity style={styles.dateButton} onPress={() => setShowDatePicker(true)}>
-            <View style={styles.dropdownIconContainer}>
-              <Ionicons name="calendar-outline" size={18} color="#07a3e4" />
-            </View>
-            <Text style={styles.dropdownButtonText}>{formatDate(selectedDate)}</Text>
-            <Ionicons name="chevron-forward" size={20} color="#07a3e4" />
-          </TouchableOpacity>
+          <Text style={styles.label}>
+            {movementType === 'EXPENSE' ? 'Categoría y tipo *' : 'Categoría *'}
+          </Text>
+          <View
+            style={[styles.categoryTypeCard, categoryError ? styles.categoryTypeCardError : null]}
+          >
+            <TouchableOpacity style={styles.categorySelector} onPress={() => setModalVisible(true)}>
+              <View style={styles.dropdownContent}>
+                <View style={styles.dropdownIconContainer}>
+                  <Ionicons
+                    name={
+                      (selectedCategory?.icon ||
+                        (movementType === 'EXPENSE'
+                          ? 'cart-outline'
+                          : 'cash-outline')) as keyof typeof Ionicons.glyphMap
+                    }
+                    size={18}
+                    color="#07a3e4"
+                  />
+                </View>
+                <Text
+                  style={selectedCategory ? styles.dropdownButtonText : styles.dropdownPlaceholder}
+                >
+                  {selectedCategory ? selectedCategory.label : 'Seleccioná una categoría'}
+                </Text>
+              </View>
+              <Ionicons name="chevron-down" size={20} color="#07a3e4" />
+            </TouchableOpacity>
+
+            {movementType === 'EXPENSE' && (
+              <>
+                <View style={styles.categoryTypeDivider} />
+                <View style={styles.typeRow}>
+                  <TouchableOpacity
+                    style={[
+                      styles.typeChip,
+                      selectedExpenseType === 'FIXED' && styles.typeChipActive,
+                    ]}
+                    onPress={() => {
+                      setSelectedExpenseType('FIXED');
+                      setShowInferredNotice(false);
+                    }}
+                  >
+                    <Ionicons
+                      name="pin-outline"
+                      size={14}
+                      color={selectedExpenseType === 'FIXED' ? '#07a3e4' : '#6B8299'}
+                    />
+                    <Text
+                      style={[
+                        styles.typeChipText,
+                        selectedExpenseType === 'FIXED' && styles.typeChipTextActive,
+                      ]}
+                    >
+                      Fijo
+                    </Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={[
+                      styles.typeChip,
+                      selectedExpenseType === 'VARIABLE' && styles.typeChipActive,
+                    ]}
+                    onPress={() => {
+                      setSelectedExpenseType('VARIABLE');
+                      setShowInferredNotice(false);
+                    }}
+                  >
+                    <Ionicons
+                      name="trending-up"
+                      size={14}
+                      color={selectedExpenseType === 'VARIABLE' ? '#07a3e4' : '#6B8299'}
+                    />
+                    <Text
+                      style={[
+                        styles.typeChipText,
+                        selectedExpenseType === 'VARIABLE' && styles.typeChipTextActive,
+                      ]}
+                    >
+                      Variable
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+              </>
+            )}
+          </View>
+          {categoryError && <Text style={styles.errorText}>{categoryError}</Text>}
 
           {movementType === 'EXPENSE' && (
             <>
-              <Text style={styles.label}>Tipo de gasto *</Text>
               <InferredRuleBanner isVisible={showInferredNotice} />
-              <View style={styles.typeContainer}>
-                <TouchableOpacity
-                  style={[
-                    styles.typeButton,
-                    selectedExpenseType === 'FIXED'
-                      ? styles.typeButtonActive
-                      : styles.typeButtonInactive,
-                  ]}
-                  onPress={() => {
-                    setSelectedExpenseType('FIXED');
-                    setShowInferredNotice(false);
-                  }}
-                >
-                  <Text
-                    style={[
-                      styles.typeButtonText,
-                      selectedExpenseType === 'FIXED'
-                        ? styles.typeButtonTextActive
-                        : styles.typeButtonTextInactive,
-                    ]}
-                  >
-                    Fijo
-                  </Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={[
-                    styles.typeButton,
-                    selectedExpenseType === 'VARIABLE'
-                      ? styles.typeButtonActive
-                      : styles.typeButtonInactive,
-                  ]}
-                  onPress={() => {
-                    setSelectedExpenseType('VARIABLE');
-                    setShowInferredNotice(false);
-                  }}
-                >
-                  <Text
-                    style={[
-                      styles.typeButtonText,
-                      selectedExpenseType === 'VARIABLE'
-                        ? styles.typeButtonTextActive
-                        : styles.typeButtonTextInactive,
-                    ]}
-                  >
-                    Variable
-                  </Text>
-                </TouchableOpacity>
-              </View>
-
               <CategoryRuleSuggestion
                 movementType={movementType}
                 selectedCategory={selectedCategory}
                 selectedExpenseType={selectedExpenseType}
-                onAcceptSuggestion={handleAcceptRuleSuggestion}
+                checked={wantsRule}
+                onToggle={() => setWantsRule(prev => !prev)}
               />
             </>
           )}
 
-          <ExpandableTextInput
-            label="Descripción"
-            value={description}
-            onChangeText={text => setDescription(text.slice(0, 255))}
-            placeholder="Información adicional (opcional)"
-            scrollViewRef={scrollViewRef}
-            scrollYRef={scrollYRef}
-          />
-        </ScrollView>
-
-        <TouchableOpacity
-          style={[styles.saveButton, submitting && styles.saveButtonDisabled]}
-          onPress={onSubmit}
-          disabled={submitting}
-        >
-          {submitting ? (
-            <ActivityIndicator size="small" color="#fff" />
-          ) : (
-            <Ionicons name="checkmark" size={24} color="#fff" />
+          {!isRecurring && (
+            <>
+              <Text style={styles.label}>Fecha *</Text>
+              <View style={styles.dateChipsRow}>
+                <TouchableOpacity
+                  style={[styles.dateChip, isToday && styles.dateChipActive]}
+                  onPress={() => setSelectedDate(today)}
+                >
+                  <Text style={[styles.dateChipText, isToday && styles.dateChipTextActive]}>
+                    Hoy
+                  </Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.dateChip, isYesterday && styles.dateChipActive]}
+                  onPress={() => setSelectedDate(yesterday)}
+                >
+                  <Text style={[styles.dateChipText, isYesterday && styles.dateChipTextActive]}>
+                    Ayer
+                  </Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.dateChipCustom, isCustomDate && styles.dateChipActive]}
+                  onPress={() => setShowDatePicker(true)}
+                >
+                  <Ionicons
+                    name="calendar-outline"
+                    size={16}
+                    color={isCustomDate ? '#07a3e4' : '#6B8299'}
+                  />
+                  <Text
+                    style={[styles.dateChipText, isCustomDate && styles.dateChipTextActive]}
+                    numberOfLines={1}
+                  >
+                    {isCustomDate ? formatDate(selectedDate) : 'Otra'}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </>
           )}
-        </TouchableOpacity>
+
+          <View style={styles.recurringSwitchRow}>
+            <Text style={styles.recurringSwitchLabel}>
+              {movementType === 'EXPENSE'
+                ? '¿Es un gasto recurrente?'
+                : '¿Es un ingreso recurrente?'}
+            </Text>
+            <Switch
+              value={isRecurring}
+              onValueChange={setIsRecurring}
+              trackColor={{ false: '#D7E2EC', true: '#07a3e4' }}
+              thumbColor="#ffffff"
+              ios_backgroundColor="#D7E2EC"
+            />
+          </View>
+
+          {isRecurring && (
+            <View style={styles.recurringSubPanel}>
+              <View style={styles.subPanelHeader}>
+                <Ionicons name="repeat" size={16} color="#07a3e4" />
+                <Text style={styles.subPanelHeaderText}>Recurrente</Text>
+                <TouchableOpacity
+                  style={styles.subPanelInfoButton}
+                  hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                  onPress={() =>
+                    alert({
+                      title: 'Movimiento recurrente',
+                      message:
+                        'Se va a registrar automáticamente a partir de la fecha de inicio (inclusive), con la frecuencia que elijas.',
+                    })
+                  }
+                >
+                  <Ionicons name="information-circle-outline" size={16} color="#07a3e4" />
+                </TouchableOpacity>
+              </View>
+
+              <View style={styles.subRow}>
+                <Ionicons name="sync-outline" size={18} color="#37618A" style={styles.subRowIcon} />
+                <Text style={styles.subRowLabel}>Frecuencia</Text>
+                <View style={styles.segmented}>
+                  <TouchableOpacity
+                    style={[styles.segment, frequency === 'WEEKLY' && styles.segmentActive]}
+                    onPress={() => setFrequency('WEEKLY')}
+                  >
+                    <Text
+                      style={[
+                        styles.segmentText,
+                        frequency === 'WEEKLY' && styles.segmentTextActive,
+                      ]}
+                    >
+                      Semanal
+                    </Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={[styles.segment, frequency === 'MONTHLY' && styles.segmentActive]}
+                    onPress={() => setFrequency('MONTHLY')}
+                  >
+                    <Text
+                      style={[
+                        styles.segmentText,
+                        frequency === 'MONTHLY' && styles.segmentTextActive,
+                      ]}
+                    >
+                      Mensual
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+
+              <View style={styles.subRowDivider} />
+
+              <TouchableOpacity style={styles.subRow} onPress={() => setShowDatePicker(true)}>
+                <Ionicons
+                  name="calendar-outline"
+                  size={18}
+                  color="#37618A"
+                  style={styles.subRowIcon}
+                />
+                <Text style={styles.subRowLabel}>Inicia</Text>
+                <View style={styles.datePill}>
+                  <Text style={styles.datePillText}>{formatDate(selectedDate)}</Text>
+                  <Ionicons name="chevron-down" size={16} color="#07a3e4" />
+                </View>
+              </TouchableOpacity>
+            </View>
+          )}
+          <TouchableOpacity
+            style={[styles.saveButton, submitting && styles.saveButtonDisabled]}
+            onPress={onSubmit}
+            disabled={submitting}
+          >
+            {submitting ? (
+              <ActivityIndicator size="small" color="#fff" />
+            ) : (
+              <>
+                <Ionicons name="save-outline" size={20} color="#fff" />
+                <Text style={styles.saveButtonText}>Guardar</Text>
+              </>
+            )}
+          </TouchableOpacity>
+        </ScrollView>
       </Layout>
 
       <Modal
@@ -698,42 +768,39 @@ const AddMovementScreen = () => {
         </SafeAreaView>
       </Modal>
 
-      {showDatePicker && (
-        <DateTimePicker
-          mode="date"
-          value={selectedDate}
-          display="default"
-          onChange={onDateChange}
-          maximumDate={isRecurring ? undefined : new Date()}
-        />
-      )}
+      <DatePickerModal
+        visible={showDatePicker}
+        date={selectedDate}
+        max={isRecurring ? undefined : new Date()}
+        onSelect={onDateSelect}
+        onClose={() => setShowDatePicker(false)}
+      />
 
       <CameraModal
         visible={cameraVisible}
         onClose={() => setCameraVisible(false)}
         onCapture={onImageCaptured}
       />
-
-      <CategoryRuleModal
-        visible={suggestRuleModal.visible}
-        scale={suggestRuleModal.scale}
-        opacity={suggestRuleModal.opacity}
-        onClose={suggestRuleModal.close}
-        rule={suggestedRuleData}
-        onSave={handleSaveSuggestedRule}
-        saving={ruleSaving}
-      />
     </>
   );
 };
 
 const localStyles = StyleSheet.create({
+  topRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    marginBottom: vh * 2,
+  },
+  topRowClose: {
+    padding: 4,
+  },
   tabContainer: {
+    flex: 1,
     flexDirection: 'row',
     backgroundColor: '#fff',
     borderRadius: 14,
     padding: 4,
-    marginBottom: vh * 2,
     borderWidth: 1,
     borderColor: '#E0E0E0',
     shadowColor: '#000',
@@ -794,6 +861,123 @@ const localStyles = StyleSheet.create({
     fontSize: 12,
     color: '#013366',
     fontWeight: '500',
+  },
+  addDescriptionLink: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    alignSelf: 'flex-start',
+    gap: 6,
+    marginTop: vh * 1.2,
+    paddingVertical: 4,
+  },
+  addDescriptionText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#07a3e4',
+  },
+  recurringSwitchRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    marginTop: vh * 1.5,
+  },
+  recurringSwitchLabel: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: '#003366',
+  },
+  recurringSubPanel: {
+    marginTop: vh * 1,
+    backgroundColor: '#F4FAFE',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#D7EAF7',
+    borderLeftWidth: 3,
+    borderLeftColor: '#07a3e4',
+    paddingHorizontal: 12,
+    paddingVertical: vh * 0.6,
+  },
+  subPanelHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingVertical: vh * 0.8,
+  },
+  subPanelHeaderText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#07a3e4',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  subPanelInfoButton: {
+    marginLeft: 2,
+  },
+  subRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: vh * 1,
+  },
+  subRowIcon: {
+    marginRight: 10,
+  },
+  subRowLabel: {
+    flex: 1,
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#37618A',
+  },
+  datePill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    width: RECURRENCE_CONTROL_WIDTH,
+    paddingVertical: 7,
+    paddingHorizontal: 12,
+    borderRadius: 9,
+    backgroundColor: '#fff',
+    borderWidth: 1,
+    borderColor: '#D7EAF7',
+  },
+  datePillText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#003366',
+  },
+  subRowDivider: {
+    height: 1,
+    backgroundColor: '#E1ECF5',
+  },
+  segmented: {
+    flexDirection: 'row',
+    width: RECURRENCE_CONTROL_WIDTH,
+    backgroundColor: '#E4EEF6',
+    borderRadius: 9,
+    padding: 3,
+  },
+  segment: {
+    flex: 1,
+    paddingVertical: 7,
+    paddingHorizontal: 8,
+    borderRadius: 7,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  segmentActive: {
+    backgroundColor: '#fff',
+    shadowColor: '#506E96',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.12,
+    shadowRadius: 3,
+    elevation: 2,
+  },
+  segmentText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#6B8299',
+  },
+  segmentTextActive: {
+    color: '#07a3e4',
   },
 });
 

@@ -1,13 +1,15 @@
 import React, { useState } from 'react';
-import { Alert, View, Image, KeyboardAvoidingView } from 'react-native';
+import { View, Image, KeyboardAvoidingView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button, Layout, Text, Input } from '@ui-kitten/components';
 import { router } from 'expo-router';
 import { authService } from '../services/authService';
 import { validateEmail } from '../utils/validation';
 import { loginStyles as styles } from '../styles/loginStyles';
+import { useDialog } from '../context/dialog';
 
 const ForgotPasswordScreen = () => {
+  const { alert } = useDialog();
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
   const [emailError, setEmailError] = useState<string | null>(null);
@@ -26,7 +28,10 @@ const ForgotPasswordScreen = () => {
       router.push({ pathname: '/verify-reset-otp', params: { email } });
     } catch (err) {
       console.error(err);
-      Alert.alert('Error', 'Ocurrió un error al procesar tu solicitud. Intentá de nuevo.');
+      await alert({
+        title: 'Error',
+        message: 'Ocurrió un error al procesar tu solicitud. Intentá de nuevo.',
+      });
     } finally {
       setLoading(false);
     }

@@ -62,8 +62,8 @@ export default function CategoryRulesScreen() {
       });
       addRule(response);
       createRuleModal.close();
-    } catch (e: any) {
-      console.error('Error detectado al crear:', e);
+    } catch (e) {
+      // Re-throw so the modal can display the error message inline.
       throw e;
     } finally {
       setSaving(false);
@@ -72,7 +72,18 @@ export default function CategoryRulesScreen() {
   return (
     <Layout style={rulesScreenStyles.container}>
       <View style={rulesScreenStyles.headerRow}>
-        <Text style={rulesScreenStyles.title}>Reglas por categoría</Text>
+        <View style={rulesScreenStyles.titleRow}>
+          <Text style={rulesScreenStyles.title}>Reglas por categoría</Text>
+          {rules.length > 0 && (
+            <View style={rulesScreenStyles.countBadge}>
+              <Text style={rulesScreenStyles.countBadgeText}>{rules.length}</Text>
+            </View>
+          )}
+        </View>
+        <Text style={rulesScreenStyles.subtitle}>
+          Creá reglas personalizadas para clasificar tus gastos como fijos o variables según su
+          categoría.
+        </Text>
       </View>
 
       {screenLoading ? (
@@ -91,13 +102,13 @@ export default function CategoryRulesScreen() {
           contentContainerStyle={rulesScreenStyles.listPadding}
           ListEmptyComponent={
             <View style={rulesScreenStyles.emptyContainer}>
-              <Ionicons
-                name="alert-circle-outline"
-                size={48}
-                color="#6c757d"
-                style={{ marginBottom: 8 }}
-              />
-              <Text appearance="hint">No tenés reglas configuradas aún.</Text>
+              <View style={rulesScreenStyles.emptyIconCircle}>
+                <Ionicons name="pricetags-outline" size={34} color="#07a3e4" />
+              </View>
+              <Text style={rulesScreenStyles.emptyTitle}>Todavía no tenés reglas</Text>
+              <Text style={rulesScreenStyles.emptyText}>
+                Creá tu primera regla para que tus gastos se clasifiquen solos según su categoría.
+              </Text>
             </View>
           }
         />
