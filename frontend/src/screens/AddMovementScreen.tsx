@@ -22,6 +22,7 @@ import ExpandableTextInput from '../components/ExpandableTextInput/ExpandableTex
 import DatePickerModal from '../components/DatePickerModal/DatePickerModal';
 import { expenseService } from '../services/expenseService';
 import { incomeService } from '../services/incomeService';
+import { PulseScanner } from '../components/PulseScanner';
 import { ruleService } from '../services/ruleService';
 import { CategoryRuleSuggestion } from '../components/Rules/CategoryRule/Banners/CategoryRuleSuggestion';
 import { useRules } from '../context/rules';
@@ -406,24 +407,52 @@ const AddMovementScreen = () => {
           <View style={styles.scanOverlayContainer}>
             <View style={styles.scanSubHeader}>
               <Text style={styles.scanOverlayTitle}>Procesando Gasto</Text>
-              <TouchableOpacity
-                onPress={() => {
-                  setScanningReceipt(false);
-                  setScanHasError(false);
-                }}
-              >
-                <Text style={styles.scanCloseButton}>✕</Text>
-              </TouchableOpacity>
+              {!scanHasError && (
+                <TouchableOpacity
+                  onPress={() => {
+                    setScanningReceipt(false);
+                    setScanHasError(false);
+                  }}
+                >
+                  <Text style={styles.scanCloseButton}>✕</Text>
+                </TouchableOpacity>
+              )}
             </View>
 
             <View style={styles.scanLoadingContainer}>
               {scanHasError ? (
-                <Ionicons name="alert-circle" size={64} color="#E53935" />
+                <Ionicons name="alert-circle" size={120} color="#E53935" />
               ) : (
-                <ActivityIndicator size="large" color="#07a3e4" />
+                <PulseScanner />
               )}
               <Text style={styles.scanOverlayText}>{scanStatusMessage}</Text>
               <Text style={styles.scanSubText}>{scanSubTextMessage}</Text>
+
+              {scanHasError && (
+                <View style={styles.errorButtonContainer}>
+                  <TouchableOpacity
+                    style={styles.primaryButton}
+                    onPress={() => {
+                      setScanningReceipt(false);
+                      setScanHasError(false);
+                    }}
+                  >
+                    <Ionicons name="create-outline" size={20} color="#fff" />
+                    <Text style={styles.primaryButtonText}>Cargar manualmente</Text>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    style={styles.secondaryButton}
+                    onPress={() => {
+                      setScanHasError(false);
+                      onScanReceipt();
+                    }}
+                  >
+                    <Ionicons name="camera-outline" size={18} color="#006699" />
+                    <Text style={styles.secondaryButtonText}>Intentar de nuevo</Text>
+                  </TouchableOpacity>
+                </View>
+              )}
             </View>
           </View>
         )}
@@ -1052,13 +1081,13 @@ const localStyles = StyleSheet.create({
     padding: 5,
   },
   scanLoadingContainer: {
-    flex: 1,
+    // flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    paddingTop: 100,
+    paddingTop: 0,
   },
   scanOverlayText: {
-    marginTop: 20,
+    marginTop: 10,
     textAlign: 'center',
     fontWeight: 'bold',
     color: '#003366',
@@ -1071,6 +1100,43 @@ const localStyles = StyleSheet.create({
     color: '#006699',
     paddingHorizontal: 20,
     fontSize: 16,
+  },
+  errorButtonContainer: {
+    width: '100%',
+    paddingHorizontal: 20,
+    marginTop: 30,
+    gap: 12,
+  },
+  primaryButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    height: 50,
+    borderRadius: 14,
+    backgroundColor: '#07a3e4',
+    shadowColor: '#506E96',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.18,
+    shadowRadius: 10,
+    elevation: 4,
+  },
+  primaryButtonText: {
+    color: '#fff',
+    fontWeight: 'bold',
+    fontSize: 16,
+  },
+  secondaryButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    paddingVertical: 12,
+  },
+  secondaryButtonText: {
+    color: '#006699',
+    fontSize: 15,
+    fontWeight: '600',
   },
 });
 
