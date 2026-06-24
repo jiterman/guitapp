@@ -12,7 +12,7 @@ import {
 import { useRouter, usePathname } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { SvgXml } from 'react-native-svg';
-import { useAudioRecorder, AudioModule } from 'expo-audio';
+import { useAudioRecorder, AudioModule, AudioQuality } from 'expo-audio';
 import { Ionicons } from '@expo/vector-icons';
 
 import HOME_ICON from '../../../assets/icons/homeIcon';
@@ -47,21 +47,21 @@ const BottomNavBar: React.FC = () => {
     extension: '.wav',
     sampleRate: 16000,
     numberOfChannels: 1,
+    bitRate: 128000,
     android: {
       extension: '.m4a',
       outputFormat: 'mpeg4',
       audioEncoder: 'aac',
       sampleRate: 16000,
-      numberOfChannels: 1,
     },
     ios: {
       extension: '.wav',
       outputFormat: 'lpcm',
       sampleRate: 16000,
-      numberOfChannels: 1,
       linearPCMBitDepth: 16,
       linearPCMIsBigEndian: false,
       linearPCMIsFloat: false,
+      audioQuality: AudioQuality.MAX,
     },
     web: {},
   });
@@ -76,8 +76,8 @@ const BottomNavBar: React.FC = () => {
       }
 
       await AudioModule.setAudioModeAsync({
-        allowsRecordingIOS: true,
-        playsInSilentModeIOS: true,
+        allowsRecording: true,
+        playsInSilentMode: true,
       });
 
       try {
@@ -120,7 +120,7 @@ const BottomNavBar: React.FC = () => {
       }
 
       await AudioModule.setAudioModeAsync({
-        allowsRecordingIOS: false,
+        allowsRecording: false,
       });
       const uri = audioRecorder.uri;
 
