@@ -105,6 +105,58 @@ public class GeminiService {
         }
     }
 
+    public ReceiptAnalysisResponse analyzeText(String transcribedText) {
+        try {
+            LocalDate currentDate = LocalDate.now();
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+            String formatedCurrentDate = currentDate.format(formatter);
+            String categories = Arrays.stream(ExpenseCategory.values())
+                    .map(Enum::name)
+                    .collect(Collectors.joining(", "));
+
+            String prompt = "Analyze this transcribed audio text of an expense description and extract the following information in JSON format: " +
+                    "{" +
+                    "\"date\": date (yyyy-MM-dd), " +
+                    "\"amount\": number, " +
+                    "\"category\": one of [" + categories + "], " +
+                    "\"title\": \"string (max 3 words, max 20 chars)\"" +
+                    "}. " +
+                    "If a field cannot be determined, use null. " +
+                    "If any part of the date cannot be determined, use current date information, for example, if year is missing use current year. The current date is "
+                    + formatedCurrentDate + ". " +
+                    "The amount should be a number (e.g. 1500.50) and has to be the total amount spoken or implied in the text. " +
+                    "The category must match exactly one of the provided values." +
+                    "The title must specify over the category, for example, if category is RESTAURANT, the title must include something related to RESTAURANT like \"Almuerzo\", \"Cafe\", \"Cena\". Title must be in spanish and max 20 characters. "
+                    +
+                    "Text to analyze: \"" + transcribedText.replace("\"", "\\\"") + "\". " +
+                    "CRITICAL: Only return the JSON.";
+
+            String jsonPayload = String.format("""
+                    {
+                      "contents": [
+                        {
+                          "parts": [
+                            { "text": "%s" }
+                          ]
+                        }
+                      ]
+                    }
+                    """,
+                    prompt.replace("\"", "\\\""));
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+            HttpEntity<String> requestEntity = new HttpEntity<>(jsonPayload, headers);
+            String urlWithKey = apiUrl + "?key=" + apiKey;
+            String response = restTemplate.postForObject(urlWithKey, requestEntity, String.class);
+
+            return parseGeminiResponse(response);
+        } catch (Exception e) {
+            log.error("Error calling Gemini API for text analysis", e);
+            throw new AuthException(ErrorCode.UNKNOWN_ERROR, "Error analyzing text with Gemini");
+        }
+    }
+
     private ReceiptAnalysisResponse parseGeminiResponse(String response) throws Exception {
         JsonNode root = objectMapper.readTree(response);
         String jsonContent = root.path("candidates")

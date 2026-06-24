@@ -11,6 +11,7 @@ import org.fiuba.guitapp.dto.ReceiptAnalysisResponse;
 import org.fiuba.guitapp.dto.UpdateExpenseRequest;
 import org.fiuba.guitapp.service.ExpenseService;
 import org.fiuba.guitapp.service.GeminiService;
+import org.fiuba.guitapp.service.SpeechToTextService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -33,11 +34,20 @@ public class ExpenseController {
 
     private final ExpenseService expenseService;
     private final GeminiService geminiService;
+    private final SpeechToTextService speechToTextService;
 
     @PostMapping("/analyze-receipt")
     public ResponseEntity<ReceiptAnalysisResponse> analyzeReceipt(
             @RequestParam("file") MultipartFile file) {
         ReceiptAnalysisResponse response = geminiService.analyzeReceipt(file);
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/analyze-voice")
+    public ResponseEntity<ReceiptAnalysisResponse> analyzeVoice(
+            @RequestParam("file") MultipartFile file) {
+        String transcript = speechToTextService.transcribeAudio(file);
+        ReceiptAnalysisResponse response = geminiService.analyzeText(transcript);
         return ResponseEntity.ok(response);
     }
 
