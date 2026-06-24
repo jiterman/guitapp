@@ -43,7 +43,8 @@
           },
           "androidIntentFilters": ["*/*"]
         }
-      ]
+      ],
+      "expo-audio"
     ],
     "ios": {
       "supportsTablet": true,

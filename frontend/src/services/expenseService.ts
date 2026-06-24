@@ -139,10 +139,47 @@ const analyzeReceipt = async (imageUri: string): Promise<ReceiptAnalysisResponse
   return response.json();
 };
 
+const analyzeVoice = async (audioUri: string): Promise<ReceiptAnalysisResponse> => {
+  const token = await authService.getToken();
+
+  const filename = audioUri.split('/').pop() || 'audio.wav';
+  const fileExtension = filename.split('.').pop() || 'wav';
+  let mimeType = 'audio/wav';
+  if (fileExtension === 'amr') {
+    mimeType = 'audio/amr';
+  } else if (fileExtension === 'm4a') {
+    mimeType = 'audio/m4a';
+  }
+
+  const formData = new FormData();
+  // @ts-expect-error - FormData append for files is not fully typed in React Native
+  formData.append('file', {
+    uri: audioUri,
+    name: filename,
+    type: mimeType,
+  });
+
+  const response = await fetch(`${API_URL}/api/expenses/analyze-voice`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+    body: formData,
+  });
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({}));
+    throw { code: error.code, message: error.message ?? 'Voice analysis failed' };
+  }
+
+  return response.json();
+};
+
 export const expenseService = {
   getExpenseById,
   updateExpense,
   deleteExpense,
   addExpense,
   analyzeReceipt,
+  analyzeVoice,
 };

@@ -22,6 +22,7 @@ import org.fiuba.guitapp.model.ExpenseCategory;
 import org.fiuba.guitapp.model.ExpenseType;
 import org.fiuba.guitapp.service.ExpenseService;
 import org.fiuba.guitapp.service.GeminiService;
+import org.fiuba.guitapp.service.SpeechToTextService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -51,6 +52,9 @@ class ExpenseControllerTests {
 
     @MockBean
     private GeminiService geminiService;
+
+    @MockBean
+    private SpeechToTextService speechToTextService;
 
     @Test
     @WithMockUser(username = "test@example.com")
@@ -461,5 +465,29 @@ class ExpenseControllerTests {
                 .andExpect(jsonPath("$.variablePercentage").value(33.3333));
 
         verify(expenseService, times(1)).getFixedAndVariableStatistics("test@example.com", "monthly", null, null, null);
+    }
+
+    @Test
+    @WithMockUser(username = "test@example.com")
+    void analyzeVoice_ShouldReturnAnalysis_WhenFileIsProvided() throws Exception {
+        ReceiptAnalysisResponse response = new ReceiptAnalysisResponse(
+                "2023-10-27",
+                new BigDecimal("123.45"),
+                ExpenseCategory.OTHER,
+                "Test Analysis");
+
+        when(speechToTextService.transcribeAudio(any())).thenReturn("gasto de prueba");
+        when(geminiService.analyzeText(eq("gasto de prueba"))).thenReturn(response);
+
+        mockMvc.perform(multipart("/api/expenses/analyze-voice")
+                .file("file", "test.wav".getBytes())
+                .contentType(MediaType.MULTIPART_FORM_DATA))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.amount").value(123.45))
+                .andExpect(jsonPath("$.title").value("Test Analysis"))
+                .andExpect(jsonPath("$.category").value("OTHER"));
+
+        verify(speechToTextService, times(1)).transcribeAudio(any());
+        verify(geminiService, times(1)).analyzeText(eq("gasto de prueba"));
     }
 }

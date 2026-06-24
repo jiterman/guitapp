@@ -225,4 +225,48 @@ class GeminiServiceTests {
             geminiService.analyzeReceipt(multipartFile);
         });
     }
+
+    @Test
+    void analyzeText_ShouldReturnResponse_WhenApiCallIsSuccessful() throws Exception {
+        // Arrange
+        String transcribedText = "Gasté 1500 pesos en restaurante Pizza Lunch";
+        String geminiResponse = """
+                {
+                  "candidates": [
+                    {
+                      "content": {
+                        "parts": [
+                          {
+                            "text": "{\\"amount\\": 1500.50, \\"category\\": \\"RESTAURANT\\", \\"title\\": \\"Pizza Lunch\\"}"
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+                """;
+
+        when(restTemplate.postForObject(anyString(), any(), eq(String.class))).thenReturn(geminiResponse);
+
+        // Act
+        ReceiptAnalysisResponse response = geminiService.analyzeText(transcribedText);
+
+        // Assert
+        assertNotNull(response);
+        assertEquals(0, new BigDecimal("1500.5").compareTo(response.amount()));
+        assertEquals(ExpenseCategory.RESTAURANT, response.category());
+        assertEquals("Pizza Lunch", response.title());
+    }
+
+    @Test
+    void analyzeText_ShouldThrowAuthException_WhenApiFails() {
+        // Arrange
+        String transcribedText = "Gasté 1500 pesos";
+        when(restTemplate.postForObject(anyString(), any(), eq(String.class))).thenThrow(new RuntimeException("API error"));
+
+        // Act & Assert
+        org.junit.jupiter.api.Assertions.assertThrows(org.fiuba.guitapp.exception.AuthException.class, () -> {
+            geminiService.analyzeText(transcribedText);
+        });
+    }
 }
