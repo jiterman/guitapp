@@ -27,12 +27,14 @@ export const usePushNotifications = (enabled: boolean = true) => {
         setExpoPushToken(token);
         if (token) {
           // Send token to backend
-          userService.updateFcmToken(token).catch(err => {
-            console.error('Error enviando FCM token al backend:', err);
+          userService.updateFcmToken(token).catch(() => {
+            // silently ignore FCM token registration failure
           });
         }
       })
-      .catch(error => console.error('Error registrando notificaciones:', error));
+      .catch(() => {
+        // silently ignore push notification registration failure
+      });
 
     // Escuchamos notificaciones mientras la app está abierta
     const notificationListener = Notifications.addNotificationReceivedListener(notification => {
@@ -83,8 +85,8 @@ export const usePushNotifications = (enabled: boolean = true) => {
       // Usamos getDevicePushTokenAsync para obtener el token nativo FCM/APNs
       const tokenResponse = await Notifications.getDevicePushTokenAsync();
       token = tokenResponse.data;
-    } catch (error) {
-      console.error('Error obteniendo el token del dispositivo:', error);
+    } catch {
+      // silently ignore device token fetch failure
     }
 
     return token;

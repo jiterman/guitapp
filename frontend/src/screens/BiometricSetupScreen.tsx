@@ -35,8 +35,8 @@ const BiometricSetupScreen = () => {
     try {
       const profile = await userService.getProfile();
       setUser(profile);
-    } catch (e) {
-      console.error('Error fetching profile after biometric setup', e);
+    } catch {
+      // profile fetch failed; proceed to navigation anyway
     }
 
     if (onboardingCompleted === 'true') {

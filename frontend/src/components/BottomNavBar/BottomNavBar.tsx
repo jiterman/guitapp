@@ -22,6 +22,7 @@ import SUMMARY_ICON from '../../../assets/icons/summaryIcon';
 import PLUS_ICON from '../../../assets/icons/plusIcon';
 import styles from '../../styles/bottomNavStyles';
 import { expenseService } from '../../services/expenseService';
+import { toLocalDateString } from '../../utils/dateFormatter';
 
 const ROUTE_ORDER = ['/home', '/statistics', '/transactions', '/summary'];
 
@@ -103,8 +104,8 @@ const BottomNavBar: React.FC = () => {
       Vibration.vibrate(100);
       audioRecorder.record();
       setIsRecordingState(true);
-    } catch (err) {
-      console.error('Failed to start recording', err);
+    } catch {
+      // recording failed silently; button returns to idle state
     }
   };
 
@@ -141,12 +142,11 @@ const BottomNavBar: React.FC = () => {
             amount: analysisResponse.amount.toString(),
             title: analysisResponse.title || '',
             category: analysisResponse.category || 'OTHER',
-            date: analysisResponse.date || new Date().toISOString().split('T')[0],
+            date: analysisResponse.date || toLocalDateString(new Date()),
           },
         });
       }
-    } catch (err) {
-      console.error('Failed to stop recording or analyze voice', err);
+    } catch {
       setErrorMessage(
         'Perdón! En este momento no pudimos procesar el audio, por favor volvé a intentar en unos segundos'
       );

@@ -190,8 +190,7 @@ const AddMovementScreen = () => {
       setTimeout(() => {
         setScanningReceipt(false);
       }, 500);
-    } catch (err) {
-      console.error('Error analyzing receipt:', err);
+    } catch {
       setScanStatusMessage('Ha ocurrido un error al procesar la imagen.');
       setScanSubTextMessage(
         'Podés volver atrás utilizando la cruz de arriba a la derecha para intentar nuevamente.'

@@ -8,9 +8,12 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 
 import java.math.BigDecimal;
+import java.util.List;
 
+import org.fiuba.guitapp.dto.MonthlySummaryResponse;
 import org.fiuba.guitapp.dto.ReceiptAnalysisResponse;
 import org.fiuba.guitapp.model.ExpenseCategory;
+import org.fiuba.guitapp.model.User;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -267,6 +270,69 @@ class GeminiServiceTests {
         // Act & Assert
         org.junit.jupiter.api.Assertions.assertThrows(org.fiuba.guitapp.exception.AuthException.class, () -> {
             geminiService.analyzeText(transcribedText);
+        });
+    }
+
+    @Test
+    void generateMonthlySummary_ShouldReturnText_WhenApiCallIsSuccessful() {
+        // Arrange
+        User user = new User();
+        user.setEmail("test@example.com");
+        MonthlySummaryResponse summary = new MonthlySummaryResponse(
+                2026,
+                5,
+                new BigDecimal("100000"),
+                new BigDecimal("60000"),
+                new BigDecimal("40000"),
+                List.of(),
+                List.of());
+
+        String geminiResponse = """
+                {
+                  "candidates": [
+                    {
+                      "content": {
+                        "parts": [
+                          {
+                            "text": "Este mes ahorraste bien. Seguí así."
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+                """;
+
+        when(restTemplate.postForObject(anyString(), any(), eq(String.class))).thenReturn(geminiResponse);
+
+        // Act
+        String result = geminiService.generateMonthlySummary(summary, user);
+
+        // Assert
+        assertNotNull(result);
+        assertEquals("Este mes ahorraste bien. Seguí así.", result);
+    }
+
+    @Test
+    void generateMonthlySummary_ShouldThrowAuthException_WhenApiCallFails() {
+        // Arrange
+        User user = new User();
+        user.setEmail("test@example.com");
+        MonthlySummaryResponse summary = new MonthlySummaryResponse(
+                2026,
+                5,
+                new BigDecimal("100000"),
+                new BigDecimal("60000"),
+                new BigDecimal("40000"),
+                List.of(),
+                List.of());
+
+        when(restTemplate.postForObject(anyString(), any(), eq(String.class)))
+                .thenThrow(new RuntimeException("API error"));
+
+        // Act & Assert
+        org.junit.jupiter.api.Assertions.assertThrows(org.fiuba.guitapp.exception.AuthException.class, () -> {
+            geminiService.generateMonthlySummary(summary, user);
         });
     }
 }

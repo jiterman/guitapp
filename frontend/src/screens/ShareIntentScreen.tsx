@@ -69,8 +69,7 @@ const ShareIntentScreen = () => {
             imagePath: manipulatedImage.uri,
           },
         });
-      } catch (error) {
-        console.error('Error procesando la imagen:', error);
+      } catch {
         setStatusMessage('Ha ocurrido un error al procesar la imagen.');
         setSubTextMessage(
           'Podés volver atrás utilizando la cruz de arriba a la derecha para intentar nuevamente.'

@@ -86,8 +86,6 @@ const PersonalInfoEditor: React.FC<PersonalInfoEditorProps> = ({
 
       await onSaveEmail(draftEmail.trim());
     } catch (e: unknown) {
-      console.error('Error cambiando email', e);
-
       setEmailError(e instanceof Error ? e.message : 'Error de red. Intentá nuevamente');
     }
   };

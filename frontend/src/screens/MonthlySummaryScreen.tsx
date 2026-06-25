@@ -14,6 +14,7 @@ import { Ionicons } from '@expo/vector-icons';
 import StatsCard from '../components/StatsCard/StatsCard';
 import CategoryLegend from '../components/CategoryLegend/CategoryLegend';
 import HealthScoreCard from '../components/HealthScoreCard/HealthScoreCard';
+import AiSummaryCard from '../components/AiSummaryCard/AiSummaryCard';
 import { EXPENSE_CATEGORIES } from '../constants/categories';
 import { MonthlySummaryResponse, monthlySummaryService } from '../services/monthlySummaryService';
 import { HealthScoreResponse, healthScoreService } from '../services/healthScoreService';
@@ -142,6 +143,8 @@ const MonthlySummaryScreen: React.FC = () => {
   const [healthScore, setHealthScore] = useState<HealthScoreResponse | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [aiSummary, setAiSummary] = useState<string | null>(null);
+  const [aiSummaryLoading, setAiSummaryLoading] = useState(false);
   const fetchSummary = useCallback(async (y: number, m: number) => {
     setLoading(true);
     setError(null);
@@ -162,6 +165,23 @@ const MonthlySummaryScreen: React.FC = () => {
   useEffect(() => {
     fetchSummary(year, month);
   }, [year, month, fetchSummary]);
+
+  const fetchAiSummary = useCallback(async (y: number, m: number) => {
+    setAiSummaryLoading(true);
+    setAiSummary(null);
+    try {
+      const data = await monthlySummaryService.getAiSummary(y, m);
+      setAiSummary(data.summaryText);
+    } catch {
+      // silently fail — AI summary is non-critical
+    } finally {
+      setAiSummaryLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchAiSummary(year, month);
+  }, [year, month, fetchAiSummary]);
 
   const goToPrevMonth = () => {
     if (month === 1) {
@@ -230,57 +250,64 @@ const MonthlySummaryScreen: React.FC = () => {
 
       {!loading && !error && summary && (
         <>
-          {healthScore && (
-            <View style={styles.healthScoreWrapper}>
-              <HealthScoreCard data={healthScore} />
-            </View>
-          )}
-
-          <View style={styles.statsCardWrapper}>
-            <StatsCard
-              income={summary.totalIncome}
-              expense={summary.totalExpenses}
-              variant="monthly"
-            />
-          </View>
-
-          {summary.insights.length > 0 && (
-            <View style={styles.section}>
-              <ScrollView
-                horizontal
-                showsHorizontalScrollIndicator={false}
-                style={styles.insightsScroll}
-                contentContainerStyle={styles.insightsList}
-              >
-                {summary.insights.map((insight, idx) => (
-                  <InsightCard
-                    key={idx}
-                    type={insight.type}
-                    label={insight.label}
-                    highlight={insight.highlight}
-                    sub={insight.sub}
-                    variant={insight.variant}
-                    category={insight.category}
-                  />
-                ))}
-              </ScrollView>
-            </View>
-          )}
-
-          {summary.categoryBreakdown.length > 0 && (
-            <View style={styles.section}>
-              <Text style={styles.sectionTitle}>
-                Gastos por categoría <Text style={styles.sectionTitleSub}>(vs mes anterior)</Text>
-              </Text>
-              <CategoryLegend data={summary.categoryBreakdown} />
-            </View>
-          )}
-
-          {summary.categoryBreakdown.length === 0 && summary.insights.length === 0 && (
+          {summary.categoryBreakdown.length === 0 && summary.insights.length === 0 ? (
             <View style={styles.centered}>
               <Ionicons name="calendar-outline" size={48} color="#07a3e4" />
               <Text style={styles.emptyText}>No hay datos registrados para este mes.</Text>
             </View>
+          ) : (
+            <>
+              {healthScore && (
+                <View style={styles.healthScoreWrapper}>
+                  <HealthScoreCard data={healthScore} />
+                </View>
+              )}
+
+              <View style={styles.statsCardWrapper}>
+                <StatsCard
+                  income={summary.totalIncome}
+                  expense={summary.totalExpenses}
+                  variant="monthly"
+                />
+              </View>
+
+              {summary.insights.length > 0 && (
+                <View style={styles.section}>
+                  <ScrollView
+                    horizontal
+                    showsHorizontalScrollIndicator={false}
+                    style={styles.insightsScroll}
+                    contentContainerStyle={styles.insightsList}
+                  >
+                    {summary.insights.map((insight, idx) => (
+                      <InsightCard
+                        key={idx}
+                        type={insight.type}
+                        label={insight.label}
+                        highlight={insight.highlight}
+                        sub={insight.sub}
+                        variant={insight.variant}
+                        category={insight.category}
+                      />
+                    ))}
+                  </ScrollView>
+                </View>
+              )}
+
+              <View style={styles.section}>
+                <AiSummaryCard text={aiSummary} loading={aiSummaryLoading} />
+              </View>
+
+              {summary.categoryBreakdown.length > 0 && (
+                <View style={styles.section}>
+                  <Text style={styles.sectionTitle}>
+                    Gastos por categoría{' '}
+                    <Text style={styles.sectionTitleSub}>(vs mes anterior)</Text>
+                  </Text>
+                  <CategoryLegend data={summary.categoryBreakdown} />
+                </View>
+              )}
+            </>
           )}
         </>
       )}
