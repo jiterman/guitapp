@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { View } from 'react-native';
+import { View, TouchableOpacity, TextInput } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Layout, Text, Input, Button } from '@ui-kitten/components';
+import { Layout, Text, Button } from '@ui-kitten/components';
 import { router } from 'expo-router';
 import { userService } from '../services/userService';
 import { useUser } from '../context/user';
@@ -11,6 +11,7 @@ import { OnboardingError } from '../types/errors';
 
 import { authService } from '../services/authService';
 import { useDialog } from '../context/dialog';
+import ExpensesEditor from '../components/Profile/ExpensesEditor';
 
 const OnboardingScreen = () => {
   const { alert } = useDialog();
@@ -22,18 +23,6 @@ const OnboardingScreen = () => {
   const [firstName, setFirstName] = useState('');
   const [firstNameError, setFirstNameError] = useState<string | null>(null);
 
-  // Step 2
-  const [fixedExpenses, setFixedExpenses] = useState('50');
-  const [variableExpenses, setVariableExpenses] = useState('30');
-  const [estimatedIncome, setEstimatedIncome] = useState('0');
-  const [expensesError, setExpensesError] = useState<string | null>(null);
-
-  const calculateSavings = () => {
-    const fixed = parseInt(fixedExpenses || '0', 10);
-    const variable = parseInt(variableExpenses || '0', 10);
-    return Math.max(0, 100 - (fixed + variable));
-  };
-
   const handleNextStep = () => {
     const error = validateFirstName(firstName);
     if (error) {
@@ -43,25 +32,8 @@ const OnboardingScreen = () => {
     setStep(2);
   };
 
-  const handleFinish = async () => {
-    setExpensesError(null);
-    const fixed = parseInt(fixedExpenses, 10);
-    const variable = parseInt(variableExpenses, 10);
-    const income = parseFloat(estimatedIncome);
-
-    if (isNaN(fixed) || isNaN(variable) || isNaN(income)) {
-      setExpensesError('Debes ingresar números válidos.');
-      return;
-    }
-    if (fixed <= 0 || variable <= 0) {
-      setExpensesError('Los porcentajes deben ser mayores a 0.');
-      return;
-    }
-    if (income <= 0) {
-      setExpensesError('El ingreso estimado debe ser mayor a 0.');
-      return;
-    }
-
+  // Step 2
+  const handleOnboardingSave = async (fixed: number, variable: number, income: number) => {
     setLoading(true);
     try {
       await userService.completeOnboarding(firstName, fixed, variable, income);
@@ -89,7 +61,7 @@ const OnboardingScreen = () => {
           {step === 1 ? '¡Bienvenido!' : 'Tus Objetivos'}
         </Text>
         <Text category="s1" style={styles.subtitle}>
-          {step === 1 ? 'Queremos conocerte un poco más.' : 'Configurá tus metas de gastos.'}
+          {step === 1 ? 'Queremos conocerte un poco más.' : 'Configurá tus objetivos financieros.'}
         </Text>
         {step === 2 && (
           <Text style={styles.hint}>
@@ -102,96 +74,57 @@ const OnboardingScreen = () => {
         <View style={styles.card}>
           {step === 1 && (
             <>
-              <Text style={styles.label}>¿Cómo querés que te llamemos?</Text>
-              <Input
-                value={firstName}
-                placeholder="Ej. Chris"
-                onChangeText={text => {
-                  setFirstName(text);
-                  setFirstNameError(null);
-                }}
-                style={styles.input}
-                status={firstNameError ? 'danger' : 'basic'}
-                disabled={loading}
-              />
+              <Text style={[styles.label, { marginTop: 0, marginBottom: 8 }]}>
+                ¿Cómo querés que te llamemos?
+              </Text>
+              <View
+                style={[
+                  styles.inputWrapper,
+                  firstNameError ? { borderColor: '#FF3333' } : null,
+                  loading ? { backgroundColor: '#F4F9FD' } : null,
+                ]}
+              >
+                <TextInput
+                  value={firstName}
+                  placeholder="Ej. Chris"
+                  placeholderTextColor="#a0b8c8"
+                  onChangeText={text => {
+                    setFirstName(text);
+                    setFirstNameError(null);
+                  }}
+                  style={styles.textInput}
+                  editable={!loading}
+                />
+              </View>
               {firstNameError && <Text style={styles.errorText}>{firstNameError}</Text>}
 
-              <Button style={styles.button} onPress={handleNextStep}>
+              <TouchableOpacity
+                style={[styles.button, { alignItems: 'center', justifyContent: 'center' }]}
+                onPress={handleNextStep}
+                disabled={loading}
+              >
                 <Text style={styles.buttonText}>Continuar</Text>
-              </Button>
+              </TouchableOpacity>
             </>
           )}
 
           {step === 2 && (
             <>
-              <Text style={styles.label}>Ingresos Mensuales Estimados</Text>
-              <Input
-                value={estimatedIncome}
-                placeholder="Ej. 5000"
-                keyboardType="numeric"
-                onChangeText={text => {
-                  setEstimatedIncome(text);
-                  setExpensesError(null);
-                }}
-                style={styles.input}
-                status={expensesError ? 'danger' : 'basic'}
-                disabled={loading}
+              <ExpensesEditor
+                fixedDefault={50}
+                variableDefault={30}
+                incomeDefault={0}
+                onSave={handleOnboardingSave}
+                buttonText={loading ? 'Guardando...' : 'Finalizar Onboarding'}
+                showHeaders={true}
+                showCard={false}
               />
-
-              <Text style={styles.label}>Gastos Fijos (%)</Text>
-              <Input
-                value={fixedExpenses}
-                placeholder="Ej. 50"
-                keyboardType="numeric"
-                onChangeText={text => {
-                  setFixedExpenses(text);
-                  const fixed = parseInt(text, 10);
-                  const variable = parseInt(variableExpenses, 10);
-                  if (!isNaN(fixed) && !isNaN(variable) && fixed + variable > 100) {
-                    setExpensesError('La suma de gastos fijos y variables no puede superar 100.');
-                  } else {
-                    setExpensesError(null);
-                  }
-                }}
-                style={styles.input}
-                status={expensesError ? 'danger' : 'basic'}
-                disabled={loading}
-              />
-
-              <Text style={styles.label}>Gastos Variables (%)</Text>
-              <Input
-                value={variableExpenses}
-                placeholder="Ej. 30"
-                keyboardType="numeric"
-                onChangeText={text => {
-                  setVariableExpenses(text);
-                  const fixed = parseInt(fixedExpenses, 10);
-                  const variable = parseInt(text, 10);
-                  if (!isNaN(fixed) && !isNaN(variable) && fixed + variable > 100) {
-                    setExpensesError('La suma de gastos fijos y variables no puede superar 100.');
-                  } else {
-                    setExpensesError(null);
-                  }
-                }}
-                style={styles.input}
-                status={expensesError ? 'danger' : 'basic'}
-                disabled={loading}
-              />
-
-              <Text style={styles.label}>Ahorro (%) - Autocalculado</Text>
-              <Input value={String(calculateSavings())} style={styles.input} disabled={true} />
-              {expensesError && <Text style={styles.errorText}>{expensesError}</Text>}
-
               <Button
-                style={styles.button}
-                onPress={handleFinish}
-                disabled={loading || !!expensesError}
+                appearance="ghost"
+                onPress={() => setStep(1)}
+                disabled={loading}
+                style={{ marginTop: 10 }}
               >
-                <Text style={styles.buttonText}>
-                  {loading ? 'Guardando...' : 'Finalizar Onboarding'}
-                </Text>
-              </Button>
-              <Button appearance="ghost" onPress={() => setStep(1)} disabled={loading}>
                 Atrás
               </Button>
             </>

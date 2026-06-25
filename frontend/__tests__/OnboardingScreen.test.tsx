@@ -75,8 +75,8 @@ describe('OnboardingScreen', () => {
     fireEvent.press(getByText('Continuar'));
 
     expect(getByText('Tus Objetivos')).toBeTruthy();
-    expect(getByText('Ingresos Mensuales Estimados')).toBeTruthy();
-    expect(getByText('Gastos Fijos (%)')).toBeTruthy();
+    expect(getByText('Ingresos estimados')).toBeTruthy();
+    expect(getByText('Gastos fijos')).toBeTruthy();
   });
 
   it('should show error if expenses sum is 100 or more', async () => {
@@ -116,7 +116,7 @@ describe('OnboardingScreen', () => {
     fireEvent.changeText(getByPlaceholderText('Ej. Chris'), 'Chris');
     fireEvent.press(getByText('Continuar'));
 
-    fireEvent.changeText(getByPlaceholderText('Ej. 5000'), '0');
+    fireEvent.changeText(getByPlaceholderText('Ej. 500.000'), '0');
     fireEvent.press(getByText('Finalizar Onboarding'));
 
     await waitFor(() => {
@@ -132,7 +132,7 @@ describe('OnboardingScreen', () => {
     fireEvent.changeText(getByPlaceholderText('Ej. Chris'), 'Chris');
     fireEvent.press(getByText('Continuar'));
 
-    fireEvent.changeText(getByPlaceholderText('Ej. 5000'), '5000');
+    fireEvent.changeText(getByPlaceholderText('Ej. 500.000'), '5000');
     fireEvent.changeText(getByPlaceholderText('Ej. 50'), '50');
     fireEvent.changeText(getByPlaceholderText('Ej. 30'), '30');
     fireEvent.press(getByText('Finalizar Onboarding'));

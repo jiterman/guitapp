@@ -5,6 +5,8 @@ interface UseCurrencyInputReturn {
   amount: string;
   handleAmountChange: (text: string) => void;
   setAmount: (value: string) => void;
+  handleFocus: () => void;
+  handleBlur: () => void;
 }
 
 /**
@@ -16,12 +18,13 @@ interface UseCurrencyInputReturn {
  */
 export const useCurrencyInput = (initialValue = ''): UseCurrencyInputReturn => {
   const [amount, setAmountInternal] = useState(initialValue);
+  const [isFocused, setIsFocused] = useState(false);
 
   /**
    * Formats a numeric string to display with thousands separators and decimals.
    * Example: "1500.5" -> "1.500,5"
    */
-  const formatCurrency = (value: string): string => {
+  const formatCurrency = (value: string, forceDecimals = false): string => {
     if (!value) {
       return '';
     }
@@ -35,8 +38,14 @@ export const useCurrencyInput = (initialValue = ''): UseCurrencyInputReturn => {
     const withSeparator = integerPart.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
 
     if (decimalPart !== undefined) {
-      const limitedDecimal = decimalPart.slice(0, 2);
+      const limitedDecimal = forceDecimals
+        ? (decimalPart + '00').slice(0, 2)
+        : decimalPart.slice(0, 2);
       return `${withSeparator},${limitedDecimal}`;
+    }
+
+    if (forceDecimals) {
+      return `${withSeparator},00`;
     }
 
     return withSeparator;
@@ -71,12 +80,22 @@ export const useCurrencyInput = (initialValue = ''): UseCurrencyInputReturn => {
     setAmountInternal(value);
   };
 
-  const displayValue = formatCurrency(amount);
+  const handleFocus = () => {
+    setIsFocused(true);
+  };
+
+  const handleBlur = () => {
+    setIsFocused(false);
+  };
+
+  const displayValue = formatCurrency(amount, !isFocused);
 
   return {
     displayValue,
     amount,
     handleAmountChange,
     setAmount,
+    handleFocus,
+    handleBlur,
   };
 };

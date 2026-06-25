@@ -18,7 +18,7 @@ const LEVEL_COLORS: Record<string, { primary: string; bg: string; border: string
 
 const FACTOR_INFO: Record<string, { title: string; body: string }> = {
   distribution: {
-    title: 'Distribución de gastos',
+    title: 'Distribución de ingresos',
     body: 'Mide qué porcentaje del total de tus gastos corresponde a categorías no esenciales.\n\n≤20% → excelente\n20–25% → aceptable\n25–30% → alto\n>30% → demasiado alto\n\nCategorías no esenciales: Restaurantes, Café, Delivery, Suscripciones, Salidas, Gimnasio, Viajes, Ropa, Belleza, Compras y Tecnología.',
   },
   savings: {
