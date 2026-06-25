@@ -28,6 +28,10 @@ public class SecurityConfig {
                 .authorizeHttpRequests(authorize -> authorize
                         .requestMatchers("/api/auth/**", "/error")
                         .permitAll()
+                        .requestMatchers(HttpMethod.DELETE, "/api/notifications")
+                        .permitAll()
+                        .requestMatchers(HttpMethod.DELETE, "/api/users/onboarding")
+                        .permitAll()
                         .requestMatchers(HttpMethod.DELETE, "/api/summary/monthly/ai-summary")
                         .permitAll()
                         .requestMatchers(

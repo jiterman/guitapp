@@ -43,6 +43,11 @@ public class UserNotificationService {
     }
 
     @Transactional
+    public void deleteAllNotificationsForUser(User user) {
+        notificationRepository.deleteByUser(user);
+    }
+
+    @Transactional
     public void markAllAsRead(User user) {
         List<Notification> unread = notificationRepository
                 .findByUserAndSentStateOrderByCreatedAtDesc(user, NotificationSentState.SENT)

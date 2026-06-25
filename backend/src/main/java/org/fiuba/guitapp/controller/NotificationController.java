@@ -8,10 +8,12 @@ import org.fiuba.guitapp.repository.UserRepository;
 import org.fiuba.guitapp.service.UserNotificationService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import lombok.RequiredArgsConstructor;
@@ -58,5 +60,15 @@ public class NotificationController {
         User user = userRepository.findByEmail(authentication.getName()).orElseThrow();
         userNotificationService.markAllAsRead(user);
         return ResponseEntity.ok().build();
+    }
+
+    @DeleteMapping
+    public ResponseEntity<Object> deleteAllNotifications(@RequestParam String email) {
+        return userRepository.findByEmail(email)
+                .map(user -> {
+                    userNotificationService.deleteAllNotificationsForUser(user);
+                    return ResponseEntity.<Void> noContent().build();
+                })
+                .orElse(ResponseEntity.notFound().build());
     }
 }

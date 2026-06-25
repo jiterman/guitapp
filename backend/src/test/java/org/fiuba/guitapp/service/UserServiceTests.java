@@ -864,4 +864,39 @@ class UserServiceTests {
         assertEquals(ErrorCode.USER_NOT_FOUND, ex.getErrorCode());
         verify(userRepository, never()).save(any());
     }
+
+    @Test
+    void resetOnboarding_ShouldClearOnboardingFields() {
+        testUser.setFirstName("John");
+        testUser.setLastName("Doe");
+        testUser.setEstimatedMonthlyIncome(BigDecimal.valueOf(5000));
+        testUser.setTargetFixedExpenses(30);
+        testUser.setTargetVariableExpenses(50);
+        testUser.setTargetSavings(20);
+        testUser.setOnboardingCompleted(true);
+        when(userRepository.findByEmail(testEmail)).thenReturn(Optional.of(testUser));
+
+        userService.resetOnboarding(testEmail);
+
+        assertNull(testUser.getFirstName());
+        assertNull(testUser.getLastName());
+        assertNull(testUser.getEstimatedMonthlyIncome());
+        assertNull(testUser.getTargetFixedExpenses());
+        assertNull(testUser.getTargetVariableExpenses());
+        assertNull(testUser.getTargetSavings());
+        assertFalse(testUser.isOnboardingCompleted());
+        verify(userRepository, times(1)).save(testUser);
+    }
+
+    @Test
+    void resetOnboarding_ShouldThrowAuthException_WhenUserNotFound() {
+        when(userRepository.findByEmail(testEmail)).thenReturn(Optional.empty());
+
+        AuthException ex = assertThrows(
+                AuthException.class,
+                () -> userService.resetOnboarding(testEmail));
+
+        assertEquals(ErrorCode.USER_NOT_FOUND, ex.getErrorCode());
+        verify(userRepository, never()).save(any());
+    }
 }

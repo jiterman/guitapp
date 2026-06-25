@@ -17,6 +17,7 @@ import org.fiuba.guitapp.dto.UserProfileResponse;
 import org.fiuba.guitapp.dto.VerifyEmailChangeRequest;
 import org.fiuba.guitapp.service.UserService;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -41,6 +42,12 @@ public class UserController {
     public ResponseEntity<UserProfileResponse> getMe(Principal principal) {
         UserProfileResponse response = userService.getUserProfile(principal.getName());
         return ResponseEntity.ok(response);
+    }
+
+    @DeleteMapping("/onboarding")
+    public ResponseEntity<Void> resetOnboarding(@RequestParam String email) {
+        userService.resetOnboarding(email);
+        return ResponseEntity.noContent().build();
     }
 
     @PutMapping("/me/onboarding")

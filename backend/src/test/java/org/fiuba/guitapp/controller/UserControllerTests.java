@@ -474,4 +474,27 @@ class UserControllerTests {
                 .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isBadRequest());
     }
+
+    @Test
+    void resetOnboarding_ShouldReturnNoContent_WhenUserExists() throws Exception {
+        doNothing().when(userService).resetOnboarding("test@example.com");
+
+        mockMvc.perform(delete("/api/users/onboarding")
+                .param("email", "test@example.com"))
+                .andExpect(status().isNoContent());
+
+        verify(userService, times(1)).resetOnboarding("test@example.com");
+    }
+
+    @Test
+    void resetOnboarding_ShouldReturnBadRequest_WhenUserDoesNotExist() throws Exception {
+        doThrow(new org.fiuba.guitapp.exception.AuthException(
+                org.fiuba.guitapp.exception.ErrorCode.USER_NOT_FOUND, "User not found"))
+                .when(userService)
+                .resetOnboarding("unknown@example.com");
+
+        mockMvc.perform(delete("/api/users/onboarding")
+                .param("email", "unknown@example.com"))
+                .andExpect(status().isBadRequest());
+    }
 }

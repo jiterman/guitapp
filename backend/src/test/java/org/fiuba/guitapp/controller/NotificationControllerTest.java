@@ -3,6 +3,7 @@ package org.fiuba.guitapp.controller;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -119,5 +120,30 @@ class NotificationControllerTest {
                 .andExpect(status().isOk());
 
         verify(userNotificationService, times(1)).markAllAsRead(testUser);
+    }
+
+    @Test
+    void deleteAllNotifications_ShouldReturnNoContent_WhenUserExists() throws Exception {
+        when(userRepository.findByEmail("test@example.com")).thenReturn(Optional.of(testUser));
+        doNothing().when(userNotificationService).deleteAllNotificationsForUser(testUser);
+
+        mockMvc.perform(delete("/api/notifications")
+                .param("email", "test@example.com")
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isNoContent());
+
+        verify(userNotificationService, times(1)).deleteAllNotificationsForUser(testUser);
+    }
+
+    @Test
+    void deleteAllNotifications_ShouldReturnNotFound_WhenUserDoesNotExist() throws Exception {
+        when(userRepository.findByEmail("unknown@example.com")).thenReturn(Optional.empty());
+
+        mockMvc.perform(delete("/api/notifications")
+                .param("email", "unknown@example.com")
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isNotFound());
+
+        verify(userNotificationService, never()).deleteAllNotificationsForUser(any());
     }
 }
