@@ -92,6 +92,22 @@ public class UserService {
     }
 
     @Transactional
+    public void resetOnboarding(String email) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new AuthException(ErrorCode.USER_NOT_FOUND, "User not found"));
+
+        user.setFirstName(null);
+        user.setLastName(null);
+        user.setEstimatedMonthlyIncome(null);
+        user.setTargetFixedExpenses(null);
+        user.setTargetVariableExpenses(null);
+        user.setTargetSavings(null);
+        user.setOnboardingCompleted(false);
+
+        userRepository.save(user);
+    }
+
+    @Transactional
     public void completeOnboarding(String email, OnboardingRequest request) {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new AuthException(ErrorCode.USER_NOT_FOUND, "User not found"));

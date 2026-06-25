@@ -20,4 +20,6 @@ public interface NotificationRepository extends JpaRepository<Notification, Long
     long countByUserAndReadFalseAndSentState(User user, NotificationSentState sentState);
 
     boolean existsByUserAndTypeAndCreatedAtBetween(User user, AlertType type, LocalDateTime start, LocalDateTime end);
+
+    void deleteByUser(User user);
 }

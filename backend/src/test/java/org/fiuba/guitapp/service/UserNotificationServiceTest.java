@@ -115,6 +115,15 @@ class UserNotificationServiceTest {
     }
 
     @Test
+    void deleteAllNotificationsForUser_ShouldCallDeleteByUser() {
+        doNothing().when(notificationRepository).deleteByUser(testUser);
+
+        userNotificationService.deleteAllNotificationsForUser(testUser);
+
+        verify(notificationRepository, times(1)).deleteByUser(testUser);
+    }
+
+    @Test
     void markAllAsRead_ShouldMarkOnlySentUnreadNotificationsAsRead() {
         Notification unreadSent = Notification.builder().user(testUser).read(false).sentState(NotificationSentState.SENT).build();
         Notification unreadSent2 = Notification.builder().user(testUser).read(false).sentState(NotificationSentState.SENT).build();
