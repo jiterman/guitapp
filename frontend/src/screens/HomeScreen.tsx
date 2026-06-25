@@ -58,7 +58,9 @@ const HomeScreen = () => {
         const data = await movementService.getMovements();
         if (mounted) {
           setAllMovements(data);
-          setMovements(data.slice(0, 10));
+          setTimeout(() => {
+            if (mounted) setMovements(data.slice(0, 10));
+          }, 0);
         }
       } catch {
         // ignore
