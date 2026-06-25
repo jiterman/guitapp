@@ -880,7 +880,7 @@ class UserServiceTests {
 
         assertNull(testUser.getFirstName());
         assertNull(testUser.getLastName());
-        assertNull(testUser.getEstimatedMonthlyIncome());
+        assertEquals(BigDecimal.ZERO, testUser.getEstimatedMonthlyIncome());
         assertNull(testUser.getTargetFixedExpenses());
         assertNull(testUser.getTargetVariableExpenses());
         assertNull(testUser.getTargetSavings());
