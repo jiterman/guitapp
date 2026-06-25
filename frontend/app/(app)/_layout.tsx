@@ -1,13 +1,15 @@
 import { View, StyleSheet, TouchableOpacity, Dimensions, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Text, Icon } from '@ui-kitten/components';
-import { Stack, useRouter } from 'expo-router';
+import { Stack, useRouter, usePathname } from 'expo-router';
 import { useUser } from '../../src/context/user';
 import BottomNavBar from '../../src/components/BottomNavBar';
 import { usePushNotifications } from '../../src/hooks/usePushNotifications';
 import { notificationService } from '../../src/services/notificationService';
 import { useEffect, useState, useCallback } from 'react';
 import { eventEmitter } from '../../src/utils/eventEmitter';
+import * as SecureStore from 'expo-secure-store';
+import { HomeGuideOverlay } from '../../src/components/HomeGuideOverlay/HomeGuideOverlay';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
@@ -17,6 +19,33 @@ export default function AppLayout() {
   const { user } = useUser();
   const [unreadCount, setUnreadCount] = useState<number>(0);
   const router = useRouter();
+  const pathname = usePathname();
+  const [showGuide, setShowGuide] = useState<boolean>(false);
+
+  useEffect(() => {
+    const checkGuideStatus = async () => {
+      if (user?.onboardingCompleted) {
+        try {
+          const hasSeen = await SecureStore.getItemAsync('hasSeenHomeGuide');
+          if (!hasSeen && pathname === '/home') {
+            setShowGuide(true);
+          }
+        } catch {
+          // ignore
+        }
+      }
+    };
+    checkGuideStatus();
+  }, [user, pathname]);
+
+  const handleFinishGuide = async () => {
+    try {
+      await SecureStore.setItemAsync('hasSeenHomeGuide', 'true');
+    } catch {
+      // ignore
+    }
+    setShowGuide(false);
+  };
 
   // Treat a missing channel (existing users) as PUSH; only EMAIL disables push.
   usePushNotifications(!!user && user.notificationChannel !== 'EMAIL');
@@ -128,6 +157,7 @@ export default function AppLayout() {
 
       <Stack screenOptions={{ headerShown: false }} />
       <BottomNavBar />
+      <HomeGuideOverlay visible={showGuide} onFinish={handleFinishGuide} />
     </SafeAreaView>
   );
 }

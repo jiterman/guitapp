@@ -18,6 +18,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { router, useLocalSearchParams } from 'expo-router';
 import * as ImageManipulator from 'expo-image-manipulator';
 import CameraModal from '../components/CameraModal/CameraModal';
+import { AddMovementGuideOverlay } from '../components/AddMovementGuideOverlay/AddMovementGuideOverlay';
+import * as SecureStore from 'expo-secure-store';
 import ExpandableTextInput from '../components/ExpandableTextInput/ExpandableTextInput';
 import DatePickerModal from '../components/DatePickerModal/DatePickerModal';
 import { expenseService } from '../services/expenseService';
@@ -110,6 +112,36 @@ const AddMovementScreen = () => {
   );
   const [scanHasError, setScanHasError] = useState(false);
   const [cameraVisible, setCameraVisible] = useState(false);
+  const [showGuide, setShowGuide] = useState(false);
+  const [cameraButtonPos, setCameraButtonPos] = useState<{ x: number; y: number } | undefined>(
+    undefined
+  );
+  const cameraButtonRef = useRef<View>(null);
+
+  useEffect(() => {
+    const checkGuide = async () => {
+      if (movementType === 'EXPENSE' && !isRecurring) {
+        try {
+          const hasSeen = await SecureStore.getItemAsync('hasSeenAddMovementGuide');
+          if (!hasSeen) {
+            setShowGuide(true);
+          }
+        } catch {
+          // ignore
+        }
+      }
+    };
+    checkGuide();
+  }, [movementType, isRecurring]);
+
+  const handleFinishGuide = async () => {
+    try {
+      await SecureStore.setItemAsync('hasSeenAddMovementGuide', 'true');
+    } catch {
+      // ignore
+    }
+    setShowGuide(false);
+  };
 
   // Aviso de regla inferida
   const { rules, addRule } = useRules();
@@ -485,9 +517,24 @@ const AddMovementScreen = () => {
             />
             {movementType === 'EXPENSE' && !isRecurring && (
               <TouchableOpacity
+                ref={cameraButtonRef}
                 onPress={onScanReceipt}
                 style={styles.amountScanButton}
                 disabled={scanningReceipt}
+                onLayout={() => {
+                  cameraButtonRef.current?.measure(
+                    (
+                      _x: number,
+                      _y: number,
+                      width: number,
+                      height: number,
+                      pageX: number,
+                      pageY: number
+                    ) => {
+                      setCameraButtonPos({ x: pageX + width / 2, y: pageY + height });
+                    }
+                  );
+                }}
               >
                 <Ionicons name="camera" size={20} color="#fff" />
               </TouchableOpacity>
@@ -851,6 +898,12 @@ const AddMovementScreen = () => {
         visible={cameraVisible}
         onClose={() => setCameraVisible(false)}
         onCapture={onImageCaptured}
+      />
+      <AddMovementGuideOverlay
+        visible={showGuide}
+        onFinish={handleFinishGuide}
+        cameraButtonX={cameraButtonPos?.x}
+        cameraButtonY={cameraButtonPos?.y}
       />
     </>
   );

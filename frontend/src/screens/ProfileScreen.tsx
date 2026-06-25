@@ -1,6 +1,7 @@
-import React from 'react';
-import { StyleSheet, Dimensions, ScrollView, View } from 'react-native';
+import React, { useState } from 'react';
+import { StyleSheet, Dimensions, ScrollView } from 'react-native';
 import { Layout } from '@ui-kitten/components';
+import * as SecureStore from 'expo-secure-store';
 import { authService } from '../services/authService';
 import { useUser } from '../context/user';
 import { useRules } from '../context/rules';
@@ -19,7 +20,8 @@ import NotificationChannelSheet from '../components/Profile/NotificationChannelS
 import NotificationFrequencySheet from '../components/Profile/NotificationFrequencySheet';
 import { useNotificationChannel } from '../hooks/Profile/useNotificationChannel';
 import { useNotificationFrequency } from '../hooks/Profile/useNotificationFrequency';
-import { profileColors, profileSharedStyles } from '../styles/profileStyles';
+import { profileColors } from '../styles/profileStyles';
+import AppDialog from '../components/AppDialog/AppDialog';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 const vh = screenHeight / 100;
@@ -27,12 +29,23 @@ const vh = screenHeight / 100;
 const ProfileScreen: React.FC = () => {
   const { user, setUser, getCreatedMonth, getCreatedYear } = useUser();
   const { setRules } = useRules();
+  const [tutorialsDialogVisible, setTutorialsDialogVisible] = useState(false);
 
   const handleLogout = async () => {
     await authService.removeToken();
     setUser(null);
     setRules([]);
     router.replace('/login');
+  };
+
+  const handleResetTutorials = async () => {
+    try {
+      await SecureStore.deleteItemAsync('hasSeenHomeGuide');
+      await SecureStore.deleteItemAsync('hasSeenAddMovementGuide');
+      setTutorialsDialogVisible(true);
+    } catch {
+      // ignore
+    }
   };
 
   const personalInfoSheet = useModal();
@@ -147,27 +160,22 @@ const ProfileScreen: React.FC = () => {
           </ProfileSection>
 
           <ProfileSection title="Notificaciones">
-            <View style={profileSharedStyles.menuCardRow}>
-              <ProfileMenuItem
-                title="Medio de aviso"
-                subtitle="Elegí si querés recibir los avisos en el celular o por correo"
-                icon="notifications-outline"
-                iconColor="#07a3e4"
-                iconBackground="#E6F2FC"
-                onPress={notificationsSheet.open}
-              />
-            </View>
-            <View style={profileSharedStyles.menuCardDivider} />
-            <View style={profileSharedStyles.menuCardRow}>
-              <ProfileMenuItem
-                title="Frecuencia de avisos"
-                subtitle="Instantáneas, resumen diario o resumen semanal"
-                icon="time-outline"
-                iconColor="#07a3e4"
-                iconBackground="#E6F2FC"
-                onPress={notificationFrequencySheet.open}
-              />
-            </View>
+            <ProfileMenuItem
+              title="Medio de aviso"
+              subtitle="Elegí si querés recibir los avisos en el celular o por correo"
+              icon="notifications-outline"
+              iconColor="#07a3e4"
+              iconBackground="#E6F2FC"
+              onPress={notificationsSheet.open}
+            />
+            <ProfileMenuItem
+              title="Frecuencia de avisos"
+              subtitle="Instantáneas, resumen diario o resumen semanal"
+              icon="time-outline"
+              iconColor="#07a3e4"
+              iconBackground="#E6F2FC"
+              onPress={notificationFrequencySheet.open}
+            />
           </ProfileSection>
 
           <ProfileSection title="Reglas">
@@ -181,6 +189,17 @@ const ProfileScreen: React.FC = () => {
             />
           </ProfileSection>
 
+          <ProfileSection title="Ayuda">
+            <ProfileMenuItem
+              title="Reiniciar tutoriales"
+              subtitle="Volvé a ver las guías interactivas de la app"
+              icon="book-outline"
+              iconColor="#FF9500"
+              iconBackground="rgba(255, 149, 0, 0.12)"
+              onPress={handleResetTutorials}
+            />
+          </ProfileSection>
+
           <ProfileSection title="Seguridad">
             <ProfileMenuItem
               title="Contraseña"
@@ -190,9 +209,6 @@ const ProfileScreen: React.FC = () => {
               iconBackground="rgba(255, 59, 48, 0.12)"
               onPress={passwordSheet.open}
             />
-          </ProfileSection>
-
-          <ProfileSection title="">
             <ProfileMenuItem
               title="Cerrar sesión"
               subtitle="Salí de tu cuenta"
@@ -274,6 +290,14 @@ const ProfileScreen: React.FC = () => {
         onSave={notificationFrequency.handleSave}
         onChange={notificationFrequency.clearError}
       />
+
+      <AppDialog
+        visible={tutorialsDialogVisible}
+        title="Guías Reiniciadas"
+        message="Las guías interactivas se volverán a mostrar cuando navegues a la pantalla de Inicio o Carga de Gasto."
+        confirmText="Entendido"
+        onConfirm={() => setTutorialsDialogVisible(false)}
+      />
     </>
   );
 };
@@ -286,7 +310,7 @@ const styles = StyleSheet.create({
   scrollContent: {
     padding: screenWidth * 0.05,
     paddingTop: vh * 2,
-    paddingBottom: vh * 3,
+    paddingBottom: vh * 1.5,
   },
 });
 
