@@ -44,7 +44,7 @@ const ExpensesSheet: React.FC<Props> = ({
       onClose();
       await alert({
         title: 'Listo',
-        message: 'Estructura de gastos actualizada correctamente',
+        message: 'Objetivos financieros actualizados correctamente',
       });
     }
   };
@@ -62,7 +62,7 @@ const ExpensesSheet: React.FC<Props> = ({
       >
         <Animated.View style={[profileModalStyles.card, { transform: [{ scale }], opacity }]}>
           <View style={profileSharedStyles.sheetHeader}>
-            <Text style={profileSharedStyles.sheetTitle}>Estructura de gastos</Text>
+            <Text style={profileSharedStyles.sheetTitle}>Objetivos financieros</Text>
             <TouchableOpacity onPress={onClose} hitSlop={10}>
               <Ionicons name="close" size={22} color="#003366" />
             </TouchableOpacity>

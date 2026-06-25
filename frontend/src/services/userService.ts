@@ -306,7 +306,7 @@ export const userService = {
     const data = await response.json().catch(() => ({}));
 
     if (!response.ok) {
-      throw new Error(data.message || 'Error al actualizar la estructura de gastos');
+      throw new Error(data.message || 'Error al actualizar los objetivos financieros');
     }
 
     return data.data;
