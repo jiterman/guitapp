@@ -1,6 +1,7 @@
 import React from 'react';
-import { StyleSheet, Dimensions, ScrollView, View } from 'react-native';
+import { StyleSheet, Dimensions, ScrollView, View, Alert } from 'react-native';
 import { Layout } from '@ui-kitten/components';
+import * as SecureStore from 'expo-secure-store';
 import { authService } from '../services/authService';
 import { useUser } from '../context/user';
 import { useRules } from '../context/rules';
@@ -33,6 +34,19 @@ const ProfileScreen: React.FC = () => {
     setUser(null);
     setRules([]);
     router.replace('/login');
+  };
+
+  const handleResetTutorials = async () => {
+    try {
+      await SecureStore.deleteItemAsync('hasSeenHomeGuide');
+      await SecureStore.deleteItemAsync('hasSeenAddMovementGuide');
+      Alert.alert(
+        'Guías Reiniciadas',
+        'Las guías interactivas se volverán a mostrar cuando navegues a la pantalla de Inicio o Carga de Gasto.'
+      );
+    } catch {
+      // ignore
+    }
   };
 
   const personalInfoSheet = useModal();
@@ -189,6 +203,17 @@ const ProfileScreen: React.FC = () => {
               iconColor="#FF3B30"
               iconBackground="rgba(255, 59, 48, 0.12)"
               onPress={passwordSheet.open}
+            />
+          </ProfileSection>
+
+          <ProfileSection title="Ayuda">
+            <ProfileMenuItem
+              title="Reiniciar tutoriales"
+              subtitle="Volvé a ver las guías interactivas de la app"
+              icon="help-circle-outline"
+              iconColor="#FF9500"
+              iconBackground="rgba(255, 149, 0, 0.12)"
+              onPress={handleResetTutorials}
             />
           </ProfileSection>
 

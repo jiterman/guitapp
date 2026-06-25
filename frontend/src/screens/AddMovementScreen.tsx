@@ -18,6 +18,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { router, useLocalSearchParams } from 'expo-router';
 import * as ImageManipulator from 'expo-image-manipulator';
 import CameraModal from '../components/CameraModal/CameraModal';
+import { AddMovementGuideOverlay } from '../components/AddMovementGuideOverlay/AddMovementGuideOverlay';
+import * as SecureStore from 'expo-secure-store';
 import ExpandableTextInput from '../components/ExpandableTextInput/ExpandableTextInput';
 import DatePickerModal from '../components/DatePickerModal/DatePickerModal';
 import { expenseService } from '../services/expenseService';
@@ -111,6 +113,32 @@ const AddMovementScreen = () => {
   );
   const [scanHasError, setScanHasError] = useState(false);
   const [cameraVisible, setCameraVisible] = useState(false);
+  const [showGuide, setShowGuide] = useState(false);
+
+  useEffect(() => {
+    const checkGuide = async () => {
+      if (movementType === 'EXPENSE' && !isRecurring) {
+        try {
+          const hasSeen = await SecureStore.getItemAsync('hasSeenAddMovementGuide');
+          if (!hasSeen) {
+            setShowGuide(true);
+          }
+        } catch {
+          // ignore
+        }
+      }
+    };
+    checkGuide();
+  }, [movementType, isRecurring]);
+
+  const handleFinishGuide = async () => {
+    try {
+      await SecureStore.setItemAsync('hasSeenAddMovementGuide', 'true');
+    } catch {
+      // ignore
+    }
+    setShowGuide(false);
+  };
 
   // Aviso de regla inferida
   const { rules, addRule } = useRules();
@@ -855,6 +883,7 @@ const AddMovementScreen = () => {
         onClose={() => setCameraVisible(false)}
         onCapture={onImageCaptured}
       />
+      <AddMovementGuideOverlay visible={showGuide} onFinish={handleFinishGuide} />
     </>
   );
 };
