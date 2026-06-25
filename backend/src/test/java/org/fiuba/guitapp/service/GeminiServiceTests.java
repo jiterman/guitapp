@@ -10,6 +10,8 @@ import static org.mockito.Mockito.when;
 import java.math.BigDecimal;
 import java.util.List;
 
+import org.fiuba.guitapp.dto.MonthlyCategoryBreakdown;
+import org.fiuba.guitapp.dto.MonthlyInsight;
 import org.fiuba.guitapp.dto.MonthlySummaryResponse;
 import org.fiuba.guitapp.dto.ReceiptAnalysisResponse;
 import org.fiuba.guitapp.model.ExpenseCategory;
@@ -333,6 +335,183 @@ class GeminiServiceTests {
         // Act & Assert
         org.junit.jupiter.api.Assertions.assertThrows(org.fiuba.guitapp.exception.AuthException.class, () -> {
             geminiService.generateMonthlySummary(summary, user);
+        });
+    }
+
+    @Test
+    void generateMonthlySummary_ShouldBuildPromptWithCategoriesAndInsights() {
+        User user = new User();
+        user.setEmail("test@example.com");
+
+        MonthlyCategoryBreakdown category = new MonthlyCategoryBreakdown(
+                ExpenseCategory.DELIVERY, new BigDecimal("20000"), 33.3, 15.0);
+        MonthlyInsight insight = new MonthlyInsight(
+                "SPENDING", "Delivery", "33%", "del total", "negative", null);
+
+        MonthlySummaryResponse summary = new MonthlySummaryResponse(
+                2026, 5,
+                new BigDecimal("100000"),
+                new BigDecimal("60000"),
+                new BigDecimal("40000"),
+                List.of(category),
+                List.of(insight));
+
+        String geminiResponse = """
+                {
+                  "candidates": [
+                    {
+                      "content": {
+                        "parts": [
+                          {
+                            "text": "• Delivery representó un tercio de tus gastos."
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+                """;
+
+        when(restTemplate.postForObject(anyString(), any(), eq(String.class))).thenReturn(geminiResponse);
+
+        String result = geminiService.generateMonthlySummary(summary, user);
+
+        assertNotNull(result);
+        assertEquals("• Delivery representó un tercio de tus gastos.", result);
+    }
+
+    @Test
+    void generateMonthlySummary_ShouldBuildPromptWithInsightWithNullSub() {
+        User user = new User();
+        user.setEmail("test@example.com");
+
+        MonthlyInsight insightNoSub = new MonthlyInsight(
+                "SAVINGS", "Ahorraste", "40%", null, "positive", null);
+
+        MonthlySummaryResponse summary = new MonthlySummaryResponse(
+                2026, 5,
+                new BigDecimal("100000"),
+                new BigDecimal("60000"),
+                new BigDecimal("40000"),
+                List.of(),
+                List.of(insightNoSub));
+
+        String geminiResponse = """
+                {
+                  "candidates": [
+                    {
+                      "content": {
+                        "parts": [
+                          {
+                            "text": "• Buen ahorro este mes."
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+                """;
+
+        when(restTemplate.postForObject(anyString(), any(), eq(String.class))).thenReturn(geminiResponse);
+
+        String result = geminiService.generateMonthlySummary(summary, user);
+
+        assertNotNull(result);
+        assertEquals("• Buen ahorro este mes.", result);
+    }
+
+    @Test
+    void generateMonthlySummary_ShouldBuildPromptWithCategoryWithNullChange() {
+        User user = new User();
+        user.setEmail("test@example.com");
+
+        MonthlyCategoryBreakdown categoryNoChange = new MonthlyCategoryBreakdown(
+                ExpenseCategory.RENT, new BigDecimal("50000"), 50.0, null);
+
+        MonthlySummaryResponse summary = new MonthlySummaryResponse(
+                2026, 5,
+                new BigDecimal("100000"),
+                new BigDecimal("50000"),
+                new BigDecimal("50000"),
+                List.of(categoryNoChange),
+                List.of());
+
+        String geminiResponse = """
+                {
+                  "candidates": [
+                    {
+                      "content": {
+                        "parts": [
+                          {
+                            "text": "• El alquiler se llevó la mitad de tus gastos."
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+                """;
+
+        when(restTemplate.postForObject(anyString(), any(), eq(String.class))).thenReturn(geminiResponse);
+
+        String result = geminiService.generateMonthlySummary(summary, user);
+
+        assertNotNull(result);
+        assertEquals("• El alquiler se llevó la mitad de tus gastos.", result);
+    }
+
+    @Test
+    void analyzeText_ShouldHandleTextWithQuotes() {
+        String transcribedText = "Gasté \"mil pesos\" en el \"súper\"";
+
+        String geminiResponse = """
+                {
+                  "candidates": [
+                    {
+                      "content": {
+                        "parts": [
+                          {
+                            "text": "{\\"amount\\": 1000, \\"category\\": \\"SUPERMARKET\\", \\"title\\": \\"Súper\\"}"
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+                """;
+
+        when(restTemplate.postForObject(anyString(), any(), eq(String.class))).thenReturn(geminiResponse);
+
+        ReceiptAnalysisResponse response = geminiService.analyzeText(transcribedText);
+
+        assertNotNull(response);
+        assertEquals(ExpenseCategory.SUPERMARKET, response.category());
+    }
+
+    @Test
+    void analyzeText_ShouldThrowAuthException_WhenResponseIsInvalidJson() {
+        String transcribedText = "Gasté 500 en café";
+
+        String geminiResponse = """
+                {
+                  "candidates": [
+                    {
+                      "content": {
+                        "parts": [
+                          {
+                            "text": "invalid json"
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+                """;
+
+        when(restTemplate.postForObject(anyString(), any(), eq(String.class))).thenReturn(geminiResponse);
+
+        org.junit.jupiter.api.Assertions.assertThrows(org.fiuba.guitapp.exception.AuthException.class, () -> {
+            geminiService.analyzeText(transcribedText);
         });
     }
 }

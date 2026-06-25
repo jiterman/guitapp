@@ -9,6 +9,7 @@ import java.math.BigDecimal;
 import java.util.Collections;
 import java.util.List;
 
+import org.fiuba.guitapp.dto.AiSummaryResponse;
 import org.fiuba.guitapp.dto.HealthScoreFactor;
 import org.fiuba.guitapp.dto.HealthScoreResponse;
 import org.fiuba.guitapp.dto.MonthlyCategoryBreakdown;
@@ -16,6 +17,7 @@ import org.fiuba.guitapp.dto.MonthlyInsight;
 import org.fiuba.guitapp.dto.MonthlySummaryResponse;
 import org.fiuba.guitapp.model.ExpenseCategory;
 import org.fiuba.guitapp.service.HealthScoreService;
+import org.fiuba.guitapp.service.MonthlyAiSummaryService;
 import org.fiuba.guitapp.service.MonthlySummaryService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -40,6 +42,9 @@ class MonthlySummaryControllerTests {
 
     @MockBean
     private HealthScoreService healthScoreService;
+
+    @MockBean
+    private MonthlyAiSummaryService monthlyAiSummaryService;
 
     @Test
     @WithMockUser(username = "test@example.com")
@@ -142,5 +147,57 @@ class MonthlySummaryControllerTests {
         mockMvc.perform(post("/api/summary/monthly/notify")
                 .header("X-Internal-Key", "test-internal-key"))
                 .andExpect(status().isNoContent());
+    }
+
+    @Test
+    @WithMockUser(username = "test@example.com")
+    void getAiSummary_returnsOkWithSummaryText() throws Exception {
+        AiSummaryResponse response = new AiSummaryResponse("• Gastaste mucho en delivery este mes.");
+
+        when(monthlyAiSummaryService.getAiSummary(eq("test@example.com"), eq(2025), eq(4)))
+                .thenReturn(response);
+
+        mockMvc.perform(get("/api/summary/monthly/ai-summary")
+                .param("year", "2025")
+                .param("month", "4"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.summaryText").value("• Gastaste mucho en delivery este mes."));
+    }
+
+    @Test
+    @WithMockUser(username = "test@example.com")
+    void getAiSummary_usesDefaultPreviousMonthWhenParamsMissing() throws Exception {
+        AiSummaryResponse response = new AiSummaryResponse("• Resumen del mes anterior.");
+
+        when(monthlyAiSummaryService.getAiSummary(any(), anyInt(), anyInt())).thenReturn(response);
+
+        mockMvc.perform(get("/api/summary/monthly/ai-summary"))
+                .andExpect(status().isOk());
+
+        verify(monthlyAiSummaryService).getAiSummary(eq("test@example.com"), anyInt(), anyInt());
+    }
+
+    @Test
+    void deleteAiSummary_returnsNoContent() throws Exception {
+        doNothing().when(monthlyAiSummaryService).deleteAiSummary(anyString(), anyInt(), anyInt());
+
+        mockMvc.perform(delete("/api/summary/monthly/ai-summary")
+                .param("email", "test@example.com")
+                .param("year", "2025")
+                .param("month", "4"))
+                .andExpect(status().isNoContent());
+
+        verify(monthlyAiSummaryService).deleteAiSummary("test@example.com", 2025, 4);
+    }
+
+    @Test
+    void deleteAiSummary_usesDefaultPreviousMonthWhenParamsMissing() throws Exception {
+        doNothing().when(monthlyAiSummaryService).deleteAiSummary(anyString(), anyInt(), anyInt());
+
+        mockMvc.perform(delete("/api/summary/monthly/ai-summary")
+                .param("email", "test@example.com"))
+                .andExpect(status().isNoContent());
+
+        verify(monthlyAiSummaryService).deleteAiSummary(eq("test@example.com"), anyInt(), anyInt());
     }
 }
