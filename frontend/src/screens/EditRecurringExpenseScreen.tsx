@@ -36,7 +36,8 @@ const EditRecurringExpenseScreen = () => {
   const scrollViewRef = useRef<ScrollView>(null);
   const scrollYRef = useRef(0);
   const { recurringExpenseId } = useLocalSearchParams<{ recurringExpenseId?: string }>();
-  const { displayValue, amount, handleAmountChange, setAmount } = useCurrencyInput();
+  const { displayValue, amount, handleAmountChange, setAmount, handleFocus, handleBlur } =
+    useCurrencyInput();
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<ExpenseCategoryOption | null>(null);
@@ -191,6 +192,8 @@ const EditRecurringExpenseScreen = () => {
                 handleAmountChange(text);
                 if (amountError) setAmountError(null);
               }}
+              onFocus={handleFocus}
+              onBlur={handleBlur}
               placeholder="0,00"
               keyboardType="decimal-pad"
               style={styles.amountInput}

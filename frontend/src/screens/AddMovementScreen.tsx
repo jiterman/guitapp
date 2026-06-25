@@ -74,9 +74,8 @@ const AddMovementScreen = () => {
     params.type === 'INCOME' ? 'INCOME' : 'EXPENSE'
   );
 
-  const { displayValue, amount, handleAmountChange, setAmount } = useCurrencyInput(
-    (params.amount as string) || ''
-  );
+  const { displayValue, amount, handleAmountChange, setAmount, handleFocus, handleBlur } =
+    useCurrencyInput((params.amount as string) || '');
   const [title, setTitle] = useState((params.title as string) || '');
   const [description, setDescription] = useState('');
   const initialCategory =
@@ -477,6 +476,8 @@ const AddMovementScreen = () => {
                 handleAmountChange(text);
                 if (amountError) setAmountError(null);
               }}
+              onFocus={handleFocus}
+              onBlur={handleBlur}
               placeholder="0,00"
               keyboardType="decimal-pad"
               style={styles.amountInput}
