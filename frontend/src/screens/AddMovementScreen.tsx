@@ -116,7 +116,7 @@ const AddMovementScreen = () => {
   const [cameraButtonPos, setCameraButtonPos] = useState<{ x: number; y: number } | undefined>(
     undefined
   );
-  const cameraButtonRef = useRef<TouchableOpacity>(null);
+  const cameraButtonRef = useRef<View>(null);
 
   useEffect(() => {
     const checkGuide = async () => {
@@ -522,9 +522,18 @@ const AddMovementScreen = () => {
                 style={styles.amountScanButton}
                 disabled={scanningReceipt}
                 onLayout={() => {
-                  cameraButtonRef.current?.measure((_x, _y, width, height, pageX, pageY) => {
-                    setCameraButtonPos({ x: pageX + width / 2, y: pageY + height });
-                  });
+                  cameraButtonRef.current?.measure(
+                    (
+                      _x: number,
+                      _y: number,
+                      width: number,
+                      height: number,
+                      pageX: number,
+                      pageY: number
+                    ) => {
+                      setCameraButtonPos({ x: pageX + width / 2, y: pageY + height });
+                    }
+                  );
                 }}
               >
                 <Ionicons name="camera" size={20} color="#fff" />
