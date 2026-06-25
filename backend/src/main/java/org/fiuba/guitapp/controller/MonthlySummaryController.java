@@ -3,11 +3,14 @@ package org.fiuba.guitapp.controller;
 import java.security.Principal;
 import java.time.YearMonth;
 
+import org.fiuba.guitapp.dto.AiSummaryResponse;
 import org.fiuba.guitapp.dto.HealthScoreResponse;
 import org.fiuba.guitapp.dto.MonthlySummaryResponse;
 import org.fiuba.guitapp.service.HealthScoreService;
+import org.fiuba.guitapp.service.MonthlyAiSummaryService;
 import org.fiuba.guitapp.service.MonthlySummaryService;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -23,6 +26,7 @@ public class MonthlySummaryController {
 
     private final MonthlySummaryService monthlySummaryService;
     private final HealthScoreService healthScoreService;
+    private final MonthlyAiSummaryService monthlyAiSummaryService;
 
     @GetMapping("/monthly")
     public ResponseEntity<MonthlySummaryResponse> getMonthlySummary(
@@ -44,6 +48,27 @@ public class MonthlySummaryController {
         HealthScoreResponse response = healthScoreService.getHealthScore(
                 principal.getName(), target.getYear(), target.getMonthValue());
         return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/monthly/ai-summary")
+    public ResponseEntity<AiSummaryResponse> getAiSummary(
+            Principal principal,
+            @RequestParam(required = false) Integer year,
+            @RequestParam(required = false) Integer month) {
+        YearMonth target = resolveYearMonth(year, month);
+        AiSummaryResponse response = monthlyAiSummaryService.getAiSummary(
+                principal.getName(), target.getYear(), target.getMonthValue());
+        return ResponseEntity.ok(response);
+    }
+
+    @DeleteMapping("/monthly/ai-summary")
+    public ResponseEntity<Void> deleteAiSummary(
+            @RequestParam String email,
+            @RequestParam(required = false) Integer year,
+            @RequestParam(required = false) Integer month) {
+        YearMonth target = resolveYearMonth(year, month);
+        monthlyAiSummaryService.deleteAiSummary(email, target.getYear(), target.getMonthValue());
+        return ResponseEntity.noContent().build();
     }
 
     @PostMapping("/monthly/notify")

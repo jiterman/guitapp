@@ -140,7 +140,6 @@ const ExpenseDetailScreen: React.FC = () => {
             <ExpandableField
               label="Descripción"
               value={expense.description}
-              emptyText="Sin descripción"
               backgroundColor="#f5f5f5"
               iconName="document-text-outline"
               iconColor="#666"

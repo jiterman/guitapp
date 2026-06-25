@@ -54,6 +54,21 @@ const getMonthlySummary = async (year: number, month: number): Promise<MonthlySu
   return response.json();
 };
 
+const getAiSummary = async (year: number, month: number): Promise<{ summaryText: string }> => {
+  const token = await authService.getToken();
+  const params = new URLSearchParams({ year: year.toString(), month: month.toString() });
+  const response = await fetch(`${API_URL}/api/summary/monthly/ai-summary?${params.toString()}`, {
+    method: 'GET',
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({}));
+    throw { code: error.code, message: error.message ?? 'Get AI summary failed' };
+  }
+  return response.json();
+};
+
 export const monthlySummaryService = {
   getMonthlySummary,
+  getAiSummary,
 };

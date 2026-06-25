@@ -26,8 +26,7 @@ const ForgotPasswordScreen = () => {
     try {
       await authService.forgotPassword(email);
       router.push({ pathname: '/verify-reset-otp', params: { email } });
-    } catch (err) {
-      console.error(err);
+    } catch {
       await alert({
         title: 'Error',
         message: 'Ocurrió un error al procesar tu solicitud. Intentá de nuevo.',

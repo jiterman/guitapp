@@ -41,7 +41,6 @@ export const usePersonalInfo = ({ user, setUser, onSuccess }: UsePersonalInfoPar
 
       onSuccess();
     } catch (e) {
-      console.error('Error actualizando perfil', e);
       throw e;
     } finally {
       setSaving(false);
@@ -59,7 +58,6 @@ export const usePersonalInfo = ({ user, setUser, onSuccess }: UsePersonalInfoPar
         params: { email: newEmail },
       });
     } catch (e) {
-      console.error('Error iniciando cambio de email', e);
       throw e;
     } finally {
       setSaving(false);

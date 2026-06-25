@@ -117,10 +117,10 @@ public class ExpenseService {
             expense.setAmount(request.amount());
         }
         if (request.title() != null) {
-            expense.setTitle(request.title());
+            expense.setTitle(request.title().isBlank() ? null : request.title());
         }
         if (request.description() != null) {
-            expense.setDescription(request.description());
+            expense.setDescription(request.description().isBlank() ? null : request.description());
         }
         if (request.category() != null) {
             expense.setCategory(request.category());

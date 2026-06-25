@@ -378,7 +378,7 @@ class ExpenseServiceTests {
     }
 
     @Test
-    void updateExpense_ShouldSetDescriptionToEmpty_WhenEmptyStringProvided() {
+    void updateExpense_ShouldClearTitleAndDescription_WhenEmptyStringProvided() {
         UUID expenseId = UUID.randomUUID();
         LocalDate now = LocalDate.now();
 
@@ -400,8 +400,8 @@ class ExpenseServiceTests {
 
         ExpenseResponse response = expenseService.updateExpense(testEmail, expenseId, request);
 
-        assertEquals("", response.title());
-        assertEquals("", response.description());
+        assertNull(response.title());
+        assertNull(response.description());
         assertEquals(new BigDecimal("40.00"), response.amount());
         assertEquals(ExpenseCategory.OUTINGS, response.category());
         assertEquals(ExpenseType.VARIABLE, response.type());

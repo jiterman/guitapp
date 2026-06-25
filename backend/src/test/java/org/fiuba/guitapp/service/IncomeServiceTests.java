@@ -357,7 +357,7 @@ class IncomeServiceTests {
     }
 
     @Test
-    void updateIncome_ShouldSetDescriptionToEmpty_WhenEmptyStringProvided() {
+    void updateIncome_ShouldClearTitleAndDescription_WhenEmptyStringProvided() {
         UUID incomeId = UUID.randomUUID();
         LocalDate now = LocalDate.now();
 
@@ -378,7 +378,8 @@ class IncomeServiceTests {
 
         IncomeResponse response = incomeService.updateIncome(testEmail, incomeId, request);
 
-        assertEquals("", response.description());
+        assertNull(response.title());
+        assertNull(response.description());
         assertEquals(new BigDecimal("100.00"), response.amount());
         assertEquals(IncomeCategory.SALARY, response.category());
     }
