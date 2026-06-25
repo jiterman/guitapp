@@ -8,6 +8,7 @@ import {
   StyleSheet,
   Modal,
   Vibration,
+  Animated,
 } from 'react-native';
 import { useRouter, usePathname } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -42,7 +43,16 @@ const BottomNavBar: React.FC = () => {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const preparePromiseRef = useRef<Promise<void> | null>(null);
-  const shouldRecordRef = useRef(false);
+  const longPressTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const isLongPressRef = useRef(false);
+  const recordingStartTimeRef = useRef<number | null>(null);
+  const trashZoneTopRef = useRef(9999);
+  const trashZoneBottomRef = useRef(9999);
+  const trashZoneLeftRef = useRef(0);
+  const trashZoneRightRef = useRef(0);
+  const trashViewRef = useRef<View>(null);
+  const trashScale = useRef(new Animated.Value(1)).current;
+  const [isOverTrash, setIsOverTrash] = useState(false);
 
   const audioRecorder = useAudioRecorder({
     extension: '.wav',
@@ -67,75 +77,87 @@ const BottomNavBar: React.FC = () => {
     web: {},
   });
 
-  const handlePressIn = () => {
-    shouldRecordRef.current = false;
+  const prepareAudio = () => {
     preparePromiseRef.current = (async () => {
       const permission = await AudioModule.requestRecordingPermissionsAsync();
-      if (!permission.granted) {
-        console.warn('Microphone permission not granted');
-        return;
-      }
-
-      await AudioModule.setAudioModeAsync({
-        allowsRecording: true,
-        playsInSilentMode: true,
-      });
-
+      if (!permission.granted) return;
+      await AudioModule.setAudioModeAsync({ allowsRecording: true, playsInSilentMode: true });
       try {
         await audioRecorder.prepareToRecordAsync();
       } catch (err) {
-        if (err instanceof Error && !err.message.includes('already been prepared')) {
-          throw err;
-        }
+        if (err instanceof Error && !err.message.includes('already been prepared')) throw err;
       }
     })();
   };
 
   const startRecording = async () => {
     try {
-      shouldRecordRef.current = true;
-      if (preparePromiseRef.current) {
-        await preparePromiseRef.current;
-      }
-
-      // Check if user is still holding the button
-      if (!shouldRecordRef.current) return;
-
+      if (preparePromiseRef.current) await preparePromiseRef.current;
+      if (!isLongPressRef.current) return;
       Vibration.vibrate(100);
       audioRecorder.record();
+      recordingStartTimeRef.current = Date.now();
       setIsRecordingState(true);
     } catch {
-      // recording failed silently; button returns to idle state
+      isLongPressRef.current = false;
     }
   };
 
-  const stopRecording = async () => {
-    shouldRecordRef.current = false;
+  const checkIfOverTrash = (pageX: number, pageY: number): boolean => {
+    return (
+      pageY >= trashZoneTopRef.current &&
+      pageY <= trashZoneBottomRef.current &&
+      pageX >= trashZoneLeftRef.current &&
+      pageX <= trashZoneRightRef.current
+    );
+  };
+
+  const updateTrashState = (pageX: number, pageY: number) => {
+    const overTrash = checkIfOverTrash(pageX, pageY);
+    setIsOverTrash(overTrash);
+    Animated.spring(trashScale, {
+      toValue: overTrash ? 1.2 : 1,
+      useNativeDriver: true,
+      friction: 8,
+      tension: 120,
+    }).start();
+  };
+
+  const stopRecording = async (cancelled = false) => {
+    isLongPressRef.current = false;
+    setIsOverTrash(false);
+    Animated.spring(trashScale, { toValue: 1, useNativeDriver: true }).start();
+
     if (!audioRecorder.isRecording && !isRecordingState) return;
 
     try {
       setIsRecordingState(false);
+      if (audioRecorder.isRecording) await audioRecorder.stop();
+      await AudioModule.setAudioModeAsync({ allowsRecording: false });
 
-      if (audioRecorder.isRecording) {
-        await audioRecorder.stop();
+      if (cancelled) return;
+
+      const durationMs = recordingStartTimeRef.current
+        ? Date.now() - recordingStartTimeRef.current
+        : 0;
+      recordingStartTimeRef.current = null;
+      if (durationMs < 2000) {
+        setErrorMessage(
+          'El audio es muy corto. Hablá por al menos 2 segundos para registrar el gasto.'
+        );
+        return;
       }
 
-      await AudioModule.setAudioModeAsync({
-        allowsRecording: false,
-      });
       const uri = audioRecorder.uri;
-
       if (uri) {
         setIsAnalyzing(true);
         const analysisResponse = await expenseService.analyzeVoice(uri);
-
         if (!analysisResponse.amount) {
           setErrorMessage(
             'Perdón! No pudimos extraer el monto de tu audio, por favor volvé a intentar especificando el valor.'
           );
           return;
         }
-
         router.navigate({
           pathname: '/add-movement',
           params: {
@@ -154,6 +176,62 @@ const BottomNavBar: React.FC = () => {
       setIsAnalyzing(false);
     }
   };
+
+  const prepareAudioRef = useRef<() => void>(prepareAudio);
+  const startRecordingRef = useRef<() => Promise<void>>(startRecording);
+  const updateTrashStateRef = useRef<(pageX: number, pageY: number) => void>(updateTrashState);
+  const checkIfOverTrashRef = useRef<(pageX: number, pageY: number) => boolean>(checkIfOverTrash);
+  const stopRecordingRef = useRef<(cancelled?: boolean) => Promise<void>>(stopRecording);
+  const routerRef = useRef(router);
+  const pathnameRef = useRef(pathname);
+  prepareAudioRef.current = prepareAudio;
+  startRecordingRef.current = startRecording;
+  updateTrashStateRef.current = updateTrashState;
+  checkIfOverTrashRef.current = checkIfOverTrash;
+  stopRecordingRef.current = stopRecording;
+  routerRef.current = router;
+  pathnameRef.current = pathname;
+
+  const fabPanResponder = useRef(
+    PanResponder.create({
+      onStartShouldSetPanResponder: () => true,
+      onMoveShouldSetPanResponder: () => true,
+      onPanResponderGrant: () => {
+        isLongPressRef.current = false;
+        prepareAudioRef.current();
+        longPressTimerRef.current = setTimeout(() => {
+          isLongPressRef.current = true;
+          startRecordingRef.current();
+        }, 800);
+      },
+      onPanResponderMove: (_, gestureState) => {
+        if (isLongPressRef.current) {
+          updateTrashStateRef.current(gestureState.moveX, gestureState.moveY);
+        }
+      },
+      onPanResponderRelease: (_, gestureState) => {
+        if (longPressTimerRef.current) {
+          clearTimeout(longPressTimerRef.current);
+          longPressTimerRef.current = null;
+        }
+        if (isLongPressRef.current) {
+          const overTrash = checkIfOverTrashRef.current(gestureState.moveX, gestureState.moveY);
+          stopRecordingRef.current(overTrash);
+        } else if (Math.abs(gestureState.dx) < 10 && Math.abs(gestureState.dy) < 10) {
+          // Short tap with no significant movement
+          const currentPathnameRef = pathnameRef.current;
+          if (currentPathnameRef !== '/add-movement') routerRef.current.navigate('/add-movement');
+        }
+      },
+      onPanResponderTerminate: () => {
+        if (longPressTimerRef.current) {
+          clearTimeout(longPressTimerRef.current);
+          longPressTimerRef.current = null;
+        }
+        stopRecordingRef.current(false);
+      },
+    })
+  ).current;
 
   useEffect(() => {
     const idx = ROUTE_ORDER.indexOf(pathname || '');
@@ -230,24 +308,18 @@ const BottomNavBar: React.FC = () => {
         <NavButton path="/statistics" icon={CHART_ICON} label="Estadísticas" index={1} />
 
         <View style={styles.fabContainer}>
-          <Pressable
-            style={[styles.fabButton, isRecordingState && { backgroundColor: '#E53935' }]}
-            onPressIn={handlePressIn}
-            onPress={() => {
-              if (pathname !== '/add-movement') router.navigate('/add-movement');
-            }}
-            onLongPress={startRecording}
-            delayLongPress={800}
-            onPressOut={stopRecording}
+          <View
+            style={styles.fabButton}
             accessibilityRole="button"
             accessibilityLabel="Agregar movimiento"
+            {...fabPanResponder.panHandlers}
           >
             {isRecordingState ? (
-              <Text style={{ fontSize: 24 }}>🎙️</Text>
+              <Ionicons name="mic" size={28} color="#fff" />
             ) : (
               <SvgXml xml={PLUS_ICON.replace('currentColor', '#fff')} width={30} height={30} />
             )}
-          </Pressable>
+          </View>
         </View>
 
         <NavButton path="/transactions" icon={LIST_ICON} label="Movimientos" index={2} />
@@ -255,13 +327,34 @@ const BottomNavBar: React.FC = () => {
       </View>
 
       <Modal transparent visible={isRecordingState} animationType="fade">
-        <View style={localStyles.overlayContainer}>
-          <View style={localStyles.popupCard}>
+        <View style={localStyles.recordingOverlay} pointerEvents="none">
+          <Animated.View
+            ref={trashViewRef}
+            style={[
+              localStyles.trashZone,
+              isOverTrash && localStyles.trashZoneActive,
+              { transform: [{ scale: trashScale }] },
+            ]}
+            onLayout={() => {
+              trashViewRef.current?.measure((_x, _y, width, height, pageX, pageY) => {
+                trashZoneTopRef.current = pageY;
+                trashZoneBottomRef.current = pageY + height;
+                trashZoneLeftRef.current = pageX;
+                trashZoneRightRef.current = pageX + width;
+              });
+            }}
+            pointerEvents="none"
+          >
+            <Ionicons name="trash" size={24} color={isOverTrash ? '#fff' : '#E53935'} />
+          </Animated.View>
+          <View style={localStyles.popupCard} pointerEvents="none">
             <View style={localStyles.micCircle}>
               <Ionicons name="mic" size={48} color="#07a3e4" />
             </View>
             <Text style={localStyles.titleText}>Grabando audio...</Text>
-            <Text style={localStyles.subtitleText}>Hablá para registrar el movimiento</Text>
+            <Text style={localStyles.subtitleText}>
+              {isOverTrash ? 'Soltá para cancelar' : 'Deslizá hacia arriba para cancelar'}
+            </Text>
           </View>
         </View>
       </Modal>
@@ -299,6 +392,33 @@ const localStyles = StyleSheet.create({
     backgroundColor: 'rgba(0, 51, 102, 0.5)',
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  recordingOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 51, 102, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  trashZone: {
+    position: 'absolute',
+    bottom: 120,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: '#fff',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: '#E53935',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 5,
+  },
+  trashZoneActive: {
+    backgroundColor: '#E53935',
+    borderColor: '#E53935',
   },
   popupCard: {
     width: '80%',
