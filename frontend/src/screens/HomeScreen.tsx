@@ -18,6 +18,7 @@ const vh = screenHeight / 100;
 
 const HomeScreen = () => {
   const [movements, setMovements] = useState<MovementResponse[]>([]);
+  const [allMovements, setAllMovements] = useState<MovementResponse[]>([]);
   const [incomeSum, setIncomeSum] = useState<number>(0);
   const [expenseSum, setExpenseSum] = useState<number>(0);
   const isFocused = useIsFocused();
@@ -40,6 +41,7 @@ const HomeScreen = () => {
         await expenseService.deleteExpense(movement.id);
       }
       setMovements(prev => prev.filter(m => m.id !== movement.id));
+      setAllMovements(prev => prev.filter(m => m.id !== movement.id));
     } catch {
       await alert({
         title: 'Error',
@@ -54,7 +56,10 @@ const HomeScreen = () => {
     (async () => {
       try {
         const data = await movementService.getMovements();
-        if (mounted) setMovements(data);
+        if (mounted) {
+          setAllMovements(data);
+          setMovements(data.slice(0, 10));
+        }
       } catch {
         // ignore
       }
@@ -69,7 +74,7 @@ const HomeScreen = () => {
     const currentMonth = now.getMonth();
     const currentYear = now.getFullYear();
 
-    const incomesThisMonth = movements
+    const incomesThisMonth = allMovements
       .filter(m => m.type === 'INCOME')
       .filter(m => {
         const d = parseLocalDate(String(m.date));
@@ -77,7 +82,7 @@ const HomeScreen = () => {
       })
       .reduce((acc, m) => acc + Number(m.amount), 0);
 
-    const expensesThisMonth = movements
+    const expensesThisMonth = allMovements
       .filter(m => m.type === 'EXPENSE')
       .filter(m => {
         const d = parseLocalDate(String(m.date));
@@ -87,7 +92,7 @@ const HomeScreen = () => {
 
     setIncomeSum(incomesThisMonth);
     setExpenseSum(expensesThisMonth);
-  }, [movements]);
+  }, [allMovements]);
   const now = new Date();
   const monthName = now.toLocaleString('es-ES', { month: 'long' });
   const monthLabel = `${monthName.charAt(0).toUpperCase()}${monthName.slice(1)} ${now.getFullYear()}`;
