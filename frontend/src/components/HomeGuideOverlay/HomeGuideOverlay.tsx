@@ -5,6 +5,11 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const { width: screenWidth } = Dimensions.get('window');
 
+// Avatar center = paddingHorizontal (5% of screen) + half avatar width (23px)
+const AVATAR_CENTER_X = screenWidth * 0.05 + 23;
+const TOOLTIP_LEFT = 16;
+const ARROW_MARGIN_LEFT = AVATAR_CENTER_X - TOOLTIP_LEFT - 10;
+
 interface HomeGuideOverlayProps {
   visible: boolean;
   onFinish: () => void;
@@ -29,10 +34,10 @@ export const HomeGuideOverlay: React.FC<HomeGuideOverlayProps> = ({ visible, onF
       <View style={styles.overlay} testID="guide-overlay-container">
         {step === 1 && (
           <View
-            style={[styles.tooltipContainer, { top: insets.top + 70, left: 20 }]}
+            style={[styles.tooltipContainer, { top: insets.top + 70, left: 16 }]}
             testID="step-1-tooltip"
           >
-            <View style={styles.arrowUp} />
+            <View style={[styles.arrowUp, { marginLeft: ARROW_MARGIN_LEFT }]} />
             <View style={styles.tooltipCard}>
               <View style={styles.headerRow}>
                 <Ionicons name="person-circle" size={24} color="#07a3e4" />
@@ -142,7 +147,6 @@ const styles = StyleSheet.create({
     borderLeftColor: 'transparent',
     borderRightColor: 'transparent',
     borderBottomColor: '#ffffff',
-    marginLeft: 24,
   },
   arrowDown: {
     width: 0,

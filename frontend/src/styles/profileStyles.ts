@@ -63,7 +63,7 @@ export const profileSharedStyles = StyleSheet.create({
 
   menuCardDivider: {
     height: 1,
-    backgroundColor: '#D1D5DB',
+    backgroundColor: '#EEF6FB',
     marginHorizontal: screenWidth * 0.04,
   },
 

@@ -8,13 +8,26 @@ const { width: screenWidth } = Dimensions.get('window');
 interface AddMovementGuideOverlayProps {
   visible: boolean;
   onFinish: () => void;
+  cameraButtonX?: number;
+  cameraButtonY?: number;
 }
 
 export const AddMovementGuideOverlay: React.FC<AddMovementGuideOverlayProps> = ({
   visible,
   onFinish,
+  cameraButtonX,
+  cameraButtonY,
 }) => {
   const insets = useSafeAreaInsets();
+  const tooltipWidth = screenWidth * 0.75;
+  const buttonCenterX = cameraButtonX ?? screenWidth - screenWidth * 0.05 - 23;
+  // Center the tooltip under the button, then clamp so it stays within screen margins
+  const tooltipLeft = Math.min(
+    Math.max(16, buttonCenterX - tooltipWidth / 2),
+    screenWidth - tooltipWidth - 16
+  );
+  const arrowMarginLeft = buttonCenterX - tooltipLeft - 10;
+  const tooltipTop = cameraButtonY !== undefined ? cameraButtonY + 12 : insets.top + 250;
 
   if (!visible) return null;
 
@@ -22,10 +35,10 @@ export const AddMovementGuideOverlay: React.FC<AddMovementGuideOverlayProps> = (
     <Modal transparent visible={visible} animationType="fade">
       <View style={styles.overlay} testID="guide-overlay-container">
         <View
-          style={[styles.tooltipContainer, { top: insets.top + 250, right: 16 }]}
+          style={[styles.tooltipContainer, { top: tooltipTop, left: tooltipLeft }]}
           testID="step-1-tooltip"
         >
-          <View style={styles.arrowUp} />
+          <View style={[styles.arrowUp, { marginLeft: arrowMarginLeft }]} />
           <View style={styles.tooltipCard}>
             <View style={styles.headerRow}>
               <Ionicons name="camera" size={24} color="#07a3e4" />
@@ -106,7 +119,5 @@ const styles = StyleSheet.create({
     borderLeftColor: 'transparent',
     borderRightColor: 'transparent',
     borderBottomColor: '#ffffff',
-    alignSelf: 'flex-end',
-    marginRight: 30,
   },
 });

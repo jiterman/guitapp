@@ -113,6 +113,10 @@ const AddMovementScreen = () => {
   const [scanHasError, setScanHasError] = useState(false);
   const [cameraVisible, setCameraVisible] = useState(false);
   const [showGuide, setShowGuide] = useState(false);
+  const [cameraButtonPos, setCameraButtonPos] = useState<{ x: number; y: number } | undefined>(
+    undefined
+  );
+  const cameraButtonRef = useRef<TouchableOpacity>(null);
 
   useEffect(() => {
     const checkGuide = async () => {
@@ -513,9 +517,15 @@ const AddMovementScreen = () => {
             />
             {movementType === 'EXPENSE' && !isRecurring && (
               <TouchableOpacity
+                ref={cameraButtonRef}
                 onPress={onScanReceipt}
                 style={styles.amountScanButton}
                 disabled={scanningReceipt}
+                onLayout={() => {
+                  cameraButtonRef.current?.measure((_x, _y, width, height, pageX, pageY) => {
+                    setCameraButtonPos({ x: pageX + width / 2, y: pageY + height });
+                  });
+                }}
               >
                 <Ionicons name="camera" size={20} color="#fff" />
               </TouchableOpacity>
@@ -880,7 +890,12 @@ const AddMovementScreen = () => {
         onClose={() => setCameraVisible(false)}
         onCapture={onImageCaptured}
       />
-      <AddMovementGuideOverlay visible={showGuide} onFinish={handleFinishGuide} />
+      <AddMovementGuideOverlay
+        visible={showGuide}
+        onFinish={handleFinishGuide}
+        cameraButtonX={cameraButtonPos?.x}
+        cameraButtonY={cameraButtonPos?.y}
+      />
     </>
   );
 };
