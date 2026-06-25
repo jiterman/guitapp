@@ -127,8 +127,8 @@ const EditIncomeScreen = () => {
       const dateString = toLocalDateString(selectedDate);
       await incomeService.updateIncome(incomeId, {
         amount: parseFloat(amount),
-        title: title.trim() || undefined,
-        description: description.trim() || undefined,
+        title: title.trim(),
+        description: description.trim(),
         category: selectedCategory!.value as unknown as IncomeCategory,
         date: dateString,
       });
@@ -210,10 +210,7 @@ const EditIncomeScreen = () => {
               onChangeText={text => setDescription(text.slice(0, 255))}
               placeholder="Información adicional (opcional)"
               scrollViewRef={scrollViewRef}
-              onRemove={() => {
-                setDescription('');
-                setShowDescription(false);
-              }}
+              onRemove={() => setShowDescription(false)}
             />
           ) : (
             <TouchableOpacity

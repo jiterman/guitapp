@@ -258,8 +258,8 @@ const AddMovementScreen = () => {
         if (isRecurring) {
           await recurringExpenseService.addRecurringExpense({
             amount: parseFloat(amount),
-            title: title.trim() || undefined,
-            description: description.trim() || undefined,
+            title: title.trim(),
+            description: description.trim(),
             category: selectedCategory!.value as ExpenseCategory,
             type: selectedExpenseType!,
             frequency,
@@ -268,8 +268,8 @@ const AddMovementScreen = () => {
         } else {
           await expenseService.addExpense({
             amount: parseFloat(amount),
-            title: title.trim() || undefined,
-            description: description.trim() || undefined,
+            title: title.trim(),
+            description: description.trim(),
             category: selectedCategory!.value,
             type: selectedExpenseType!,
             date: dateString,
@@ -278,8 +278,8 @@ const AddMovementScreen = () => {
       } else if (isRecurring) {
         await recurringIncomeService.addRecurringIncome({
           amount: parseFloat(amount),
-          title: title.trim() || undefined,
-          description: description.trim() || undefined,
+          title: title.trim(),
+          description: description.trim(),
           category: selectedCategory!.value as unknown as IncomeCategory,
           frequency,
           startDate: dateString,
@@ -287,8 +287,8 @@ const AddMovementScreen = () => {
       } else {
         await incomeService.addIncome({
           amount: parseFloat(amount),
-          title: title.trim() || undefined,
-          description: description.trim() || undefined,
+          title: title.trim(),
+          description: description.trim(),
           category: selectedCategory!.value as unknown as IncomeCategory,
           date: dateString,
         });
@@ -519,10 +519,7 @@ const AddMovementScreen = () => {
               placeholder="Información adicional (opcional)"
               scrollViewRef={scrollViewRef}
               scrollYRef={scrollYRef}
-              onRemove={() => {
-                setDescription('');
-                setShowDescription(false);
-              }}
+              onRemove={() => setShowDescription(false)}
             />
           ) : (
             <TouchableOpacity

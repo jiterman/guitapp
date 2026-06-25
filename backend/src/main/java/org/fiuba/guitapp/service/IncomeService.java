@@ -97,10 +97,10 @@ public class IncomeService {
             income.setAmount(request.amount());
         }
         if (request.title() != null) {
-            income.setTitle(request.title());
+            income.setTitle(request.title().isBlank() ? null : request.title());
         }
         if (request.description() != null) {
-            income.setDescription(request.description());
+            income.setDescription(request.description().isBlank() ? null : request.description());
         }
         if (request.category() != null) {
             income.setCategory(request.category());

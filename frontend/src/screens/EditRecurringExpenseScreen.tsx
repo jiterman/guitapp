@@ -132,8 +132,8 @@ const EditRecurringExpenseScreen = () => {
     try {
       await recurringExpenseService.updateRecurringExpense(recurringExpenseId, {
         amount: parseFloat(amount),
-        title: title.trim() || undefined,
-        description: description.trim() || undefined,
+        title: title.trim(),
+        description: description.trim(),
         category: selectedCategory!.value as ExpenseCategory,
         type: selectedType!,
         frequency,
@@ -222,10 +222,7 @@ const EditRecurringExpenseScreen = () => {
               placeholder="Información adicional (opcional)"
               scrollViewRef={scrollViewRef}
               scrollYRef={scrollYRef}
-              onRemove={() => {
-                setDescription('');
-                setShowDescription(false);
-              }}
+              onRemove={() => setShowDescription(false)}
             />
           ) : (
             <TouchableOpacity

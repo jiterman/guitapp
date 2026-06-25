@@ -143,8 +143,8 @@ const EditExpenseScreen = () => {
       const dateString = toLocalDateString(selectedDate);
       await expenseService.updateExpense(expenseId, {
         amount: parseFloat(amount),
-        title: title.trim() || undefined,
-        description: description.trim() || undefined,
+        title: title.trim(),
+        description: description.trim(),
         category: selectedCategory!.value as ExpenseCategory,
         type: selectedType!,
         date: dateString,
@@ -229,10 +229,7 @@ const EditExpenseScreen = () => {
               placeholder="Información adicional (opcional)"
               scrollViewRef={scrollViewRef}
               scrollYRef={scrollYRef}
-              onRemove={() => {
-                setDescription('');
-                setShowDescription(false);
-              }}
+              onRemove={() => setShowDescription(false)}
             />
           ) : (
             <TouchableOpacity
