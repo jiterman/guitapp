@@ -31,6 +31,8 @@ import {
   type RecurrenceFrequency,
 } from '../services/recurringIncomeService';
 import { recurringExpenseService } from '../services/recurringExpenseService';
+import FrequencySegmentedControl from '../components/Recurring/FrequencySegmentedControl';
+import { recurringFormStyles } from '../styles/recurringFormStyles';
 import type { ExpenseType, IncomeCategory, ExpenseCategory } from '../constants/categories';
 import {
   EXPENSE_CATEGORIES,
@@ -44,8 +46,6 @@ import { useCurrencyInput } from '../hooks/useCurrencyInput';
 import { formatDate, toLocalDateString, parseLocalDate } from '../utils/dateFormatter';
 
 const vh = Dimensions.get('window').height / 100;
-// Shared width so the date pill matches the Frequency segmented control.
-const RECURRENCE_CONTROL_WIDTH = 168;
 interface InferredRuleBannerProps {
   isVisible: boolean;
 }
@@ -617,18 +617,18 @@ const AddMovementScreen = () => {
           </View>
 
           {isRecurring && (
-            <View style={styles.recurringSubPanel}>
-              <View style={styles.subPanelHeader}>
+            <View style={recurringFormStyles.recurringSubPanel}>
+              <View style={recurringFormStyles.subPanelHeader}>
                 <Ionicons name="repeat" size={16} color="#07a3e4" />
-                <Text style={styles.subPanelHeaderText}>Recurrente</Text>
+                <Text style={recurringFormStyles.subPanelHeaderText}>Recurrente</Text>
                 <TouchableOpacity
-                  style={styles.subPanelInfoButton}
+                  style={recurringFormStyles.subPanelInfoButton}
                   hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
                   onPress={() =>
                     alert({
                       title: 'Movimiento recurrente',
                       message:
-                        'Se va a registrar automáticamente a partir de la fecha de inicio (inclusive), con la frecuencia que elijas.',
+                        'Se va a registrar automáticamente a partir de la fecha de inicio. Semanal: cada 7 días. Quincena: días 1 y 15 de cada mes. Mensual: mismo día del mes.',
                     })
                   }
                 >
@@ -636,51 +636,36 @@ const AddMovementScreen = () => {
                 </TouchableOpacity>
               </View>
 
-              <View style={styles.subRow}>
-                <Ionicons name="sync-outline" size={18} color="#37618A" style={styles.subRowIcon} />
-                <Text style={styles.subRowLabel}>Frecuencia</Text>
-                <View style={styles.segmented}>
-                  <TouchableOpacity
-                    style={[styles.segment, frequency === 'WEEKLY' && styles.segmentActive]}
-                    onPress={() => setFrequency('WEEKLY')}
-                  >
-                    <Text
-                      style={[
-                        styles.segmentText,
-                        frequency === 'WEEKLY' && styles.segmentTextActive,
-                      ]}
-                    >
-                      Semanal
-                    </Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    style={[styles.segment, frequency === 'MONTHLY' && styles.segmentActive]}
-                    onPress={() => setFrequency('MONTHLY')}
-                  >
-                    <Text
-                      style={[
-                        styles.segmentText,
-                        frequency === 'MONTHLY' && styles.segmentTextActive,
-                      ]}
-                    >
-                      Mensual
-                    </Text>
-                  </TouchableOpacity>
+              <View style={recurringFormStyles.subRow}>
+                <View style={recurringFormStyles.subRowLeading}>
+                  <Ionicons
+                    name="sync-outline"
+                    size={18}
+                    color="#37618A"
+                    style={recurringFormStyles.subRowIcon}
+                  />
+                  <Text style={recurringFormStyles.subRowLabel}>Frecuencia</Text>
                 </View>
+                <FrequencySegmentedControl value={frequency} onChange={setFrequency} />
               </View>
 
-              <View style={styles.subRowDivider} />
+              <View style={recurringFormStyles.subRowDivider} />
 
-              <TouchableOpacity style={styles.subRow} onPress={() => setShowDatePicker(true)}>
-                <Ionicons
-                  name="calendar-outline"
-                  size={18}
-                  color="#37618A"
-                  style={styles.subRowIcon}
-                />
-                <Text style={styles.subRowLabel}>Inicia</Text>
-                <View style={styles.datePill}>
-                  <Text style={styles.datePillText}>{formatDate(selectedDate)}</Text>
+              <TouchableOpacity
+                style={recurringFormStyles.subRow}
+                onPress={() => setShowDatePicker(true)}
+              >
+                <View style={recurringFormStyles.subRowLeading}>
+                  <Ionicons
+                    name="calendar-outline"
+                    size={18}
+                    color="#37618A"
+                    style={recurringFormStyles.subRowIcon}
+                  />
+                  <Text style={recurringFormStyles.subRowLabel}>Inicia</Text>
+                </View>
+                <View style={recurringFormStyles.datePill}>
+                  <Text style={recurringFormStyles.datePillText}>{formatDate(selectedDate)}</Text>
                   <Ionicons name="chevron-down" size={16} color="#07a3e4" />
                 </View>
               </TouchableOpacity>
@@ -885,99 +870,6 @@ const localStyles = StyleSheet.create({
     fontSize: 14,
     fontWeight: 'bold',
     color: '#003366',
-  },
-  recurringSubPanel: {
-    marginTop: vh * 1,
-    backgroundColor: '#F4FAFE',
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#D7EAF7',
-    borderLeftWidth: 3,
-    borderLeftColor: '#07a3e4',
-    paddingHorizontal: 12,
-    paddingVertical: vh * 0.6,
-  },
-  subPanelHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    paddingVertical: vh * 0.8,
-  },
-  subPanelHeaderText: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: '#07a3e4',
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-  },
-  subPanelInfoButton: {
-    marginLeft: 2,
-  },
-  subRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: vh * 1,
-  },
-  subRowIcon: {
-    marginRight: 10,
-  },
-  subRowLabel: {
-    flex: 1,
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#37618A',
-  },
-  datePill: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    width: RECURRENCE_CONTROL_WIDTH,
-    paddingVertical: 7,
-    paddingHorizontal: 12,
-    borderRadius: 9,
-    backgroundColor: '#fff',
-    borderWidth: 1,
-    borderColor: '#D7EAF7',
-  },
-  datePillText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#003366',
-  },
-  subRowDivider: {
-    height: 1,
-    backgroundColor: '#E1ECF5',
-  },
-  segmented: {
-    flexDirection: 'row',
-    width: RECURRENCE_CONTROL_WIDTH,
-    backgroundColor: '#E4EEF6',
-    borderRadius: 9,
-    padding: 3,
-  },
-  segment: {
-    flex: 1,
-    paddingVertical: 7,
-    paddingHorizontal: 8,
-    borderRadius: 7,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  segmentActive: {
-    backgroundColor: '#fff',
-    shadowColor: '#506E96',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.12,
-    shadowRadius: 3,
-    elevation: 2,
-  },
-  segmentText: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: '#6B8299',
-  },
-  segmentTextActive: {
-    color: '#07a3e4',
   },
 });
 

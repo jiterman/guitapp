@@ -1,7 +1,7 @@
 import { authService, API_URL } from './authService';
 import type { IncomeCategory } from '../constants/categories';
 
-export type RecurrenceFrequency = 'WEEKLY' | 'MONTHLY';
+export type RecurrenceFrequency = 'WEEKLY' | 'BIWEEKLY' | 'MONTHLY';
 
 export interface AddRecurringIncomeRequest {
   amount: number;

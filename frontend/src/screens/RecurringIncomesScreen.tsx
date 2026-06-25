@@ -6,17 +6,14 @@ import { router, useFocusEffect } from 'expo-router';
 import {
   recurringIncomeService,
   RecurringIncomeResponse,
-  RecurrenceFrequency,
 } from '../services/recurringIncomeService';
 import { getCategoryIcon, getCategoryLabel } from '../constants/categories';
 import { detailScreenStyles } from '../styles/detailScreenStyles';
 import { recurringIncomeStyles as styles } from '../styles/recurringIncomeStyles';
 import { formatDate } from '../utils/dateFormatter';
 import { formatMoney } from '../utils/currencyFormatter';
+import { getRecurrenceFrequencyLabel } from '../utils/recurrenceFrequency';
 import { useDialog } from '../context/dialog';
-
-const frequencyLabel = (frequency: RecurrenceFrequency): string =>
-  frequency === 'WEEKLY' ? 'Semanal' : 'Mensual';
 
 const displayTitle = (item: RecurringIncomeResponse): string => {
   if (item.title?.trim()) return item.title.trim();
@@ -149,7 +146,9 @@ const RecurringIncomesScreen = () => {
 
                 <View style={styles.metaRow}>
                   <Text style={styles.metaLabel}>Frecuencia</Text>
-                  <Text style={styles.metaValue}>{frequencyLabel(item.frequency)}</Text>
+                  <Text style={styles.metaValue}>
+                    {getRecurrenceFrequencyLabel(item.frequency)}
+                  </Text>
                 </View>
 
                 <View style={styles.metaRow}>

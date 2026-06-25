@@ -187,3 +187,17 @@ docker exec -i guitapp-db psql -U postgres -d guitapp -f - < backend/src/main/re
 ```
 
 > El nombre de la base por defecto es `guitapp`. Si usás la variable de entorno `DB_NAME`, reemplazalo.
+
+### Permitir frecuencia Quincena (BIWEEKLY) en recurrentes
+
+Actualiza el constraint de PostgreSQL para aceptar `BIWEEKLY` además de `WEEKLY` y `MONTHLY`. Correr una sola vez si al guardar un ingreso/gasto recurrente quincenal falla con `recurring_*_frequency_check`.
+
+```bash
+psql -d guitapp -f backend/src/main/resources/migrations/V2__add_biweekly_to_recurring_frequency_check.sql
+```
+
+Con Docker local:
+
+```bash
+docker exec -i guitapp-db psql -U postgres -d guitapp -f - < backend/src/main/resources/migrations/V2__add_biweekly_to_recurring_frequency_check.sql
+```

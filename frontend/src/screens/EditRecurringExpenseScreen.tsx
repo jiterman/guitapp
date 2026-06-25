@@ -6,8 +6,6 @@ import {
   FlatList,
   TextInput,
   ActivityIndicator,
-  StyleSheet,
-  Dimensions,
 } from 'react-native';
 import { ScrollView } from 'react-native';
 import { Layout, Text } from '@ui-kitten/components';
@@ -18,6 +16,8 @@ import { recurringExpenseService } from '../services/recurringExpenseService';
 import type { RecurrenceFrequency } from '../services/recurringIncomeService';
 import type { ExpenseType, ExpenseCategory } from '../constants/categories';
 import { EXPENSE_CATEGORIES, ExpenseCategoryOption } from '../constants/categories';
+import FrequencySegmentedControl from '../components/Recurring/FrequencySegmentedControl';
+import { recurringFormStyles } from '../styles/recurringFormStyles';
 import { useCurrencyInput } from '../hooks/useCurrencyInput';
 import {
   transactionFormStyles as styles,
@@ -28,8 +28,6 @@ import { formatDate, toLocalDateString, parseLocalDate } from '../utils/dateForm
 import ExpandableTextInput from '../components/ExpandableTextInput/ExpandableTextInput';
 import DatePickerModal from '../components/DatePickerModal/DatePickerModal';
 import { useDialog } from '../context/dialog';
-
-const vh = Dimensions.get('window').height / 100;
 
 const EditRecurringExpenseScreen = () => {
   const { alert } = useDialog();
@@ -309,60 +307,37 @@ const EditRecurringExpenseScreen = () => {
           {typeError && <Text style={styles.typeErrorText}>{typeError}</Text>}
 
           <Text style={styles.label}>Recurrencia</Text>
-          <View style={localStyles.recurringSubPanel}>
-            <View style={localStyles.subRow}>
-              <Ionicons
-                name="sync-outline"
-                size={18}
-                color="#37618A"
-                style={localStyles.subRowIcon}
-              />
-              <Text style={localStyles.subRowLabel}>Frecuencia</Text>
-              <View style={localStyles.segmented}>
-                <TouchableOpacity
-                  style={[localStyles.segment, frequency === 'WEEKLY' && localStyles.segmentActive]}
-                  onPress={() => setFrequency('WEEKLY')}
-                >
-                  <Text
-                    style={[
-                      localStyles.segmentText,
-                      frequency === 'WEEKLY' && localStyles.segmentTextActive,
-                    ]}
-                  >
-                    Semanal
-                  </Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={[
-                    localStyles.segment,
-                    frequency === 'MONTHLY' && localStyles.segmentActive,
-                  ]}
-                  onPress={() => setFrequency('MONTHLY')}
-                >
-                  <Text
-                    style={[
-                      localStyles.segmentText,
-                      frequency === 'MONTHLY' && localStyles.segmentTextActive,
-                    ]}
-                  >
-                    Mensual
-                  </Text>
-                </TouchableOpacity>
+          <View style={recurringFormStyles.recurringSubPanel}>
+            <View style={recurringFormStyles.subRow}>
+              <View style={recurringFormStyles.subRowLeading}>
+                <Ionicons
+                  name="sync-outline"
+                  size={18}
+                  color="#37618A"
+                  style={recurringFormStyles.subRowIcon}
+                />
+                <Text style={recurringFormStyles.subRowLabel}>Frecuencia</Text>
               </View>
+              <FrequencySegmentedControl value={frequency} onChange={setFrequency} />
             </View>
 
-            <View style={localStyles.subRowDivider} />
+            <View style={recurringFormStyles.subRowDivider} />
 
-            <TouchableOpacity style={localStyles.subRow} onPress={() => setShowDatePicker(true)}>
-              <Ionicons
-                name="calendar-outline"
-                size={18}
-                color="#37618A"
-                style={localStyles.subRowIcon}
-              />
-              <Text style={localStyles.subRowLabel}>Inicia</Text>
-              <View style={localStyles.datePill}>
-                <Text style={localStyles.datePillText}>{formatDate(startDate)}</Text>
+            <TouchableOpacity
+              style={recurringFormStyles.subRow}
+              onPress={() => setShowDatePicker(true)}
+            >
+              <View style={recurringFormStyles.subRowLeading}>
+                <Ionicons
+                  name="calendar-outline"
+                  size={18}
+                  color="#37618A"
+                  style={recurringFormStyles.subRowIcon}
+                />
+                <Text style={recurringFormStyles.subRowLabel}>Inicia</Text>
+              </View>
+              <View style={recurringFormStyles.datePill}>
+                <Text style={recurringFormStyles.datePillText}>{formatDate(startDate)}</Text>
                 <Ionicons name="chevron-down" size={16} color="#07a3e4" />
               </View>
             </TouchableOpacity>
@@ -459,87 +434,5 @@ const EditRecurringExpenseScreen = () => {
     </>
   );
 };
-
-const RECURRENCE_CONTROL_WIDTH = 168;
-
-const localStyles = StyleSheet.create({
-  recurringSubPanel: {
-    marginTop: vh * 1,
-    backgroundColor: '#F4FAFE',
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#D7EAF7',
-    borderLeftWidth: 3,
-    borderLeftColor: '#07a3e4',
-    paddingHorizontal: 12,
-    paddingVertical: vh * 0.6,
-  },
-  subRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: vh * 1,
-  },
-  subRowIcon: {
-    marginRight: 10,
-  },
-  subRowLabel: {
-    flex: 1,
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#37618A',
-  },
-  subRowDivider: {
-    height: 1,
-    backgroundColor: '#E1ECF5',
-  },
-  segmented: {
-    flexDirection: 'row',
-    width: RECURRENCE_CONTROL_WIDTH,
-    backgroundColor: '#E4EEF6',
-    borderRadius: 9,
-    padding: 3,
-  },
-  segment: {
-    flex: 1,
-    paddingVertical: 7,
-    paddingHorizontal: 8,
-    borderRadius: 7,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  segmentActive: {
-    backgroundColor: '#fff',
-    shadowColor: '#506E96',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.12,
-    shadowRadius: 3,
-    elevation: 2,
-  },
-  segmentText: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: '#6B8299',
-  },
-  segmentTextActive: {
-    color: '#07a3e4',
-  },
-  datePill: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    width: RECURRENCE_CONTROL_WIDTH,
-    paddingVertical: 7,
-    paddingHorizontal: 12,
-    borderRadius: 9,
-    backgroundColor: '#fff',
-    borderWidth: 1,
-    borderColor: '#D7EAF7',
-  },
-  datePillText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#003366',
-  },
-});
 
 export default EditRecurringExpenseScreen;
