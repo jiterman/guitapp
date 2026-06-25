@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { View, TouchableOpacity, Image, KeyboardAvoidingView, Modal, FlatList } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button, Layout, Text, Input, Icon, IconProps } from '@ui-kitten/components';
 import { router } from 'expo-router';
@@ -229,7 +230,8 @@ const LoginScreen = () => {
                 onPress={onBiometricButtonPress}
                 disabled={loading}
               >
-                <Text style={styles.biometricText}>🔐 Ingresar con biometría</Text>
+                <Ionicons name="finger-print" size={18} color="#006699" />
+                <Text style={styles.biometricText}> Ingresar con biometría</Text>
               </TouchableOpacity>
             )}
           </View>

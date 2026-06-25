@@ -123,7 +123,9 @@ export const loginStyles = StyleSheet.create({
   },
   biometricButton: {
     marginTop: vh * 2,
+    flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
     paddingVertical: vh * 1.2,
   },
   biometricText: {
