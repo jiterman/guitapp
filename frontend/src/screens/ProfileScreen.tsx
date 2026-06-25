@@ -121,7 +121,7 @@ const ProfileScreen: React.FC = () => {
 
           <ProfileSection title="Finanzas">
             <ProfileMenuItem
-              title="Estructura de gastos"
+              title="Objetivos financieros"
               subtitle="Configurá tus ingresos estimados y los gastos fijos y variables"
               icon="pie-chart-outline"
               iconColor="#FFBB00"

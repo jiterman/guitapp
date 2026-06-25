@@ -9,14 +9,14 @@ describe('useCurrencyInput', () => {
     expect(result.current.displayValue).toBe('');
   });
 
-  it('should initialize with provided value', () => {
+  it('should initialize with provided value and force decimals by default (blurred)', () => {
     const { result } = renderHook(() => useCurrencyInput('100'));
 
     expect(result.current.amount).toBe('100');
-    expect(result.current.displayValue).toBe('100');
+    expect(result.current.displayValue).toBe('100,00');
   });
 
-  it('should format amount with thousands separator', () => {
+  it('should format amount with thousands separator and decimals on blur', () => {
     const { result } = renderHook(() => useCurrencyInput());
 
     act(() => {
@@ -24,7 +24,7 @@ describe('useCurrencyInput', () => {
     });
 
     expect(result.current.amount).toBe('100000');
-    expect(result.current.displayValue).toBe('100.000');
+    expect(result.current.displayValue).toBe('100.000,00');
   });
 
   it('should format amount with decimal places using comma', () => {
@@ -38,57 +38,50 @@ describe('useCurrencyInput', () => {
     expect(result.current.displayValue).toBe('1.500,50');
   });
 
-  it('should handle formatted input with currency symbol and comma', () => {
+  it('should not add decimals automatically when focused', () => {
     const { result } = renderHook(() => useCurrencyInput());
 
     act(() => {
-      result.current.handleAmountChange('1500,50');
-    });
-
-    expect(result.current.amount).toBe('1500.50');
-    expect(result.current.displayValue).toBe('1.500,50');
-  });
-
-  it('should not add decimals automatically', () => {
-    const { result } = renderHook(() => useCurrencyInput());
-
-    act(() => {
+      result.current.handleFocus();
       result.current.handleAmountChange('100');
     });
 
     expect(result.current.displayValue).toBe('100');
+
+    act(() => {
+      result.current.handleBlur();
+    });
+
+    expect(result.current.displayValue).toBe('100,00');
   });
 
-  it('should handle single decimal digit using comma', () => {
+  it('should handle single decimal digit correctly', () => {
     const { result } = renderHook(() => useCurrencyInput());
 
     act(() => {
+      result.current.handleFocus();
       result.current.handleAmountChange('100,5');
     });
 
     expect(result.current.amount).toBe('100.5');
     expect(result.current.displayValue).toBe('100,5');
+
+    act(() => {
+      result.current.handleBlur();
+    });
+
+    expect(result.current.displayValue).toBe('100,50');
   });
 
-  it('should limit decimal places to 2 digits using comma', () => {
+  it('should limit decimal places to 2 digits', () => {
     const { result } = renderHook(() => useCurrencyInput());
 
     act(() => {
+      result.current.handleFocus();
       result.current.handleAmountChange('100,999');
     });
 
     expect(result.current.amount).toBe('100.99');
-  });
-
-  it('should handle comma as decimal separator in input', () => {
-    const { result } = renderHook(() => useCurrencyInput());
-
-    act(() => {
-      result.current.handleAmountChange('100,50');
-    });
-
-    expect(result.current.amount).toBe('100.50');
-    expect(result.current.displayValue).toBe('100,50');
   });
 
   it('should remove leading zeros', () => {
@@ -98,7 +91,7 @@ describe('useCurrencyInput', () => {
       result.current.handleAmountChange('00100');
     });
 
-    expect(result.current.displayValue).toBe('100');
+    expect(result.current.displayValue).toBe('100,00');
   });
 
   it('should format zero correctly', () => {
@@ -109,7 +102,7 @@ describe('useCurrencyInput', () => {
     });
 
     expect(result.current.amount).toBe('0');
-    expect(result.current.displayValue).toBe('0');
+    expect(result.current.displayValue).toBe('0,00');
   });
 
   it('should reject invalid characters', () => {
@@ -155,26 +148,22 @@ describe('useCurrencyInput', () => {
     expect(result.current.displayValue).toBe('');
   });
 
-  it('should handle comma at the end', () => {
+  it('should handle comma at the end while typing', () => {
     const { result } = renderHook(() => useCurrencyInput());
 
     act(() => {
+      result.current.handleFocus();
       result.current.handleAmountChange('100,');
     });
 
     expect(result.current.amount).toBe('100.');
     expect(result.current.displayValue).toBe('100,');
-  });
-
-  it('should show decimals as user types them', () => {
-    const { result } = renderHook(() => useCurrencyInput());
 
     act(() => {
-      result.current.handleAmountChange('100,5');
+      result.current.handleBlur();
     });
 
-    expect(result.current.amount).toBe('100.5');
-    expect(result.current.displayValue).toBe('100,5');
+    expect(result.current.displayValue).toBe('100,00');
   });
 
   it('should strip dots from formatted input', () => {
@@ -184,7 +173,6 @@ describe('useCurrencyInput', () => {
       result.current.handleAmountChange('1.500,50');
     });
 
-    // Dots are stripped, comma is used for decimals
     expect(result.current.amount).toBe('1500.50');
     expect(result.current.displayValue).toBe('1.500,50');
   });
@@ -196,7 +184,6 @@ describe('useCurrencyInput', () => {
       result.current.handleAmountChange('1.234.567,89');
     });
 
-    // Should strip all formatting and parse correctly
     expect(result.current.amount).toBe('1234567.89');
     expect(result.current.displayValue).toBe('1.234.567,89');
   });
@@ -208,8 +195,7 @@ describe('useCurrencyInput', () => {
       result.current.handleAmountChange('1.000.000');
     });
 
-    // Dots are stripped, treated as integer
     expect(result.current.amount).toBe('1000000');
-    expect(result.current.displayValue).toBe('1.000.000');
+    expect(result.current.displayValue).toBe('1.000.000,00');
   });
 });
