@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { View, TouchableOpacity, TextInput } from 'react-native';
+import { View, TouchableOpacity, TextInput, ScrollView, Dimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Layout, Text, Button } from '@ui-kitten/components';
+import { Text, Button } from '@ui-kitten/components';
 import { router } from 'expo-router';
 import { userService } from '../services/userService';
 import { useUser } from '../context/user';
@@ -12,6 +12,8 @@ import { OnboardingError } from '../types/errors';
 import { authService } from '../services/authService';
 import { useDialog } from '../context/dialog';
 import ExpensesEditor from '../components/Profile/ExpensesEditor';
+
+const CARD_MAX_HEIGHT = Dimensions.get('window').height * 0.65;
 
 const OnboardingScreen = () => {
   const { alert } = useDialog();
@@ -56,8 +58,8 @@ const OnboardingScreen = () => {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <Layout style={styles.container}>
-        <Text category="h1" style={styles.title}>
+      <View style={styles.container}>
+        <Text category="h1" style={[styles.title]}>
           {step === 1 ? '¡Bienvenido!' : 'Tus Objetivos'}
         </Text>
         <Text category="s1" style={styles.subtitle}>
@@ -71,7 +73,7 @@ const OnboardingScreen = () => {
           </Text>
         )}
 
-        <View style={styles.card}>
+        <View style={[styles.card, step === 2 && { maxHeight: CARD_MAX_HEIGHT }]}>
           {step === 1 && (
             <>
               <Text style={[styles.label, { marginTop: 0, marginBottom: 8 }]}>
@@ -109,7 +111,7 @@ const OnboardingScreen = () => {
           )}
 
           {step === 2 && (
-            <>
+            <ScrollView keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
               <ExpensesEditor
                 fixedDefault={50}
                 variableDefault={30}
@@ -127,10 +129,10 @@ const OnboardingScreen = () => {
               >
                 Atrás
               </Button>
-            </>
+            </ScrollView>
           )}
         </View>
-      </Layout>
+      </View>
     </SafeAreaView>
   );
 };
