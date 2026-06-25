@@ -55,8 +55,7 @@ const ResetPasswordScreen = () => {
             'Tu contraseña ha sido restablecida correctamente. Iniciá sesión con tu nueva contraseña.',
         },
       });
-    } catch (err) {
-      console.error(err);
+    } catch {
       await alert({
         title: 'Error',
         message: 'No se pudo restablecer la contraseña. Intentá de nuevo.',

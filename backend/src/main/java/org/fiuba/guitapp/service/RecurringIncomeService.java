@@ -92,10 +92,10 @@ public class RecurringIncomeService {
             recurringIncome.setAmount(request.amount());
         }
         if (request.title() != null) {
-            recurringIncome.setTitle(request.title());
+            recurringIncome.setTitle(request.title().isBlank() ? null : request.title());
         }
         if (request.description() != null) {
-            recurringIncome.setDescription(request.description());
+            recurringIncome.setDescription(request.description().isBlank() ? null : request.description());
         }
         if (request.category() != null) {
             recurringIncome.setCategory(request.category());

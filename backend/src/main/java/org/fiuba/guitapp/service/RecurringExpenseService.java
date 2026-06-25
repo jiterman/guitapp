@@ -93,10 +93,10 @@ public class RecurringExpenseService {
             recurringExpense.setAmount(request.amount());
         }
         if (request.title() != null) {
-            recurringExpense.setTitle(request.title());
+            recurringExpense.setTitle(request.title().isBlank() ? null : request.title());
         }
         if (request.description() != null) {
-            recurringExpense.setDescription(request.description());
+            recurringExpense.setDescription(request.description().isBlank() ? null : request.description());
         }
         if (request.category() != null) {
             recurringExpense.setCategory(request.category());

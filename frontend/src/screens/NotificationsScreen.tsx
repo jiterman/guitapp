@@ -69,8 +69,8 @@ const NotificationsScreen: React.FC = () => {
     try {
       const data = await notificationService.getNotifications();
       setNotifications(data);
-    } catch (error) {
-      console.error('Error loading notifications:', error);
+    } catch {
+      // silently ignore load failure; list stays empty
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -91,8 +91,8 @@ const NotificationsScreen: React.FC = () => {
       await notificationService.markAsRead(id);
       setNotifications(prev => prev.map(n => (n.id === id ? { ...n, read: true } : n)));
       eventEmitter.emit('notificationsRead');
-    } catch (error) {
-      console.error('Error marking as read:', error);
+    } catch {
+      // silently ignore mark-as-read failure
     }
   };
 
@@ -101,8 +101,8 @@ const NotificationsScreen: React.FC = () => {
       await notificationService.markAllAsRead();
       setNotifications(prev => prev.map(n => ({ ...n, read: true })));
       eventEmitter.emit('notificationsRead');
-    } catch (error) {
-      console.error('Error marking all as read:', error);
+    } catch {
+      // silently ignore mark-all-as-read failure
     }
   };
 

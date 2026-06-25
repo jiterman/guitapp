@@ -37,7 +37,11 @@ const StatsCard: React.FC<StatsCardProps> = ({ income, expense, variant = 'defau
           </View>
         )}
         <Text style={styles.balanceLabel}>{isMonthly ? 'Ahorro del mes' : 'Balance'}</Text>
-        <Text style={[styles.balanceValue, { color: balancePositive ? '#1a9e5c' : '#c0392b' }]}>
+        <Text
+          style={[styles.balanceValue, { color: balancePositive ? '#1a9e5c' : '#c0392b' }]}
+          adjustsFontSizeToFit
+          numberOfLines={1}
+        >
           {balance < 0 ? '-' : ''}
           {formatCurrency(Math.abs(balance))}
         </Text>

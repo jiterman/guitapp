@@ -47,8 +47,8 @@ const AvatarUploader: React.FC<Props> = ({ avatarUrl, onUploaded }) => {
       const url = data.avatarUrl;
       onUploaded(url);
       setPreview(url);
-    } catch (e) {
-      console.error('Error uploading avatar', e);
+    } catch {
+      // silently ignore upload failure; avatar stays unchanged
     } finally {
       setLoading(false);
     }

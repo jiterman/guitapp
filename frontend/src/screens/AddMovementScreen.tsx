@@ -76,9 +76,8 @@ const AddMovementScreen = () => {
     params.type === 'INCOME' ? 'INCOME' : 'EXPENSE'
   );
 
-  const { displayValue, amount, handleAmountChange, setAmount } = useCurrencyInput(
-    (params.amount as string) || ''
-  );
+  const { displayValue, amount, handleAmountChange, setAmount, handleFocus, handleBlur } =
+    useCurrencyInput((params.amount as string) || '');
   const [title, setTitle] = useState((params.title as string) || '');
   const [description, setDescription] = useState('');
   const initialCategory =
@@ -218,8 +217,7 @@ const AddMovementScreen = () => {
       setTimeout(() => {
         setScanningReceipt(false);
       }, 500);
-    } catch (err) {
-      console.error('Error analyzing receipt:', err);
+    } catch {
       setScanStatusMessage('Ha ocurrido un error al procesar la imagen.');
       setScanSubTextMessage(
         'Podés volver atrás utilizando la cruz de arriba a la derecha para intentar nuevamente.'
@@ -287,8 +285,8 @@ const AddMovementScreen = () => {
         if (isRecurring) {
           await recurringExpenseService.addRecurringExpense({
             amount: parseFloat(amount),
-            title: title.trim() || undefined,
-            description: description.trim() || undefined,
+            title: title.trim(),
+            description: description.trim(),
             category: selectedCategory!.value as ExpenseCategory,
             type: selectedExpenseType!,
             frequency,
@@ -297,8 +295,8 @@ const AddMovementScreen = () => {
         } else {
           await expenseService.addExpense({
             amount: parseFloat(amount),
-            title: title.trim() || undefined,
-            description: description.trim() || undefined,
+            title: title.trim(),
+            description: description.trim(),
             category: selectedCategory!.value,
             type: selectedExpenseType!,
             date: dateString,
@@ -307,8 +305,8 @@ const AddMovementScreen = () => {
       } else if (isRecurring) {
         await recurringIncomeService.addRecurringIncome({
           amount: parseFloat(amount),
-          title: title.trim() || undefined,
-          description: description.trim() || undefined,
+          title: title.trim(),
+          description: description.trim(),
           category: selectedCategory!.value as unknown as IncomeCategory,
           frequency,
           startDate: dateString,
@@ -316,8 +314,8 @@ const AddMovementScreen = () => {
       } else {
         await incomeService.addIncome({
           amount: parseFloat(amount),
-          title: title.trim() || undefined,
-          description: description.trim() || undefined,
+          title: title.trim(),
+          description: description.trim(),
           category: selectedCategory!.value as unknown as IncomeCategory,
           date: dateString,
         });
@@ -506,6 +504,8 @@ const AddMovementScreen = () => {
                 handleAmountChange(text);
                 if (amountError) setAmountError(null);
               }}
+              onFocus={handleFocus}
+              onBlur={handleBlur}
               placeholder="0,00"
               keyboardType="decimal-pad"
               style={styles.amountInput}
@@ -548,10 +548,7 @@ const AddMovementScreen = () => {
               placeholder="Información adicional (opcional)"
               scrollViewRef={scrollViewRef}
               scrollYRef={scrollYRef}
-              onRemove={() => {
-                setDescription('');
-                setShowDescription(false);
-              }}
+              onRemove={() => setShowDescription(false)}
             />
           ) : (
             <TouchableOpacity

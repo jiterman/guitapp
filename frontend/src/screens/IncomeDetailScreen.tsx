@@ -135,7 +135,6 @@ const IncomeDetailScreen: React.FC = () => {
             <ExpandableField
               label="Descripción"
               value={income.description}
-              emptyText="Sin descripción"
               backgroundColor="#f5f5f5"
               iconName="document-text-outline"
               iconColor="#666"
