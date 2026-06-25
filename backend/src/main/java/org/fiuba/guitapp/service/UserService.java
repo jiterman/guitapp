@@ -98,7 +98,7 @@ public class UserService {
 
         user.setFirstName(null);
         user.setLastName(null);
-        user.setEstimatedMonthlyIncome(null);
+        user.setEstimatedMonthlyIncome(java.math.BigDecimal.ZERO);
         user.setTargetFixedExpenses(null);
         user.setTargetVariableExpenses(null);
         user.setTargetSavings(null);
