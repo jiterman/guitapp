@@ -62,15 +62,6 @@ public class ExpenseEventListener {
                 expenseMonth.atDay(1),
                 expenseMonth.atEndOfMonth());
 
-        ProjectionData projectionData = buildProjectionData(user, monthlyExpenses, expenseMonth);
-        if (checkNegativeBalanceRisk(user, projectionData)) {
-            return;
-        }
-
-        if (checkSavingsGoalRisk(user, projectionData)) {
-            return;
-        }
-
         boolean thresholdTriggered = false;
         if (event.getType() == ExpenseType.FIXED) {
             thresholdTriggered = checkFixedThreshold(user, monthlyExpenses);
@@ -79,6 +70,15 @@ public class ExpenseEventListener {
         }
 
         if (thresholdTriggered) {
+            return;
+        }
+
+        ProjectionData projectionData = buildProjectionData(user, monthlyExpenses, expenseMonth);
+        if (checkNegativeBalanceRisk(user, projectionData)) {
+            return;
+        }
+
+        if (checkSavingsGoalRisk(user, projectionData)) {
             return;
         }
 
@@ -119,8 +119,7 @@ public class ExpenseEventListener {
             String message = String.format(localeArg,
                     "Tu gasto en la categoría %s supera al mes anterior. Revisá tus gastos.",
                     formatCategory(category));
-            alertDeliveryService.deliverAlert(user, AlertType.CATEGORY_OVERSPENDING, message);
-            return true;
+            return alertDeliveryService.deliverAlert(user, AlertType.CATEGORY_OVERSPENDING, message);
         }
 
         return false;
@@ -182,8 +181,7 @@ public class ExpenseEventListener {
                     "Te pasaste de tu presupuesto de gastos fijos. Llevás gastado %s de los %s de tu objetivo de este mes",
                     formatter.format(totalFixed),
                     formatter.format(fixedLimit));
-            alertDeliveryService.deliverAlert(user, AlertType.FIXED_EXPENSE_THRESHOLD_EXCEEDED, message);
-            return true;
+            return alertDeliveryService.deliverAlert(user, AlertType.FIXED_EXPENSE_THRESHOLD_EXCEEDED, message);
         }
 
         return false;
@@ -215,8 +213,7 @@ public class ExpenseEventListener {
                     "Te pasaste de tu presupuesto de gastos variables. Llevás gastado %s de los %s de tu objetivo de este mes",
                     formatter.format(totalVariable),
                     formatter.format(variableLimit));
-            alertDeliveryService.deliverAlert(user, AlertType.VARIABLE_EXPENSE_THRESHOLD_EXCEEDED, message);
-            return true;
+            return alertDeliveryService.deliverAlert(user, AlertType.VARIABLE_EXPENSE_THRESHOLD_EXCEEDED, message);
         }
 
         return false;

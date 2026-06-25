@@ -27,10 +27,10 @@ public class AlertDeliveryService {
     private final EmailService emailService;
     private final NotificationRepository notificationRepository;
 
-    public void deliverAlert(User user, AlertType alertType, String body) {
+    public boolean deliverAlert(User user, AlertType alertType, String body) {
         if (isAlreadySentThisMonth(user, alertType)) {
             log.info("Notificacion de tipo {} ya enviada este mes para el usuario {}", alertType, user.getEmail());
-            return;
+            return false;
         }
 
         saveNotification(user, alertType, body);
@@ -38,6 +38,7 @@ public class AlertDeliveryService {
         if (shouldSendImmediately(user, alertType)) {
             sendAlert(user, alertType, body);
         }
+        return true;
     }
 
     public void deliverSummaryNotification(User user, AlertType alertType, String body) {
